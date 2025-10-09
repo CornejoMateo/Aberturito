@@ -2,11 +2,13 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useAuth } from '@/components/auth-provider'
+import { useRouter } from 'next/navigation'
 import { LayoutDashboard, Package, Users, FileText, ClipboardCheck, Calendar, BarChart3, Menu, X } from "lucide-react"
 
 const navigation = [
@@ -22,6 +24,19 @@ const navigation = [
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, loading, signOutUser } = useAuth()
+
+  // redirect to login when auth resolved and there's no user
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login')
+    }
+  }, [loading, user, router])
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Cargando...</div>
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,11 +96,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <div className="border-t border-border p-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <span className="font-semibold text-primary text-sm">AD</span>
+                <span className="font-semibold text-primary text-sm">{user?.email ? user.email.charAt(0).toUpperCase() : 'U'}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">Admin Demo</p>
-                <p className="text-xs text-muted-foreground truncate">admin@araberturas.com</p>
+                <p className="text-sm font-medium text-foreground truncate">{user?.displayName ?? 'Usuario'}</p>
+                <p className="text-xs text-muted-foreground truncate">{user?.email ?? ''}</p>
+              </div>
+              <div className="ml-2">
+                <Button variant="ghost" size="sm" onClick={() => signOutUser()}>
+                  Cerrar sesión
+                </Button>
               </div>
             </div>
           </div>

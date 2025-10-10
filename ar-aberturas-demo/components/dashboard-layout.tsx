@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -33,6 +33,36 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       router.push('/login')
     }
   }, [loading, user, router])
+
+  // Definición de permisos por rol
+  const allowedByRole = useMemo(() => {
+    return {
+      admin: ["Dashboard", "Stock", "Clientes", "Presupuestos", "Obras", "Calendario", "Reportes"],
+      fabrica: ["Stock"],
+      ventas: ["Dashboard", "Stock", "Clientes", "Presupuestos", "Calendario"],
+      marketing: ["Dashboard", "Calendario", "Clientes", "Reportes", "Presupuestos"],
+      colocador: ["Obras"],
+    } as Record<string, string[]>
+  }, [])
+
+  const filteredNavigation = useMemo(() => {
+    if (!user?.role) return navigation
+    const allowedNames = allowedByRole[user.role] ?? []
+    return navigation.filter((item) => allowedNames.includes(item.name))
+  }, [user?.role, allowedByRole])
+
+  // Redirigir a la primera ruta permitida si la actual no está permitida
+  useEffect(() => {
+    if (loading || !user?.role) return
+    const allowedNames = allowedByRole[user.role] ?? []
+    const currentItem = navigation.find((n) => n.href === pathname)
+    const isAllowed = currentItem ? allowedNames.includes(currentItem.name) : true
+
+    if (!isAllowed) {
+      const firstAllowed = navigation.find((n) => allowedNames.includes(n.name))
+      if (firstAllowed) router.replace(firstAllowed.href)
+    }
+  }, [loading, user?.role, pathname, router, allowedByRole])
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Cargando...</div>
@@ -71,7 +101,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1 px-3 py-4">
-            {navigation.map((item) => {
+            {filteredNavigation.map((item) => {
               const isActive = pathname === item.href
               return (
                 <Link
@@ -96,11 +126,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <div className="border-t border-border p-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <span className="font-semibold text-primary text-sm">{user?.email ? user.email.charAt(0).toUpperCase() : 'U'}</span>
+                <span className="font-semibold text-primary text-sm">{user?.usuario ? user.usuario.charAt(0).toUpperCase() : 'U'}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{user?.displayName ?? 'Usuario'}</p>
-                <p className="text-xs text-muted-foreground truncate">{user?.email ?? ''}</p>
+                <p className="text-sm font-medium text-foreground truncate">{user?.usuario ?? 'Usuario'}</p>
+                <p className="text-xs text-muted-foreground truncate">{user?.role ?? ''}</p>
               </div>
               <div className="ml-2">
                 <Button variant="ghost" size="sm" onClick={() => signOutUser()}>

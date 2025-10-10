@@ -1,44 +1,89 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from 'firebase/auth'
-import { auth } from '@/lib/firebase'
 import { useRouter } from 'next/navigation'
+import { db } from '@/lib/firebase'
+import { collection, getDocs, query, where } from 'firebase/firestore'
+
+type UserRole = 'fabrica' | 'admin' | 'marketing' | 'ventas' | 'colocador'
+
+type SessionUser = {
+  usuario: string
+  role: UserRole
+}
 
 type AuthContextType = {
-  user: User | null
+  user: SessionUser | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<void>
+  signIn: (usuario: string, contraseña: string) => Promise<void>
   signOutUser: () => Promise<void>
 }
+
+const SESSION_STORAGE_KEY = 'sessionUser'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<SessionUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isMounted, setIsMounted] = useState(false)
   const router = useRouter()
 
+  // Restaurar sesión desde localStorage
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u)
+    setIsMounted(true)
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem(SESSION_STORAGE_KEY) : null
+      if (raw) {
+        const parsed: SessionUser = JSON.parse(raw)
+        setUser(parsed)
+      }
+    } catch (_) {
+      // ignore
+    } finally {
       setLoading(false)
-    })
-    return () => unsub()
+    }
   }, [])
 
-  async function signIn(email: string, password: string) {
+  async function signIn(usuario: string, contraseña: string) {
     setLoading(true)
-    await signInWithEmailAndPassword(auth, email, password)
-    setLoading(false)
+    try {
+      const usersRef = collection(db, 'users')
+      const q = query(usersRef, where('usuario', '==', usuario), where('contraseña', '==', contraseña))
+      const snap = await getDocs(q)
+
+      if (snap.empty) {
+        throw new Error('Usuario o contraseña incorrectos')
+      }
+
+      // Suponemos usuario único por "usuario"
+      const docData = snap.docs[0].data() as { usuario: string; contraseña: string; role: UserRole }
+      const sessionUser: SessionUser = { usuario: docData.usuario, role: docData.role }
+      setUser(sessionUser)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser))
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function signOutUser() {
     setLoading(true)
-    await signOut(auth)
-    setLoading(false)
-    // redirect to login after sign out
-    router.push('/login')
+    try {
+      setUser(null)
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(SESSION_STORAGE_KEY)
+      }
+      router.push('/login')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!isMounted) {
+    // Evita desajustes de SSR/CSR durante la hidratación
+    return null
   }
 
   return (

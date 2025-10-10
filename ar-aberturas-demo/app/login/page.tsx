@@ -9,8 +9,8 @@ import { useAuth } from '@/components/auth-provider'
 export default function LoginPage() {
   const { signIn, user, loading } = useAuth()
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [usuario, setUsuario] = useState('')
+  const [contraseña, setContraseña] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   // Redirect to dashboard after auth state resolved
@@ -24,7 +24,7 @@ export default function LoginPage() {
     e.preventDefault()
     setError(null)
     try {
-      await signIn(email, password)
+      await signIn(usuario, contraseña)
       router.push('/')
     } catch (err: any) {
       setError(err?.message || 'Error al iniciar sesión')
@@ -37,19 +37,19 @@ export default function LoginPage() {
         <h2 className="text-2xl font-semibold mb-4">Iniciar sesión</h2>
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
-            <label className="text-sm text-muted-foreground">Usuario (email)</label>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="admin@ejemplo.com" />
+            <label className="text-sm text-muted-foreground">Usuario</label>
+            <Input value={usuario} onChange={(e) => setUsuario(e.target.value)} type="text" placeholder="usuario" />
           </div>
           <div>
             <label className="text-sm text-muted-foreground">Contraseña</label>
-            <Input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="********" />
+            <Input value={contraseña} onChange={(e) => setContraseña(e.target.value)} type="password" placeholder="********" />
           </div>
           {error && <div className="text-sm text-destructive">{error}</div>}
           <div className="flex items-center justify-end">
             <Button type="submit" disabled={loading}>{loading ? 'Cargando...' : 'Ingresar'}</Button>
           </div>
         </form>
-        <div className="text-xs text-muted-foreground mt-3">Usa las credenciales provistas en Firebase. Ej: admin@demo.com / admin123</div>
+        <div className="text-xs text-muted-foreground mt-3">Usa las credenciales cargadas en la colección "users".</div>
       </div>
     </div>
   )

@@ -34,10 +34,6 @@ export function ReportsView() {
           <h2 className="text-2xl font-bold text-foreground text-balance">Reportes y Métricas</h2>
           <p className="text-muted-foreground mt-1">Análisis de rendimiento y estadísticas</p>
         </div>
-        <Button variant="outline" className="gap-2 bg-transparent">
-          <Download className="h-4 w-4" />
-          Exportar Reporte
-        </Button>
       </div>
 
       {/* Key metrics */}

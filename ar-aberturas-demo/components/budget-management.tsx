@@ -110,10 +110,6 @@ export function BudgetManagement() {
           <p className="text-muted-foreground mt-1">Creación y seguimiento de presupuestos</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-2 bg-transparent">
-            <Download className="h-4 w-4" />
-            Exportar
-          </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2">

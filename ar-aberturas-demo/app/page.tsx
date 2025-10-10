@@ -6,6 +6,7 @@ import { DashboardLayout } from "@/components/dashboard-layout"
 import { DashboardHome } from "@/components/dashboard-home"
 import { StockManagement } from "@/components/stock-management"
 import { useAuth } from "@/components/auth-provider"
+import { InstallationChecklist } from "@/components/installation-checklist"
 
 export default function HomePage() {
   const { user, loading } = useAuth()
@@ -43,7 +44,7 @@ export default function HomePage() {
     case 'marketing':
       return <DashboardLayout><DashboardHome /></DashboardLayout>
     case 'colocador':
-      return <DashboardLayout><DashboardHome /></DashboardLayout>
+      return <DashboardLayout><InstallationChecklist/></DashboardLayout>
     default:
       return <DashboardLayout><DashboardHome /></DashboardLayout>
   }

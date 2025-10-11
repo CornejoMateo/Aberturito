@@ -7,6 +7,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog"
 import { useAuth } from '@/components/auth-provider'
 import { useRouter } from 'next/navigation'
 import { LayoutDashboard, Package, Users, FileText, ClipboardCheck, Calendar, BarChart3, Menu, X } from "lucide-react"
@@ -64,7 +65,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   }, [loading, user?.role, pathname, router, allowedByRole])
 
-  if (loading) {
+  if (loading || !user?.role || !user) {
     return <div className="min-h-screen flex items-center justify-center">Cargando...</div>
   }
 
@@ -133,9 +134,26 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <p className="text-xs text-muted-foreground truncate">{user?.role ?? ''}</p>
               </div>
               <div className="ml-2">
-                <Button variant="ghost" size="sm" onClick={() => signOutUser()}>
-                  Cerrar sesión
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      Cerrar sesión
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Seguro que querés cerrar sesión?</AlertDialogTitle>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction asChild>
+                        <Button variant="destructive" size="sm" onClick={() => signOutUser()}>
+                          Sí, cerrar sesión
+                        </Button>
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           </div>

@@ -1,34 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import {
-  Package,
-  Plus,
-  Search,
-  AlertTriangle,
-  TrendingDown,
-  TrendingUp,
-  Filter,
-  Download,
-  Edit,
-  Trash2,
-} from "lucide-react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { categories } from "@/constants/categories"
+import { StockAddDialog } from "../../utils/stock/stock-add-dialog"
+import { StockStats } from "../../utils/stock/stock-stats"
+import { StockLowAlert } from "../../utils/stock/stock-low-alert"
+import { StockFilters } from "../../utils/stock/stock-filters"
+import { StockTable } from "../../utils/stock/stock-table"
 
 type StockItem = {
   id: string
@@ -41,6 +19,8 @@ type StockItem = {
   lastUpdate: string
 }
 
+
+// Esto se deberia borrar y hacer una funcion en db.ts para traer la lista de stock
 const initialStock: StockItem[] = [
   {
     id: "1",
@@ -121,258 +101,50 @@ export function StockManagement() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground text-balance">Gestión de Stock</h2>
           <p className="text-muted-foreground mt-1">Control de inventario y materiales</p>
         </div>
+        {/* form for new item */}
         <div className="flex gap-2">
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Agregar Item
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-card">
-              <DialogHeader>
-                <DialogTitle className="text-foreground">Agregar nuevo item</DialogTitle>
-                <DialogDescription className="text-muted-foreground">
-                  Ingrese los datos del nuevo material o producto
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name" className="text-foreground">
-                    Nombre
-                  </Label>
-                  <Input id="name" placeholder="Ej: Perfil de Aluminio" className="bg-background" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="category" className="text-foreground">
-                    Categoría
-                  </Label>
-                  <Select>
-                    <SelectTrigger className="bg-background">
-                      <SelectValue placeholder="Seleccionar categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="perfiles">Perfiles</SelectItem>
-                      <SelectItem value="vidrios">Vidrios</SelectItem>
-                      <SelectItem value="herrajes">Herrajes</SelectItem>
-                      <SelectItem value="accesorios">Accesorios</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="quantity" className="text-foreground">
-                      Cantidad
-                    </Label>
-                    <Input id="quantity" type="number" placeholder="0" className="bg-background" />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="unit" className="text-foreground">
-                      Unidad
-                    </Label>
-                    <Input id="unit" placeholder="unidades" className="bg-background" />
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="minStock" className="text-foreground">
-                    Stock mínimo
-                  </Label>
-                  <Input id="minStock" type="number" placeholder="0" className="bg-background" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="location" className="text-foreground">
-                    Ubicación
-                  </Label>
-                  <Input id="location" placeholder="Ej: Depósito A" className="bg-background" />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={() => setIsAddDialogOpen(false)}>Guardar</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <StockAddDialog
+            open={isAddDialogOpen}
+            onOpenChange={setIsAddDialogOpen}
+            onSave={(newItem) => {
+              setStock([...stock, { ...newItem, id: Date.now().toString() }])
+              setIsAddDialogOpen(false)
+            }}
+          />
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="p-6 bg-card border-border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Total items</p>
-              <p className="text-2xl font-bold text-foreground mt-2">{totalItems}</p>
-            </div>
-            <div className="rounded-lg bg-secondary p-3 text-chart-1">
-              <Package className="h-6 w-6" />
-            </div>
-          </div>
-        </Card>
-        <Card className="p-6 bg-card border-border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Categorías</p>
-              <p className="text-2xl font-bold text-foreground mt-2">{categories.length - 1}</p>
-            </div>
-            <div className="rounded-lg bg-secondary p-3 text-chart-2">
-              <Filter className="h-6 w-6" />
-            </div>
-          </div>
-        </Card>
-        <Card className="p-6 bg-card border-border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Stock bajo</p>
-              <p className="text-2xl font-bold text-foreground mt-2">{lowStockItems.length}</p>
-            </div>
-            <div className="rounded-lg bg-secondary p-3 text-destructive">
-              <AlertTriangle className="h-6 w-6" />
-            </div>
-          </div>
-        </Card>
-      </div>
+      { /* stats */}
+      <StockStats 
+        totalItems={totalItems}
+        categoriesCount={categories.length - 1}
+        lowStockCount={lowStockItems.length}
+      />
 
-      {/* Alerts */}
-      {lowStockItems.length > 0 && (
-        <Card className="p-4 bg-destructive/10 border-destructive/20">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-foreground">Alerta de stock bajo</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {lowStockItems.length} {lowStockItems.length === 1 ? "producto tiene" : "productos tienen"} stock por
-                debajo del mínimo recomendado
-              </p>
-            </div>
-          </div>
-        </Card>
-      )}
+      { /* stock alert */}
+      <StockLowAlert lowStockItems={lowStockItems} />
 
-      {/* Filters */}
-      <Card className="p-4 bg-card border-border">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Buscar productos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 bg-background"
-            />
-          </div>
-          <div className="flex gap-2 overflow-x-auto">
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(category)}
-                className="whitespace-nowrap"
-              >
-                {category}
-              </Button>
-            ))}
-          </div>
-        </div>
-      </Card>
+      { /* filters */}
+      <StockFilters
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+      />
 
-      {/* Stock table */}
-      <Card className="bg-card border-border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="border-b border-border bg-secondary">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Producto
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Categoría
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Cantidad
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Ubicación
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Última Act.
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filteredStock.map((item) => {
-                const isLowStock = item.quantity < item.minStock
-                const stockPercentage = (item.quantity / item.minStock) * 100
-
-                return (
-                  <tr key={item.id} className="hover:bg-secondary/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                          <Package className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{item.name}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge variant="outline" className="bg-secondary">
-                        {item.category}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-sm text-foreground">
-                        {item.quantity} {item.unit}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Mín: {item.minStock}</p>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {isLowStock ? (
-                        <Badge variant="destructive" className="gap-1">
-                          <TrendingDown className="h-3 w-3" />
-                          Bajo
-                        </Badge>
-                      ) : (
-                        <Badge className="gap-1 bg-accent">
-                          <TrendingUp className="h-3 w-3" />
-                          Normal
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{item.location}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{item.lastUpdate}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      { /* main table */}
+      <StockTable
+        filteredStock={filteredStock}
+        onEdit={(id) => {/* implement edit logic */}}
+        onDelete={(id) => setStock(stock.filter(item => item.id !== id))}
+      />
     </div>
   )
 }
+
+export type { StockItem }

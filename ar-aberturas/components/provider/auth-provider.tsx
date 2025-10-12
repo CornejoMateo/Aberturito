@@ -2,9 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { db } from '@/lib/firebase'
-import { collection, getDocs, query, where } from 'firebase/firestore'
 import { UserRole } from '@/constants/user-role'
+import { findUser } from '@/lib/db'
 
 type SessionUser = {
   usuario: string
@@ -47,21 +46,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function signIn(usuario: string, contraseña: string) {
     setLoading(true)
     try {
-      const usersRef = collection(db, 'users')
-      const q = query(usersRef, where('usuario', '==', usuario), where('contraseña', '==', contraseña))
-      const snap = await getDocs(q)
-
-      if (snap.empty) {
-        throw new Error('Usuario o contraseña incorrectos')
-      }
-
-      // Suponemos usuario único por "usuario"
-      const docData = snap.docs[0].data() as { usuario: string; contraseña: string; role: UserRole }
-      const sessionUser: SessionUser = { usuario: docData.usuario, role: docData.role }
-      setUser(sessionUser)
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser))
-      }
+      const docData = await findUser(usuario, contraseña)
+      if (!docData) throw new Error('Usuario o contraseña incorrectos')
+        const sessionUser: SessionUser = { usuario: docData.usuario, role: docData.role }
+        setUser(sessionUser)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser))
+        }
     } finally {
       setLoading(false)
     }

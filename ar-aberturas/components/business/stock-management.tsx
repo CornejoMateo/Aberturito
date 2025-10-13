@@ -87,12 +87,12 @@ const initialStock: StockItem[] = [
 export function StockManagement() {
   const [stock, setStock] = useState<StockItem[]>(initialStock)
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("Todos")
+  const [selectedCategory, setSelectedCategory] = useState("Perfiles")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 
   const filteredStock = stock.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === "Todos" || item.category === selectedCategory
+    const matchesCategory = selectedCategory === "Perfiles" || item.category === selectedCategory
     return matchesSearch && matchesCategory
   })
 

@@ -54,6 +54,23 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     return pathname === item.href
   }
 
+  // Función para obtener el texto dinámico del menú Stock
+  const getStockMenuText = () => {
+    if (pathname === "/stock/aluminio") return "Stock Aluminio"
+    if (pathname === "/stock/pvc") return "Stock PVC"
+    if (pathname === "/stock") return "Stock"
+    return "Stock"
+  }
+
+  // Auto-expandir el menú Stock cuando se está en una subpágina
+  useEffect(() => {
+    if (pathname.startsWith('/stock/')) {
+      setExpandedItems(prev => 
+        prev.includes('Stock') ? prev : [...prev, 'Stock']
+      )
+    }
+  }, [pathname])
+
   // redirect to login when auth resolved and there's no user
   useEffect(() => {
     if (!loading && !user) {
@@ -116,6 +133,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         }
       }
     }
+    
+    // Redirigir a Stock Aluminio por defecto si se accede a /stock
+    if (pathname === '/stock') {
+      router.replace('/stock/aluminio')
+    }
   }, [loading, user?.role, pathname, router, allowedByRole])
 
   if (loading || !user?.role || !user) {
@@ -175,7 +197,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       >
                         <div className="flex items-center gap-3">
                           <item.icon className="h-5 w-5" />
-                          {item.name}
+                          {item.name === "Stock" ? getStockMenuText() : item.name}
                         </div>
                         {isExpanded ? (
                           <ChevronDown className="h-4 w-4" />

@@ -1,10 +1,10 @@
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { StockManagement } from "@/components/business/stock-management"
 
-export default function StockPage() {
+export default function StockAluminioPage() {
   return (
     <DashboardLayout>
-      <StockManagement materialType="all" />
+      <StockManagement materialType="aluminio" />
     </DashboardLayout>
   )
 }

@@ -1,7 +1,6 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { BarChart3, Download, TrendingUp, Users, FileText, Package, DollarSign } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"

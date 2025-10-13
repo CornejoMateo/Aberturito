@@ -38,11 +38,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   // Definición de permisos por rol
   const allowedByRole = useMemo(() => {
     return {
-      admin: ["Dashboard", "Stock", "Clientes", "Presupuestos", "Obras", "Calendario", "Reportes"],
-      fabrica: ["Stock"],
-      ventas: ["Dashboard", "Stock", "Clientes", "Presupuestos", "Calendario"],
-      marketing: ["Dashboard", "Calendario", "Clientes", "Reportes", "Presupuestos"],
-      colocador: ["Obras"],
+      Admin: ["Dashboard", "Stock", "Clientes", "Presupuestos", "Obras", "Calendario", "Reportes"],
+      Fabrica: ["Stock"],
+      Ventas: ["Dashboard", "Stock", "Clientes", "Presupuestos", "Calendario"],
+      Marketing: ["Dashboard", "Calendario", "Clientes", "Reportes", "Presupuestos"],
+      Colocador: ["Obras"],
     } as Record<string, string[]>
   }, [])
 

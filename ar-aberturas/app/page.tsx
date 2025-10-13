@@ -35,15 +35,15 @@ export default function HomePage() {
   
   // Mostrar dashboard según el rol del usuario
   switch (user.role) {
-    case 'admin':
+    case 'Admin':
       return <DashboardLayout><DashboardHome /></DashboardLayout>
-    case 'fabrica':
+    case 'Fabrica':
       return <DashboardLayout><StockManagement /></DashboardLayout>
-    case 'ventas':
+    case 'Ventas':
       return <DashboardLayout><DashboardHome /></DashboardLayout>
-    case 'marketing':
+    case 'Marketing':
       return <DashboardLayout><DashboardHome /></DashboardLayout>
-    case 'colocador':
+    case 'Colocador':
       return <DashboardLayout><InstallationChecklist/></DashboardLayout>
     default:
       return <DashboardLayout><DashboardHome /></DashboardLayout>

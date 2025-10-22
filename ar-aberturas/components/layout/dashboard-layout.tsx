@@ -10,11 +10,19 @@ import { Button } from "@/components/ui/button"
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog"
 import { useAuth } from '@/components/provider/auth-provider'
 import { useRouter } from 'next/navigation'
-import { LayoutDashboard, Package, Users, FileText, ClipboardCheck, Calendar, BarChart3, Menu, X } from "lucide-react"
+import { LayoutDashboard, Package, Users, FileText, ClipboardCheck, Calendar, BarChart3, Menu, X, ChevronDown, ChevronRight } from "lucide-react"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Stock", href: "/stock", icon: Package },
+  { 
+    name: "Stock", 
+    href: "/stock", 
+    icon: Package,
+    subItems: [
+      { name: "Aluminio", href: "/stock/aluminio" },
+      { name: "PVC", href: "/stock/pvc" },
+    ]
+  },
   { name: "Clientes", href: "/clientes", icon: Users },
   { name: "Presupuestos", href: "/presupuestos", icon: FileText },
   { name: "Obras", href: "/obras", icon: ClipboardCheck },
@@ -24,9 +32,44 @@ const navigation = [
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [expandedItems, setExpandedItems] = useState<string[]>([])
   const pathname = usePathname()
   const router = useRouter()
   const { user, loading, signOutUser } = useAuth()
+
+  // Función para manejar la expansión de submenús
+  const toggleExpanded = (itemName: string) => {
+    setExpandedItems(prev => 
+      prev.includes(itemName) 
+        ? prev.filter(name => name !== itemName)
+        : [...prev, itemName]
+    )
+  }
+
+  // Función para verificar si un item está activo (incluyendo subitems)
+  const isItemActive = (item: any) => {
+    if (item.subItems) {
+      return item.subItems.some((subItem: any) => pathname === subItem.href) || pathname === item.href
+    }
+    return pathname === item.href
+  }
+
+  // Función para obtener el texto dinámico del menú Stock
+  const getStockMenuText = () => {
+    if (pathname === "/stock/aluminio") return "Stock Aluminio"
+    if (pathname === "/stock/pvc") return "Stock PVC"
+    if (pathname === "/stock") return "Stock"
+    return "Stock"
+  }
+
+  // Auto-expandir el menú Stock cuando se está en una subpágina
+  useEffect(() => {
+    if (pathname.startsWith('/stock/')) {
+      setExpandedItems(prev => 
+        prev.includes('Stock') ? prev : [...prev, 'Stock']
+      )
+    }
+  }, [pathname])
 
   // redirect to login when auth resolved and there's no user
   useEffect(() => {
@@ -46,6 +89,26 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     } as Record<string, string[]>
   }, [])
 
+  // Función para verificar si una ruta está permitida
+  const isRouteAllowed = (href: string) => {
+    if (!user?.role) return false
+    const allowedNames = allowedByRole[user.role] ?? []
+    
+    // Verificar rutas principales
+    const mainItem = navigation.find(item => item.href === href)
+    if (mainItem && allowedNames.includes(mainItem.name)) return true
+    
+    // Verificar subitems
+    for (const item of navigation) {
+      if (item.subItems) {
+        const subItem = item.subItems.find(sub => sub.href === href)
+        if (subItem && allowedNames.includes(item.name)) return true
+      }
+    }
+    
+    return false
+  }
+
   const filteredNavigation = useMemo(() => {
     if (!user?.role) return navigation
     const allowedNames = allowedByRole[user.role] ?? []
@@ -55,13 +118,25 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   // Redirigir a la primera ruta permitida si la actual no está permitida
   useEffect(() => {
     if (loading || !user?.role) return
-    const allowedNames = allowedByRole[user.role] ?? []
-    const currentItem = navigation.find((n) => n.href === pathname)
-    const isAllowed = currentItem ? allowedNames.includes(currentItem.name) : true
-
+    
+    const isAllowed = isRouteAllowed(pathname)
+    
     if (!isAllowed) {
+      const allowedNames = allowedByRole[user.role] ?? []
       const firstAllowed = navigation.find((n) => allowedNames.includes(n.name))
-      if (firstAllowed) router.replace(firstAllowed.href)
+      if (firstAllowed) {
+        // Si el primer item permitido tiene subitems, ir al primer subitem
+        if (firstAllowed.subItems && firstAllowed.subItems.length > 0) {
+          router.replace(firstAllowed.subItems[0].href)
+        } else {
+          router.replace(firstAllowed.href)
+        }
+      }
+    }
+    
+    // Redirigir a Stock Aluminio por defecto si se accede a /stock
+    if (pathname === '/stock') {
+      router.replace('/stock/aluminio')
     }
   }, [loading, user?.role, pathname, router, allowedByRole])
 
@@ -103,22 +178,73 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           {/* Navigation */}
           <nav className="flex-1 space-y-1 px-3 py-4">
             {filteredNavigation.map((item) => {
-              const isActive = pathname === item.href
+              const isActive = isItemActive(item)
+              const isExpanded = expandedItems.includes(item.name)
+              const hasSubItems = item.subItems && item.subItems.length > 0
+
               return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                <div key={item.name}>
+                  {hasSubItems ? (
+                    <div>
+                      <button
+                        onClick={() => toggleExpanded(item.name)}
+                        className={cn(
+                          "flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                          isActive
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <item.icon className="h-5 w-5" />
+                          {item.name === "Stock" ? getStockMenuText() : item.name}
+                        </div>
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </button>
+                      {isExpanded && (
+                        <div className="ml-6 mt-1 space-y-1">
+                          {item.subItems.map((subItem) => {
+                            const isSubActive = pathname === subItem.href
+                            return (
+                              <Link
+                                key={subItem.name}
+                                href={subItem.href}
+                                className={cn(
+                                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                                  isSubActive
+                                    ? "bg-primary text-primary-foreground"
+                                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                                )}
+                                onClick={() => setSidebarOpen(false)}
+                              >
+                                <div className="h-2 w-2 rounded-full bg-current" />
+                                {subItem.name}
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                      )}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {item.name}
+                    </Link>
                   )}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <item.icon className="h-5 w-5" />
-                  {item.name}
-                </Link>
+                </div>
               )
             })}
           </nav>

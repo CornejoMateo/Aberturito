@@ -2,10 +2,10 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Package, TrendingDown, TrendingUp, Edit, Trash2 } from "lucide-react"
-import { StockItem } from "../../components/business/stock-management"
+import { type ProfileItemStock } from "@/lib/stock"
 
 interface StockTableProps {
-  filteredStock: StockItem[]
+  filteredStock: ProfileItemStock[]
   onEdit: (id: string) => void
   onDelete: (id: string) => void
 }
@@ -42,7 +42,7 @@ export function StockTable({ filteredStock, onEdit, onDelete }: StockTableProps)
           </thead>
           <tbody className="divide-y divide-border">
             {filteredStock.map((item) => {
-              const isLowStock = item.quantity < item.minStock
+              const isLowStock = (item.quantity ?? 0) < 10 // threshold fijo por ahora
 
               return (
                 <tr key={item.id} className="hover:bg-secondary/50 transition-colors">
@@ -52,20 +52,21 @@ export function StockTable({ filteredStock, onEdit, onDelete }: StockTableProps)
                         <Package className="h-5 w-5 text-muted-foreground" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-foreground">{item.name}</p>
+                        <p className="text-sm font-medium text-foreground">{item.type || 'N/A'}</p>
+                        <p className="text-xs text-muted-foreground">{item.line || ''}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Badge variant="outline" className="bg-secondary">
-                      {item.category}
+                      {item.category || 'Sin categoría'}
                     </Badge>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <p className="text-sm text-foreground">
-                      {item.quantity} {item.unit}
+                      {item.quantity ?? 0} unidades
                     </p>
-                    <p className="text-xs text-muted-foreground">Mín: {item.minStock}</p>
+                    <p className="text-xs text-muted-foreground">{item.width ? `${item.width}mm` : ''}</p>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {isLowStock ? (
@@ -80,18 +81,18 @@ export function StockTable({ filteredStock, onEdit, onDelete }: StockTableProps)
                       </Badge>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{item.location}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{item.lastUpdate}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{item.site || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{item.last_update || item.created_at || 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(item.id)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => item.id && onEdit(item.id)}>
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="icon" 
                         className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => onDelete(item.id)}
+                        onClick={() => item.id && onDelete(item.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

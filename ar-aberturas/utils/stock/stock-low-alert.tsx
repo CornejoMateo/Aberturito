@@ -1,9 +1,9 @@
 import { Card } from "@/components/ui/card"
 import { AlertTriangle } from "lucide-react"
-import { StockItem } from "../../components/business/stock-management"
+import { type ProfileItemStock } from "@/lib/stock"
 
 interface StockLowAlertProps {
-  lowStockItems: StockItem[]
+  lowStockItems: ProfileItemStock[]
 }
 
 export function StockLowAlert({ lowStockItems }: StockLowAlertProps) {

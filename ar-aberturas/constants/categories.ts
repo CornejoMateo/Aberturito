@@ -1,1 +1,0 @@
-export const categories = ["Todos", "Perfiles", "Vidrios", "Herrajes", "Accesorios"]

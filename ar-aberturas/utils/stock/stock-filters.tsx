@@ -30,14 +30,6 @@ export function StockFilters({
           />
         </div>
         <div className="flex gap-2 overflow-x-auto">
-          <Button
-            variant={selectedCategory === "Perfiles" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedCategory("Perfiles")}
-            className="whitespace-nowrap"
-          >
-            Todos
-          </Button>
           {categories.map((categoria) => (
             <Button
               key={categoria}

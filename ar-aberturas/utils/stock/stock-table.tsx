@@ -5,6 +5,15 @@ import { Package, TrendingDown, TrendingUp, Edit, Trash2, Plus, Minus } from "lu
 import { type ProfileItemStock } from "@/lib/stock"
 import { useState } from "react"
 import { ConfirmUpdateDialog } from "@/components/stock/confirm-update-dialog"
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel
+} from "@/components/ui/alert-dialog"
 
 interface StockTableProps {
   filteredStock: ProfileItemStock[]
@@ -187,14 +196,32 @@ export function StockTable({ filteredStock, onEdit, onDelete, onUpdateQuantity }
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => item.id && onEdit(item.id)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => item.id && onDelete(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogTitle>¿Eliminar perfil del stock?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              ¿Estás seguro que deseas eliminar este perfil? Esta acción no se puede deshacer.
+                            </AlertDialogDescription>
+                            <div className="flex justify-end gap-2 mt-4">
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-destructive text-white hover:bg-destructive/90"
+                                onClick={() => item.id && onDelete(item.id)}
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </div>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </td>
                   </tr>

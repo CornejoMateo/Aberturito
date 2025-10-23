@@ -51,6 +51,11 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
 
   const lowStockItems = stock.filter((item) => (item.quantity ?? 0) < 10)
   const totalItems = stock.reduce((sum, item) => sum + (item.quantity ?? 0), 0)
+  
+  // Obtener el último ítem agregado
+  const lastAddedItem = [...stock].sort((a, b) => 
+    new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+  )[0]
 
   // Dinamic titles based on material type
   const getTitle = () => {
@@ -133,11 +138,11 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
       </div>
 
       { /* stats */}
-      <StockStats 
-        totalItems={totalItems}
-        categoriesCount={5}
-        lowStockCount={lowStockItems.length}
-      />
+        <StockStats 
+          totalItems={totalItems}
+          lowStockCount={lowStockItems.length}
+          lastAddedItem={lastAddedItem}
+        />
 
       { /* stock alert */}
       <StockLowAlert lowStockItems={lowStockItems} />

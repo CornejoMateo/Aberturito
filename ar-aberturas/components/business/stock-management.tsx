@@ -167,6 +167,18 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
             }
             setStock((s) => s.filter(item => item.id !== id))
           }}
+          onUpdateQuantity={async (id, newQuantity) => {
+            if (newQuantity < 0) return; // Prevent negative quantities
+            
+            const { data, error } = await updateProfileStock(id, { quantity: newQuantity })
+            if (error) {
+              setError(error.message ?? 'Error al actualizar la cantidad')
+              throw error // This will be caught by the StockTable
+            }
+            if (data) {
+              setStock(stock.map(item => item.id === id ? { ...item, quantity: newQuantity } : item))
+            }
+          }}
         />
       )}
     </div>

@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader,
 import { useAuth } from '@/components/provider/auth-provider'
 import { useRouter } from 'next/navigation'
 import { LayoutDashboard, Package, Users, FileText, ClipboardCheck, Calendar, BarChart3, Menu, X, ChevronDown, ChevronRight } from "lucide-react"
+import Image from "next/image";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -165,9 +166,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           {/* Logo */}
           <div className="flex h-16 items-center justify-between border-b border-border px-6">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <span className="font-bold text-primary-foreground text-sm">AR</span>
-              </div>
+              <Image src="/logo-ar-transparente.png" alt="Logo" width={80} height={80}/>
               <span className="font-semibold text-foreground">AR Aberturas</span>
             </div>
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>

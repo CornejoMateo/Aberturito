@@ -1,12 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { StockAddDialog } from "../../utils/stock/stock-add-dialog"
+import { StockFormDialog } from "../../utils/stock/stock-add-dialog"
 import { StockStats } from "../../utils/stock/stock-stats"
 import { StockLowAlert } from "../../utils/stock/stock-low-alert"
 import { StockFilters } from "../../utils/stock/stock-filters"
 import { StockTable } from "../../utils/stock/stock-table"
-import { listStock, createProfileStock, deleteProfileStock, type ProfileItemStock } from "@/lib/stock"
+import { listStock, createProfileStock, deleteProfileStock, type ProfileItemStock, updateProfileStock } from "@/lib/stock"
 
 interface StockManagementProps {
   materialType?: "Aluminio" | "PVC"
@@ -17,6 +17,8 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("Perfiles")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<ProfileItemStock | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -50,7 +52,7 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
   const lowStockItems = stock.filter((item) => (item.quantity ?? 0) < 10)
   const totalItems = stock.reduce((sum, item) => sum + (item.quantity ?? 0), 0)
 
-  // Títulos dinámicos según el tipo de material
+  // Dinamic titles based on material type
   const getTitle = () => {
     switch (materialType) {
       case "Aluminio":
@@ -73,6 +75,14 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
     }
   }
 
+  const handleEdit = (id: string) => {
+    const item = stock.find(s => s.id === id)
+    if (item) {
+      setEditingItem(item)
+      setIsEditDialogOpen(true)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -82,7 +92,7 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
         </div>
         {/* form for new item */}
         <div className="flex gap-2">
-          <StockAddDialog
+          <StockFormDialog
             open={isAddDialogOpen}
             onOpenChange={setIsAddDialogOpen}
             onSave={async (newItem) => {
@@ -97,8 +107,29 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
               setIsAddDialogOpen(false)
             }}
             materialType={materialType}
+            triggerButton={true}
           />
         </div>
+          {/* form for edit item */}
+          <StockFormDialog
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            onSave={async (changes) => {
+              if (!editingItem?.id) return
+              const { data, error } = await updateProfileStock(editingItem.id, changes)
+              if (error) {
+                setError(error.message ?? String(error))
+                return
+              }
+              if (data) {
+                setStock(stock.map(item => item.id === editingItem.id ? data : item))
+              }
+              setIsEditDialogOpen(false)
+            }}
+            materialType={materialType}
+            editItem={editingItem}
+            triggerButton={false}
+          />
       </div>
 
       { /* stats */}
@@ -127,7 +158,7 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
       ) : (
         <StockTable
           filteredStock={filteredStock}
-          onEdit={(id) => {/* implement edit logic */}}
+          onEdit={handleEdit}
           onDelete={async (id) => {
             const { error } = await deleteProfileStock(id)
             if (error) {

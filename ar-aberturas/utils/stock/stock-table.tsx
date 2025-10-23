@@ -27,6 +27,9 @@ export function StockTable({ filteredStock, onEdit, onDelete }: StockTableProps)
                 Tipo
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Color
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Cantidad
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -75,6 +78,13 @@ export function StockTable({ filteredStock, onEdit, onDelete }: StockTableProps)
                       <div className="flex items-center gap-3">
                         <div>
                           <p className="text-sm font-medium text-foreground">{item.type || 'N/A'}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{item.color || 'N/A'}</p>
                         </div>
                       </div>
                     </td>

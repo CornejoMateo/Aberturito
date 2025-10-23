@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
-import { categories } from "@/constants/categories"
+import { categories } from "@/constants/stock-constants"
 
 interface StockFiltersProps {
   searchTerm: string
@@ -23,22 +23,22 @@ export function StockFilters({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Buscar productos..."
+            placeholder="Buscar por categoría, tipo, línea o color..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 bg-background"
           />
         </div>
         <div className="flex gap-2 overflow-x-auto">
-          {categories.map((category) => (
+          {categories.map((categoria) => (
             <Button
-              key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
+              key={categoria}
+              variant={selectedCategory === categoria ? "default" : "outline"}
               size="sm"
-              onClick={() => setSelectedCategory(category)}
+              onClick={() => setSelectedCategory(categoria)}
               className="whitespace-nowrap"
             >
-              {category}
+              {categoria}
             </Button>
           ))}
         </div>

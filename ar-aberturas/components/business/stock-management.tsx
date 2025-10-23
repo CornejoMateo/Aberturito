@@ -1,128 +1,141 @@
 "use client"
 
-import { useState } from "react"
-import { categories } from "@/constants/categories"
-import { StockAddDialog } from "../../utils/stock/stock-add-dialog"
+import { useEffect, useState } from "react"
+import { StockFormDialog } from "../../utils/stock/stock-add-dialog"
 import { StockStats } from "../../utils/stock/stock-stats"
 import { StockLowAlert } from "../../utils/stock/stock-low-alert"
 import { StockFilters } from "../../utils/stock/stock-filters"
 import { StockTable } from "../../utils/stock/stock-table"
+import { listStock, createProfileStock, deleteProfileStock, type ProfileItemStock, updateProfileStock } from "@/lib/stock"
 
-type StockItem = {
-  id: string
-  name: string
-  category: string
-  quantity: number
-  unit: string
-  minStock: number
-  location: string
-  lastUpdate: string
+interface StockManagementProps {
+  materialType?: "Aluminio" | "PVC"
 }
 
-
-// Esto se deberia borrar y hacer una funcion en db.ts para traer la lista de stock
-const initialStock: StockItem[] = [
-  {
-    id: "1",
-    name: "Perfil de Aluminio 6m",
-    category: "Perfiles",
-    quantity: 145,
-    unit: "unidades",
-    minStock: 50,
-    location: "Depósito A",
-    lastUpdate: "2025-03-10",
-  },
-  {
-    id: "2",
-    name: "Vidrio 4mm Transparente",
-    category: "Vidrios",
-    quantity: 28,
-    unit: "m²",
-    minStock: 30,
-    location: "Depósito B",
-    lastUpdate: "2025-03-09",
-  },
-  {
-    id: "3",
-    name: "Silicona Transparente",
-    category: "Accesorios",
-    quantity: 5,
-    unit: "tubos",
-    minStock: 20,
-    location: "Depósito C",
-    lastUpdate: "2025-03-08",
-  },
-  {
-    id: "4",
-    name: "Manijas Cromadas",
-    category: "Herrajes",
-    quantity: 89,
-    unit: "unidades",
-    minStock: 30,
-    location: "Depósito A",
-    lastUpdate: "2025-03-10",
-  },
-  {
-    id: "5",
-    name: "Tornillos Autoperforantes",
-    category: "Herrajes",
-    quantity: 450,
-    unit: "unidades",
-    minStock: 200,
-    location: "Depósito C",
-    lastUpdate: "2025-03-09",
-  },
-  {
-    id: "6",
-    name: "Burletes de Goma",
-    category: "Accesorios",
-    quantity: 120,
-    unit: "metros",
-    minStock: 50,
-    location: "Depósito B",
-    lastUpdate: "2025-03-10",
-  },
-]
-
-export function StockManagement() {
-  const [stock, setStock] = useState<StockItem[]>(initialStock)
+export function StockManagement({ materialType = "Aluminio" }: StockManagementProps) {
+  const [stock, setStock] = useState<ProfileItemStock[]>([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("Todos")
+  const [selectedCategory, setSelectedCategory] = useState("Perfiles")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<ProfileItemStock | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    const load = async () => {
+      setLoading(true)
+      const { data, error } = await listStock()
+      if (!mounted) return
+      if (error) {
+        setError(error.message ?? String(error))
+      } else if (data) {
+        setStock(data ?? [])
+      }
+      setLoading(false)
+    }
+    load()
+    return () => { mounted = false }
+  }, [])
 
   const filteredStock = stock.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === "Todos" || item.category === selectedCategory
-    return matchesSearch && matchesCategory
+    const matchesSearch = (item.category?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                         (item.type?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                         (item.line?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                         (item.color?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    const matchesCategory = selectedCategory === "Perfiles" || item.category === selectedCategory
+    const matchesMaterial = !materialType || item.material?.toLowerCase() === materialType.toLowerCase()
+    return matchesSearch && matchesCategory && matchesMaterial
   })
 
-  const lowStockItems = stock.filter((item) => item.quantity < item.minStock)
-  const totalItems = stock.reduce((sum, item) => sum + item.quantity, 0)
+  const lowStockItems = stock.filter((item) => (item.quantity ?? 0) < 10)
+  const totalItems = stock.reduce((sum, item) => sum + (item.quantity ?? 0), 0)
+
+  // Dinamic titles based on material type
+  const getTitle = () => {
+    switch (materialType) {
+      case "Aluminio":
+        return "Stock de Aluminio"
+      case "PVC":
+        return "Stock de PVC"
+      default:
+        return "Gestión de Stock"
+    }
+  }
+
+  const getDescription = () => {
+    switch (materialType) {
+      case "Aluminio":
+        return "Control de inventario de productos de aluminio"
+      case "PVC":
+        return "Control de inventario de productos de PVC"
+      default:
+        return "Control de inventario y materiales"
+    }
+  }
+
+  const handleEdit = (id: string) => {
+    const item = stock.find(s => s.id === id)
+    if (item) {
+      setEditingItem(item)
+      setIsEditDialogOpen(true)
+    }
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground text-balance">Gestión de Stock</h2>
-          <p className="text-muted-foreground mt-1">Control de inventario y materiales</p>
+          <h2 className="text-2xl font-bold text-foreground text-balance">{getTitle()}</h2>
+          <p className="text-muted-foreground mt-1">{getDescription()}</p>
         </div>
         {/* form for new item */}
         <div className="flex gap-2">
-          <StockAddDialog
+          <StockFormDialog
             open={isAddDialogOpen}
             onOpenChange={setIsAddDialogOpen}
-            onSave={(newItem) => {
-              setStock([...stock, { ...newItem, id: Date.now().toString() }])
+            onSave={async (newItem) => {
+              const { data, error } = await createProfileStock(newItem)
+              if (error) {
+                setError(error.message ?? String(error))
+                return
+              }
+              if (data) {
+                setStock((s) => [data, ...s])
+              }
               setIsAddDialogOpen(false)
             }}
+            materialType={materialType}
+            triggerButton={true}
           />
         </div>
+          {/* form for edit item */}
+          <StockFormDialog
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            onSave={async (changes) => {
+              if (!editingItem?.id) return
+              const { data, error } = await updateProfileStock(editingItem.id, changes)
+              if (error) {
+                setError(error.message ?? String(error))
+                return
+              }
+              if (data) {
+                setStock(stock.map(item => item.id === editingItem.id ? data : item))
+              }
+              setIsEditDialogOpen(false)
+            }}
+            materialType={materialType}
+            editItem={editingItem}
+            triggerButton={false}
+          />
       </div>
 
       { /* stats */}
       <StockStats 
         totalItems={totalItems}
-        categoriesCount={categories.length - 1}
+        categoriesCount={5}
         lowStockCount={lowStockItems.length}
       />
 
@@ -138,13 +151,26 @@ export function StockManagement() {
       />
 
       { /* main table */}
-      <StockTable
-        filteredStock={filteredStock}
-        onEdit={(id) => {/* implement edit logic */}}
-        onDelete={(id) => setStock(stock.filter(item => item.id !== id))}
-      />
+      {loading ? (
+        <p>Cargando stock...</p>
+      ) : error ? (
+        <p className="text-destructive">Error: {error}</p>
+      ) : (
+        <StockTable
+          filteredStock={filteredStock}
+          onEdit={handleEdit}
+          onDelete={async (id) => {
+            const { error } = await deleteProfileStock(id)
+            if (error) {
+              setError(error.message ?? String(error))
+              return
+            }
+            setStock((s) => s.filter(item => item.id !== id))
+          }}
+        />
+      )}
     </div>
   )
 }
 
-export type { StockItem }
+export type { ProfileItemStock }

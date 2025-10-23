@@ -6,6 +6,6 @@ export const lines = ["Linea modena", "Linea modena 2"]
 
 export const colors = ["Blanco alvar", "Blanco exa", "Negro alvar", "Negro exa"]
 
-export const status = ["Nuevo", "Con detalles", "Dañado"] as const
+export const status = ["Bien", "Medio", "Malo"] as const
 
 export const sites = ["Depósito A", "Depósito B", "Depósito C"]

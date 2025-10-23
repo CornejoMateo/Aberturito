@@ -31,7 +31,7 @@ export function StockAddDialog({ open, onOpenChange, onSave, materialType = "Alu
   const [type, setType] = useState("")
   const [line, setLine] = useState("")
   const [color, setColor] = useState("")
-  const [itemStatus, setItemStatus] = useState<"Nuevo" | "Con detalles" | "Dañado">("Nuevo")
+  const [itemStatus, setItemStatus] = useState("")
   const [quantity, setQuantity] = useState(0)
   const [site, setSite] = useState("")
   const [width, setWidth] = useState(0)
@@ -40,8 +40,9 @@ export function StockAddDialog({ open, onOpenChange, onSave, materialType = "Alu
   const [categoriesOptions, setCategoriesOptions] = useState(categories)
   const [typesOptions, setTypesOptions] = useState(types)
   const [linesOptions, setLinesOptions] = useState(lines)
-  const [coloresOptions, setColoresOptions] = useState(colors)
-  const [ubicacionesOptions, setUbicacionesOptions] = useState(sites)
+  const [colorsOptions, setColorsOptions] = useState(colors)
+  const [sitesOptions, setSitesOptions] = useState(sites)
+  const [statusOptions, setStatusOptions] = useState<string[]>([...status])
 
   const handleAddItem = () => {
     // Validar campos obligatorios
@@ -124,21 +125,21 @@ export function StockAddDialog({ open, onOpenChange, onSave, materialType = "Alu
             label="Color"
             value={color}
             onValueChange={setColor}
-            options={coloresOptions}
-            onAddOption={(newOption) => setColoresOptions([...coloresOptions, newOption])}
+            options={colorsOptions}
+            onAddOption={(newOption) => setColorsOptions([...colorsOptions, newOption])}
             placeholder="Seleccionar color"
           />
 
-          <div className="grid gap-2 mb-2">
+          <div className="grid gap-2">
             <Label htmlFor="estado" className="text-foreground">
               Estado
             </Label>
-            <Select value={itemStatus} onValueChange={(value: "Nuevo" | "Con detalles" | "Dañado") => setItemStatus(value)}>
+            <Select value={itemStatus} onValueChange={setItemStatus}>
               <SelectTrigger className="bg-background w-full">
                 <SelectValue placeholder="Seleccionar estado" />
               </SelectTrigger>
-              <SelectContent className="max-h-[200px] overflow-y-auto">
-                {status.map((est) => (
+              <SelectContent>
+                {statusOptions.map((est) => (
                   <SelectItem key={est} value={est}>
                     {est}
                   </SelectItem>
@@ -166,8 +167,8 @@ export function StockAddDialog({ open, onOpenChange, onSave, materialType = "Alu
             label="Ubicación"
             value={site}
             onValueChange={setSite}
-            options={ubicacionesOptions}
-            onAddOption={(newOption) => setUbicacionesOptions([...ubicacionesOptions, newOption])}
+            options={sitesOptions}
+            onAddOption={(newOption) => setSitesOptions([...sitesOptions, newOption])}
             placeholder="Seleccionar ubicación"
           />
 

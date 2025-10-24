@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { StockFormDialog } from "../../utils/stock/stock-add-dialog"
 import { StockStats } from "../../utils/stock/stock-stats"
-import { StockLowAlert } from "../../utils/stock/stock-low-alert"
 import { StockFilters } from "../../utils/stock/stock-filters"
 import { StockTable } from "../../utils/stock/stock-table"
 import { listStock, createProfileStock, deleteProfileStock, type ProfileItemStock, updateProfileStock } from "@/lib/stock"
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 
 interface StockManagementProps {
   materialType?: "Aluminio" | "PVC"
@@ -21,6 +21,8 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
   const [editingItem, setEditingItem] = useState<ProfileItemStock | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   useEffect(() => {
     let mounted = true
@@ -39,15 +41,33 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
     return () => { mounted = false }
   }, [])
 
-  const filteredStock = stock.filter((item) => {
-    const matchesSearch = (item.category?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-                         (item.type?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-                         (item.line?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-                         (item.color?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === "Perfiles" || item.category === selectedCategory
-    const matchesMaterial = !materialType || item.material?.toLowerCase() === materialType.toLowerCase()
-    return matchesSearch && matchesCategory && matchesMaterial
-  })
+  const filteredStock = useMemo(() => {
+    return stock.filter((item) => {
+      const searchLower = searchTerm.toLowerCase()
+      const matchesSearch = (item.category?.toLowerCase() || '').includes(searchLower) ||
+                          (item.type?.toLowerCase() || '').includes(searchLower) ||
+                          (item.line?.toLowerCase() || '').includes(searchLower) ||
+                          (item.color?.toLowerCase() || '').includes(searchLower) ||
+                          (item.site?.toLowerCase() || '').includes(searchLower)
+      const matchesCategory = selectedCategory === "Perfiles" || item.category === selectedCategory
+      const matchesMaterial = !materialType || item.material?.toLowerCase() === materialType.toLowerCase()
+      return matchesSearch && matchesCategory && matchesMaterial
+    })
+  }, [stock, searchTerm, selectedCategory, materialType])
+
+  // Calcular el total de páginas
+  const totalPages = Math.ceil(filteredStock.length / itemsPerPage)
+  
+  // Obtener los elementos de la página actual
+  const currentItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    return filteredStock.slice(startIndex, startIndex + itemsPerPage)
+  }, [filteredStock, currentPage, itemsPerPage])
+
+  // Resetear a la primera página cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, selectedCategory, materialType])
 
   const lowStockItems = stock.filter((item) => (item.quantity ?? 0) < 10)
   const totalItems = stock.reduce((sum, item) => sum + (item.quantity ?? 0), 0)
@@ -144,9 +164,6 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
           lastAddedItem={lastAddedItem}
         />
 
-      { /* stock alert */}
-      <StockLowAlert lowStockItems={lowStockItems} />
-
       { /* filters */}
       <StockFilters
         searchTerm={searchTerm}
@@ -161,30 +178,86 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
       ) : error ? (
         <p className="text-destructive">Error: {error}</p>
       ) : (
-        <StockTable
-          filteredStock={filteredStock}
-          onEdit={handleEdit}
-          onDelete={async (id) => {
-            const { error } = await deleteProfileStock(id)
-            if (error) {
-              setError(error.message ?? String(error))
-              return
-            }
-            setStock((s) => s.filter(item => item.id !== id))
-          }}
-          onUpdateQuantity={async (id, newQuantity) => {
-            if (newQuantity < 0) return; // Prevent negative quantities
-            
-            const { data, error } = await updateProfileStock(id, { quantity: newQuantity })
-            if (error) {
-              setError(error.message ?? 'Error al actualizar la cantidad')
-              throw error // This will be caught by the StockTable
-            }
-            if (data) {
-              setStock(stock.map(item => item.id === id ? { ...item, quantity: newQuantity } : item))
-            }
-          }}
-        />
+        <>
+          <StockTable
+            filteredStock={currentItems}
+            onEdit={handleEdit}
+            onDelete={async (id) => {
+              const { error } = await deleteProfileStock(id)
+              if (error) {
+                setError(error.message ?? String(error))
+                return
+              }
+              setStock((s) => s.filter(item => item.id !== id))
+            }}
+            onUpdateQuantity={async (id, newQuantity) => {
+              if (newQuantity < 0) return; // Prevent negative quantities
+              
+              const { data, error } = await updateProfileStock(id, { quantity: newQuantity })
+              if (error) {
+                setError(error.message ?? 'Error al actualizar la cantidad')
+                throw error // This will be caught by the StockTable
+              }
+              if (data) {
+                setStock(stock.map(item => item.id === id ? { ...item, quantity: newQuantity } : item))
+              }
+            }}
+          />
+          
+          {filteredStock.length > itemsPerPage && (
+            <div className="flex items-center justify-between px-2 mt-4">
+              <div className="text-sm text-muted-foreground">
+                Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, filteredStock.length)}-{
+                  Math.min(currentPage * itemsPerPage, filteredStock.length)
+                } de {filteredStock.length} elementos
+              </div>
+              
+              <Pagination className="mx-0 w-auto">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    // Mostrar páginas alrededor de la actual
+                    let pageNum = i + 1;
+                    if (totalPages > 5) {
+                      if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                    }
+                    
+                    return (
+                      <PaginationItem key={pageNum}>
+                        <PaginationLink 
+                          isActive={currentPage === pageNum}
+                          className="cursor-pointer"
+                          onClick={() => setCurrentPage(pageNum)}
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

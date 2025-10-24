@@ -40,10 +40,12 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
   }, [])
 
   const filteredStock = stock.filter((item) => {
-    const matchesSearch = (item.category?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-                         (item.type?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-                         (item.line?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-                         (item.color?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    const searchLower = searchTerm.toLowerCase()
+    const matchesSearch = (item.category?.toLowerCase() || '').includes(searchLower) ||
+                         (item.type?.toLowerCase() || '').includes(searchLower) ||
+                         (item.line?.toLowerCase() || '').includes(searchLower) ||
+                         (item.color?.toLowerCase() || '').includes(searchLower) ||
+                         (item.site?.toLowerCase() || '').includes(searchLower)
     const matchesCategory = selectedCategory === "Perfiles" || item.category === selectedCategory
     const matchesMaterial = !materialType || item.material?.toLowerCase() === materialType.toLowerCase()
     return matchesSearch && matchesCategory && matchesMaterial

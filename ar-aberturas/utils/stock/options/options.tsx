@@ -16,8 +16,9 @@ import { Plus } from "lucide-react"
 import { OptionLineDialog } from "./option-line-add"
 import { OptionColorDialog } from "./option-color-add"
 import { OptionTypeDialog } from "./option-type-add"
+import { OptionSiteDialog } from "./option-site-add"
 
-import { listOptions, type LineOption, TypeOption, ColorOption } from "@/lib/stock_options" // funciones de DB
+import { listOptions, type LineOption, TypeOption, ColorOption, SiteOption } from "@/lib/stock_options" // funciones de DB
 
 interface OptionsModalProps {
   open: boolean
@@ -30,11 +31,13 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
     const [isAddLineOpen, setIsAddLineOpen] = useState(false)
     const [isAddColorOpen, setIsAddColorOpen] = useState(false)
     const [isAddTypeOpen, setIsAddTypeOpen] = useState(false)
+    const [isAddSiteOpen, setIsAddSiteOpen] = useState(false)
 
     // Estados para las tablas
     const [lines, setLines] = useState<LineOption[]>([])
     const [types, setTypes] = useState<TypeOption[]>([])
     const [colors, setColors] = useState<ColorOption[]>([])
+    const [sites, setSites] = useState<SiteOption[]>([])
 
     // Cargar datos al abrir el modal
     useEffect(() => {
@@ -47,16 +50,19 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
     const [
         { data: linesData },
         { data: colorsData },
-        { data: typesData }
+        { data: typesData },
+        { data: sitesData}
     ] = await Promise.all([
         listOptions("lines"),
         listOptions("colors"),
-        listOptions("types")
+        listOptions("types"),
+        listOptions("sites")
     ])
 
     setLines((linesData ?? []) as LineOption[])
     setColors((colorsData ?? []) as ColorOption[])
     setTypes((typesData ?? []) as TypeOption[])
+    setSites((types ?? []) as SiteOption[])
     }
 
     return (
@@ -64,7 +70,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
         <DialogContent className="bg-card max-h-[90vh] flex flex-col">
             <DialogHeader>
             <DialogTitle>Administrar opciones</DialogTitle>
-            <DialogDescription>Gestione colores, líneas y tipos</DialogDescription>
+            <DialogDescription>Gestione colores, líneas, tipos y ubicaciones</DialogDescription>
             </DialogHeader>
 
             <div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2 grid gap-6">
@@ -148,6 +154,32 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
                         <tr key={color.id} className="border-b">
                             <td className="p-1">{color.name_color}</td>
                             <td className="p-1">{color.line_name}</td>
+                        </tr>
+                        ))}
+                    </tbody>
+                    </table>
+                </div>
+                {/* Table sites */}
+                <div className="flex flex-col border p-2 rounded">
+                    <div className="flex justify-between items-center mb-2">
+                    <span className="font-semibold">Ubicaciones</span>
+                    <OptionSiteDialog
+                        open={isAddSiteOpen}
+                        onOpenChange={setIsAddSiteOpen}
+                        onSave={(newSite) => setSites((prev) => [newSite, ...prev])}
+                        triggerButton={true}
+                    />
+                    </div>
+                    <table className="table-auto w-full border-collapse">
+                    <thead>
+                        <tr className="border-b">
+                            <th className="text-left p-1">Nombre</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {sites.map((site) => (
+                        <tr key={site.id} className="border-b">
+                            <td className="p-1">{site.name_site}</td>
                         </tr>
                         ))}
                     </tbody>

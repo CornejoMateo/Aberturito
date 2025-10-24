@@ -14,10 +14,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DynamicSelect } from "./dynamic-select"
 import { type ProfileItemStock } from "@/lib/stock"
-import { types, colors, status, sites, categories } from "@/constants/stock-constants"
-import { listOptions, LineOption, TypeOption, ColorOption } from "@/lib/stock_options"
+import { status, categories } from "@/constants/stock-constants"
+import { listOptions, LineOption, TypeOption, ColorOption, SiteOption } from "@/lib/stock_options"
 import { useState, useEffect } from "react"
 
 interface StockFormDialogProps {
@@ -53,7 +52,7 @@ export function StockFormDialog({
   const [typesOptions, setTypesOptions] = useState<TypeOption[]>([])
   const [linesOptions, setLinesOptions] = useState<LineOption[]>([])
   const [colorsOptions, setColorsOptions] = useState<ColorOption[]>([])
-  const [sitesOptions, setSitesOptions] = useState(sites)
+  const [sitesOptions, setSitesOptions] = useState<SiteOption[]>([])
   const [statusOptions, setStatusOptions] = useState<string[]>([...status])
 
   // get options from DB
@@ -67,6 +66,9 @@ export function StockFormDialog({
 
       const { data: colorsData } = await listOptions('colors')
       setColorsOptions(((colorsData ?? []) as ColorOption[]))
+
+      const { data: sitesData } = await listOptions('sites')
+      setSitesOptions(((sitesData ?? []) as SiteOption[]))
     }
     fetchOptions()
   }, [])
@@ -259,14 +261,24 @@ export function StockFormDialog({
               />
             </div>
 
-            <DynamicSelect
-              label="Ubicación"
-              value={site}
-              onValueChange={setSite}
-              options={sitesOptions}
-              onAddOption={(newOption) => setSitesOptions([...sitesOptions, newOption])}
-              placeholder="Seleccionar ubicación"
-            />
+            
+            <div className="grid gap-2">
+              <Label htmlFor="site" className="text-foreground">
+                Ubicación
+              </Label>
+              <Select value={site} onValueChange={setSite}>
+                <SelectTrigger className="bg-background w-full">
+                  <SelectValue placeholder="Seleccionar ubicación" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sitesOptions.map(s => (
+                    <SelectItem key={s.id} value={s.name_site ?? ""}>
+                      {s.name_site}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="grid gap-2">
               <Label htmlFor="largo" className="text-foreground">

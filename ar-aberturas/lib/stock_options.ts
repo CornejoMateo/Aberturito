@@ -21,6 +21,13 @@ export type TypeOption = {
     line_name?: string | null
 }
 
+export type SiteOption = {
+    id?: number
+    name_site?: string | null
+    created_at?: string | null
+}
+
+
 export async function listOptions<T>(table: string): Promise<{ data: T[] | null; error: any }> {
   const supabase = getSupabaseClient()
   const { data, error } = await supabase.from(table).select('*').order('created_at', { ascending: false })

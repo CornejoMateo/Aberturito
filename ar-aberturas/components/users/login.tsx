@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/components/provider/auth-provider'
-import { FaWindowMaximize, FaUser, FaLock } from 'react-icons/fa'
+import { FaUser, FaLock } from 'react-icons/fa'
+import Image from "next/image";
 
 export default function LoginPage() {
   const { signIn, user, loading } = useAuth()
@@ -41,12 +42,8 @@ export default function LoginPage() {
         
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-blue-600/20 rounded-full">
-              <FaWindowMaximize className="w-10 h-10 text-blue-400" />
-            </div>
-          </div>
           <h1 className="text-3xl font-bold text-white">AR Aberturas</h1>
+          <h3 className="text-lg text-gray-300 mt-2">Iniciar sesión</h3>
         </div>
         
         {/* Login Form */}

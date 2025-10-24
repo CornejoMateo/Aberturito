@@ -51,6 +51,11 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
 
   const lowStockItems = stock.filter((item) => (item.quantity ?? 0) < 10)
   const totalItems = stock.reduce((sum, item) => sum + (item.quantity ?? 0), 0)
+  
+  // Obtener el último ítem agregado
+  const lastAddedItem = [...stock].sort((a, b) => 
+    new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+  )[0]
 
   // Dinamic titles based on material type
   const getTitle = () => {
@@ -133,11 +138,11 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
       </div>
 
       { /* stats */}
-      <StockStats 
-        totalItems={totalItems}
-        categoriesCount={5}
-        lowStockCount={lowStockItems.length}
-      />
+        <StockStats 
+          totalItems={totalItems}
+          lowStockCount={lowStockItems.length}
+          lastAddedItem={lastAddedItem}
+        />
 
       { /* stock alert */}
       <StockLowAlert lowStockItems={lowStockItems} />
@@ -166,6 +171,18 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
               return
             }
             setStock((s) => s.filter(item => item.id !== id))
+          }}
+          onUpdateQuantity={async (id, newQuantity) => {
+            if (newQuantity < 0) return; // Prevent negative quantities
+            
+            const { data, error } = await updateProfileStock(id, { quantity: newQuantity })
+            if (error) {
+              setError(error.message ?? 'Error al actualizar la cantidad')
+              throw error // This will be caught by the StockTable
+            }
+            if (data) {
+              setStock(stock.map(item => item.id === id ? { ...item, quantity: newQuantity } : item))
+            }
           }}
         />
       )}

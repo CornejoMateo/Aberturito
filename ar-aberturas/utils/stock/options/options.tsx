@@ -62,7 +62,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
     setLines((linesData ?? []) as LineOption[])
     setColors((colorsData ?? []) as ColorOption[])
     setTypes((typesData ?? []) as TypeOption[])
-    setSites((types ?? []) as SiteOption[])
+    setSites((sitesData ?? []) as SiteOption[])
     }
 
     return (

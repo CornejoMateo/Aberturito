@@ -16,7 +16,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DynamicSelect } from "./dynamic-select"
 import { type ProfileItemStock } from "@/lib/stock"
-import { types, lines, colors, status, sites, categories } from "@/constants/stock-constants"
+import { types, colors, status, sites, categories } from "@/constants/stock-constants"
+import { listOptions, LineOption, TypeOption, ColorOption } from "@/lib/stock_options"
 import { useState, useEffect } from "react"
 
 interface StockFormDialogProps {
@@ -49,11 +50,26 @@ export function StockFormDialog({
 
   // Status and options for selects
   const [categoriesOptions, setCategoriesOptions] = useState(categories)
-  const [typesOptions, setTypesOptions] = useState(types)
-  const [linesOptions, setLinesOptions] = useState(lines)
-  const [colorsOptions, setColorsOptions] = useState(colors)
+  const [typesOptions, setTypesOptions] = useState<TypeOption[]>([])
+  const [linesOptions, setLinesOptions] = useState<LineOption[]>([])
+  const [colorsOptions, setColorsOptions] = useState<ColorOption[]>([])
   const [sitesOptions, setSitesOptions] = useState(sites)
   const [statusOptions, setStatusOptions] = useState<string[]>([...status])
+
+  // get options from DB
+  useEffect(() => {
+    async function fetchOptions() {
+      const { data: linesData } = await listOptions('lines')
+      setLinesOptions((linesData ?? []) as LineOption[])
+
+      const { data: typesData } = await listOptions('types')
+      setTypesOptions(((typesData ?? []) as TypeOption[]))
+
+      const { data: colorsData } = await listOptions('colors')
+      setColorsOptions(((colorsData ?? []) as ColorOption[]))
+    }
+    fetchOptions()
+  }, [])
 
   // Loading data into form when editItem changes
   useEffect(() => {
@@ -132,41 +148,83 @@ export function StockFormDialog({
         </DialogHeader>
         <div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2">
           <div className="grid gap-4">
-            <DynamicSelect
-              label="Categoría"
-              value={category}
-              onValueChange={setCategory}
-              options={categoriesOptions}
-              onAddOption={(newOption) => setCategoriesOptions([...categoriesOptions, newOption])}
-              placeholder="Seleccionar categoría"
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="category" className="text-foreground">
+                Categoria
+              </Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="bg-background w-full">
+                  <SelectValue placeholder="Seleccionar categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoriesOptions.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <DynamicSelect
-              label="Línea"
-              value={line}
-              onValueChange={setLine}
-              options={linesOptions}
-              onAddOption={(newOption) => setLinesOptions([...linesOptions, newOption])}
-              placeholder="Seleccionar línea"
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="line" className="text-foreground">
+                Línea
+              </Label>
+              <Select value={line} onValueChange={setLine}>
+                <SelectTrigger className="bg-background w-full">
+                  <SelectValue placeholder="Seleccionar línea" />
+                </SelectTrigger>
+                <SelectContent>
+                  {linesOptions
+                  .filter(l => l.opening === materialType)
+                  .map(l => (
+                    <SelectItem key={l.id} value={l.name_line ?? ""}>
+                      {l.name_line}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <DynamicSelect
-              label="Tipo"
-              value={type}
-              onValueChange={setType}
-              options={typesOptions}
-              onAddOption={(newOption) => setTypesOptions([...typesOptions, newOption])}
-              placeholder="Seleccionar tipo"
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="type" className="text-foreground">
+                Tipo
+              </Label>
+              <Select value={type} onValueChange={setType}>
+                <SelectTrigger className="bg-background w-full">
+                  <SelectValue placeholder="Seleccionar tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {typesOptions
+                  .filter(t => t.line_name === line)
+                  .map(t => (
+                    <SelectItem key={t.id} value={t.name_type ?? ""}>
+                      {t.name_type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <DynamicSelect
-              label="Color"
-              value={color}
-              onValueChange={setColor}
-              options={colorsOptions}
-              onAddOption={(newOption) => setColorsOptions([...colorsOptions, newOption])}
-              placeholder="Seleccionar color"
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="color" className="text-foreground">
+                Color
+              </Label>
+              <Select value={color} onValueChange={setColor}>
+                <SelectTrigger className="bg-background w-full">
+                  <SelectValue placeholder="Seleccionar color" />
+                </SelectTrigger>
+                <SelectContent>
+                  {colorsOptions
+                  .filter(c => c.line_name === line)
+                  .map(c => (
+                    <SelectItem key={c.id} value={c.name_color ?? ""}>
+                      {c.name_color}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="grid gap-2">
               <Label htmlFor="estado" className="text-foreground">

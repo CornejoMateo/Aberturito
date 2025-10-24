@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { StockFormDialog } from "../../utils/stock/stock-add-dialog"
 import { StockStats } from "../../utils/stock/stock-stats"
-import { StockLowAlert } from "../../utils/stock/stock-low-alert"
 import { StockFilters } from "../../utils/stock/stock-filters"
 import { StockTable } from "../../utils/stock/stock-table"
 import { listStock, createProfileStock, deleteProfileStock, type ProfileItemStock, updateProfileStock } from "@/lib/stock"
@@ -42,10 +41,10 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
   const filteredStock = stock.filter((item) => {
     const searchLower = searchTerm.toLowerCase()
     const matchesSearch = (item.category?.toLowerCase() || '').includes(searchLower) ||
-                         (item.type?.toLowerCase() || '').includes(searchLower) ||
-                         (item.line?.toLowerCase() || '').includes(searchLower) ||
-                         (item.color?.toLowerCase() || '').includes(searchLower) ||
-                         (item.site?.toLowerCase() || '').includes(searchLower)
+                          (item.type?.toLowerCase() || '').includes(searchLower) ||
+                          (item.line?.toLowerCase() || '').includes(searchLower) ||
+                          (item.color?.toLowerCase() || '').includes(searchLower) ||
+                          (item.site?.toLowerCase() || '').includes(searchLower)
     const matchesCategory = selectedCategory === "Perfiles" || item.category === selectedCategory
     const matchesMaterial = !materialType || item.material?.toLowerCase() === materialType.toLowerCase()
     return matchesSearch && matchesCategory && matchesMaterial
@@ -145,9 +144,6 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
           lowStockCount={lowStockItems.length}
           lastAddedItem={lastAddedItem}
         />
-
-      { /* stock alert */}
-      <StockLowAlert lowStockItems={lowStockItems} />
 
       { /* filters */}
       <StockFilters

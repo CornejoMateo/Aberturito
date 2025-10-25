@@ -48,13 +48,6 @@ export async function createOption<T>(table: string, item: Partial<T>): Promise<
     return { data, error }
 }
 
-export async function updateOption<T>(table: string, id: number, changes: Partial<T>): Promise<{ data: T | null; error: any }> {
-  const supabase = getSupabaseClient()
-  const payload = { ...changes }
-  const { data, error } = await supabase.from(table).update(payload).eq('id', id).select().single()
-  return { data, error }
-}
-
 export async function deleteOption(table: string, id: number): Promise<{ data: null; error: any }> {
   const supabase = getSupabaseClient()
   const { data, error } = await supabase.from(table).delete().eq('id', id)

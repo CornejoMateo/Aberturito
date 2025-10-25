@@ -3,6 +3,14 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogCancel,
+    AlertDialogAction
+} from "@/components/ui/alert-dialog"
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -11,14 +19,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Plus } from "lucide-react"
+import { Plus, Trash2 } from "lucide-react"
 
 import { OptionLineDialog } from "./option-line-add"
 import { OptionColorDialog } from "./option-color-add"
 import { OptionTypeDialog } from "./option-type-add"
 import { OptionSiteDialog } from "./option-site-add"
 
-import { listOptions, type LineOption, TypeOption, ColorOption, SiteOption } from "@/lib/stock_options" // funciones de DB
+import { deleteOption } from "@/lib/stock_options"
+import { listOptions, type LineOption, TypeOption, ColorOption, SiteOption } from "@/lib/stock_options"
 
 interface OptionsModalProps {
   open: boolean
@@ -39,7 +48,18 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
     const [colors, setColors] = useState<ColorOption[]>([])
     const [sites, setSites] = useState<SiteOption[]>([])
 
-    // Cargar datos al abrir el modal
+    // AlertDialog for delete option
+    const [deleteDialog, setDeleteDialog] = useState<{ open: boolean, table: string, id: number | string | undefined, label: string }>({ open: false, table: '', id: undefined, label: '' })
+
+    const handleDeleteOption = async (table: string, id: number | string | undefined) => {
+        if (id == null) return
+        await deleteOption(table, Number(id))
+        if (table === "lines") setLines((prev) => prev.filter((l) => l.id !== id))
+        else if (table === "types") setTypes((prev) => prev.filter((t) => t.id !== id))
+        else if (table === "colors") setColors((prev) => prev.filter((c) => c.id !== id))
+        else if (table === "sites") setSites((prev) => prev.filter((s) => s.id !== id))
+    }
+    
     useEffect(() => {
         if (open) {
             loadData()
@@ -91,6 +111,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
                         <tr className="border-b">
                         <th className="text-left p-1">Nombre</th>
                         <th className="text-left p-1">Abertura</th>
+                        <th className="text-left p-1">Eliminar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -98,6 +119,11 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
                         <tr key={line.id} className="border-b">
                             <td className="p-1">{line.name_line}</td>
                             <td className="p-1">{line.opening}</td>
+                            <td className="p-1">
+                                <Button variant="ghost" size="icon" onClick={() => setDeleteDialog({ open: true, table: 'lines', id: line.id, label: line.name_line ?? '' })}>
+                                    <Trash2 className="w-4 h-4 text-destructive" />
+                                </Button>
+                            </td>
                         </tr>
                         ))}
                     </tbody>
@@ -119,6 +145,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
                         <tr className="border-b">
                         <th className="text-left p-1">Nombre</th>
                         <th className="text-left p-1">Linea</th>
+                        <th className="text-left p-1">Eliminar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -126,6 +153,11 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
                         <tr key={type.id} className="border-b">
                             <td className="p-1">{type.name_type}</td>
                             <td className="p-1">{type.line_name}</td>
+                            <td className="p-1">
+                                <Button variant="ghost" size="icon" onClick={() => setDeleteDialog({ open: true, table: 'types', id: type.id, label: type.name_type ?? '' })}>
+                                    <Trash2 className="w-4 h-4 text-destructive" />
+                                </Button>
+                            </td>
                         </tr>
                         ))}
                     </tbody>
@@ -147,6 +179,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
                         <tr className="border-b">
                         <th className="text-left p-1">Nombre</th>
                         <th className="text-left p-1">Linea</th>
+                        <th className="text-left p-1">Eliminar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -154,6 +187,11 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
                         <tr key={color.id} className="border-b">
                             <td className="p-1">{color.name_color}</td>
                             <td className="p-1">{color.line_name}</td>
+                            <td className="p-1">
+                                <Button variant="ghost" size="icon" onClick={() => setDeleteDialog({ open: true, table: 'colors', id: color.id, label: color.name_color ?? '' })}>
+                                    <Trash2 className="w-4 h-4 text-destructive" />
+                                </Button>
+                            </td>
                         </tr>
                         ))}
                     </tbody>
@@ -174,18 +212,46 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
                     <thead>
                         <tr className="border-b">
                             <th className="text-left p-1">Nombre</th>
+                            <th className="text-left p-1">Eliminar</th>
                         </tr>
                     </thead>
                     <tbody>
                         {sites.map((site) => (
                         <tr key={site.id} className="border-b">
                             <td className="p-1">{site.name_site}</td>
+                            <td className="p-1">
+                                <Button variant="ghost" size="icon" onClick={() => setDeleteDialog({ open: true, table: 'sites', id: site.id, label: site.name_site ?? '' })}>
+                                    <Trash2 className="w-4 h-4 text-destructive" />
+                                </Button>
+                            </td>
                         </tr>
                         ))}
                     </tbody>
                     </table>
                 </div>
             </div>
+
+            {/* AlertDialog for delete option */}
+            <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}>
+                <AlertDialogContent>
+                    <AlertDialogTitle>¿Eliminar opción?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        ¿Estás seguro que deseas eliminar <span className="font-semibold">{deleteDialog.label}</span>? Esta acción no se puede deshacer.
+                    </AlertDialogDescription>
+                    <div className="flex justify-end gap-2 mt-4">
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-destructive text-white hover:bg-destructive/90"
+                            onClick={async () => {
+                                if (deleteDialog.id) await handleDeleteOption(deleteDialog.table, deleteDialog.id)
+                                setDeleteDialog({ open: false, table: '', id: undefined, label: '' })
+                            }}
+                        >
+                            Eliminar
+                        </AlertDialogAction>
+                    </div>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <DialogFooter className="flex-shrink-0 pt-4 border-t border-border">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>

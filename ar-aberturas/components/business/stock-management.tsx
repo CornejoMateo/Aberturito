@@ -5,7 +5,10 @@ import { StockFormDialog } from "../../utils/stock/stock-add-dialog"
 import { StockStats } from "../../utils/stock/stock-stats"
 import { StockFilters } from "../../utils/stock/stock-filters"
 import { StockTable } from "../../utils/stock/stock-table"
+import { OptionsModal } from "@/utils/stock/options/options"
 import { listStock, createProfileStock, deleteProfileStock, type ProfileItemStock, updateProfileStock } from "@/lib/stock"
+import { Button } from "@/components/ui/button"
+import { Settings } from "lucide-react"
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 
 interface StockManagementProps {
@@ -23,6 +26,8 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
   const [error, setError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
+
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -72,7 +77,7 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
   const lowStockItems = stock.filter((item) => (item.quantity ?? 0) < 10)
   const totalItems = stock.reduce((sum, item) => sum + (item.quantity ?? 0), 0)
   
-  // Obtener el último ítem agregado
+  // Get last added item
   const lastAddedItem = [...stock].sort((a, b) => 
     new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
   )[0]
@@ -116,25 +121,31 @@ export function StockManagement({ materialType = "Aluminio" }: StockManagementPr
           <p className="text-muted-foreground mt-1">{getDescription()}</p>
         </div>
         {/* form for new item */}
-        <div className="flex gap-2">
-          <StockFormDialog
-            open={isAddDialogOpen}
-            onOpenChange={setIsAddDialogOpen}
-            onSave={async (newItem) => {
-              const { data, error } = await createProfileStock(newItem)
-              if (error) {
-                setError(error.message ?? String(error))
-                return
-              }
-              if (data) {
-                setStock((s) => [data, ...s])
-              }
-              setIsAddDialogOpen(false)
-            }}
-            materialType={materialType}
-            triggerButton={true}
-          />
-        </div>
+            <div className="flex gap-2">
+              {/* button for configure options (colors, types and lines) */}
+              <Button variant="default" onClick={() => setIsModalOpen(true)} className="gap-2">
+                <Settings className="h-5 w-5" />
+                Ajustar opciones
+              </Button>
+              <OptionsModal materialType={materialType} open={isModalOpen} onOpenChange={setIsModalOpen} />
+              <StockFormDialog
+                open={isAddDialogOpen}
+                onOpenChange={setIsAddDialogOpen}
+                onSave={async (newItem) => {
+                  const { data, error } = await createProfileStock(newItem)
+                  if (error) {
+                    setError(error.message ?? String(error))
+                    return
+                  }
+                  if (data) {
+                    setStock((s) => [data, ...s])
+                  }
+                  setIsAddDialogOpen(false)
+                }}
+                materialType={materialType}
+                triggerButton={true}
+              />
+            </div>
           {/* form for edit item */}
           <StockFormDialog
             open={isEditDialogOpen}

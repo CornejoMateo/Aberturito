@@ -153,7 +153,7 @@ export function StockFormDialog({
 					</Button>
 				</DialogTrigger>
 			)}
-			<DialogContent className="bg-card max-h-[90vh] flex flex-col">
+			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader className="flex-shrink-0">
 					<DialogTitle className="text-foreground">
 						{isEditing ? 'Editar item' : 'Agregar nuevo item'}

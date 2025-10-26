@@ -138,7 +138,7 @@ export function OptionDialog({
 				</DialogTrigger>
 			)}
 
-			<DialogContent className="bg-card max-h-[90vh] flex flex-col">
+			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader className="flex-shrink-0">
 					<DialogTitle>Agregar nueva opción</DialogTitle>
 					<DialogDescription>Ingrese los datos</DialogDescription>

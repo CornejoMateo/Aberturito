@@ -31,6 +31,7 @@ import {
 	SiteOption,
 } from '@/lib/stock_options';
 import { useOptions } from '@/hooks/useOptions';
+import { useRouter } from 'next/navigation';
 
 interface OptionsModalProps {
 	open: boolean;
@@ -44,6 +45,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 	const [isAddColorOpen, setIsAddColorOpen] = useState(false);
 	const [isAddTypeOpen, setIsAddTypeOpen] = useState(false);
 	const [isAddSiteOpen, setIsAddSiteOpen] = useState(false);
+    const router = useRouter();
 
 	// AlertDialog for delete option
 	const [deleteDialog, setDeleteDialog] = useState<{
@@ -107,7 +109,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="bg-card max-h-[90vh] flex flex-col">
+			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader>
 					<DialogTitle>Administrar opciones</DialogTitle>
 					<DialogDescription>Gestione colores, líneas, tipos y ubicaciones</DialogDescription>
@@ -344,10 +346,16 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 				</AlertDialog>
 
 				<DialogFooter className="flex-shrink-0 pt-4 border-t border-border">
-					<Button variant="outline" onClick={() => onOpenChange(false)}>
-						Cerrar
-					</Button>
-				</DialogFooter>
+                    <Button
+                        variant="outline"
+                        onClick={() => {
+                            onOpenChange(false);
+							window.location.reload(); // Navega a la misma ruta, forzando recarga
+                        }}
+                    >
+                        Cerrar
+                    </Button>
+                </DialogFooter>
 			</DialogContent>
 		</Dialog>
 	);

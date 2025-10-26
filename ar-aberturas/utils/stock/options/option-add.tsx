@@ -146,18 +146,6 @@ export function OptionDialog({
 
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2">
 					<div className="grid gap-4">
-						<div className="grid gap-2">
-							<Label htmlFor="optionName">Nombre</Label>
-							<Input
-								id="optionName"
-								type="text"
-								placeholder={name}
-								value={option}
-								onChange={(e) => setOption(e.target.value)}
-								required
-							/>
-						</div>
-
 						{(table === 'types' || table === 'colors') && (
 							<div className="grid gap-2">
 								<Label htmlFor="dependence">Linea</Label>
@@ -192,6 +180,17 @@ export function OptionDialog({
 								</Select>
 							</div>
 						)}
+						<div className="grid gap-2">
+							<Label htmlFor="optionName">Nombre</Label>
+							<Input
+								id="optionName"
+								type="text"
+								placeholder={name}
+								value={option}
+								onChange={(e) => setOption(e.target.value)}
+								required
+							/>
+						</div>
 					</div>
 				</div>
 

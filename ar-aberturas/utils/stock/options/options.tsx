@@ -134,7 +134,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 						<table className="table-auto w-full border-collapse">
 							<thead>
 								<tr className="border-b">
-									<th className="text-left p-1">Nombre</th>
+									<th className="text-left p-1">Linea</th>
 									<th className="text-left p-1">Abertura</th>
 									<th className="text-left p-1">Eliminar</th>
 								</tr>
@@ -184,7 +184,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 						<table className="table-auto w-full border-collapse">
 							<thead>
 								<tr className="border-b">
-									<th className="text-left p-1">Nombre</th>
+									<th className="text-left p-1">Tipo</th>
 									<th className="text-left p-1">Linea</th>
 									<th className="text-left p-1">Eliminar</th>
 								</tr>
@@ -234,7 +234,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 						<table className="table-auto w-full border-collapse">
 							<thead>
 								<tr className="border-b">
-									<th className="text-left p-1">Nombre</th>
+									<th className="text-left p-1">Color</th>
 									<th className="text-left p-1">Linea</th>
 									<th className="text-left p-1">Eliminar</th>
 								</tr>
@@ -284,7 +284,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 						<table className="table-auto w-full border-collapse">
 							<thead>
 								<tr className="border-b">
-									<th className="text-left p-1">Nombre</th>
+									<th className="text-left p-1">Ubicación</th>
 									<th className="text-left p-1">Eliminar</th>
 								</tr>
 							</thead>

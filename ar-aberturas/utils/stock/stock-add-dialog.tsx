@@ -90,7 +90,7 @@ export function StockFormDialog({
 	// Loading data into form when editItem changes
 	useEffect(() => {
 		if (editItem) {
-		  setCategory(editItem.category || '');
+			setCategory(editItem.category || '');
 			setType(editItem.type || '');
 			setLine(editItem.line || '');
 			setColor(editItem.color || '');

@@ -51,8 +51,8 @@ export function OptionDialog({
 	const [option, setOption] = useState('');
 	const [dependence, setDependence] = useState('');
 	const [tableName, setTableName] = useState(table);
-    const [title, setTitle] = useState('');
-    const [name, setName] = useState('');
+	const [title, setTitle] = useState('');
+	const [name, setName] = useState('');
 
 	const [linesOptions, setLinesOptions] = useState<{ id: number; name_line: string }[]>([]);
 	React.useEffect(() => {
@@ -67,23 +67,23 @@ export function OptionDialog({
 		}
 	}, [table, open]);
 
-    React.useEffect(() => {
-        if (table === 'lines') {
-            setTitle('Agregar Linea');
-            setName('Nombre de la línea');
-        } else if (table === 'types') {
-            setTitle('Agregar Tipo');
-            setName('Nombre del tipo');
-        } else if (table === 'colors') {
-            setTitle('Agregar Color');
-            setName('Nombre del color');
-        } else if (table === 'sites') {
-            setTitle('Agregar Ubicación');
-            setName('Nombre de la ubicación');
-        } else {
-            setTitle('Agregar opción');
-        }
-    }, [table]);
+	React.useEffect(() => {
+		if (table === 'lines') {
+			setTitle('Agregar Linea');
+			setName('Nombre de la línea');
+		} else if (table === 'types') {
+			setTitle('Agregar Tipo');
+			setName('Nombre del tipo');
+		} else if (table === 'colors') {
+			setTitle('Agregar Color');
+			setName('Nombre del color');
+		} else if (table === 'sites') {
+			setTitle('Agregar Ubicación');
+			setName('Nombre de la ubicación');
+		} else {
+			setTitle('Agregar opción');
+		}
+	}, [table]);
 
 	// Set default value for 'Abertura' select when dialog opens for lines
 	React.useEffect(() => {

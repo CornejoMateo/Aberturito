@@ -5,7 +5,7 @@ export function useOptions<T>(key: string, fetchFromDb: () => Promise<T[]>) {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-    // basically fetch options from localStorage (if available) or from DB
+	// basically fetch options from localStorage (if available) or from DB
 	useEffect(() => {
 		const local = localStorage.getItem(key);
 		if (local) {

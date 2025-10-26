@@ -95,7 +95,7 @@ export function StockTable({ filteredStock, onEdit, onDelete, onUpdateQuantity }
           <tbody className="divide-y divide-border">
             {filteredStock.length === 0 ? ( 
               <tr>
-                <td colSpan={8} className="px-6 py-12 text-center">
+                <td colSpan={10} className="px-6 py-12 text-center">
                   <div className="flex flex-col items-center gap-2 text-muted-foreground">
                     <Package className="h-12 w-12 opacity-50" />
                     <p className="text-lg font-medium">No hay items en stock</p>

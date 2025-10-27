@@ -19,7 +19,8 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog';
-import { Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { OptionDialog } from './option-add';
 
 import { deleteOption } from '@/lib/stock_options';
@@ -45,6 +46,22 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 	const [isAddColorOpen, setIsAddColorOpen] = useState(false);
 	const [isAddTypeOpen, setIsAddTypeOpen] = useState(false);
 	const [isAddSiteOpen, setIsAddSiteOpen] = useState(false);
+	
+	// Estados para controlar qué secciones están abiertas
+	const [openSections, setOpenSections] = useState({
+		lines: true,
+		tipos: true,
+		colores: true,
+		ubicaciones: true,
+	});
+
+	const toggleSection = (section: keyof typeof openSections) => {
+		setOpenSections(prev => ({
+			...prev,
+			[section]: !prev[section]
+		}));
+	};
+
     const router = useRouter();
 
 	// AlertDialog for delete option
@@ -117,204 +134,259 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2 grid gap-6">
 					{/* Table lines */}
-					<div className="flex flex-col border p-2 rounded">
-						<div className="flex justify-between items-center mb-2">
-							<span className="font-semibold">Líneas</span>
-							<OptionDialog
-								open={isAddLineOpen}
-								onOpenChange={setIsAddLineOpen}
-								materialType={materialType}
-								onSave={async (newLine: LineOption) => {
-									const updated = [newLine, ...lines];
-									localStorage.setItem('lines', JSON.stringify(updated));
-									updateLines(updated);
-								}}
-								triggerButton={true}
-								table="lines"
-							/>
-						</div>
-						<table className="table-auto w-full border-collapse">
-							<thead>
-								<tr className="border-b">
-									<th className="text-left p-1">Linea</th>
-									<th className="text-left p-1">Abertura</th>
-									<th className="text-left p-1">Eliminar</th>
-								</tr>
-							</thead>
-							<tbody>
-								{lines.map((line: LineOption, idx: number) => (
-									<tr key={`${line.id}-${line.name_line}-${idx}`} className="border-b">
-										<td className="p-1">{line.name_line}</td>
-										<td className="p-1">{line.opening}</td>
-										<td className="p-1">
-											<Button
-												variant="ghost"
-												size="icon"
-												onClick={() =>
-													setDeleteDialog({
-														open: true,
-														table: 'lines',
-														id: line.id,
-														label: line.name_line ?? '',
-													})
-												}
-											>
-												<Trash2 className="w-4 h-4 text-destructive" />
-											</Button>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
+					<Collapsible 
+						open={openSections.lines} 
+						onOpenChange={() => toggleSection('lines')}
+						className="border rounded"
+					>
+						<CollapsibleTrigger asChild>
+							<div className="flex justify-between items-center p-3 hover:bg-accent/50 cursor-pointer">
+								<h3 className="font-semibold text-base">Líneas</h3>
+								<div className="flex items-center gap-2">
+									<OptionDialog
+										open={isAddLineOpen}
+										onOpenChange={setIsAddLineOpen}
+										materialType={materialType}
+										onSave={async (newLine: LineOption) => {
+											const updated = [newLine, ...lines];
+											localStorage.setItem('lines', JSON.stringify(updated));
+											updateLines(updated);
+										}}
+										triggerButton={true}
+										table="lines"
+									/>
+									{openSections.lines ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+								</div>
+							</div>
+						</CollapsibleTrigger>
+						<CollapsibleContent>
+							<div className="px-3 pb-3">
+								<table className="table-auto w-full border-collapse">
+									<thead>
+										<tr className="border-b">
+											<th className="text-left p-1">Linea</th>
+											<th className="text-left p-1">Abertura</th>
+											<th className="text-left p-1">Eliminar</th>
+										</tr>
+									</thead>
+									<tbody>
+										{lines.map((line: LineOption, idx: number) => (
+											<tr key={`${line.id}-${line.name_line}-${idx}`} className="border-b">
+												<td className="p-1">{line.name_line}</td>
+												<td className="p-1">{line.opening}</td>
+												<td className="p-1">
+													<Button
+														variant="ghost"
+														size="icon"
+														onClick={() =>
+															setDeleteDialog({
+																open: true,
+																table: 'lines',
+																id: line.id,
+																label: line.name_line ?? '',
+															})
+														}
+													>
+														<Trash2 className="w-4 h-4 text-destructive" />
+													</Button>
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						</CollapsibleContent>
+					</Collapsible>
+
 					{/* Table types */}
-					<div className="flex flex-col border p-2 rounded">
-						<div className="flex justify-between items-center mb-2">
-							<span className="font-semibold">Tipos</span>
-							<OptionDialog
-								open={isAddTypeOpen}
-								onOpenChange={setIsAddTypeOpen}
-								onSave={async (newType: TypeOption) => {
-									const updated = [newType, ...types];
-									localStorage.setItem('types', JSON.stringify(updated));
-									updateTypes(updated);
-								}}
-								triggerButton={true}
-								table="types"
-							/>
-						</div>
-						<table className="table-auto w-full border-collapse">
-							<thead>
-								<tr className="border-b">
-									<th className="text-left p-1">Tipo</th>
-									<th className="text-left p-1">Linea</th>
-									<th className="text-left p-1">Eliminar</th>
-								</tr>
-							</thead>
-							<tbody>
-								{types.map((type: TypeOption, idx: number) => (
-									<tr key={`${type.id}-${type.name_type}-${idx}`} className="border-b">
-										<td className="p-1">{type.name_type}</td>
-										<td className="p-1">{type.line_name}</td>
-										<td className="p-1">
-											<Button
-												variant="ghost"
-												size="icon"
-												onClick={() =>
-													setDeleteDialog({
-														open: true,
-														table: 'types',
-														id: type.id,
-														label: type.name_type ?? '',
-													})
-												}
-											>
-												<Trash2 className="w-4 h-4 text-destructive" />
-											</Button>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
+					<Collapsible 
+						open={openSections.tipos} 
+						onOpenChange={() => toggleSection('tipos')}
+						className="border rounded"
+					>
+						<CollapsibleTrigger asChild>
+							<div className="flex justify-between items-center p-3 hover:bg-accent/50 cursor-pointer">
+								<h3 className="font-semibold text-base">Tipos</h3>
+								<div className="flex items-center gap-2">
+									<OptionDialog
+										open={isAddTypeOpen}
+										onOpenChange={setIsAddTypeOpen}
+										onSave={async (newType: TypeOption) => {
+											const updated = [newType, ...types];
+											localStorage.setItem('types', JSON.stringify(updated));
+											updateTypes(updated);
+										}}
+										triggerButton={true}
+										table="types"
+									/>
+									{openSections.tipos ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+								</div>
+							</div>
+						</CollapsibleTrigger>
+						<CollapsibleContent>
+							<div className="px-3 pb-3">
+								<table className="table-auto w-full border-collapse">
+									<thead>
+										<tr className="border-b">
+											<th className="text-left p-1">Tipo</th>
+											<th className="text-left p-1">Línea</th>
+											<th className="text-left p-1">Eliminar</th>
+										</tr>
+									</thead>
+									<tbody>
+										{types.map((type: TypeOption, idx: number) => (
+											<tr key={`${type.id}-${type.name_type}-${idx}`} className="border-b">
+												<td className="p-1">{type.name_type}</td>
+												<td className="p-1">{type.line_name}</td>
+												<td className="p-1">
+													<Button
+														variant="ghost"
+														size="icon"
+														onClick={() =>
+															setDeleteDialog({
+																open: true,
+																table: 'types',
+																id: type.id,
+																label: type.name_type ?? '',
+															})
+														}
+													>
+														<Trash2 className="w-4 h-4 text-destructive" />
+													</Button>
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						</CollapsibleContent>
+					</Collapsible>
+
 					{/* Table colors */}
-					<div className="flex flex-col border p-2 rounded">
-						<div className="flex justify-between items-center mb-2">
-							<span className="font-semibold">Colores</span>
-							<OptionDialog
-								open={isAddColorOpen}
-								onOpenChange={setIsAddColorOpen}
-								onSave={async (newColor: ColorOption) => {
-									const updated = [newColor, ...colors];
-									localStorage.setItem('colors', JSON.stringify(updated));
-									updateColors(updated);
-								}}
-								triggerButton={true}
-								table="colors"
-							/>
-						</div>
-						<table className="table-auto w-full border-collapse">
-							<thead>
-								<tr className="border-b">
-									<th className="text-left p-1">Color</th>
-									<th className="text-left p-1">Linea</th>
-									<th className="text-left p-1">Eliminar</th>
-								</tr>
-							</thead>
-							<tbody>
-								{colors.map((color: ColorOption, idx: number) => (
-									<tr key={`${color.id}-${color.name_color}-${idx}`} className="border-b">
-										<td className="p-1">{color.name_color}</td>
-										<td className="p-1">{color.line_name}</td>
-										<td className="p-1">
-											<Button
-												variant="ghost"
-												size="icon"
-												onClick={() =>
-													setDeleteDialog({
-														open: true,
-														table: 'colors',
-														id: color.id,
-														label: color.name_color ?? '',
-													})
-												}
-											>
-												<Trash2 className="w-4 h-4 text-destructive" />
-											</Button>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
+					<Collapsible 
+						open={openSections.colores} 
+						onOpenChange={() => toggleSection('colores')}
+						className="border rounded"
+					>
+						<CollapsibleTrigger asChild>
+							<div className="flex justify-between items-center p-3 hover:bg-accent/50 cursor-pointer">
+								<h3 className="font-semibold text-base">Colores</h3>
+								<div className="flex items-center gap-2">
+									<OptionDialog
+										open={isAddColorOpen}
+										onOpenChange={setIsAddColorOpen}
+										onSave={async (newColor: ColorOption) => {
+											const updated = [newColor, ...colors];
+											localStorage.setItem('colors', JSON.stringify(updated));
+											updateColors(updated);
+										}}
+										triggerButton={true}
+										table="colors"
+									/>
+									{openSections.colores ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+								</div>
+							</div>
+						</CollapsibleTrigger>
+						<CollapsibleContent>
+							<div className="px-3 pb-3">
+								<table className="table-auto w-full border-collapse">
+									<thead>
+										<tr className="border-b">
+											<th className="text-left p-1">Color</th>
+											<th className="text-left p-1">Línea</th>
+											<th className="text-left p-1">Eliminar</th>
+										</tr>
+									</thead>
+									<tbody>
+										{colors.map((color: ColorOption, idx: number) => (
+											<tr key={`${color.id}-${color.name_color}-${idx}`} className="border-b">
+												<td className="p-1">{color.name_color}</td>
+												<td className="p-1">{color.line_name}</td>
+												<td className="p-1">
+													<Button
+														variant="ghost"
+														size="icon"
+														onClick={() =>
+															setDeleteDialog({
+																open: true,
+																table: 'colors',
+																id: color.id,
+																label: color.name_color ?? '',
+															})
+														}
+													>
+														<Trash2 className="w-4 h-4 text-destructive" />
+													</Button>
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						</CollapsibleContent>
+					</Collapsible>
+
 					{/* Table sites */}
-					<div className="flex flex-col border p-2 rounded">
-						<div className="flex justify-between items-center mb-2">
-							<span className="font-semibold">Ubicaciones</span>
-							<OptionDialog
-								open={isAddSiteOpen}
-								onOpenChange={setIsAddSiteOpen}
-								onSave={async (newSite: SiteOption) => {
-									const updated = [newSite, ...sites];
-									localStorage.setItem('sites', JSON.stringify(updated));
-									updateSites(updated);
-								}}
-								triggerButton={true}
-								table="sites"
-							/>
-						</div>
-						<table className="table-auto w-full border-collapse">
-							<thead>
-								<tr className="border-b">
-									<th className="text-left p-1">Ubicación</th>
-									<th className="text-left p-1">Eliminar</th>
-								</tr>
-							</thead>
-							<tbody>
-								{sites.map((site: SiteOption) => (
-									<tr key={`${site.id}-${site.name_site}`} className="border-b">
-										<td className="p-1">{site.name_site}</td>
-										<td className="p-1">
-											<Button
-												variant="ghost"
-												size="icon"
-												onClick={() =>
-													setDeleteDialog({
-														open: true,
-														table: 'sites',
-														id: site.id,
-														label: site.name_site ?? '',
-													})
-												}
-											>
-												<Trash2 className="w-4 h-4 text-destructive" />
-											</Button>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
+					<Collapsible 
+						open={openSections.ubicaciones} 
+						onOpenChange={() => toggleSection('ubicaciones')}
+						className="border rounded"
+					>
+						<CollapsibleTrigger asChild>
+							<div className="flex justify-between items-center p-3 hover:bg-accent/50 cursor-pointer">
+								<h3 className="font-semibold text-base">Ubicaciones</h3>
+								<div className="flex items-center gap-2">
+									<OptionDialog
+										open={isAddSiteOpen}
+										onOpenChange={setIsAddSiteOpen}
+										onSave={async (newSite: SiteOption) => {
+											const updated = [newSite, ...sites];
+											localStorage.setItem('sites', JSON.stringify(updated));
+											updateSites(updated);
+										}}
+										triggerButton={true}
+										table="sites"
+									/>
+									{openSections.ubicaciones ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+								</div>
+							</div>
+						</CollapsibleTrigger>
+						<CollapsibleContent>
+							<div className="px-3 pb-3">
+								<table className="table-auto w-full border-collapse">
+									<thead>
+										<tr className="border-b">
+											<th className="text-left p-1">Ubicación</th>
+											<th className="text-left p-1">Eliminar</th>
+										</tr>
+									</thead>
+									<tbody>
+										{sites.map((site: SiteOption) => (
+											<tr key={`${site.id}-${site.name_site}`} className="border-b">
+												<td className="p-1">{site.name_site}</td>
+												<td className="p-1">
+													<Button
+														variant="ghost"
+														size="icon"
+														onClick={() =>
+															setDeleteDialog({
+																open: true,
+																table: 'sites',
+																id: site.id,
+																label: site.name_site ?? '',
+															})
+														}
+													>
+														<Trash2 className="w-4 h-4 text-destructive" />
+													</Button>
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						</CollapsibleContent>
+					</Collapsible>
 				</div>
 
 				{/* AlertDialog for delete option */}
@@ -346,16 +418,16 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 				</AlertDialog>
 
 				<DialogFooter className="flex-shrink-0 pt-4 border-t border-border">
-                    <Button
-                        variant="outline"
-                        onClick={() => {
-                            onOpenChange(false);
+                <Button
+                    variant="outline"
+                    onClick={() => {
+                        onOpenChange(false);
 							window.location.reload(); // Navega a la misma ruta, forzando recarga
-                        }}
-                    >
-                        Cerrar
-                    </Button>
-                </DialogFooter>
+                    }}
+                >
+                    Cerrar
+                </Button>
+            </DialogFooter>
 			</DialogContent>
 		</Dialog>
 	);

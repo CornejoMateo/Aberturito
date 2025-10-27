@@ -181,7 +181,17 @@ export function OptionDialog({
 							</div>
 						)}
 						<div className="grid gap-2">
-							<Label htmlFor="optionName">Nombre</Label>
+							{table === 'lines' ? (
+								<Label htmlFor="optionName">Línea</Label>
+							) : table === 'types' ? (
+								<Label htmlFor="optionName">Tipo</Label>
+							) : table === 'colors' ? (
+								<Label htmlFor="optionName">Color</Label>
+							) : table === 'sites' ? (
+								<Label htmlFor="optionName">Ubicación</Label>
+							) : (
+								<Label htmlFor="optionName">Nombre</Label>
+							)}
 							<Input
 								id="optionName"
 								type="text"

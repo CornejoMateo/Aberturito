@@ -131,7 +131,7 @@ export function OptionDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			{triggerButton && (
 				<DialogTrigger asChild>
-					<Button className="gap-2">
+					<Button className="gap-2" size="sm">
 						<Plus className="h-4 w-4" />
 						{title}
 					</Button>

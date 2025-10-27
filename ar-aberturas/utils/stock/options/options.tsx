@@ -166,7 +166,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										<tr className="border-b">
 											<th className="text-left p-1">Linea</th>
 											<th className="text-left p-1">Abertura</th>
-											<th className="text-left p-1">Eliminar</th>
+											<th className="text-center p-1">Eliminar</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -174,10 +174,11 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 											<tr key={`${line.id}-${line.name_line}-${idx}`} className="border-b">
 												<td className="p-1">{line.name_line}</td>
 												<td className="p-1">{line.opening}</td>
-												<td className="p-1">
+												<td className="p-1 text-center">
 													<Button
 														variant="ghost"
 														size="icon"
+														className="mx-auto"
 														onClick={() =>
 															setDeleteDialog({
 																open: true,
@@ -230,7 +231,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										<tr className="border-b">
 											<th className="text-left p-1">Tipo</th>
 											<th className="text-left p-1">Línea</th>
-											<th className="text-left p-1">Eliminar</th>
+											<th className="text-center p-1">Eliminar</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -238,10 +239,11 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 											<tr key={`${type.id}-${type.name_type}-${idx}`} className="border-b">
 												<td className="p-1">{type.name_type}</td>
 												<td className="p-1">{type.line_name}</td>
-												<td className="p-1">
+												<td className="p-1 text-center">
 													<Button
 														variant="ghost"
 														size="icon"
+														className="mx-auto"
 														onClick={() =>
 															setDeleteDialog({
 																open: true,
@@ -294,7 +296,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										<tr className="border-b">
 											<th className="text-left p-1">Color</th>
 											<th className="text-left p-1">Línea</th>
-											<th className="text-left p-1">Eliminar</th>
+											<th className="text-center p-1">Eliminar</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -302,10 +304,11 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 											<tr key={`${color.id}-${color.name_color}-${idx}`} className="border-b">
 												<td className="p-1">{color.name_color}</td>
 												<td className="p-1">{color.line_name}</td>
-												<td className="p-1">
+												<td className="p-1 text-center">
 													<Button
 														variant="ghost"
 														size="icon"
+														className="mx-auto"
 														onClick={() =>
 															setDeleteDialog({
 																open: true,
@@ -357,17 +360,18 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 									<thead>
 										<tr className="border-b">
 											<th className="text-left p-1">Ubicación</th>
-											<th className="text-left p-1">Eliminar</th>
+											<th className="text-center p-1">Eliminar</th>
 										</tr>
 									</thead>
 									<tbody>
 										{sites.map((site: SiteOption) => (
 											<tr key={`${site.id}-${site.name_site}`} className="border-b">
 												<td className="p-1">{site.name_site}</td>
-												<td className="p-1">
+												<td className="p-1 text-center">
 													<Button
 														variant="ghost"
 														size="icon"
+														className="mx-auto"
 														onClick={() =>
 															setDeleteDialog({
 																open: true,

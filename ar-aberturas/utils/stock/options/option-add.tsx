@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import {
 	Dialog,
 	DialogContent,
@@ -53,6 +54,7 @@ export function OptionDialog({
 	const [tableName, setTableName] = useState(table);
 	const [title, setTitle] = useState('');
 	const [name, setName] = useState('');
+	const { toast } = useToast();
 
 	const [linesOptions, setLinesOptions] = useState<{ id: number; name_line: string }[]>([]);
 	React.useEffect(() => {
@@ -94,7 +96,13 @@ export function OptionDialog({
 
 	const handleSave = async () => {
 		if (!option) {
-			alert('El nombre es obligatorio');
+			toast({
+				title: 'Error de validación',
+				description: 'El nombre es obligatorio',
+				variant: 'destructive',
+				duration: 5000,
+			});
+			console.log('Mostrando toast de validación');
 			return;
 		}
 
@@ -114,13 +122,40 @@ export function OptionDialog({
 		const { data, error } = await createOption(tableName ?? '', fields);
 		if (error) {
 			console.error('Supabase error:', error);
-			alert(`Error al guardar la opcion ${error.message || 'Error desconocido'}`);
+			let errorMessage = 'Ocurrió un error al guardar la opción';
+			if (error.message?.includes('duplicate key value violates unique constraint')) {
+				const fieldName = tableName === 'lines' ? 'línea' : 
+									tableName === 'types' ? 'tipo' : 
+									tableName === 'colors' ? 'color' : 'ubicación';
+				errorMessage = `Ya existe un${fieldName === 'ubicación' ? 'a' : 'a'} ${fieldName} con ese nombre`;
+			}
+
+			toast({
+				title: 'Error al guardar',
+				description: errorMessage,
+				variant: 'destructive',
+				duration: 5000,
+			});
+			console.log('Mostrando toast de error:', errorMessage);
 			return;
 		}
 
 		if (onSave && data) {
 			onSave(data);
 		}
+
+		// Mostrar mensaje de éxito
+		const successMessage = tableName === 'lines' ? 'Línea guardada correctamente' : 
+						   tableName === 'types' ? 'Tipo guardado correctamente' :
+						   tableName === 'colors' ? 'Color guardado correctamente' :
+						   'Ubicación guardada correctamente';
+
+		toast({
+			title: 'Éxito',
+			description: successMessage,
+			duration: 3000,
+		});
+		console.log('Mostrando toast de éxito:', successMessage);
 
 		setOption('');
 		setDependence('');

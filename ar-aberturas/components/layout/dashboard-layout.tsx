@@ -31,25 +31,57 @@ import {
 	X,
 	ChevronDown,
 	ChevronRight,
+	Lock,
 } from 'lucide-react';
 import Image from 'next/image';
 
 const navigation = [
-	{ name: 'Dashboard', href: '/', icon: LayoutDashboard },
+	{ 
+		name: 'Dashboard', 
+		href: '/', 
+		icon: LayoutDashboard,
+		disabled: true
+	},
 	{
 		name: 'Stock',
 		href: '/stock',
 		icon: Package,
+		disabled: false,
 		subItems: [
 			{ name: 'Aluminio', href: '/stock/aluminio' },
 			{ name: 'PVC', href: '/stock/pvc' },
 		],
 	},
-	{ name: 'Clientes', href: '/clientes', icon: Users },
-	{ name: 'Presupuestos', href: '/presupuestos', icon: FileText },
-	{ name: 'Obras', href: '/obras', icon: ClipboardCheck },
-	{ name: 'Calendario', href: '/calendario', icon: Calendar },
-	{ name: 'Reportes', href: '/reportes', icon: BarChart3 },
+	{ 
+		name: 'Clientes', 
+		href: '/clientes', 
+		icon: Users,
+		disabled: true
+	},
+	{ 
+		name: 'Presupuestos', 
+		href: '/presupuestos', 
+		icon: FileText,
+		disabled: true
+	},
+	{ 
+		name: 'Obras', 
+		href: '/obras', 
+		icon: ClipboardCheck,
+		disabled: true
+	},
+	{ 
+		name: 'Calendario', 
+		href: '/calendario', 
+		icon: Calendar,
+		disabled: true
+	},
+	{ 
+		name: 'Reportes', 
+		href: '/reportes', 
+		icon: BarChart3,
+		disabled: true
+	},
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -91,12 +123,25 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 		}
 	}, [pathname]);
 
-	// redirect to login when auth resolved and there's no user
+	// Estado para controlar si debemos redirigir
+	const [shouldRedirect, setShouldRedirect] = useState(false);
+
+	// Efecto para manejar la redirección
 	useEffect(() => {
-		if (!loading && !user) {
-			router.push('/login');
+		if (!loading && typeof window !== 'undefined') {
+			if (!user) {
+				router.push('/login');
+			} else if (pathname === '/') {
+				setShouldRedirect(true);
+				router.replace('/stock/aluminio');
+			}
 		}
-	}, [loading, user, router]);
+	}, [loading, user, pathname, router]);
+
+	// Si estamos en proceso de redirección, mostramos un loader
+	if (shouldRedirect || (pathname === '/' && user)) {
+		return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
+	}
 
 	// Definición de permisos por rol
 	const allowedByRole = useMemo(() => {
@@ -154,14 +199,20 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 			}
 		}
 
-		// Redirigir a Stock Aluminio por defecto si se accede a /stock
-		if (pathname === '/stock') {
+		// Redirigir a Stock Aluminio por defecto si se accede a /stock o a la raíz
+		if (pathname === '/stock' || pathname === '/') {
 			router.replace('/stock/aluminio');
 		}
 	}, [loading, user?.role, pathname, router, allowedByRole]);
 
-	if (loading || !user?.role || !user) {
+	// Mostrar carga solo si estamos en el proceso de autenticación
+	if (loading || !user) {
 		return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
+	}
+
+	// Si el usuario no tiene rol, no renderizar nada (ya se manejó la redirección)
+	if (!user.role) {
+		return null;
 	}
 
 	return (
@@ -210,17 +261,24 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 									{hasSubItems ? (
 										<div>
 											<button
-												onClick={() => toggleExpanded(item.name)}
+												onClick={() => !item.disabled && toggleExpanded(item.name)}
 												className={cn(
 													'flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
 													isActive
 														? 'bg-primary text-primary-foreground'
-														: 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+														: item.disabled 
+															? 'text-muted-foreground/40 cursor-not-allowed'
+															: 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+													{
+														'opacity-60': item.disabled,
+													}
 												)}
+												disabled={item.disabled}
 											>
 												<div className="flex items-center gap-3">
 													<item.icon className="h-5 w-5" />
 													{item.name === 'Stock' ? getStockMenuText() : item.name}
+													{item.disabled && <Lock className="h-3.5 w-3.5 ml-1" />}
 												</div>
 												{isExpanded ? (
 													<ChevronDown className="h-4 w-4" />
@@ -253,19 +311,38 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 											)}
 										</div>
 									) : (
-										<Link
-											href={item.href}
+										<div 
 											className={cn(
 												'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
 												isActive
 													? 'bg-primary text-primary-foreground'
-													: 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+													: item.disabled 
+														? 'text-muted-foreground/40 cursor-not-allowed'
+														: 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+												{
+													'opacity-60': item.disabled,
+												}
 											)}
-											onClick={() => setSidebarOpen(false)}
 										>
-											<item.icon className="h-5 w-5" />
-											{item.name}
-										</Link>
+											{item.disabled ? (
+												<>
+													<item.icon className="h-5 w-5" />
+													<span className="flex items-center gap-1">
+														{item.name}
+														<Lock className="h-3.5 w-3.5" />
+													</span>
+												</>
+											) : (
+												<Link 
+													href={item.href} 
+													className="flex items-center gap-3 w-full"
+													onClick={() => setSidebarOpen(false)}
+												>
+													<item.icon className="h-5 w-5" />
+													{item.name}
+												</Link>
+											)}
+										</div>
 									)}
 								</div>
 							);

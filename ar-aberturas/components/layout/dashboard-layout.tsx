@@ -36,11 +36,11 @@ import {
 import Image from 'next/image';
 
 const navigation = [
-	{ 
-		name: 'Dashboard', 
-		href: '/', 
+	{
+		name: 'Dashboard',
+		href: '/',
 		icon: LayoutDashboard,
-		disabled: true
+		disabled: true,
 	},
 	{
 		name: 'Stock',
@@ -52,35 +52,35 @@ const navigation = [
 			{ name: 'PVC', href: '/stock/pvc' },
 		],
 	},
-	{ 
-		name: 'Clientes', 
-		href: '/clientes', 
+	{
+		name: 'Clientes',
+		href: '/clientes',
 		icon: Users,
-		disabled: true
+		disabled: true,
 	},
-	{ 
-		name: 'Presupuestos', 
-		href: '/presupuestos', 
+	{
+		name: 'Presupuestos',
+		href: '/presupuestos',
 		icon: FileText,
-		disabled: true
+		disabled: true,
 	},
-	{ 
-		name: 'Obras', 
-		href: '/obras', 
+	{
+		name: 'Obras',
+		href: '/obras',
 		icon: ClipboardCheck,
-		disabled: true
+		disabled: true,
 	},
-	{ 
-		name: 'Calendario', 
-		href: '/calendario', 
+	{
+		name: 'Calendario',
+		href: '/calendario',
 		icon: Calendar,
-		disabled: true
+		disabled: true,
 	},
-	{ 
-		name: 'Reportes', 
-		href: '/reportes', 
+	{
+		name: 'Reportes',
+		href: '/reportes',
 		icon: BarChart3,
-		disabled: true
+		disabled: true,
 	},
 ];
 
@@ -236,7 +236,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 					{/* Logo */}
 					<div className="flex h-16 items-center justify-between border-b border-border px-6">
 						<div className="flex items-center gap-2">
-							<Image src="/logo-ar.png" alt="Logo" width={92} height={92}/> 
+							<Image src="/logo-ar.png" alt="Logo" width={92} height={92} />
 							<span className="font-semibold text-foreground">AR Aberturas</span>
 						</div>
 						<Button
@@ -266,7 +266,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 													'flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
 													isActive
 														? 'bg-primary text-primary-foreground'
-														: item.disabled 
+														: item.disabled
 															? 'text-muted-foreground/40 cursor-not-allowed'
 															: 'text-muted-foreground hover:bg-secondary hover:text-foreground',
 													{
@@ -311,12 +311,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 											)}
 										</div>
 									) : (
-										<div 
+										<div
 											className={cn(
 												'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
 												isActive
 													? 'bg-primary text-primary-foreground'
-													: item.disabled 
+													: item.disabled
 														? 'text-muted-foreground/40 cursor-not-allowed'
 														: 'text-muted-foreground hover:bg-secondary hover:text-foreground',
 												{
@@ -333,8 +333,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 													</span>
 												</>
 											) : (
-												<Link 
-													href={item.href} 
+												<Link
+													href={item.href}
 													className="flex items-center gap-3 w-full"
 													onClick={() => setSidebarOpen(false)}
 												>

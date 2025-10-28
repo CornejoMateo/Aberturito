@@ -25,6 +25,7 @@ import { status, categories } from '@/constants/stock-constants';
 import { listOptions, LineOption, TypeOption, ColorOption, SiteOption } from '@/lib/stock_options';
 import { useState, useEffect } from 'react';
 import { useOptions } from '@/hooks/useOptions';
+import { useToast } from '@/hooks/use-toast';
 
 interface StockFormDialogProps {
 	open: boolean;
@@ -86,6 +87,7 @@ export function StockFormDialog({
 		listOptions('sites').then((res) => (res.data ?? []) as SiteOption[])
 	);
 	const [statusOptions, setStatusOptions] = useState<string[]>([...status]);
+	const { toast } = useToast();
 
 	// Loading data into form when editItem changes
 	useEffect(() => {
@@ -116,31 +118,53 @@ export function StockFormDialog({
 	};
 
 	const handleSave = () => {
-		// Validate require fields
+		// Validate required fields
 		if (!category || !type || !line || !color || !site || quantity <= 0 || width <= 0) {
-			alert('Por favor complete todos los campos obligatorios');
+			toast({
+				title: 'Error de validación',
+				description: 'Por favor complete todos los campos obligatorios',
+				variant: 'destructive',
+				duration: 5000,
+			});
 			return;
 		}
 
-		onSave({
-			category,
-			type,
-			line,
-			color,
-			status: itemStatus,
-			quantity,
-			site,
-			width,
-			material: materialType?.toLowerCase(),
-			created_at: isEditing ? editItem.created_at : new Date().toISOString().split('T')[0],
-		});
+		try {
+			onSave({
+				category,
+				type,
+				line,
+				color,
+				status: itemStatus,
+				quantity,
+				site,
+				width,
+				material: materialType?.toLowerCase(),
+				created_at: isEditing ? editItem.created_at : new Date().toISOString().split('T')[0],
+			});
 
-		// Reset form after save if not editing
-		if (!isEditing) {
-			resetForm();
+			// Show success message
+			toast({
+				title: '¡Éxito!',
+				description: isEditing ? 'Item actualizado correctamente' : 'Item agregado correctamente',
+				duration: 3000,
+			});
+
+			// Reset form after save if not editing
+			if (!isEditing) {
+				resetForm();
+			}
+
+			onOpenChange(false);
+		} catch (error) {
+			console.error('Error al guardar el item:', error);
+			toast({
+				title: 'Error',
+				description: 'Ocurrió un error al guardar el item. Por favor, intente nuevamente.',
+				variant: 'destructive',
+				duration: 5000,
+			});
 		}
-
-		onOpenChange(false);
 	};
 
 	return (

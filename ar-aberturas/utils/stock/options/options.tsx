@@ -46,7 +46,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 	const [isAddColorOpen, setIsAddColorOpen] = useState(false);
 	const [isAddTypeOpen, setIsAddTypeOpen] = useState(false);
 	const [isAddSiteOpen, setIsAddSiteOpen] = useState(false);
-	
+
 	// Estados para controlar qué secciones están abiertas
 	const [openSections, setOpenSections] = useState({
 		lines: true,
@@ -56,13 +56,13 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 	});
 
 	const toggleSection = (section: keyof typeof openSections) => {
-		setOpenSections(prev => ({
+		setOpenSections((prev) => ({
 			...prev,
-			[section]: !prev[section]
+			[section]: !prev[section],
 		}));
 	};
 
-    const router = useRouter();
+	const router = useRouter();
 
 	// AlertDialog for delete option
 	const [deleteDialog, setDeleteDialog] = useState<{
@@ -134,8 +134,8 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2 grid gap-6">
 					{/* Table lines */}
-					<Collapsible 
-						open={openSections.lines} 
+					<Collapsible
+						open={openSections.lines}
 						onOpenChange={() => toggleSection('lines')}
 						className="border rounded"
 					>
@@ -155,7 +155,11 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										triggerButton={true}
 										table="lines"
 									/>
-									{openSections.lines ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+									{openSections.lines ? (
+										<ChevronUp className="w-4 h-4" />
+									) : (
+										<ChevronDown className="w-4 h-4" />
+									)}
 								</div>
 							</div>
 						</CollapsibleTrigger>
@@ -200,8 +204,8 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 					</Collapsible>
 
 					{/* Table types */}
-					<Collapsible 
-						open={openSections.tipos} 
+					<Collapsible
+						open={openSections.tipos}
 						onOpenChange={() => toggleSection('tipos')}
 						className="border rounded"
 					>
@@ -220,7 +224,11 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										triggerButton={true}
 										table="types"
 									/>
-									{openSections.tipos ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+									{openSections.tipos ? (
+										<ChevronUp className="w-4 h-4" />
+									) : (
+										<ChevronDown className="w-4 h-4" />
+									)}
 								</div>
 							</div>
 						</CollapsibleTrigger>
@@ -265,8 +273,8 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 					</Collapsible>
 
 					{/* Table colors */}
-					<Collapsible 
-						open={openSections.colores} 
+					<Collapsible
+						open={openSections.colores}
 						onOpenChange={() => toggleSection('colores')}
 						className="border rounded"
 					>
@@ -285,7 +293,11 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										triggerButton={true}
 										table="colors"
 									/>
-									{openSections.colores ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+									{openSections.colores ? (
+										<ChevronUp className="w-4 h-4" />
+									) : (
+										<ChevronDown className="w-4 h-4" />
+									)}
 								</div>
 							</div>
 						</CollapsibleTrigger>
@@ -330,8 +342,8 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 					</Collapsible>
 
 					{/* Table sites */}
-					<Collapsible 
-						open={openSections.ubicaciones} 
+					<Collapsible
+						open={openSections.ubicaciones}
 						onOpenChange={() => toggleSection('ubicaciones')}
 						className="border rounded"
 					>
@@ -350,7 +362,11 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										triggerButton={true}
 										table="sites"
 									/>
-									{openSections.ubicaciones ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+									{openSections.ubicaciones ? (
+										<ChevronUp className="w-4 h-4" />
+									) : (
+										<ChevronDown className="w-4 h-4" />
+									)}
 								</div>
 							</div>
 						</CollapsibleTrigger>
@@ -422,16 +438,16 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 				</AlertDialog>
 
 				<DialogFooter className="flex-shrink-0 pt-4 border-t border-border">
-                <Button
-                    variant="outline"
-                    onClick={() => {
-                        onOpenChange(false);
+					<Button
+						variant="outline"
+						onClick={() => {
+							onOpenChange(false);
 							window.location.reload(); // Navega a la misma ruta, forzando recarga
-                    }}
-                >
-                    Cerrar
-                </Button>
-            </DialogFooter>
+						}}
+					>
+						Cerrar
+					</Button>
+				</DialogFooter>
 			</DialogContent>
 		</Dialog>
 	);

@@ -124,9 +124,14 @@ export function OptionDialog({
 			console.error('Supabase error:', error);
 			let errorMessage = 'Ocurrió un error al guardar la opción';
 			if (error.message?.includes('duplicate key value violates unique constraint')) {
-				const fieldName = tableName === 'lines' ? 'línea' : 
-									tableName === 'types' ? 'tipo' : 
-									tableName === 'colors' ? 'color' : 'ubicación';
+				const fieldName =
+					tableName === 'lines'
+						? 'línea'
+						: tableName === 'types'
+							? 'tipo'
+							: tableName === 'colors'
+								? 'color'
+								: 'ubicación';
 				errorMessage = `Ya existe un${fieldName === 'ubicación' ? 'a' : 'a'} ${fieldName} con ese nombre`;
 			}
 
@@ -145,10 +150,14 @@ export function OptionDialog({
 		}
 
 		// Mostrar mensaje de éxito
-		const successMessage = tableName === 'lines' ? 'Línea guardada correctamente' : 
-						   tableName === 'types' ? 'Tipo guardado correctamente' :
-						   tableName === 'colors' ? 'Color guardado correctamente' :
-						   'Ubicación guardada correctamente';
+		const successMessage =
+			tableName === 'lines'
+				? 'Línea guardada correctamente'
+				: tableName === 'types'
+					? 'Tipo guardado correctamente'
+					: tableName === 'colors'
+						? 'Color guardado correctamente'
+						: 'Ubicación guardada correctamente';
 
 		toast({
 			title: 'Éxito',

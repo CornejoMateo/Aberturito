@@ -23,9 +23,7 @@ export default function RootLayout({
 		<html lang="es">
 			<body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
 				<AuthProvider>
-					<Suspense fallback={null}>
-						{children}
-					</Suspense>
+					<Suspense fallback={null}>{children}</Suspense>
 				</AuthProvider>
 				<Toaster />
 				<Analytics />

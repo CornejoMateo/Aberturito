@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/next';
 import '../styles/globals.css';
 import { Suspense } from 'react';
 import { AuthProvider } from '@/components/provider/auth-provider';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
 	title: 'AR Aberturas - Sistema de Gestión',
@@ -22,8 +23,11 @@ export default function RootLayout({
 		<html lang="es">
 			<body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
 				<AuthProvider>
-					<Suspense fallback={null}>{children}</Suspense>
+					<Suspense fallback={null}>
+						{children}
+					</Suspense>
 				</AuthProvider>
+				<Toaster />
 				<Analytics />
 			</body>
 		</html>

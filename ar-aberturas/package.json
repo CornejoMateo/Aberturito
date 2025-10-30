@@ -5,6 +5,7 @@
 	"scripts": {
 		"build": "next build",
 		"dev": "next dev",
+		"generate-icons": "sh ./scripts/generate-icons.sh",
 		"lint": "next lint",
 		"start": "next start"
 	},

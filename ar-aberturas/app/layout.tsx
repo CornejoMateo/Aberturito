@@ -21,6 +21,15 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="es">
+			<head>
+				<link rel="manifest" href="/manifest.json" />
+				<link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
+				<link rel="icon" href="/icons/icon-192.png" />
+				<meta name="theme-color" content="#0f172a" />
+				<meta name="mobile-web-app-capable" content="yes" />
+				<meta name="apple-mobile-web-app-capable" content="yes" />
+				<meta name="apple-mobile-web-app-title" content="AR Aberturas" />
+			</head>
 			<body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
 				<AuthProvider>
 					<Suspense fallback={null}>{children}</Suspense>

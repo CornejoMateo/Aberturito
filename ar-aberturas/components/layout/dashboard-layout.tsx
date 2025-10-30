@@ -89,7 +89,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	const [expandedItems, setExpandedItems] = useState<string[]>([]);
 	const pathname = usePathname();
 	const router = useRouter();
-	const [isMounted, setIsMounted] = useState(false);
 	const { user, loading, signOutUser } = useAuth();
 
 	// Función para manejar la expansión de submenús
@@ -125,17 +124,24 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	}, [pathname]);
 
 	// Estado para controlar si debemos redirigir
+	const [shouldRedirect, setShouldRedirect] = useState(false);
 
 	// Efecto para manejar la redirección
 	useEffect(() => {
 		if (!loading && typeof window !== 'undefined') {
 			if (!user) {
 				router.push('/login');
-			} else if (pathname === '/' || pathname === '') {
+			} else if (pathname === '/') {
+				setShouldRedirect(true);
 				router.replace('/stock/aluminio');
 			}
 		}
 	}, [loading, user, pathname, router]);
+
+	// Si estamos en proceso de redirección, mostramos un loader
+	if (shouldRedirect || (pathname === '/' && user)) {
+		return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
+	}
 
 	// Definición de permisos por rol
 	const allowedByRole = useMemo(() => {
@@ -204,12 +210,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 		return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
 	}
 
-	if (pathname === '/' && user) {
-		return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
-	}
-
+	// Si el usuario no tiene rol, no renderizar nada (ya se manejó la redirección)
 	if (!user.role) {
-		return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
+		return null;
 	}
 
 	return (

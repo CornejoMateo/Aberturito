@@ -32,7 +32,6 @@ import {
 	SiteOption,
 } from '@/lib/stock_options';
 import { useOptions } from '@/hooks/useOptions';
-import { useRouter } from 'next/navigation';
 
 interface OptionsModalProps {
 	open: boolean;
@@ -50,9 +49,9 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 	// Estados para controlar qué secciones están abiertas
 	const [openSections, setOpenSections] = useState({
 		lines: true,
-		codigos: true,
-		colores: true,
-		ubicaciones: true,
+		codes: true,
+		colors: true,
+		sites: true,
 	});
 
 	const toggleSection = (section: keyof typeof openSections) => {
@@ -203,8 +202,8 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 
 					{/* Table codes */}
 					<Collapsible
-						open={openSections.codigos}
-						onOpenChange={() => toggleSection('codigos')}
+						open={openSections.codes}
+						onOpenChange={() => toggleSection('codes')}
 						className="border rounded"
 					>
 						<CollapsibleTrigger asChild>
@@ -222,7 +221,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										triggerButton={true}
 										table="codes"
 									/>
-									{openSections.codigos ? (
+									{openSections.codes ? (
 										<ChevronUp className="w-4 h-4" />
 									) : (
 										<ChevronDown className="w-4 h-4" />
@@ -272,8 +271,8 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 
 					{/* Table colors */}
 					<Collapsible
-						open={openSections.colores}
-						onOpenChange={() => toggleSection('colores')}
+						open={openSections.colors}
+						onOpenChange={() => toggleSection('colors')}
 						className="border rounded"
 					>
 						<CollapsibleTrigger asChild>
@@ -291,7 +290,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										triggerButton={true}
 										table="colors"
 									/>
-									{openSections.colores ? (
+									{openSections.colors ? (
 										<ChevronUp className="w-4 h-4" />
 									) : (
 										<ChevronDown className="w-4 h-4" />
@@ -341,8 +340,8 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 
 					{/* Table sites */}
 					<Collapsible
-						open={openSections.ubicaciones}
-						onOpenChange={() => toggleSection('ubicaciones')}
+						open={openSections.sites}
+						onOpenChange={() => toggleSection('sites')}
 						className="border rounded"
 					>
 						<CollapsibleTrigger asChild>
@@ -360,7 +359,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										triggerButton={true}
 										table="sites"
 									/>
-									{openSections.ubicaciones ? (
+									{openSections.sites ? (
 										<ChevronUp className="w-4 h-4" />
 									) : (
 										<ChevronDown className="w-4 h-4" />

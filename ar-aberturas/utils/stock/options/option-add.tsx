@@ -26,7 +26,7 @@ import {
 import {
 	createOption,
 	type LineOption,
-	TypeOption,
+	CodeOption,
 	ColorOption,
 	SiteOption,
 } from '@/lib/stock_options';
@@ -35,10 +35,10 @@ import React from 'react';
 interface OptionFormDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	onSave?: (option: LineOption | TypeOption | ColorOption | SiteOption) => void;
+	onSave?: (option: LineOption | CodeOption | ColorOption | SiteOption) => void;
 	triggerButton?: boolean;
 	materialType?: 'Aluminio' | 'PVC';
-	table?: 'lines' | 'types' | 'colors' | 'sites';
+	table?: 'lines' | 'codes' | 'colors' | 'sites';
 }
 
 export function OptionDialog({
@@ -58,7 +58,7 @@ export function OptionDialog({
 
 	const [linesOptions, setLinesOptions] = useState<{ id: number; name_line: string }[]>([]);
 	React.useEffect(() => {
-		if ((table === 'types' || table === 'colors') && open) {
+		if ((table === 'codes' || table === 'colors') && open) {
 			const local = localStorage.getItem('lines');
 			if (local) {
 				try {
@@ -73,9 +73,9 @@ export function OptionDialog({
 		if (table === 'lines') {
 			setTitle('Agregar Linea');
 			setName('Nombre de la línea');
-		} else if (table === 'types') {
-			setTitle('Agregar Tipo');
-			setName('Nombre del tipo');
+		} else if (table === 'codes') {
+			setTitle('Agregar Código');
+			setName('Nombre del código');
 		} else if (table === 'colors') {
 			setTitle('Agregar Color');
 			setName('Nombre del color');
@@ -110,8 +110,8 @@ export function OptionDialog({
 		if (tableName === 'lines') {
 			fields.name_line = option ?? '';
 			fields.opening = dependence ?? '';
-		} else if (tableName === 'types') {
-			fields.name_type = option ?? '';
+		} else if (tableName === 'codes') {
+			fields.name_code = option ?? '';
 			fields.line_name = dependence ?? '';
 		} else if (tableName === 'colors') {
 			fields.name_color = option ?? '';
@@ -127,8 +127,8 @@ export function OptionDialog({
 				const fieldName =
 					tableName === 'lines'
 						? 'línea'
-						: tableName === 'types'
-							? 'tipo'
+						: tableName === 'codes'
+							? 'código'
 							: tableName === 'colors'
 								? 'color'
 								: 'ubicación';
@@ -153,8 +153,8 @@ export function OptionDialog({
 		const successMessage =
 			tableName === 'lines'
 				? 'Línea guardada correctamente'
-				: tableName === 'types'
-					? 'Tipo guardado correctamente'
+				: tableName === 'codes'
+					? 'Código guardado correctamente'
 					: tableName === 'colors'
 						? 'Color guardado correctamente'
 						: 'Ubicación guardada correctamente';
@@ -190,7 +190,7 @@ export function OptionDialog({
 
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2">
 					<div className="grid gap-4">
-						{(table === 'types' || table === 'colors') && (
+						{(table === 'codes' || table === 'colors') && (
 							<div className="grid gap-2">
 								<Label htmlFor="dependence">Linea</Label>
 								<Select value={dependence} onValueChange={setDependence}>
@@ -227,8 +227,8 @@ export function OptionDialog({
 						<div className="grid gap-2">
 							{table === 'lines' ? (
 								<Label htmlFor="optionName">Línea</Label>
-							) : table === 'types' ? (
-								<Label htmlFor="optionName">Tipo</Label>
+							) : table === 'codes' ? (
+								<Label htmlFor="optionName">Código</Label>
 							) : table === 'colors' ? (
 								<Label htmlFor="optionName">Color</Label>
 							) : table === 'sites' ? (

@@ -27,7 +27,7 @@ import { deleteOption } from '@/lib/stock_options';
 import {
 	listOptions,
 	type LineOption,
-	TypeOption,
+	CodeOption,
 	ColorOption,
 	SiteOption,
 } from '@/lib/stock_options';
@@ -44,13 +44,13 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 	// Estados para abrir los diálogos de agregar
 	const [isAddLineOpen, setIsAddLineOpen] = useState(false);
 	const [isAddColorOpen, setIsAddColorOpen] = useState(false);
-	const [isAddTypeOpen, setIsAddTypeOpen] = useState(false);
+	const [isAddCodeOpen, setIsAddCodeOpen] = useState(false);
 	const [isAddSiteOpen, setIsAddSiteOpen] = useState(false);
 
 	// Estados para controlar qué secciones están abiertas
 	const [openSections, setOpenSections] = useState({
 		lines: true,
-		tipos: true,
+		codigos: true,
 		colores: true,
 		ubicaciones: true,
 	});
@@ -61,8 +61,6 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 			[section]: !prev[section],
 		}));
 	};
-
-	const router = useRouter();
 
 	// AlertDialog for delete option
 	const [deleteDialog, setDeleteDialog] = useState<{
@@ -80,11 +78,11 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 		listOptions('lines').then((res) => (res.data ?? []) as LineOption[])
 	);
 	const {
-		options: types,
-		loading: loadingTypes,
-		updateOptions: updateTypes,
-	} = useOptions<TypeOption>('types', () =>
-		listOptions('types').then((res) => (res.data ?? []) as TypeOption[])
+		options: codes,
+		loading: loadingCodes,
+		updateOptions: updateCodes,
+	} = useOptions<CodeOption>('codes', () =>
+		listOptions('codes').then((res) => (res.data ?? []) as CodeOption[])
 	);
 	const {
 		options: colors,
@@ -109,10 +107,10 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 			const updated = lines.filter((l: LineOption) => l.id !== id);
 			localStorage.setItem('lines', JSON.stringify(updated));
 			updateLines(updated);
-		} else if (table === 'types') {
-			const updated = types.filter((t: TypeOption) => t.id !== id);
-			localStorage.setItem('types', JSON.stringify(updated));
-			updateTypes(updated);
+		} else if (table === 'codes') {
+			const updated = codes.filter((t: CodeOption) => t.id !== id);
+			localStorage.setItem('codes', JSON.stringify(updated));
+			updateCodes(updated);
 		} else if (table === 'colors') {
 			const updated = colors.filter((c: ColorOption) => c.id !== id);
 			localStorage.setItem('colors', JSON.stringify(updated));
@@ -129,7 +127,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader>
 					<DialogTitle>Administrar opciones</DialogTitle>
-					<DialogDescription>Gestione colores, líneas, tipos y ubicaciones</DialogDescription>
+					<DialogDescription>Gestione colores, líneas, códigos y ubicaciones</DialogDescription>
 				</DialogHeader>
 
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2 grid gap-6">
@@ -203,28 +201,28 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 						</CollapsibleContent>
 					</Collapsible>
 
-					{/* Table types */}
+					{/* Table codes */}
 					<Collapsible
-						open={openSections.tipos}
-						onOpenChange={() => toggleSection('tipos')}
+						open={openSections.codigos}
+						onOpenChange={() => toggleSection('codigos')}
 						className="border rounded"
 					>
 						<CollapsibleTrigger asChild>
 							<div className="flex justify-between items-center p-3 hover:bg-accent/50 cursor-pointer">
-								<h3 className="font-semibold text-base">Tipos</h3>
+								<h3 className="font-semibold text-base">Códigos</h3>
 								<div className="flex items-center gap-2">
 									<OptionDialog
-										open={isAddTypeOpen}
-										onOpenChange={setIsAddTypeOpen}
-										onSave={async (newType: TypeOption) => {
-											const updated = [newType, ...types];
-											localStorage.setItem('types', JSON.stringify(updated));
-											updateTypes(updated);
+										open={isAddCodeOpen}
+										onOpenChange={setIsAddCodeOpen}
+										onSave={async (newCode: CodeOption) => {
+											const updated = [newCode, ...codes];
+											localStorage.setItem('codes', JSON.stringify(updated));
+											updateCodes(updated);
 										}}
 										triggerButton={true}
-										table="types"
+										table="codes"
 									/>
-									{openSections.tipos ? (
+									{openSections.codigos ? (
 										<ChevronUp className="w-4 h-4" />
 									) : (
 										<ChevronDown className="w-4 h-4" />
@@ -237,16 +235,16 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 								<table className="table-auto w-full border-collapse">
 									<thead>
 										<tr className="border-b">
-											<th className="text-left p-1">Tipo</th>
+											<th className="text-left p-1">Código</th>
 											<th className="text-left p-1">Línea</th>
 											<th className="text-center p-1">Eliminar</th>
 										</tr>
 									</thead>
 									<tbody>
-										{types.map((type: TypeOption, idx: number) => (
-											<tr key={`${type.id}-${type.name_type}-${idx}`} className="border-b">
-												<td className="p-1">{type.name_type}</td>
-												<td className="p-1">{type.line_name}</td>
+										{codes.map((code: CodeOption, idx: number) => (
+											<tr key={`${code.id}-${code.name_code}-${idx}`} className="border-b">
+												<td className="p-1">{code.name_code}</td>
+												<td className="p-1">{code.line_name}</td>
 												<td className="p-1 text-center">
 													<Button
 														variant="ghost"
@@ -255,9 +253,9 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 														onClick={() =>
 															setDeleteDialog({
 																open: true,
-																table: 'types',
-																id: type.id,
-																label: type.name_type ?? '',
+																table: 'codes',
+																id: code.id,
+																label: code.name_code ?? '',
 															})
 														}
 													>

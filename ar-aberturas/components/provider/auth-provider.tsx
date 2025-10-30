@@ -3,17 +3,16 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserRole } from '@/constants/user-role';
-import { findUser } from '@/lib/db';
 
 type SessionUser = {
-	usuario: string;
+	username: string;
 	role: UserRole;
 };
 
 type AuthContextType = {
 	user: SessionUser | null;
 	loading: boolean;
-	signIn: (usuario: string, contraseña: string) => Promise<void>;
+	signIn: (username: string, password: string) => Promise<void>;
 	signOutUser: () => Promise<void>;
 };
 
@@ -43,13 +42,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		}
 	}, []);
 
-	async function signIn(usuario: string, contraseña: string) {
+	async function signIn(username: string, password: string) {
 		setLoading(true);
 		try {
-			const docData = await findUser(usuario, contraseña);
-			if (!docData) throw new Error('Usuario o contraseña incorrectos');
-			const sessionUser: SessionUser = { usuario: docData.usuario, role: docData.role };
+			const res = await fetch('/api/login', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ username, password }),
+			});
+
+			if (!res.ok) {
+				const errorData = await res.json();
+				throw new Error(errorData.error || 'Error al iniciar sesión');
+			}
+
+			const data = await res.json();
+			const sessionUser: SessionUser = { username: data.usuario, role: data.role };
 			setUser(sessionUser);
+
 			if (typeof window !== 'undefined') {
 				localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
 			}

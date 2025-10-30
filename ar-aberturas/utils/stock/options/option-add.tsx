@@ -54,6 +54,7 @@ export function OptionDialog({
 	const [tableName, setTableName] = useState(table);
 	const [title, setTitle] = useState('');
 	const [name, setName] = useState('');
+	const [optionName, setOptionName] = useState('');
 	const { toast } = useToast();
 
 	const [linesOptions, setLinesOptions] = useState<{ id: number; name_line: string }[]>([]);
@@ -107,34 +108,38 @@ export function OptionDialog({
 		}
 
 		let fields: any = {};
+		let fieldName: string = '';
+		let successMessage: string = '';
 		if (tableName === 'lines') {
 			fields.name_line = option ?? '';
 			fields.opening = dependence ?? '';
+			fieldName = 'línea';
+			successMessage = 'Línea guardada correctamente';
+			setOptionName("Linea");
 		} else if (tableName === 'codes') {
 			fields.name_code = option ?? '';
 			fields.line_name = dependence ?? '';
+			fieldName = 'código';
+			successMessage = 'Código guardado correctamente';
+			setOptionName("Código");
 		} else if (tableName === 'colors') {
 			fields.name_color = option ?? '';
 			fields.line_name = dependence ?? '';
+			fieldName = 'color';
+			successMessage = 'Color guardado correctamente';
+			setOptionName("Color");
 		} else if (tableName === 'sites') {
 			fields.name_site = option ?? '';
+			fieldName = 'ubicación';
+			successMessage = 'Ubicación guardada correctamente';
+			setOptionName("Ubicación");
 		}
 		const { data, error } = await createOption(tableName ?? '', fields);
 		if (error) {
 			console.error('Supabase error:', error);
 			let errorMessage = 'Ocurrió un error al guardar la opción';
 			if (error.message?.includes('duplicate key value violates unique constraint')) {
-				const fieldName =
-					tableName === 'lines'
-						? 'línea'
-						: tableName === 'codes'
-							? 'código'
-							: tableName === 'colors'
-								? 'color'
-								: 'ubicación';
-				errorMessage = `Ya existe un${fieldName === 'ubicación' ? 'a' : 'a'} ${fieldName} con ese nombre`;
-			}
-
+				errorMessage = `Ya existe ${fieldName === 'ubicación' ? 'una' : 'un'} ${fieldName} con ese nombre`;			}
 			toast({
 				title: 'Error al guardar',
 				description: errorMessage,
@@ -148,16 +153,6 @@ export function OptionDialog({
 		if (onSave && data) {
 			onSave(data);
 		}
-
-		// Mostrar mensaje de éxito
-		const successMessage =
-			tableName === 'lines'
-				? 'Línea guardada correctamente'
-				: tableName === 'codes'
-					? 'Código guardado correctamente'
-					: tableName === 'colors'
-						? 'Color guardado correctamente'
-						: 'Ubicación guardada correctamente';
 
 		toast({
 			title: 'Éxito',
@@ -225,17 +220,7 @@ export function OptionDialog({
 							</div>
 						)}
 						<div className="grid gap-2">
-							{table === 'lines' ? (
-								<Label htmlFor="optionName">Línea</Label>
-							) : table === 'codes' ? (
-								<Label htmlFor="optionName">Código</Label>
-							) : table === 'colors' ? (
-								<Label htmlFor="optionName">Color</Label>
-							) : table === 'sites' ? (
-								<Label htmlFor="optionName">Ubicación</Label>
-							) : (
-								<Label htmlFor="optionName">Nombre</Label>
-							)}
+							<Label htmlFor="optionName">{optionName}</Label>
 							<Input
 								id="optionName"
 								type="text"

@@ -89,6 +89,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	const [expandedItems, setExpandedItems] = useState<string[]>([]);
 	const pathname = usePathname();
 	const router = useRouter();
+	const [isMounted, setIsMounted] = useState(false);
 	const { user, loading, signOutUser } = useAuth();
 
 	// Función para manejar la expansión de submenús
@@ -135,14 +136,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 			}
 		}
 	}, [loading, user, pathname, router]);
-
-	if (loading || !user) {
-		return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
-	}
-
-	if (pathname === '/' && user) {
-		return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
-	}
 
 	// Definición de permisos por rol
 	const allowedByRole = useMemo(() => {
@@ -208,6 +201,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
 	// Mostrar carga solo si estamos en el proceso de autenticación
 	if (loading || !user) {
+		return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
+	}
+
+	if (pathname === '/' && user) {
+		return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
+	}
+
+	if (!user.role) {
 		return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
 	}
 

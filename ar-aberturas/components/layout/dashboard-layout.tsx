@@ -124,22 +124,23 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	}, [pathname]);
 
 	// Estado para controlar si debemos redirigir
-	const [shouldRedirect, setShouldRedirect] = useState(false);
 
 	// Efecto para manejar la redirección
 	useEffect(() => {
 		if (!loading && typeof window !== 'undefined') {
 			if (!user) {
 				router.push('/login');
-			} else if (pathname === '/') {
-				setShouldRedirect(true);
+			} else if (pathname === '/' || pathname === '') {
 				router.replace('/stock/aluminio');
 			}
 		}
 	}, [loading, user, pathname, router]);
 
-	// Si estamos en proceso de redirección, mostramos un loader
-	if (shouldRedirect || (pathname === '/' && user)) {
+	if (loading || !user) {
+		return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
+	}
+
+	if (pathname === '/' && user) {
 		return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
 	}
 
@@ -208,11 +209,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	// Mostrar carga solo si estamos en el proceso de autenticación
 	if (loading || !user) {
 		return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
-	}
-
-	// Si el usuario no tiene rol, no renderizar nada (ya se manejó la redirección)
-	if (!user.role) {
-		return null;
 	}
 
 	return (

@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select';
 import { type ProfileItemStock } from '@/lib/stock';
 import { status, categories } from '@/constants/stock-constants';
-import { listOptions, LineOption, TypeOption, ColorOption, SiteOption } from '@/lib/stock_options';
+import { listOptions, LineOption, CodeOption, ColorOption, SiteOption } from '@/lib/stock_options';
 import { useState, useEffect } from 'react';
 import { useOptions } from '@/hooks/useOptions';
 import { useToast } from '@/hooks/use-toast';
@@ -47,7 +47,7 @@ export function StockFormDialog({
 	const isEditing = !!editItem;
 
 	const [category, setCategory] = useState('');
-	const [type, setType] = useState('');
+	const [code, setCode] = useState('');
 	const [line, setLine] = useState('');
 	const [color, setColor] = useState('');
 	const [itemStatus, setItemStatus] = useState('');
@@ -66,11 +66,11 @@ export function StockFormDialog({
 		listOptions('lines').then((res) => (res.data ?? []) as LineOption[])
 	);
 	const {
-		options: typesOptions,
-		loading: loadingTypes,
-		error: errorTypes,
-	} = useOptions<TypeOption>('types', () =>
-		listOptions('types').then((res) => (res.data ?? []) as TypeOption[])
+		options: codesOptions,
+		loading: loadingCodes,
+		error: errorCodes,
+	} = useOptions<CodeOption>('codes', () =>
+		listOptions('codes').then((res) => (res.data ?? []) as CodeOption[])
 	);
 	const {
 		options: colorsOptions,
@@ -93,7 +93,7 @@ export function StockFormDialog({
 	useEffect(() => {
 		if (editItem) {
 			setCategory(editItem.category || '');
-			setType(editItem.type || '');
+			setCode(editItem.code || '');
 			setLine(editItem.line || '');
 			setColor(editItem.color || '');
 			setItemStatus(editItem.status || '');
@@ -108,7 +108,7 @@ export function StockFormDialog({
 
 	const resetForm = () => {
 		setCategory('');
-		setType('');
+		setCode('');
 		setLine('');
 		setColor('');
 		setItemStatus('');
@@ -119,7 +119,7 @@ export function StockFormDialog({
 
 	const handleSave = () => {
 		// Validate required fields
-		if (!category || !type || !line || !color || !site || quantity <= 0 || width <= 0) {
+		if (!category || !code || !line || !color || !site || quantity <= 0 || width <= 0) {
 			toast({
 				title: 'Error de validación',
 				description: 'Por favor complete todos los campos obligatorios',
@@ -132,7 +132,7 @@ export function StockFormDialog({
 		try {
 			onSave({
 				category,
-				type,
+				code,
 				line,
 				color,
 				status: itemStatus,
@@ -229,19 +229,19 @@ export function StockFormDialog({
 						</div>
 
 						<div className="grid gap-2">
-							<Label htmlFor="type" className="text-foreground">
-								Tipo
+							<Label htmlFor="code" className="text-foreground">
+								Código
 							</Label>
-							<Select value={type} onValueChange={setType}>
+							<Select value={code} onValueChange={setCode}>
 								<SelectTrigger className="bg-background w-full">
-									<SelectValue placeholder="Seleccionar tipo" />
+									<SelectValue placeholder="Seleccionar código" />
 								</SelectTrigger>
 								<SelectContent>
-									{typesOptions
-										.filter((t) => t.line_name === line)
-										.map((t) => (
-											<SelectItem key={t.id} value={t.name_type ?? ''}>
-												{t.name_type}
+									{codesOptions
+										.filter((cod) => cod.line_name === line)
+										.map((cod) => (
+											<SelectItem key={cod.id} value={cod.name_code ?? ''}>
+												{cod.name_code}
 											</SelectItem>
 										))}
 								</SelectContent>

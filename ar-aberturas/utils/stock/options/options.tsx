@@ -22,17 +22,17 @@ import {
 import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { OptionDialog } from './option-add';
+import { toast } from '@/hooks/use-toast';
 
 import { deleteOption } from '@/lib/stock_options';
 import {
 	listOptions,
 	type LineOption,
-	TypeOption,
+	CodeOption,
 	ColorOption,
 	SiteOption,
 } from '@/lib/stock_options';
 import { useOptions } from '@/hooks/useOptions';
-import { useRouter } from 'next/navigation';
 
 interface OptionsModalProps {
 	open: boolean;
@@ -44,15 +44,15 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 	// Estados para abrir los diálogos de agregar
 	const [isAddLineOpen, setIsAddLineOpen] = useState(false);
 	const [isAddColorOpen, setIsAddColorOpen] = useState(false);
-	const [isAddTypeOpen, setIsAddTypeOpen] = useState(false);
+	const [isAddCodeOpen, setIsAddCodeOpen] = useState(false);
 	const [isAddSiteOpen, setIsAddSiteOpen] = useState(false);
 
 	// Estados para controlar qué secciones están abiertas
 	const [openSections, setOpenSections] = useState({
 		lines: true,
-		tipos: true,
-		colores: true,
-		ubicaciones: true,
+		codes: true,
+		colors: true,
+		sites: true,
 	});
 
 	const toggleSection = (section: keyof typeof openSections) => {
@@ -62,13 +62,11 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 		}));
 	};
 
-	const router = useRouter();
-
 	// AlertDialog for delete option
 	const [deleteDialog, setDeleteDialog] = useState<{
 		open: boolean;
 		table: string;
-		id: number | string | undefined;
+		id: number | undefined;
 		label: string;
 	}>({ open: false, table: '', id: undefined, label: '' });
 
@@ -80,11 +78,11 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 		listOptions('lines').then((res) => (res.data ?? []) as LineOption[])
 	);
 	const {
-		options: types,
-		loading: loadingTypes,
-		updateOptions: updateTypes,
-	} = useOptions<TypeOption>('types', () =>
-		listOptions('types').then((res) => (res.data ?? []) as TypeOption[])
+		options: codes,
+		loading: loadingCodes,
+		updateOptions: updateCodes,
+	} = useOptions<CodeOption>('codes', () =>
+		listOptions('codes').then((res) => (res.data ?? []) as CodeOption[])
 	);
 	const {
 		options: colors,
@@ -101,26 +99,59 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 		listOptions('sites').then((res) => (res.data ?? []) as SiteOption[])
 	);
 
-	const handleDeleteOption = async (table: string, id: number | string | undefined) => {
-		if (id == null) return;
-		await deleteOption(table, Number(id));
-		// Actualiza el localStorage y el estado del hook
-		if (table === 'lines') {
-			const updated = lines.filter((l: LineOption) => l.id !== id);
-			localStorage.setItem('lines', JSON.stringify(updated));
-			updateLines(updated);
-		} else if (table === 'types') {
-			const updated = types.filter((t: TypeOption) => t.id !== id);
-			localStorage.setItem('types', JSON.stringify(updated));
-			updateTypes(updated);
-		} else if (table === 'colors') {
-			const updated = colors.filter((c: ColorOption) => c.id !== id);
-			localStorage.setItem('colors', JSON.stringify(updated));
-			updateColors(updated);
-		} else if (table === 'sites') {
-			const updated = sites.filter((s: SiteOption) => s.id !== id);
-			localStorage.setItem('sites', JSON.stringify(updated));
-			updateSites(updated);
+	const handleDeleteOption = async (table: string, id: number) => {
+		try {
+			const { error } = await deleteOption(table, id);
+
+			if (error) {
+				console.error('Error al eliminar:', error);
+				let errorMessage = 'Ocurrió un error al eliminar el elemento.';
+				if (error.message?.includes('violates foreign key constraint')) {
+					errorMessage =
+						'No se puede eliminar este elemento porque está siendo utilizado por otra de las opciones.';
+				}
+				toast({
+					title: 'Error al eliminar',
+					description: errorMessage,
+					variant: 'destructive',
+					duration: 5000,
+				});
+				console.log('Mostrando toast de error:', errorMessage);
+				return;
+			}
+
+			if (table === 'lines') {
+				const updated = lines.filter((opt: LineOption) => opt.id !== id);
+				updateLines(updated);
+				localStorage.setItem('lines', JSON.stringify(updated));
+			} else if (table === 'codes') {
+				const updated = codes.filter((opt: CodeOption) => opt.id !== id);
+				updateCodes(updated);
+				localStorage.setItem('codes', JSON.stringify(updated));
+			} else if (table === 'colors') {
+				const updated = colors.filter((opt: ColorOption) => opt.id !== id);
+				updateColors(updated);
+				localStorage.setItem('colors', JSON.stringify(updated));
+			} else if (table === 'sites') {
+				const updated = sites.filter((opt: SiteOption) => opt.id !== id);
+				updateSites(updated);
+				localStorage.setItem('sites', JSON.stringify(updated));
+			}
+
+			toast({
+				title: 'Éxito',
+				description: 'Elemento eliminado correctamente',
+				duration: 3000,
+			});
+			console.log('Mostrando toast de éxito');
+		} catch (err) {
+			console.error('Error inesperado:', err);
+			toast({
+				title: 'Error inesperado',
+				description: 'Ocurrió un error inesperado al eliminar el elemento.',
+				variant: 'destructive',
+				duration: 5000,
+			});
 		}
 	};
 
@@ -129,7 +160,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader>
 					<DialogTitle>Administrar opciones</DialogTitle>
-					<DialogDescription>Gestione colores, líneas, tipos y ubicaciones</DialogDescription>
+					<DialogDescription>Gestione colores, líneas, códigos y ubicaciones</DialogDescription>
 				</DialogHeader>
 
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2 grid gap-6">
@@ -203,28 +234,28 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 						</CollapsibleContent>
 					</Collapsible>
 
-					{/* Table types */}
+					{/* Table codes */}
 					<Collapsible
-						open={openSections.tipos}
-						onOpenChange={() => toggleSection('tipos')}
+						open={openSections.codes}
+						onOpenChange={() => toggleSection('codes')}
 						className="border rounded"
 					>
 						<CollapsibleTrigger asChild>
 							<div className="flex justify-between items-center p-3 hover:bg-accent/50 cursor-pointer">
-								<h3 className="font-semibold text-base">Tipos</h3>
+								<h3 className="font-semibold text-base">Códigos</h3>
 								<div className="flex items-center gap-2">
 									<OptionDialog
-										open={isAddTypeOpen}
-										onOpenChange={setIsAddTypeOpen}
-										onSave={async (newType: TypeOption) => {
-											const updated = [newType, ...types];
-											localStorage.setItem('types', JSON.stringify(updated));
-											updateTypes(updated);
+										open={isAddCodeOpen}
+										onOpenChange={setIsAddCodeOpen}
+										onSave={async (newCode: CodeOption) => {
+											const updated = [newCode, ...codes];
+											localStorage.setItem('codes', JSON.stringify(updated));
+											updateCodes(updated);
 										}}
 										triggerButton={true}
-										table="types"
+										table="codes"
 									/>
-									{openSections.tipos ? (
+									{openSections.codes ? (
 										<ChevronUp className="w-4 h-4" />
 									) : (
 										<ChevronDown className="w-4 h-4" />
@@ -237,16 +268,16 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 								<table className="table-auto w-full border-collapse">
 									<thead>
 										<tr className="border-b">
-											<th className="text-left p-1">Tipo</th>
+											<th className="text-left p-1">Código</th>
 											<th className="text-left p-1">Línea</th>
 											<th className="text-center p-1">Eliminar</th>
 										</tr>
 									</thead>
 									<tbody>
-										{types.map((type: TypeOption, idx: number) => (
-											<tr key={`${type.id}-${type.name_type}-${idx}`} className="border-b">
-												<td className="p-1">{type.name_type}</td>
-												<td className="p-1">{type.line_name}</td>
+										{codes.map((code: CodeOption, idx: number) => (
+											<tr key={`${code.id}-${code.name_code}-${idx}`} className="border-b">
+												<td className="p-1">{code.name_code}</td>
+												<td className="p-1">{code.line_name}</td>
 												<td className="p-1 text-center">
 													<Button
 														variant="ghost"
@@ -255,9 +286,9 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 														onClick={() =>
 															setDeleteDialog({
 																open: true,
-																table: 'types',
-																id: type.id,
-																label: type.name_type ?? '',
+																table: 'codes',
+																id: code.id,
+																label: code.name_code ?? '',
 															})
 														}
 													>
@@ -274,8 +305,8 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 
 					{/* Table colors */}
 					<Collapsible
-						open={openSections.colores}
-						onOpenChange={() => toggleSection('colores')}
+						open={openSections.colors}
+						onOpenChange={() => toggleSection('colors')}
 						className="border rounded"
 					>
 						<CollapsibleTrigger asChild>
@@ -293,7 +324,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										triggerButton={true}
 										table="colors"
 									/>
-									{openSections.colores ? (
+									{openSections.colors ? (
 										<ChevronUp className="w-4 h-4" />
 									) : (
 										<ChevronDown className="w-4 h-4" />
@@ -343,8 +374,8 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 
 					{/* Table sites */}
 					<Collapsible
-						open={openSections.ubicaciones}
-						onOpenChange={() => toggleSection('ubicaciones')}
+						open={openSections.sites}
+						onOpenChange={() => toggleSection('sites')}
 						className="border rounded"
 					>
 						<CollapsibleTrigger asChild>
@@ -362,7 +393,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										triggerButton={true}
 										table="sites"
 									/>
-									{openSections.ubicaciones ? (
+									{openSections.sites ? (
 										<ChevronUp className="w-4 h-4" />
 									) : (
 										<ChevronDown className="w-4 h-4" />

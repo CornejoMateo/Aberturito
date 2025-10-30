@@ -66,7 +66,7 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 			const searchLower = searchTerm.toLowerCase();
 			const matchesSearch =
 				(item.category?.toLowerCase() || '').includes(searchLower) ||
-				(item.type?.toLowerCase() || '').includes(searchLower) ||
+				(item.code?.toLowerCase() || '').includes(searchLower) ||
 				(item.line?.toLowerCase() || '').includes(searchLower) ||
 				(item.color?.toLowerCase() || '').includes(searchLower) ||
 				(item.site?.toLowerCase() || '').includes(searchLower);
@@ -139,7 +139,7 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 				</div>
 				{/* form for new item */}
 				<div className="flex gap-2">
-					{/* button for configure options (colors, types and lines) */}
+					{/* button for configure options (colors, codes and lines) */}
 					<Button variant="default" onClick={() => setIsModalOpen(true)} className="gap-2">
 						<Settings className="h-5 w-5" />
 						Ajustar opciones

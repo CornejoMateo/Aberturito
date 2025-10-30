@@ -22,6 +22,7 @@ import {
 import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { OptionDialog } from './option-add';
+import { toast } from '@/hooks/use-toast';
 
 import { deleteOption } from '@/lib/stock_options';
 import {
@@ -65,7 +66,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 	const [deleteDialog, setDeleteDialog] = useState<{
 		open: boolean;
 		table: string;
-		id: number | string | undefined;
+		id: number | undefined;
 		label: string;
 	}>({ open: false, table: '', id: undefined, label: '' });
 
@@ -98,26 +99,59 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 		listOptions('sites').then((res) => (res.data ?? []) as SiteOption[])
 	);
 
-	const handleDeleteOption = async (table: string, id: number | string | undefined) => {
-		if (id == null) return;
-		await deleteOption(table, Number(id));
-		// Actualiza el localStorage y el estado del hook
-		if (table === 'lines') {
-			const updated = lines.filter((l: LineOption) => l.id !== id);
-			localStorage.setItem('lines', JSON.stringify(updated));
-			updateLines(updated);
-		} else if (table === 'codes') {
-			const updated = codes.filter((t: CodeOption) => t.id !== id);
-			localStorage.setItem('codes', JSON.stringify(updated));
-			updateCodes(updated);
-		} else if (table === 'colors') {
-			const updated = colors.filter((c: ColorOption) => c.id !== id);
-			localStorage.setItem('colors', JSON.stringify(updated));
-			updateColors(updated);
-		} else if (table === 'sites') {
-			const updated = sites.filter((s: SiteOption) => s.id !== id);
-			localStorage.setItem('sites', JSON.stringify(updated));
-			updateSites(updated);
+	const handleDeleteOption = async (table: string, id: number) => {
+		try {
+			const { error } = await deleteOption(table, id);
+
+			if (error) {
+				console.error('Error al eliminar:', error);
+				let errorMessage = 'Ocurrió un error al eliminar el elemento.';
+				if (error.message?.includes('violates foreign key constraint')) {
+					errorMessage =
+						'No se puede eliminar este elemento porque está siendo utilizado por otra de las opciones.';
+				}
+				toast({
+					title: 'Error al eliminar',
+					description: errorMessage,
+					variant: 'destructive',
+					duration: 5000,
+				});
+				console.log('Mostrando toast de error:', errorMessage);
+				return;
+			}
+
+			if (table === 'lines') {
+				const updated = lines.filter((opt: LineOption) => opt.id !== id);
+				updateLines(updated);
+				localStorage.setItem('lines', JSON.stringify(updated));
+			} else if (table === 'codes') {
+				const updated = codes.filter((opt: CodeOption) => opt.id !== id);
+				updateCodes(updated);
+				localStorage.setItem('codes', JSON.stringify(updated));
+			} else if (table === 'colors') {
+				const updated = colors.filter((opt: ColorOption) => opt.id !== id);
+				updateColors(updated);
+				localStorage.setItem('colors', JSON.stringify(updated));
+			} else if (table === 'sites') {
+				const updated = sites.filter((opt: SiteOption) => opt.id !== id);
+				updateSites(updated);
+				localStorage.setItem('sites', JSON.stringify(updated));
+			}
+
+			toast({
+				title: 'Éxito',
+				description: 'Elemento eliminado correctamente',
+				duration: 3000,
+			});
+			console.log('Mostrando toast de éxito');
+		} catch (err) {
+			console.error('Error inesperado:', err);
+			toast({
+				title: 'Error inesperado',
+				description: 'Ocurrió un error inesperado al eliminar el elemento.',
+				variant: 'destructive',
+				duration: 5000,
+			});
 		}
 	};
 

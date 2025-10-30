@@ -14,9 +14,9 @@ export type ColorOption = {
 	line_name?: string | null;
 };
 
-export type TypeOption = {
+export type CodeOption = {
 	id?: number;
-	name_type?: string | null;
+	name_code?: string | null;
 	created_at?: string | null;
 	line_name?: string | null;
 };

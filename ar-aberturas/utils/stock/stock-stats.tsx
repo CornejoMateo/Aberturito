@@ -29,7 +29,7 @@ export function StockStats({ totalItems, lowStockCount, lastAddedItem }: StockSt
 						{lastAddedItem ? (
 							<div className="mt-2 space-y-1">
 								<p className="text-sm font-medium text-foreground">
-									{lastAddedItem.line || 'Sin tipo'}, {lastAddedItem.type || 'Sin tipo'}
+									{lastAddedItem.line || 'Sin código'}, {lastAddedItem.code || 'Sin código'}
 								</p>
 								<p className="text-xs text-muted-foreground">
 									{lastAddedItem.color ? `${lastAddedItem.color} • ` : ''}

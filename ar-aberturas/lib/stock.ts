@@ -3,7 +3,7 @@ import { getSupabaseClient } from './supabase-client';
 export type ProfileItemStock = {
 	id?: string;
 	category?: string | null;
-	type?: string | null;
+	code?: string | null;
 	line?: string | null;
 	color?: string | null;
 	status?: string | null;

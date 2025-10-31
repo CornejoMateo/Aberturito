@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Package, TrendingDown, TrendingUp, Edit, Trash2, Plus, Minus } from 'lucide-react';
-import { type ProfileItemStock } from '@/lib/stock';
+import { type ProfileItemStock } from '@/lib/profile-stock';
 import { useState } from 'react';
 import { ConfirmUpdateDialog } from '@/components/stock/confirm-update-dialog';
 import {
@@ -15,14 +15,14 @@ import {
 	AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 
-interface StockTableProps {
+interface ProfileTableProps {
 	filteredStock: ProfileItemStock[];
 	onEdit: (id: string) => void;
 	onDelete: (id: string) => void;
 	onUpdateQuantity: (id: string, newQuantity: number) => Promise<void>;
 }
 
-export function StockTable({ filteredStock, onEdit, onDelete, onUpdateQuantity }: StockTableProps) {
+export function ProfileTable({ filteredStock, onEdit, onDelete, onUpdateQuantity }: ProfileTableProps) {
 	const [updatingId, setUpdatingId] = useState<string | null>(null);
 	const [isUpdating, setIsUpdating] = useState(false);
 	const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);

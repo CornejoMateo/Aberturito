@@ -3,7 +3,14 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Plus, Check, ChevronsUpDown, Search } from 'lucide-react';
 import {
 	Dialog,
 	DialogContent,
@@ -14,12 +21,18 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+} from '@/components/ui/command';
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import { type ProfileItemStock } from '@/lib/stock';
 import { status, categories } from '@/constants/stock-constants';
 import { listOptions, LineOption, CodeOption, ColorOption, SiteOption } from '@/lib/stock_options';
@@ -88,6 +101,12 @@ export function StockFormDialog({
 	);
 	const [statusOptions, setStatusOptions] = useState<string[]>([...status]);
 	const { toast } = useToast();
+
+	// Estados para controlar la apertura/cierre de los Popover
+	const [openLine, setOpenLine] = useState(false);
+	const [openCode, setOpenCode] = useState(false);
+	const [openColor, setOpenColor] = useState(false);
+	const [openSite, setOpenSite] = useState(false);
 
 	// Loading data into form when editItem changes
 	useEffect(() => {
@@ -194,9 +213,12 @@ export function StockFormDialog({
 							<Label htmlFor="category" className="text-foreground">
 								Categoria
 							</Label>
-							<Select value={category} onValueChange={setCategory}>
-								<SelectTrigger className="bg-background w-full">
-									<SelectValue placeholder="Seleccionar categoria" />
+							<Select
+								value={category}
+								onValueChange={setCategory}
+							>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Seleccionar categoría" />
 								</SelectTrigger>
 								<SelectContent>
 									{categoriesOptions.map((cat) => (
@@ -212,68 +234,173 @@ export function StockFormDialog({
 							<Label htmlFor="line" className="text-foreground">
 								Línea
 							</Label>
-							<Select value={line} onValueChange={setLine}>
-								<SelectTrigger className="bg-background w-full">
-									<SelectValue placeholder="Seleccionar línea" />
-								</SelectTrigger>
-								<SelectContent>
-									{linesOptions
-										.filter((l) => l.opening === materialType)
-										.map((l, idx) => (
-											<SelectItem key={`${l.id}-${idx}`} value={l.name_line ?? ''}>
-												{l.name_line}
-											</SelectItem>
-										))}
-								</SelectContent>
-							</Select>
+							<Popover open={openLine} onOpenChange={setOpenLine}>
+								<PopoverTrigger asChild>
+									<Button
+										variant="outline"
+										role="combobox"
+										className={cn(
+											'w-full h-10 justify-between text-left font-normal',
+											!line && 'text-muted-foreground',
+											'border-input bg-background rounded-md border',
+											'hover:bg-accent hover:text-accent-foreground',
+											'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+											'disabled:opacity-50 disabled:pointer-events-none'
+										)}
+										disabled={loadingLines}
+									>
+										{line || 'Seleccionar línea'}
+										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent className="w-full p-0">
+									<Command>
+										<CommandInput placeholder="Buscar línea..." />
+										<CommandEmpty>No se encontraron líneas.</CommandEmpty>
+										<CommandGroup className="max-h-60 overflow-auto">
+											{linesOptions
+												.filter((l) => l.opening === materialType)
+												.map((l) => (
+													<CommandItem
+														value={l.name_line ?? ''}
+														key={`${l.id}-${l.name_line}`}
+														onSelect={() => {
+															setLine(l.name_line ?? '');
+															setOpenLine(false);
+														}}
+													>
+														<Check
+															className={cn(
+																'mr-2 h-4 w-4',
+																line === l.name_line ? 'opacity-100' : 'opacity-0'
+															)}
+														/>
+														{l.name_line}
+													</CommandItem>
+												))}
+										</CommandGroup>
+									</Command>
+								</PopoverContent>
+							</Popover>
 						</div>
 
 						<div className="grid gap-2">
 							<Label htmlFor="code" className="text-foreground">
 								Código
 							</Label>
-							<Select value={code} onValueChange={setCode}>
-								<SelectTrigger className="bg-background w-full">
-									<SelectValue placeholder="Seleccionar código" />
-								</SelectTrigger>
-								<SelectContent>
-									{codesOptions
-										.filter((cod) => cod.line_name === line)
-										.map((cod) => (
-											<SelectItem key={cod.id} value={cod.name_code ?? ''}>
-												{cod.name_code}
-											</SelectItem>
-										))}
-								</SelectContent>
-							</Select>
+							<Popover open={openCode} onOpenChange={setOpenCode}>
+								<PopoverTrigger asChild>
+									<Button
+										variant="outline"
+										role="combobox"
+										className={cn(
+											'w-full h-10 justify-between text-left font-normal',
+											!code && 'text-muted-foreground',
+											'border-input bg-background rounded-md border',
+											'hover:bg-accent hover:text-accent-foreground',
+											'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+											'disabled:opacity-50 disabled:pointer-events-none'
+										)}
+										disabled={loadingCodes || !line}
+									>
+										{code || 'Seleccionar código'}
+										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent className="w-full p-0">
+									<Command>
+										<CommandInput placeholder="Buscar código..." />
+										<CommandEmpty>No se encontraron códigos.</CommandEmpty>
+										<CommandGroup className="max-h-60 overflow-auto">
+											{codesOptions
+												.filter((cod) => cod.line_name === line)
+												.map((cod) => (
+													<CommandItem
+														value={cod.name_code ?? ''}
+														key={cod.id}
+														onSelect={() => {
+															setCode(cod.name_code ?? '');
+															setOpenCode(false);
+														}}
+													>
+														<Check
+															className={cn(
+																'mr-2 h-4 w-4',
+																code === cod.name_code ? 'opacity-100' : 'opacity-0'
+															)}
+														/>
+														{cod.name_code}
+													</CommandItem>
+												))}
+										</CommandGroup>
+									</Command>
+								</PopoverContent>
+							</Popover>
 						</div>
 
 						<div className="grid gap-2">
 							<Label htmlFor="color" className="text-foreground">
 								Color
 							</Label>
-							<Select value={color} onValueChange={setColor}>
-								<SelectTrigger className="bg-background w-full">
-									<SelectValue placeholder="Seleccionar color" />
-								</SelectTrigger>
-								<SelectContent>
-									{colorsOptions
-										.filter((c) => c.line_name === line)
-										.map((c, idx) => (
-											<SelectItem key={`${c.id}-${idx}`} value={c.name_color ?? ''}>
-												{c.name_color}
-											</SelectItem>
-										))}
-								</SelectContent>
-							</Select>
+							<Popover open={openColor} onOpenChange={setOpenColor}>
+								<PopoverTrigger asChild>
+									<Button
+										variant="outline"
+										role="combobox"
+										className={cn(
+											'w-full h-10 justify-between text-left font-normal',
+											!color && 'text-muted-foreground',
+											'border-input bg-background rounded-md border',
+											'hover:bg-accent hover:text-accent-foreground',
+											'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+											'disabled:opacity-50 disabled:pointer-events-none'
+										)}
+										disabled={loadingColors || !line}
+									>
+										{color || 'Seleccionar color'}
+										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent className="w-full p-0">
+									<Command>
+										<CommandInput placeholder="Buscar color..." />
+										<CommandEmpty>No se encontraron colores.</CommandEmpty>
+										<CommandGroup className="max-h-60 overflow-auto">
+											{colorsOptions
+												.filter((c) => c.line_name === line)
+												.map((c) => (
+													<CommandItem
+														value={c.name_color ?? ''}
+														key={`${c.id}-${c.name_color}`}
+														onSelect={() => {
+															setColor(c.name_color ?? '');
+															setOpenColor(false);
+														}}
+													>
+														<Check
+															className={cn(
+																'mr-2 h-4 w-4',
+																color === c.name_color ? 'opacity-100' : 'opacity-0'
+															)}
+														/>
+														{c.name_color}
+													</CommandItem>
+												))}
+										</CommandGroup>
+									</Command>
+								</PopoverContent>
+							</Popover>
 						</div>
 
 						<div className="grid gap-2">
 							<Label htmlFor="estado" className="text-foreground">
 								Estado
 							</Label>
-							<Select value={itemStatus} onValueChange={setItemStatus}>
-								<SelectTrigger className="bg-background w-full">
+							<Select
+								value={itemStatus}
+								onValueChange={setItemStatus}
+							>
+								<SelectTrigger className="w-full">
 									<SelectValue placeholder="Seleccionar estado" />
 								</SelectTrigger>
 								<SelectContent>
@@ -305,18 +432,52 @@ export function StockFormDialog({
 							<Label htmlFor="site" className="text-foreground">
 								Ubicación
 							</Label>
-							<Select value={site} onValueChange={setSite}>
-								<SelectTrigger className="bg-background w-full">
-									<SelectValue placeholder="Seleccionar ubicación" />
-								</SelectTrigger>
-								<SelectContent>
-									{sitesOptions.map((s) => (
-										<SelectItem key={s.id} value={s.name_site ?? ''}>
-											{s.name_site}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
+							<Popover open={openSite} onOpenChange={setOpenSite}>
+								<PopoverTrigger asChild>
+									<Button
+										variant="outline"
+										role="combobox"
+										className={cn(
+											'w-full h-10 justify-between text-left font-normal',
+											!site && 'text-muted-foreground',
+											'border-input bg-background rounded-md border',
+											'hover:bg-accent hover:text-accent-foreground',
+											'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+											'disabled:opacity-50 disabled:pointer-events-none'
+										)}
+										disabled={loadingSites}
+									>
+										{site || 'Seleccionar ubicación'}
+										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent className="w-full p-0">
+									<Command>
+										<CommandInput placeholder="Buscar ubicación..." />
+										<CommandEmpty>No se encontraron ubicaciones.</CommandEmpty>
+										<CommandGroup className="max-h-60 overflow-auto">
+											{sitesOptions.map((s) => (
+												<CommandItem
+													value={s.name_site ?? ''}
+													key={s.id}
+													onSelect={() => {
+														setSite(s.name_site ?? '');
+									setOpenSite(false);
+													}}
+												>
+													<Check
+														className={cn(
+															'mr-2 h-4 w-4',
+															site === s.name_site ? 'opacity-100' : 'opacity-0'
+														)}
+													/>
+													{s.name_site}
+												</CommandItem>
+											))}
+										</CommandGroup>
+									</Command>
+								</PopoverContent>
+							</Popover>
 						</div>
 
 						<div className="grid gap-2">

@@ -1,240 +1,353 @@
-"use client"
+'use client';
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Plus } from "lucide-react"
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Plus } from 'lucide-react';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DynamicSelect } from "./dynamic-select"
-import { type ProfileItemStock } from "@/lib/stock"
-import { types, lines, colors, status, sites, categories } from "@/constants/stock-constants"
-import { useState, useEffect } from "react"
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
+import { type ProfileItemStock } from '@/lib/stock';
+import { status, categories } from '@/constants/stock-constants';
+import { listOptions, LineOption, CodeOption, ColorOption, SiteOption } from '@/lib/stock_options';
+import { useState, useEffect } from 'react';
+import { useOptions } from '@/hooks/useOptions';
+import { useToast } from '@/hooks/use-toast';
 
 interface StockFormDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSave: (item: Partial<ProfileItemStock>) => void
-  materialType?: "Aluminio" | "PVC"
-  editItem?: ProfileItemStock | null
-  triggerButton?: boolean 
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	onSave: (item: Partial<ProfileItemStock>) => void;
+	materialType?: 'Aluminio' | 'PVC';
+	editItem?: ProfileItemStock | null;
+	triggerButton?: boolean;
 }
 
-export function StockFormDialog({ 
-  open, 
-  onOpenChange, 
-  onSave, 
-  materialType = "Aluminio",
-  editItem = null,
-  triggerButton = true
+export function StockFormDialog({
+	open,
+	onOpenChange,
+	onSave,
+	materialType = 'Aluminio',
+	editItem = null,
+	triggerButton = true,
 }: StockFormDialogProps) {
-  const isEditing = !!editItem
-  
-  const [category, setCategory] = useState("")
-  const [type, setType] = useState("")
-  const [line, setLine] = useState("")
-  const [color, setColor] = useState("")
-  const [itemStatus, setItemStatus] = useState("")
-  const [quantity, setQuantity] = useState(0)
-  const [site, setSite] = useState("")
-  const [width, setWidth] = useState(0)
+	const isEditing = !!editItem;
 
-  // Status and options for selects
-  const [categoriesOptions, setCategoriesOptions] = useState(categories)
-  const [typesOptions, setTypesOptions] = useState(types)
-  const [linesOptions, setLinesOptions] = useState(lines)
-  const [colorsOptions, setColorsOptions] = useState(colors)
-  const [sitesOptions, setSitesOptions] = useState(sites)
-  const [statusOptions, setStatusOptions] = useState<string[]>([...status])
+	const [category, setCategory] = useState('');
+	const [code, setCode] = useState('');
+	const [line, setLine] = useState('');
+	const [color, setColor] = useState('');
+	const [itemStatus, setItemStatus] = useState('');
+	const [quantity, setQuantity] = useState(0);
+	const [site, setSite] = useState('');
+	const [width, setWidth] = useState(0);
 
-  // Loading data into form when editItem changes
-  useEffect(() => {
-    if (editItem) {
-      setCategory(editItem.category || "")
-      setType(editItem.type || "")
-      setLine(editItem.line || "")
-      setColor(editItem.color || "")
-      setItemStatus(editItem.status || "")
-      setQuantity(editItem.quantity || 0)
-      setSite(editItem.site || "")
-      setWidth(editItem.width || 0)
-    } else {
-      // Reset form when not editing
-      resetForm()
-    }
-  }, [editItem])
+	// Status and options for selects
+	const [categoriesOptions, setCategoriesOptions] = useState(categories);
 
-  const resetForm = () => {
-    setCategory("")
-    setType("")
-    setLine("")
-    setColor("")
-    setItemStatus("")
-    setQuantity(0)
-    setSite("")
-    setWidth(0)
-  }
+	const {
+		options: linesOptions,
+		loading: loadingLines,
+		error: errorLines,
+	} = useOptions<LineOption>('lines', () =>
+		listOptions('lines').then((res) => (res.data ?? []) as LineOption[])
+	);
+	const {
+		options: codesOptions,
+		loading: loadingCodes,
+		error: errorCodes,
+	} = useOptions<CodeOption>('codes', () =>
+		listOptions('codes').then((res) => (res.data ?? []) as CodeOption[])
+	);
+	const {
+		options: colorsOptions,
+		loading: loadingColors,
+		error: errorColors,
+	} = useOptions<ColorOption>('colors', () =>
+		listOptions('colors').then((res) => (res.data ?? []) as ColorOption[])
+	);
+	const {
+		options: sitesOptions,
+		loading: loadingSites,
+		error: errorSites,
+	} = useOptions<SiteOption>('sites', () =>
+		listOptions('sites').then((res) => (res.data ?? []) as SiteOption[])
+	);
+	const [statusOptions, setStatusOptions] = useState<string[]>([...status]);
+	const { toast } = useToast();
 
-  const handleSave = () => {
-    // Validate require fields
-    if (!category || !type || !line || !color || !site || quantity <= 0 || width <= 0) {
-      alert("Por favor complete todos los campos obligatorios")
-      return
-    }
+	// Loading data into form when editItem changes
+	useEffect(() => {
+		if (editItem) {
+			setCategory(editItem.category || '');
+			setCode(editItem.code || '');
+			setLine(editItem.line || '');
+			setColor(editItem.color || '');
+			setItemStatus(editItem.status || '');
+			setQuantity(editItem.quantity || 0);
+			setSite(editItem.site || '');
+			setWidth(editItem.width || 0);
+		} else {
+			// Reset form when not editing
+			resetForm();
+		}
+	}, [editItem]);
 
-    onSave({ 
-      category,
-      type,
-      line,
-      color,
-      status: itemStatus,
-      quantity,
-      site,
-      width,
-      material: materialType?.toLowerCase(),
-      created_at: isEditing ? editItem.created_at : new Date().toISOString().split('T')[0]
-    })
-    
-    // Reset form after save if not editing
-    if (!isEditing) {
-      resetForm()
-    }
-    
-    onOpenChange(false)
-  }
+	const resetForm = () => {
+		setCategory('');
+		setCode('');
+		setLine('');
+		setColor('');
+		setItemStatus('');
+		setQuantity(0);
+		setSite('');
+		setWidth(0);
+	};
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {triggerButton && (
-        <DialogTrigger asChild>
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Agregar Item
-          </Button>
-        </DialogTrigger>
-      )}
-      <DialogContent className="bg-card max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="text-foreground">
-            {isEditing ? "Editar item" : "Agregar nuevo item"}
-          </DialogTitle>
-          <DialogDescription className="text-muted-foreground">
-            {isEditing ? "Modifique los datos del material o producto" : "Ingrese los datos del nuevo material o producto"}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2">
-          <div className="grid gap-4">
-            <DynamicSelect
-              label="Categoría"
-              value={category}
-              onValueChange={setCategory}
-              options={categoriesOptions}
-              onAddOption={(newOption) => setCategoriesOptions([...categoriesOptions, newOption])}
-              placeholder="Seleccionar categoría"
-            />
+	const handleSave = () => {
+		// Validate required fields
+		if (!category || !code || !line || !color || !site || quantity <= 0 || width <= 0) {
+			toast({
+				title: 'Error de validación',
+				description: 'Por favor complete todos los campos obligatorios',
+				variant: 'destructive',
+				duration: 5000,
+			});
+			return;
+		}
 
-            <DynamicSelect
-              label="Línea"
-              value={line}
-              onValueChange={setLine}
-              options={linesOptions}
-              onAddOption={(newOption) => setLinesOptions([...linesOptions, newOption])}
-              placeholder="Seleccionar línea"
-            />
+		try {
+			onSave({
+				category,
+				code,
+				line,
+				color,
+				status: itemStatus,
+				quantity,
+				site,
+				width,
+				material: materialType?.toLowerCase(),
+				created_at: isEditing ? editItem.created_at : new Date().toISOString().split('T')[0],
+			});
 
-            <DynamicSelect
-              label="Tipo"
-              value={type}
-              onValueChange={setType}
-              options={typesOptions}
-              onAddOption={(newOption) => setTypesOptions([...typesOptions, newOption])}
-              placeholder="Seleccionar tipo"
-            />
+			// Show success message
+			toast({
+				title: '¡Éxito!',
+				description: isEditing ? 'Item actualizado correctamente' : 'Item agregado correctamente',
+				duration: 3000,
+			});
 
-            <DynamicSelect
-              label="Color"
-              value={color}
-              onValueChange={setColor}
-              options={colorsOptions}
-              onAddOption={(newOption) => setColorsOptions([...colorsOptions, newOption])}
-              placeholder="Seleccionar color"
-            />
+			// Reset form after save if not editing
+			if (!isEditing) {
+				resetForm();
+			}
 
-            <div className="grid gap-2">
-              <Label htmlFor="estado" className="text-foreground">
-                Estado
-              </Label>
-              <Select value={itemStatus} onValueChange={setItemStatus}>
-                <SelectTrigger className="bg-background w-full">
-                  <SelectValue placeholder="Seleccionar estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map((est) => (
-                    <SelectItem key={est} value={est}>
-                      {est}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+			onOpenChange(false);
+		} catch (error) {
+			console.error('Error al guardar el item:', error);
+			toast({
+				title: 'Error',
+				description: 'Ocurrió un error al guardar el item. Por favor, intente nuevamente.',
+				variant: 'destructive',
+				duration: 5000,
+			});
+		}
+	};
 
-            <div className="grid gap-2">
-              <Label htmlFor="cantidad" className="text-foreground">
-                Cantidad
-              </Label>
-              <Input
-                id="cantidad"
-                type="number"
-                placeholder="0"
-                className="bg-background"
-                value={quantity || ""}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                required
-              />
-            </div>
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			{triggerButton && (
+				<DialogTrigger asChild>
+					<Button className="gap-2">
+						<Plus className="h-4 w-4" />
+						Agregar Item
+					</Button>
+				</DialogTrigger>
+			)}
+			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
+				<DialogHeader className="flex-shrink-0">
+					<DialogTitle className="text-foreground">
+						{isEditing ? 'Editar item' : 'Agregar nuevo item'}
+					</DialogTitle>
+					<DialogDescription className="text-muted-foreground">
+						{isEditing
+							? 'Modifique los datos del material o producto'
+							: 'Ingrese los datos del nuevo material o producto'}
+					</DialogDescription>
+				</DialogHeader>
+				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2">
+					<div className="grid gap-4">
+						<div className="grid gap-2">
+							<Label htmlFor="category" className="text-foreground">
+								Categoria
+							</Label>
+							<Select value={category} onValueChange={setCategory}>
+								<SelectTrigger className="bg-background w-full">
+									<SelectValue placeholder="Seleccionar categoria" />
+								</SelectTrigger>
+								<SelectContent>
+									{categoriesOptions.map((cat) => (
+										<SelectItem key={cat} value={cat}>
+											{cat}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
 
-            <DynamicSelect
-              label="Ubicación"
-              value={site}
-              onValueChange={setSite}
-              options={sitesOptions}
-              onAddOption={(newOption) => setSitesOptions([...sitesOptions, newOption])}
-              placeholder="Seleccionar ubicación"
-            />
+						<div className="grid gap-2">
+							<Label htmlFor="line" className="text-foreground">
+								Línea
+							</Label>
+							<Select value={line} onValueChange={setLine}>
+								<SelectTrigger className="bg-background w-full">
+									<SelectValue placeholder="Seleccionar línea" />
+								</SelectTrigger>
+								<SelectContent>
+									{linesOptions
+										.filter((l) => l.opening === materialType)
+										.map((l, idx) => (
+											<SelectItem key={`${l.id}-${idx}`} value={l.name_line ?? ''}>
+												{l.name_line}
+											</SelectItem>
+										))}
+								</SelectContent>
+							</Select>
+						</div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="largo" className="text-foreground">
-                Largo (mm)
-              </Label>
-              <Input
-                id="largo"
-                type="number"
-                placeholder="0"
-                className="bg-background"
-                value={width || ""}
-                onChange={(e) => setWidth(Number(e.target.value))}
-                required
-              />
-            </div>
-          </div>
-        </div>
-        <DialogFooter className="flex-shrink-0 pt-4 border-t border-border">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} className="w-full sm:w-auto">
-            {isEditing ? "Guardar cambios" : "Guardar"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
+						<div className="grid gap-2">
+							<Label htmlFor="code" className="text-foreground">
+								Código
+							</Label>
+							<Select value={code} onValueChange={setCode}>
+								<SelectTrigger className="bg-background w-full">
+									<SelectValue placeholder="Seleccionar código" />
+								</SelectTrigger>
+								<SelectContent>
+									{codesOptions
+										.filter((cod) => cod.line_name === line)
+										.map((cod) => (
+											<SelectItem key={cod.id} value={cod.name_code ?? ''}>
+												{cod.name_code}
+											</SelectItem>
+										))}
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div className="grid gap-2">
+							<Label htmlFor="color" className="text-foreground">
+								Color
+							</Label>
+							<Select value={color} onValueChange={setColor}>
+								<SelectTrigger className="bg-background w-full">
+									<SelectValue placeholder="Seleccionar color" />
+								</SelectTrigger>
+								<SelectContent>
+									{colorsOptions
+										.filter((c) => c.line_name === line)
+										.map((c, idx) => (
+											<SelectItem key={`${c.id}-${idx}`} value={c.name_color ?? ''}>
+												{c.name_color}
+											</SelectItem>
+										))}
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div className="grid gap-2">
+							<Label htmlFor="estado" className="text-foreground">
+								Estado
+							</Label>
+							<Select value={itemStatus} onValueChange={setItemStatus}>
+								<SelectTrigger className="bg-background w-full">
+									<SelectValue placeholder="Seleccionar estado" />
+								</SelectTrigger>
+								<SelectContent>
+									{statusOptions.map((est) => (
+										<SelectItem key={est} value={est}>
+											{est}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div className="grid gap-2">
+							<Label htmlFor="cantidad" className="text-foreground">
+								Cantidad
+							</Label>
+							<Input
+								id="cantidad"
+								type="number"
+								placeholder="0"
+								className="bg-background"
+								value={quantity || ''}
+								onChange={(e) => setQuantity(Number(e.target.value))}
+								required
+							/>
+						</div>
+
+						<div className="grid gap-2">
+							<Label htmlFor="site" className="text-foreground">
+								Ubicación
+							</Label>
+							<Select value={site} onValueChange={setSite}>
+								<SelectTrigger className="bg-background w-full">
+									<SelectValue placeholder="Seleccionar ubicación" />
+								</SelectTrigger>
+								<SelectContent>
+									{sitesOptions.map((s) => (
+										<SelectItem key={s.id} value={s.name_site ?? ''}>
+											{s.name_site}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div className="grid gap-2">
+							<Label htmlFor="largo" className="text-foreground">
+								Largo (mm)
+							</Label>
+							<Input
+								id="largo"
+								type="number"
+								placeholder="0"
+								className="bg-background"
+								value={width || ''}
+								onChange={(e) => setWidth(Number(e.target.value))}
+								required
+							/>
+						</div>
+					</div>
+				</div>
+				<DialogFooter className="flex-shrink-0 pt-4 border-t border-border">
+					<Button
+						variant="outline"
+						onClick={() => onOpenChange(false)}
+						className="w-full sm:w-auto"
+					>
+						Cancelar
+					</Button>
+					<Button onClick={handleSave} className="w-full sm:w-auto">
+						{isEditing ? 'Guardar cambios' : 'Guardar'}
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
+	);
 }

@@ -253,9 +253,9 @@ export function StockFormDialog({
 										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 									</Button>
 								</PopoverTrigger>
-								<PopoverContent className="w-full p-0">
+								<PopoverContent className="w-[320px] p-0" align="start" sideOffset={4}>
 									<Command>
-										<CommandInput placeholder="Buscar línea..." />
+										<CommandInput placeholder="Buscar línea..." className="w-full" />
 										<CommandEmpty>No se encontraron líneas.</CommandEmpty>
 										<CommandGroup className="max-h-60 overflow-auto">
 											{linesOptions
@@ -307,9 +307,9 @@ export function StockFormDialog({
 										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 									</Button>
 								</PopoverTrigger>
-								<PopoverContent className="w-full p-0">
+								<PopoverContent className="w-[320px] p-0" align="start" sideOffset={4}>
 									<Command>
-										<CommandInput placeholder="Buscar código..." />
+										<CommandInput placeholder="Buscar código..." className="w-full" />
 										<CommandEmpty>No se encontraron códigos.</CommandEmpty>
 										<CommandGroup className="max-h-60 overflow-auto">
 											{codesOptions
@@ -361,9 +361,9 @@ export function StockFormDialog({
 										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 									</Button>
 								</PopoverTrigger>
-								<PopoverContent className="w-full p-0">
+								<PopoverContent className="w-[320px] p-0" align="start" sideOffset={4}>
 									<Command>
-										<CommandInput placeholder="Buscar color..." />
+										<CommandInput placeholder="Buscar color..." className="w-full" />
 										<CommandEmpty>No se encontraron colores.</CommandEmpty>
 										<CommandGroup className="max-h-60 overflow-auto">
 											{colorsOptions
@@ -451,9 +451,9 @@ export function StockFormDialog({
 										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 									</Button>
 								</PopoverTrigger>
-								<PopoverContent className="w-full p-0">
+								<PopoverContent className="w-[320px] p-0" align="start" sideOffset={4}>
 									<Command>
-										<CommandInput placeholder="Buscar ubicación..." />
+										<CommandInput placeholder="Buscar ubicación..." className="w-full" />
 										<CommandEmpty>No se encontraron ubicaciones.</CommandEmpty>
 										<CommandGroup className="max-h-60 overflow-auto">
 											{sitesOptions.map((s) => (

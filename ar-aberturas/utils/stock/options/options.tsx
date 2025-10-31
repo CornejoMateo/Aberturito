@@ -24,14 +24,14 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { OptionDialog } from './option-add';
 import { toast } from '@/hooks/use-toast';
 
-import { deleteOption } from '@/lib/stock_options';
+import { deleteOption } from '@/lib/stock-options';
 import {
 	listOptions,
 	type LineOption,
 	CodeOption,
 	ColorOption,
 	SiteOption,
-} from '@/lib/stock_options';
+} from '@/lib/stock-options';
 import { useOptions } from '@/hooks/useOptions';
 
 interface OptionsModalProps {
@@ -160,7 +160,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader>
 					<DialogTitle>Administrar opciones</DialogTitle>
-					<DialogDescription>Gestione colores, líneas, códigos y ubicaciones</DialogDescription>
+					<DialogDescription>Gestione colores, líneas, códigos/nombres y ubicaciones</DialogDescription>
 				</DialogHeader>
 
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2 grid gap-6">

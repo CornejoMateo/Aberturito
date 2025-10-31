@@ -230,11 +230,11 @@ export function StockFormDialog({
 
 						<div className="grid gap-2">
 							<Label htmlFor="code" className="text-foreground">
-								Código
+								{materialType == "PVC" ? "Nombre" : "Código"}
 							</Label>
 							<Select value={code} onValueChange={setCode}>
 								<SelectTrigger className="bg-background w-full">
-									<SelectValue placeholder="Seleccionar código" />
+									<SelectValue placeholder={materialType == "PVC" ? "Seleccionar nombre" : "Seleccionar código"} />
 								</SelectTrigger>
 								<SelectContent>
 									{codesOptions

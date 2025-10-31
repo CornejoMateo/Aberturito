@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Package, PackagePlus, AlertTriangle } from 'lucide-react';
-import type { ProfileItemStock } from '@/lib/stock';
+import type { ProfileItemStock } from '@/lib/profile-stock';
 
 interface StockStatsProps {
 	totalItems: number;

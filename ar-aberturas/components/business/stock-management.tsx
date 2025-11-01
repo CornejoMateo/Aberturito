@@ -5,7 +5,7 @@ import { StockFormDialog } from '../../utils/stock/stock-add-dialog';
 import { StockStats } from '../../utils/stock/stock-stats';
 import { StockFilters } from '../../utils/stock/stock-filters';
 import { ProfileTable } from '../../utils/stock/profile-table';
-import { AccesorieTable } from '@/utils/stock/accesories-table';
+//import { AccesorieTable } from '@/utils/stock/accesories-table';
 import { OptionsModal } from '@/utils/stock/options/options';
 import {
 	listStock,
@@ -17,7 +17,7 @@ import {
 import { type AccesorieItemStock } from '@/lib/accesorie-stock';
 import { Button } from '@/components/ui/button';
 import { Settings, Image } from 'lucide-react';
-import { PhotoGalleryModal } from '@/components/stock/photo-gallery-modal';
+import { PhotoGalleryModal } from '@/utils/stock/photo-gallery-modal';
 import {
 	Pagination,
 	PaginationContent,

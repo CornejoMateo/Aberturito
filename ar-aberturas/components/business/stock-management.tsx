@@ -146,7 +146,7 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 					{/* button for configure options (colors, codes and lines) */}
 					<Button variant="default" onClick={() => setIsPhotoGalleryOpen(true)} className="gap-2">
 						<Image className="h-5 w-5" />
-						Ver fotos
+						Agregar foto
 					</Button>
 					<Button variant="default" onClick={() => setIsModalOpen(true)} className="gap-2">
 						<Settings className="h-5 w-5" />
@@ -155,6 +155,7 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 					<PhotoGalleryModal
 						open={isPhotoGalleryOpen}
 						onOpenChange={setIsPhotoGalleryOpen}
+						materialType={materialType}
 					/>
 					<OptionsModal
 						materialType={materialType}

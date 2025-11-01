@@ -33,9 +33,15 @@ import {
 	PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { type ProfileItemStock } from '@/lib/stock';
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
+import { type ProfileItemStock } from '@/lib/profile-stock';
 import { status, categories } from '@/constants/stock-constants';
-import { listOptions, LineOption, CodeOption, ColorOption, SiteOption } from '@/lib/stock_options';
+import { listOptions, LineOption, CodeOption, ColorOption, SiteOption } from '@/lib/stock-options';
 import { useState, useEffect } from 'react';
 import { useOptions } from '@/hooks/useOptions';
 import { useToast } from '@/hooks/use-toast';
@@ -286,7 +292,7 @@ export function StockFormDialog({
 
 						<div className="grid gap-2">
 							<Label htmlFor="code" className="text-foreground">
-								Código
+								{materialType == "PVC" ? "Nombre" : "Código"}
 							</Label>
 							<Popover open={openCode} onOpenChange={setOpenCode}>
 								<PopoverTrigger asChild>
@@ -303,7 +309,7 @@ export function StockFormDialog({
 										)}
 										disabled={loadingCodes || !line}
 									>
-										{code || 'Seleccionar código'}
+										{code ? code : materialType === "PVC" ? "Seleccionar nombre" : "Seleccionar código"}
 										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 									</Button>
 								</PopoverTrigger>

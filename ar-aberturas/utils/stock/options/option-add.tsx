@@ -29,7 +29,7 @@ import {
 	CodeOption,
 	ColorOption,
 	SiteOption,
-} from '@/lib/stock_options';
+} from '@/lib/stock-options';
 import React from 'react';
 
 interface OptionFormDialogProps {

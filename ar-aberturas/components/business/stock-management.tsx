@@ -4,7 +4,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { StockFormDialog } from '../../utils/stock/stock-add-dialog';
 import { StockStats } from '../../utils/stock/stock-stats';
 import { StockFilters } from '../../utils/stock/stock-filters';
-import { StockTable } from '../../utils/stock/stock-table';
+import { ProfileTable } from '../../utils/stock/profile-table';
+import { AccesorieTable } from '@/utils/stock/accesories-table';
 import { OptionsModal } from '@/utils/stock/options/options';
 import {
 	listStock,
@@ -12,7 +13,8 @@ import {
 	deleteProfileStock,
 	type ProfileItemStock,
 	updateProfileStock,
-} from '@/lib/stock';
+} from '@/lib/profile-stock';
+import { type AccesorieItemStock } from '@/lib/accesorie-stock';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import {
@@ -210,8 +212,9 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 			) : error ? (
 				<p className="text-destructive">Error: {error}</p>
 			) : (
-				<>
-					<StockTable
+				<>	
+					{selectedCategory == "Perfiles" && (
+					<ProfileTable
 						filteredStock={currentItems}
 						onEdit={handleEdit}
 						onDelete={async (id) => {
@@ -236,7 +239,11 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 								);
 							}
 						}}
-					/>
+					/>)}
+					{selectedCategory == "Accesorios" && ( 
+						<p>Tabla de accesorios en desarrollo.</p>
+						//<AccesorieTable />
+					)}
 
 					{filteredStock.length > itemsPerPage && (
 						<div className="flex items-center justify-between px-2 mt-4">

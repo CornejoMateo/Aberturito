@@ -33,12 +33,6 @@ import {
 	PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
 import { type ProfileItemStock } from '@/lib/profile-stock';
 import { status, categories } from '@/constants/stock-constants';
 import { listOptions, LineOption, CodeOption, ColorOption, SiteOption } from '@/lib/stock-options';

@@ -11,6 +11,7 @@ export type ProfileItemStock = {
 	site?: string | null;
 	width?: number | null;
 	material?: string | null;
+	image_url?: string | null;
 	created_at?: string | null;
 	last_update?: string | null;
 };
@@ -36,13 +37,26 @@ export async function getProfileById(
 
 export async function createProfileStock(
 	item: Partial<ProfileItemStock>
-): Promise<{ data: ProfileItemStock | null; error: any }> {
+	): Promise<{ data: ProfileItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
+
+	// Fetch matching image from gallery_images table
+	const { data: imageMatch } = await supabase
+		.from('gallery_images')
+		.select('image_url')
+		.eq('material_type', item.material)
+		.eq('name_line', item.line)
+		.eq('name_code', item.code)
+		.limit(1);
+
 	const payload = {
 		...item,
+		image_url: imageMatch?.[0].image_url ?? null,
 		last_update: item.created_at ?? new Date().toISOString().split('T')[0],
 	};
+
 	const { data, error } = await supabase.from(TABLE).insert(payload).select().single();
+
 	return { data, error };
 }
 

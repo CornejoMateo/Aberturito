@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { useState, useEffect } from 'react';
 import { cn } from "../../lib/utils";
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -34,6 +35,7 @@ interface PhotoGalleryModalProps {
 }
 
 export function PhotoGalleryModal({ open, onOpenChange, materialType = 'Aluminio' }: PhotoGalleryModalProps) {
+	const { toast } = useToast();
 	const [file, setFile] = useState<File | null>(null);
 	const [nameLine, setNameLine] = useState('');
 	const [nameCode, setNameCode] = useState('');
@@ -69,8 +71,23 @@ export function PhotoGalleryModal({ open, onOpenChange, materialType = 'Aluminio
     );
 
 	const handleUpload = async () => {
-		if (!file) return alert('Seleccioná una imagen');
-		if (!materialType || !nameLine || !nameCode) return alert('Completá todos los campos');
+		if (!file) {
+			toast({
+				title: 'Error',
+				description: 'Seleccioná una imagen',
+				variant: 'destructive',
+			});
+			return;
+		}
+
+		if (!materialType || !nameLine || !nameCode) {
+			toast({
+				title: 'Error',
+				description: 'Completá todos los campos',
+				variant: 'destructive',
+			});
+			return;
+		}
 
 		try {
 			setLoading(true);
@@ -89,16 +106,28 @@ export function PhotoGalleryModal({ open, onOpenChange, materialType = 'Aluminio
 			const data = await res.json();
 
 			if (data.success) {
-				alert('✅ Imagen subida correctamente');
+				toast({
+					title: '¡Éxito!',
+					description: 'Imagen subida correctamente',
+					duration: 3000,
+				});
 				setFile(null);
 				setNameLine('');
 				setNameCode('');
 			} else {
-				alert(`Error: ${data.error}`);
+				toast({
+					title: 'Error',
+					description: data.error || 'Ocurrió un error al subir la imagen',
+					variant: 'destructive',
+				});
 			}
 		} catch (err) {
 			console.error('Error al subir la imagen:', err);
-			alert('Ocurrió un error al subir la imagen');
+			toast({
+				title: 'Error',
+				description: 'Ocurrió un error al subir la imagen',
+				variant: 'destructive',
+			});
 		} finally {
 			setLoading(false);
 		}

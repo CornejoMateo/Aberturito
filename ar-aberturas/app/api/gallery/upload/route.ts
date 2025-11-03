@@ -2,6 +2,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { updateImageForMatchingProfiles } from '@/lib/profile-stock';
+import sharp from 'sharp';
 
 cloudinary.config({
 	cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
@@ -10,6 +11,7 @@ cloudinary.config({
 });
 
 export async function POST(req: Request) {
+
 	let uploadedPublicId: string | null = null;
 	try {
 		const formData = await req.formData();
@@ -28,19 +30,31 @@ export async function POST(req: Request) {
 		const arrayBuffer = await file.arrayBuffer();
 		const buffer = Buffer.from(arrayBuffer);
 
+		const compressedBuffer = await sharp(buffer)
+		.resize({
+			width: 1200,              
+			withoutEnlargement: true, 
+		})
+		.jpeg({
+			quality: 75,             
+			mozjpeg: true,          
+		})
+		.toBuffer();
+
 		const result = await new Promise((resolve, reject) => {
-			cloudinary.uploader
-				.upload_stream(
-					{
-						folder: 'gallery',
-						public_id: `${material_type}_${name_line}_${name_code}`,
-					},
-					(error, result) => {
-						if (error) reject(error);
-						else resolve(result);
-					}
-				)
-				.end(buffer);
+		cloudinary.uploader
+			.upload_stream(
+			{
+				folder: 'gallery',
+				public_id: `${material_type}_${name_line}_${name_code}`,
+				format: 'jpg', // 
+			},
+			(error, result) => {
+				if (error) reject(error);
+				else resolve(result);
+			}
+			)
+			.end(compressedBuffer);
 		});
 
 		const uploadResult = result as { secure_url: string; public_id: string };

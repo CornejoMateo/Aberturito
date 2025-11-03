@@ -276,11 +276,15 @@ export function ProfileTable({ filteredStock, onEdit, onDelete, onUpdateQuantity
 				<AlertDialogContent>
 					<AlertDialogTitle>Imagen</AlertDialogTitle>
 					<div className="flex justify-center items-center">
-						<img
-							src={openImageUrl}
-							alt="Imagen de perfil"
-							style={{ maxWidth: '70vw', maxHeight: '50vh', borderRadius: 8 }}
-						/>
+					<img
+						src={
+							openImageUrl
+							? openImageUrl.replace('/upload/', '/upload/f_auto,q_auto,w_1200/')
+							: ''
+						}
+						alt="Imagen"
+						style={{ maxWidth: '70vw', maxHeight: '50vh', borderRadius: 8 }}
+					/>
 					</div>
 					<div className="flex justify-end mt-4">
 						<AlertDialogAction onClick={() => setOpenImageUrl(null)}>

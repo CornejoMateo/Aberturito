@@ -5,7 +5,7 @@ import { StockFormDialog } from '../../utils/stock/stock-add-dialog';
 import { StockStats } from '../../utils/stock/stock-stats';
 import { StockFilters } from '../../utils/stock/stock-filters';
 import { ProfileTable } from '../../utils/stock/profile-table';
-import { AccesorieTable } from '@/utils/stock/accesories-table';
+//import { AccesorieTable } from '@/utils/stock/accesories-table';
 import { OptionsModal } from '@/utils/stock/options/options';
 import {
 	listStock,
@@ -16,7 +16,8 @@ import {
 } from '@/lib/profile-stock';
 import { type AccesorieItemStock } from '@/lib/accesorie-stock';
 import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
+import { Settings, Image } from 'lucide-react';
+import { PhotoGalleryModal } from '@/utils/stock/photo-gallery-modal';
 import {
 	Pagination,
 	PaginationContent,
@@ -43,6 +44,7 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 	const itemsPerPage = 10;
 
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [isPhotoGalleryOpen, setIsPhotoGalleryOpen] = useState(false);
 
 	useEffect(() => {
 		let mounted = true;
@@ -142,10 +144,19 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 				{/* form for new item */}
 				<div className="flex gap-2">
 					{/* button for configure options (colors, codes and lines) */}
+					<Button variant="default" onClick={() => setIsPhotoGalleryOpen(true)} className="gap-2">
+						<Image className="h-5 w-5" />
+						Agregar foto
+					</Button>
 					<Button variant="default" onClick={() => setIsModalOpen(true)} className="gap-2">
 						<Settings className="h-5 w-5" />
 						Ajustar opciones
 					</Button>
+					<PhotoGalleryModal
+						open={isPhotoGalleryOpen}
+						onOpenChange={setIsPhotoGalleryOpen}
+						materialType={materialType}
+					/>
 					<OptionsModal
 						materialType={materialType}
 						open={isModalOpen}

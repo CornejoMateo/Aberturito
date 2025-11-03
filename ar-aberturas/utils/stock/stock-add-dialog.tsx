@@ -158,7 +158,7 @@ export function StockFormDialog({
 				quantity,
 				site,
 				width,
-				material: materialType?.toLowerCase(),
+				material: materialType,
 				created_at: isEditing ? editItem.created_at : new Date().toISOString().split('T')[0],
 			});
 
@@ -253,7 +253,7 @@ export function StockFormDialog({
 										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 									</Button>
 								</PopoverTrigger>
-								<PopoverContent className="w-[320px] p-0" align="start" sideOffset={4}>
+								<PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
 									<Command>
 										<CommandInput placeholder="Buscar línea..." className="w-full" />
 										<CommandEmpty>No se encontraron líneas.</CommandEmpty>
@@ -307,7 +307,7 @@ export function StockFormDialog({
 										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 									</Button>
 								</PopoverTrigger>
-								<PopoverContent className="w-[320px] p-0" align="start" sideOffset={4}>
+								<PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
 									<Command>
 										<CommandInput placeholder="Buscar código..." className="w-full" />
 										<CommandEmpty>No se encontraron códigos.</CommandEmpty>
@@ -361,7 +361,7 @@ export function StockFormDialog({
 										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 									</Button>
 								</PopoverTrigger>
-								<PopoverContent className="w-[320px] p-0" align="start" sideOffset={4}>
+								<PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
 									<Command>
 										<CommandInput placeholder="Buscar color..." className="w-full" />
 										<CommandEmpty>No se encontraron colores.</CommandEmpty>
@@ -451,7 +451,7 @@ export function StockFormDialog({
 										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 									</Button>
 								</PopoverTrigger>
-								<PopoverContent className="w-[320px] p-0" align="start" sideOffset={4}>
+								<PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
 									<Command>
 										<CommandInput placeholder="Buscar ubicación..." className="w-full" />
 										<CommandEmpty>No se encontraron ubicaciones.</CommandEmpty>

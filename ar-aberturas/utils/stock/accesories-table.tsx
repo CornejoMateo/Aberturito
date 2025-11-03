@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Package, TrendingDown, TrendingUp, Edit, Trash2, Plus, Minus } from 'lucide-react';
 import { type AccesorieItemStock } from '@/lib/accesorie-stock';
 import { useState } from 'react';
-import { ConfirmUpdateDialog } from '@/components/stock/confirm-update-dialog';
+import { ConfirmUpdateDialog } from '@/utils/stock/confirm-update-dialog';
 import {
     AlertDialog,
     AlertDialogTrigger,

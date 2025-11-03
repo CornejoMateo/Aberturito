@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Package, TrendingDown, TrendingUp, Edit, Trash2, Plus, Minus } from 'lucide-react';
 import { type ProfileItemStock } from '@/lib/profile-stock';
 import { useState } from 'react';
-import { ConfirmUpdateDialog } from '@/components/stock/confirm-update-dialog';
+import { ConfirmUpdateDialog } from '@/utils/stock/confirm-update-dialog';
 import {
 	AlertDialog,
 	AlertDialogTrigger,
@@ -31,6 +31,7 @@ export function ProfileTable({ filteredStock, onEdit, onDelete, onUpdateQuantity
 		action: 'increment' | 'decrement';
 		currentQty: number;
 	} | null>(null);
+	const [openImageUrl, setOpenImageUrl] = useState<string | null>(null);
 
 	const handleQuantityAction = (
 		id: string,
@@ -69,9 +70,6 @@ export function ProfileTable({ filteredStock, onEdit, onDelete, onUpdateQuantity
 					<thead className="border-b border-border bg-secondary">
 						<tr>
 							<th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
-								Categoria
-							</th>
-							<th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
 								Linea
 							</th>
 							<th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -98,6 +96,9 @@ export function ProfileTable({ filteredStock, onEdit, onDelete, onUpdateQuantity
 							<th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
 								Acciones
 							</th>
+							<th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
+								Imagen
+							</th>
 						</tr>
 					</thead>
 					<tbody className="divide-y divide-border">
@@ -116,13 +117,6 @@ export function ProfileTable({ filteredStock, onEdit, onDelete, onUpdateQuantity
 
 								return (
 									<tr key={item.id} className="hover:bg-secondary/50 transition-colors">
-										<td className="px-2 py-2 whitespace-nowrap">
-											<div className="flex justify-center">
-												<Badge variant="outline" className="bg-secondary text-xs">
-													{item.category || 'Sin categoría'}
-												</Badge>
-											</div>
-										</td>
 										<td className="px-2 py-2 whitespace-nowrap">
 											<p className="text-center text-sm text-foreground">{item.line || 'N/A'}</p>
 										</td>
@@ -240,6 +234,21 @@ export function ProfileTable({ filteredStock, onEdit, onDelete, onUpdateQuantity
 												</AlertDialog>
 											</div>
 										</td>
+										<td className="px-2 py-2 whitespace-nowrap">
+											<div className="flex justify-center">
+												{item.image_url ? (
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={() => setOpenImageUrl(item.image_url!)}
+													>
+														Ver
+													</Button>
+												) : (
+													<span className="text-muted-foreground text-sm">No tiene</span>
+												)}
+											</div>
+										</td>
 									</tr>
 								);
 							})
@@ -261,6 +270,30 @@ export function ProfileTable({ filteredStock, onEdit, onDelete, onUpdateQuantity
 					isLoading={isUpdating && updatingId === currentAction.id}
 				/>
 			)}
+
+		{openImageUrl && (
+			<AlertDialog open={!!openImageUrl} onOpenChange={() => setOpenImageUrl(null)}>
+				<AlertDialogContent>
+					<AlertDialogTitle>Imagen</AlertDialogTitle>
+					<div className="flex justify-center items-center">
+					<img
+						src={
+							openImageUrl
+							? openImageUrl.replace('/upload/', '/upload/f_auto,q_auto,w_1200/')
+							: ''
+						}
+						alt="Imagen"
+						style={{ maxWidth: '70vw', maxHeight: '50vh', borderRadius: 8 }}
+					/>
+					</div>
+					<div className="flex justify-end mt-4">
+						<AlertDialogAction onClick={() => setOpenImageUrl(null)}>
+							Cerrar
+						</AlertDialogAction>
+					</div>
+				</AlertDialogContent>
+			</AlertDialog>
+		)}
 		</Card>
 	);
 }

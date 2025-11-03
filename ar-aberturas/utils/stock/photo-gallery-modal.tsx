@@ -23,6 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { useOptions } from '@/hooks/useOptions';
 import { listOptions, type LineOption, type CodeOption } from '@/lib/stock-options';
+import ImageViewer from '@/components/ui/image-viewer';
 
 interface PhotoGalleryModalProps {
 	open: boolean;
@@ -42,6 +43,10 @@ export function PhotoGalleryModal({
 	const [loading, setLoading] = useState(false);
 	const [openLine, setOpenLine] = useState(false);
 	const [openCode, setOpenCode] = useState(false);
+	const [images, setImages] = useState<{ id?: number; image_url?: string | null }[]>([]);
+	const [imagesLoading, setImagesLoading] = useState(false);
+	const [imagesError, setImagesError] = useState<string | null>(null);
+	const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
 	// Options for selects
 	const {
@@ -68,6 +73,42 @@ export function PhotoGalleryModal({
 		);
 	}, [linesOptions, materialType]);
 
+	const fetchImages = async (line?: string, code?: string) => {
+		try {
+			setImagesLoading(true);
+			setImagesError(null);
+			const params = new URLSearchParams();
+			if (materialType) params.append('material_type', materialType);
+			if (line) params.append('name_line', line);
+			if (code) params.append('name_code', code);
+
+			const res = await fetch(`/api/gallery/list?${params.toString()}`);
+			const data = await res.json();
+			if (data.success) {
+				setImages(data.images ?? []);
+			} else {
+				setImages([]);
+				setImagesError(data.error ?? 'Error al obtener imágenes');
+			}
+		} catch (err: any) {
+			console.error('Error fetching images', err);
+			setImagesError(err?.message ?? String(err));
+			setImages([]);
+		} finally {
+			setImagesLoading(false);
+		}
+	};
+
+	// Fetch images only when both line and code are selected
+	useEffect(() => {
+		if (nameLine && nameCode) {
+			fetchImages(nameLine, nameCode);
+		} else {
+			// clear images unless both selectors are set
+			setImages([]);
+			setImagesError(null);
+		}
+	}, [nameLine, nameCode, materialType]);
 	// Filter codes based on selected line
 	const filteredCodes = codesOptions.filter((code) => code.line_name === nameLine);
 
@@ -139,7 +180,7 @@ export function PhotoGalleryModal({
 			<DialogContent className="max-w-[600px] w-full">
 				<DialogHeader>
 					<DialogTitle>Agregar fotos</DialogTitle>
-					<DialogDescription>Subí imágenes según ínea y código.</DialogDescription>
+					<DialogDescription>Subí imágenes según línea y código.</DialogDescription>
 				</DialogHeader>
 
 				<div className="p-6 flex flex-col gap-4">
@@ -236,6 +277,46 @@ export function PhotoGalleryModal({
 						</PopoverContent>
 					</Popover>
 
+					{/* Gallery results */}
+					<div className="pt-4">
+						<h3 className="text-sm font-semibold text-foreground mb-2">Imágenes encontradas</h3>
+
+						{imagesLoading ? (
+							<div className="text-sm text-muted-foreground">Cargando imágenes...</div>
+						) : imagesError ? (
+							<div className="text-sm text-destructive">Error: {imagesError}</div>
+						) : !nameLine ? (
+							<div className="text-sm text-muted-foreground">Seleccioná línea y código para ver imágenes.</div>
+						) : nameLine && !nameCode ? (
+							<div className="text-sm text-muted-foreground">Seleccioná un código para ver las imágenes de la línea seleccionada.</div>
+						) : images.length === 0 ? (
+							<div className="text-sm text-muted-foreground">No se encontraron imágenes para la línea y código seleccionados.</div>
+						) : (
+							<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+								{images.map((img) => (
+									<button
+										key={img.id}
+										onClick={() => img.image_url && setSelectedImage(img.image_url)}
+										className="aspect-video bg-muted rounded overflow-hidden border border-border shadow-sm p-0"
+									>
+										{img.image_url ? (
+											<img
+												src={img.image_url}
+												alt={`Imagen ${img.id}`}
+												className="w-full h-full object-cover"
+												loading="lazy"
+											/>
+										) : (
+											<div className="flex items-center justify-center h-full text-muted-foreground">
+												Sin imagen
+											</div>
+										)}
+									</button>
+								))}
+							</div>
+						)}
+					</div>
+
 					<label htmlFor="file-upload" className="w-full">
 						<div className="w-full px-4 py-2 border rounded bg-background text-muted-foreground cursor-pointer text-center">
 							{file ? file.name : 'Elegí una imagen'}
@@ -251,6 +332,11 @@ export function PhotoGalleryModal({
 					<Button onClick={handleUpload} disabled={loading}>
 						{loading ? 'Subiendo...' : 'Subir imagen'}
 					</Button>
+
+					{/* Shared image viewer */}
+					{selectedImage && (
+						<ImageViewer open={!!selectedImage} onOpenChange={(v) => !v && setSelectedImage(null)} src={selectedImage} />
+					)}
 				</div>
 			</DialogContent>
 		</Dialog>

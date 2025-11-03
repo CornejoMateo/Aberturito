@@ -19,21 +19,31 @@ export function ImageViewer({ open, onOpenChange, src, alt = 'Imagen' }: ImageVi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] w-full p-4">
-        <DialogHeader>
+      <DialogContent className="max-w-[95vw] w-full max-h-[95vh] p-0 overflow-hidden" showCloseButton={false}>
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle>Imagen</DialogTitle>
         </DialogHeader>
 
-        <div className="flex justify-center items-center">
-          <img
-            src={largeSrc}
-            alt={alt}
-            className="max-w-[85vw] max-h-[75vh] object-contain rounded-md shadow-md"
-          />
+        <div className="flex-1 p-6 pt-4 overflow-auto">
+          <div className="flex justify-center items-center w-full h-full min-h-[50vh]">
+            <img
+              src={largeSrc}
+              alt={alt}
+              className="max-w-full max-h-[70vh] w-auto h-auto object-contain rounded-md shadow-md"
+              style={{
+                maxWidth: '100%',
+                maxHeight: 'calc(100vh - 200px)',
+                width: 'auto',
+                height: 'auto'
+              }}
+            />
+          </div>
         </div>
 
-        <div className="flex justify-end mt-4">
-          <Button onClick={() => onOpenChange(false)}>Cerrar</Button>
+        <div className="flex justify-end p-6 pt-0">
+          <Button onClick={() => onOpenChange(false)} className="px-6">
+            Cerrar
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

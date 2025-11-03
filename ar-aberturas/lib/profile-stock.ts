@@ -37,21 +37,21 @@ export async function getProfileById(
 
 export async function createProfileStock(
 	item: Partial<ProfileItemStock>
-	): Promise<{ data: ProfileItemStock | null; error: any }> {
+): Promise<{ data: ProfileItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 
 	// Fetch matching image from gallery_images table
-	const { data: imageMatch } = await supabase
+	const { data: rows, error: imageError } = await supabase
 		.from('gallery_images')
 		.select('image_url')
-		.eq('material_type', item.material)
-		.eq('name_line', item.line)
-		.eq('name_code', item.code)
-		.limit(1);
+		.ilike('material_type', item.material || '')
+		.ilike('name_line', item.line || '')
+		.ilike('name_code', item.code || '')
+		.maybeSingle();
 
 	const payload = {
 		...item,
-		image_url: imageMatch?.[0].image_url ?? null,
+		image_url: rows?.image_url ?? null,
 		last_update: item.created_at ?? new Date().toISOString().split('T')[0],
 	};
 
@@ -67,6 +67,24 @@ export async function updateProfileStock(
 	const supabase = getSupabaseClient();
 	const payload = { ...changes, last_update: new Date().toISOString().split('T')[0] };
 	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();
+	return { data, error };
+}
+
+export async function updateImageForMatchingProfiles(
+	supabase: any,
+	material: string,
+	name_line: string,
+	name_code: string,
+	image_url: string
+): Promise<{ data: ProfileItemStock[] | null; error: any }> {
+	const { data, error } = await supabase
+		.from(TABLE)
+		.update({ image_url, last_update: new Date().toISOString().split('T')[0] })
+		.eq('material', material)
+		.eq('line', name_line)
+		.eq('code', name_code)
+		.select();
+
 	return { data, error };
 }
 

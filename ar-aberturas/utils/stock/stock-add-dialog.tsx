@@ -158,7 +158,7 @@ export function StockFormDialog({
 				quantity,
 				site,
 				width,
-				material: materialType?.toLowerCase(),
+				material: materialType,
 				created_at: isEditing ? editItem.created_at : new Date().toISOString().split('T')[0],
 			});
 

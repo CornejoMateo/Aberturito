@@ -236,11 +236,17 @@ export function PhotoGalleryModal({
 						</PopoverContent>
 					</Popover>
 
-					<Input
-						type="file"
-						onChange={(e) => setFile(e.target.files?.[0] || null)}
-						className="bg-background"
-					/>
+					<label htmlFor="file-upload" className="w-full">
+						<div className="w-full px-4 py-2 border rounded bg-background text-muted-foreground cursor-pointer text-center">
+							{file ? file.name : 'Elegí una imagen'}
+						</div>
+						<Input
+							id="file-upload"
+							type="file"
+							onChange={(e) => setFile(e.target.files?.[0] || null)}
+							className="hidden"
+						/>
+					</label>
 
 					<Button onClick={handleUpload} disabled={loading}>
 						{loading ? 'Subiendo...' : 'Subir imagen'}

@@ -50,8 +50,14 @@ export async function createOption<T>(
 	return { data, error };
 }
 
-export async function deleteOption(table: string, id: number): Promise<{ data: null; error: any }> {
-	const supabase = getSupabaseClient();
-	const { data, error } = await supabase.from(table).delete().eq('id', id);
-	return { data: null, error };
+export async function deleteOption(table: string, id: number): Promise<{ success: boolean; error?: any }> {
+    try {
+        const res = await fetch(`/api/options/delete?table=${table}&id=${id}`, {
+            method: 'DELETE',
+        });
+        const data = await res.json();
+        return data;
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
 }

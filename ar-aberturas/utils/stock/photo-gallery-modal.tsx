@@ -230,6 +230,31 @@ export function PhotoGalleryModal({
 							open={!!selectedImage}
 							onOpenChange={(v) => !v && setSelectedImage(null)}
 							src={selectedImage}
+							trash={true}
+							onDelete={async () => {
+								const res = await fetch(
+									`/api/gallery/delete?code_name=${nameCode}&line_name=${nameLine}`,
+									{
+										method: 'DELETE',
+									}
+								);
+								const data = await res.json();
+								if (data.success) {
+									toast({
+										title: 'Imagen eliminada correctamente',
+										variant: 'default',
+									});
+									setSelectedImage(null);
+									setNameCode('');
+									setNameLine('');
+								} else {
+									toast({
+										title: 'Error al eliminar imagen',
+										description: data.error || 'Ocurrió un error al eliminar la imagen',
+										variant: 'destructive',
+									});
+								}
+							}}
 						/>
 					)}
 				</div>

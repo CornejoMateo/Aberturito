@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 			{
 				folder: 'gallery',
 				public_id: `${material_type}_${name_line}_${name_code}`,
-				format: 'jpg', // 
+				format: 'jpg', 
 			},
 			(error, result) => {
 				if (error) reject(error);
@@ -69,6 +69,7 @@ export async function POST(req: Request) {
 			.from('gallery_images')
 			.insert({
 				image_url: uploadResult.secure_url,
+				public_id: uploadResult.public_id, 
 				material_type,
 				name_line,
 				name_code,

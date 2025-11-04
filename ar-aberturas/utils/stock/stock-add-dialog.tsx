@@ -37,7 +37,7 @@ import { type ProfileItemStock } from '@/lib/profile-stock';
 import { status, categories } from '@/constants/stock-constants';
 import { listOptions, LineOption, CodeOption, ColorOption, SiteOption } from '@/lib/stock-options';
 import { useState, useEffect } from 'react';
-import { useOptions } from '@/hooks/useOptions';
+import { useOptions } from '@/hooks/use-options';
 import { useToast } from '@/hooks/use-toast';
 
 interface StockFormDialogProps {

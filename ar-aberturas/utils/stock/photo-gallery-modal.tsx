@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Check, ChevronsUpDown } from 'lucide-react';
-import { useOptions } from '@/hooks/useOptions';
+import { useOptions } from '@/hooks/use-options';
 import { listOptions, type LineOption, type CodeOption } from '@/lib/stock-options';
 import ImageViewer from '@/components/ui/image-viewer';
 

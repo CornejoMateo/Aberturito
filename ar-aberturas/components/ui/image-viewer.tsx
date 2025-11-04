@@ -15,7 +15,7 @@ export function ImageViewer({ open, onOpenChange, src, alt = 'Imagen' }: ImageVi
   if (!src) return null;
 
   // Try to request a larger version if URL pattern contains '/upload/' (cloudinary style)
-  const largeSrc = src.includes('/upload/') ? src.replace('/upload/', '/upload/f_auto,q_auto,w_1200/') : src;
+  const largeSrc = src;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -24,6 +24,8 @@ import {
 	PaginationPrevious,
 } from '@/components/ui/pagination';
 import { useRealtimeProfileTable } from '@/hooks/use-realtime-profile-table';
+import { Image } from 'lucide-react';
+import { PhotoGalleryModal } from '@/utils/stock/photo-gallery-modal';
 
 interface StockManagementProps {
 	materialType?: 'Aluminio' | 'PVC';
@@ -48,6 +50,7 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 	const [editingItem, setEditingItem] = useState<ProfileItemStock | null>(null);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [isPhotoGalleryOpen, setIsPhotoGalleryOpen] = useState(false);
 	const itemsPerPage = 10;
 
 	const filteredStock = useMemo(() => {
@@ -125,11 +128,19 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 				</div>
 
 				<div className="flex gap-2">
+					<Button variant="default" onClick={() => setIsPhotoGalleryOpen(true)} className="gap-2">
+						<Image className="h-5 w-5" />
+						Agregar foto
+					</Button>
 					<Button variant="default" onClick={() => setIsModalOpen(true)} className="gap-2">
 						<Settings className="h-5 w-5" />
 						Ajustar opciones
 					</Button>
-
+					<PhotoGalleryModal
+						open={isPhotoGalleryOpen}
+						onOpenChange={setIsPhotoGalleryOpen}
+						materialType={materialType}
+					/>
 					<OptionsModal
 						materialType={materialType}
 						open={isModalOpen}

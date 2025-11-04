@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
 } from '@/components/ui/select';
-import { Plus, Check, ChevronsUpDown, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import {
 	Dialog,
 	DialogContent,
@@ -20,25 +20,14 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-	Command,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-} from '@/components/ui/command';
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
 import { type ProfileItemStock } from '@/lib/profile-stock';
 import { status, categories } from '@/constants/stock-constants';
-import { listOptions, LineOption, CodeOption, ColorOption, SiteOption } from '@/lib/stock-options';
 import { useState, useEffect } from 'react';
-import { useOptions } from '@/hooks/use-options';
 import { useToast } from '@/hooks/use-toast';
+import { LineSelect } from '@/components/stock/line-select';
+import { CodeSelect } from '@/components/stock/code-select';
+import { ColorSelect } from '@/components/stock/color-select';
+import { SiteSelect } from '@/components/stock/site-select';
 
 interface StockFormDialogProps {
 	open: boolean;
@@ -70,43 +59,8 @@ export function StockFormDialog({
 
 	// Status and options for selects
 	const [categoriesOptions, setCategoriesOptions] = useState(categories);
-
-	const {
-		options: linesOptions,
-		loading: loadingLines,
-		error: errorLines,
-	} = useOptions<LineOption>('lines', () =>
-		listOptions('lines').then((res) => (res.data ?? []) as LineOption[])
-	);
-	const {
-		options: codesOptions,
-		loading: loadingCodes,
-		error: errorCodes,
-	} = useOptions<CodeOption>('codes', () =>
-		listOptions('codes').then((res) => (res.data ?? []) as CodeOption[])
-	);
-	const {
-		options: colorsOptions,
-		loading: loadingColors,
-		error: errorColors,
-	} = useOptions<ColorOption>('colors', () =>
-		listOptions('colors').then((res) => (res.data ?? []) as ColorOption[])
-	);
-	const {
-		options: sitesOptions,
-		loading: loadingSites,
-		error: errorSites,
-	} = useOptions<SiteOption>('sites', () =>
-		listOptions('sites').then((res) => (res.data ?? []) as SiteOption[])
-	);
 	const [statusOptions, setStatusOptions] = useState<string[]>([...status]);
 	const { toast } = useToast();
-
-	// Estados para controlar la apertura/cierre de los Popover
-	const [openLine, setOpenLine] = useState(false);
-	const [openCode, setOpenCode] = useState(false);
-	const [openColor, setOpenColor] = useState(false);
-	const [openSite, setOpenSite] = useState(false);
 
 	// Loading data into form when editItem changes
 	useEffect(() => {
@@ -213,10 +167,7 @@ export function StockFormDialog({
 							<Label htmlFor="category" className="text-foreground">
 								Categoria
 							</Label>
-							<Select
-								value={category}
-								onValueChange={setCategory}
-							>
+							<Select value={category} onValueChange={setCategory}>
 								<SelectTrigger className="w-full">
 									<SelectValue placeholder="Seleccionar categoría" />
 								</SelectTrigger>
@@ -234,172 +185,41 @@ export function StockFormDialog({
 							<Label htmlFor="line" className="text-foreground">
 								Línea
 							</Label>
-							<Popover open={openLine} onOpenChange={setOpenLine}>
-								<PopoverTrigger asChild>
-									<Button
-										variant="outline"
-										role="combobox"
-										className={cn(
-											'w-full h-10 justify-between text-left font-normal',
-											!line && 'text-muted-foreground',
-											'border-input bg-background rounded-md border',
-											'hover:bg-accent hover:text-accent-foreground',
-											'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-											'disabled:opacity-50 disabled:pointer-events-none'
-										)}
-										disabled={loadingLines}
-									>
-										{line || 'Seleccionar línea'}
-										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
-									<Command>
-										<CommandInput placeholder="Buscar línea..." className="w-full" />
-										<CommandEmpty>No se encontraron líneas.</CommandEmpty>
-										<CommandGroup className="max-h-60 overflow-auto">
-											{linesOptions
-												.filter((l) => l.opening === materialType)
-												.map((l) => (
-													<CommandItem
-														value={l.name_line ?? ''}
-														key={`${l.id}-${l.name_line}`}
-														onSelect={() => {
-															setLine(l.name_line ?? '');
-															setOpenLine(false);
-														}}
-													>
-														<Check
-															className={cn(
-																'mr-2 h-4 w-4',
-																line === l.name_line ? 'opacity-100' : 'opacity-0'
-															)}
-														/>
-														{l.name_line}
-													</CommandItem>
-												))}
-										</CommandGroup>
-									</Command>
-								</PopoverContent>
-							</Popover>
+							<LineSelect
+								value={line}
+								onValueChange={(value) => {
+									setLine(value);
+									setCode(''); // Reset code when line changes
+									setColor(''); // Reset color when line changes
+								}}
+								materialType={materialType}
+							/>
 						</div>
 
 						<div className="grid gap-2">
 							<Label htmlFor="code" className="text-foreground">
-								{materialType == "PVC" ? "Nombre" : "Código"}
+								{materialType == 'PVC' ? 'Nombre' : 'Código'}
 							</Label>
-							<Popover open={openCode} onOpenChange={setOpenCode}>
-								<PopoverTrigger asChild>
-									<Button
-										variant="outline"
-										role="combobox"
-										className={cn(
-											'w-full h-10 justify-between text-left font-normal',
-											!code && 'text-muted-foreground',
-											'border-input bg-background rounded-md border',
-											'hover:bg-accent hover:text-accent-foreground',
-											'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-											'disabled:opacity-50 disabled:pointer-events-none'
-										)}
-										disabled={loadingCodes || !line}
-									>
-										{code ? code : materialType === "PVC" ? "Seleccionar nombre" : "Seleccionar código"}
-										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
-									<Command>
-										<CommandInput placeholder="Buscar código..." className="w-full" />
-										<CommandEmpty>No se encontraron códigos.</CommandEmpty>
-										<CommandGroup className="max-h-60 overflow-auto">
-											{codesOptions
-												.filter((cod) => cod.line_name === line)
-												.map((cod) => (
-													<CommandItem
-														value={cod.name_code ?? ''}
-														key={cod.id}
-														onSelect={() => {
-															setCode(cod.name_code ?? '');
-															setOpenCode(false);
-														}}
-													>
-														<Check
-															className={cn(
-																'mr-2 h-4 w-4',
-																code === cod.name_code ? 'opacity-100' : 'opacity-0'
-															)}
-														/>
-														{cod.name_code}
-													</CommandItem>
-												))}
-										</CommandGroup>
-									</Command>
-								</PopoverContent>
-							</Popover>
+							<CodeSelect
+								value={code}
+								onValueChange={setCode}
+								lineName={line}
+								materialType={materialType}
+							/>
 						</div>
 
 						<div className="grid gap-2">
 							<Label htmlFor="color" className="text-foreground">
 								Color
 							</Label>
-							<Popover open={openColor} onOpenChange={setOpenColor}>
-								<PopoverTrigger asChild>
-									<Button
-										variant="outline"
-										role="combobox"
-										className={cn(
-											'w-full h-10 justify-between text-left font-normal',
-											!color && 'text-muted-foreground',
-											'border-input bg-background rounded-md border',
-											'hover:bg-accent hover:text-accent-foreground',
-											'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-											'disabled:opacity-50 disabled:pointer-events-none'
-										)}
-										disabled={loadingColors || !line}
-									>
-										{color || 'Seleccionar color'}
-										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
-									<Command>
-										<CommandInput placeholder="Buscar color..." className="w-full" />
-										<CommandEmpty>No se encontraron colores.</CommandEmpty>
-										<CommandGroup className="max-h-60 overflow-auto">
-											{colorsOptions
-												.filter((c) => c.line_name === line)
-												.map((c) => (
-													<CommandItem
-														value={c.name_color ?? ''}
-														key={`${c.id}-${c.name_color}`}
-														onSelect={() => {
-															setColor(c.name_color ?? '');
-															setOpenColor(false);
-														}}
-													>
-														<Check
-															className={cn(
-																'mr-2 h-4 w-4',
-																color === c.name_color ? 'opacity-100' : 'opacity-0'
-															)}
-														/>
-														{c.name_color}
-													</CommandItem>
-												))}
-										</CommandGroup>
-									</Command>
-								</PopoverContent>
-							</Popover>
+							<ColorSelect value={color} onValueChange={setColor} lineName={line} />
 						</div>
 
 						<div className="grid gap-2">
 							<Label htmlFor="estado" className="text-foreground">
 								Estado
 							</Label>
-							<Select
-								value={itemStatus}
-								onValueChange={setItemStatus}
-							>
+							<Select value={itemStatus} onValueChange={setItemStatus}>
 								<SelectTrigger className="w-full">
 									<SelectValue placeholder="Seleccionar estado" />
 								</SelectTrigger>
@@ -432,52 +252,7 @@ export function StockFormDialog({
 							<Label htmlFor="site" className="text-foreground">
 								Ubicación
 							</Label>
-							<Popover open={openSite} onOpenChange={setOpenSite}>
-								<PopoverTrigger asChild>
-									<Button
-										variant="outline"
-										role="combobox"
-										className={cn(
-											'w-full h-10 justify-between text-left font-normal',
-											!site && 'text-muted-foreground',
-											'border-input bg-background rounded-md border',
-											'hover:bg-accent hover:text-accent-foreground',
-											'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-											'disabled:opacity-50 disabled:pointer-events-none'
-										)}
-										disabled={loadingSites}
-									>
-										{site || 'Seleccionar ubicación'}
-										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
-									<Command>
-										<CommandInput placeholder="Buscar ubicación..." className="w-full" />
-										<CommandEmpty>No se encontraron ubicaciones.</CommandEmpty>
-										<CommandGroup className="max-h-60 overflow-auto">
-											{sitesOptions.map((s) => (
-												<CommandItem
-													value={s.name_site ?? ''}
-													key={s.id}
-													onSelect={() => {
-														setSite(s.name_site ?? '');
-									setOpenSite(false);
-													}}
-												>
-													<Check
-														className={cn(
-															'mr-2 h-4 w-4',
-															site === s.name_site ? 'opacity-100' : 'opacity-0'
-														)}
-													/>
-													{s.name_site}
-												</CommandItem>
-											))}
-										</CommandGroup>
-									</Command>
-								</PopoverContent>
-							</Popover>
+							<SiteSelect value={site} onValueChange={setSite} />
 						</div>
 
 						<div className="grid gap-2">

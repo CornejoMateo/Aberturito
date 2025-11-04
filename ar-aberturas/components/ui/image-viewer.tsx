@@ -27,10 +27,7 @@ export function ImageViewer({
 	const [remove, setRemove] = React.useState(false);
 	if (!src) return null;
 
-	// Try to request a larger version if URL pattern contains '/upload/' (cloudinary style)
-	const largeSrc = src.includes('/upload/')
-		? src.replace('/upload/', '/upload/f_auto,q_auto,w_1200/')
-		: src;
+	const largeSrc = src;
 
 	return (
 		<>

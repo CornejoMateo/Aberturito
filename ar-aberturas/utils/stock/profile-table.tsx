@@ -187,13 +187,18 @@ export function ProfileTable({ filteredStock, onEdit, onDelete, onUpdateQuantity
 												{item.site || 'N/A'}
 											</p>
 										</td>
-										<td className="px-2 py-2 whitespace-nowrap">
+											<td className="px-2 py-2 whitespace-nowrap">
 											<p className="text-center text-xs text-muted-foreground">
-												{item.created_at
-													? item.created_at.split('T')[0]
-													: item.last_update
-														? item.last_update.split('T')[0]
-														: 'N/A'}
+												{(() => {
+													const dateStr = item.created_at || item.last_update;
+													if (!dateStr) return 'N/A';
+													const d = new Date(dateStr);
+													if (isNaN(d.getTime())) return 'N/A';
+														const day = String(d.getUTCDate()).padStart(2, '0');
+														const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+														const year = d.getUTCFullYear();
+														return `${day}-${month}-${year}`;
+												})()}
 											</p>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap text-right">

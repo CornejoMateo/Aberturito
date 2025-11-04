@@ -12,17 +12,8 @@ import { cn } from '../../lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-	Command,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-} from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check, ChevronsUpDown } from 'lucide-react';
-import { useOptions } from '@/hooks/useOptions';
-import { listOptions, type LineOption, type CodeOption } from '@/lib/stock-options';
+import { LineSelect } from '@/components/stock/line-select';
+import { CodeSelect } from '@/components/stock/code-select';
 import ImageViewer from '@/components/ui/image-viewer';
 
 interface PhotoGalleryModalProps {
@@ -41,37 +32,10 @@ export function PhotoGalleryModal({
 	const [nameLine, setNameLine] = useState('');
 	const [nameCode, setNameCode] = useState('');
 	const [loading, setLoading] = useState(false);
-	const [openLine, setOpenLine] = useState(false);
-	const [openCode, setOpenCode] = useState(false);
 	const [images, setImages] = useState<{ id?: number; image_url?: string | null }[]>([]);
 	const [imagesLoading, setImagesLoading] = useState(false);
 	const [imagesError, setImagesError] = useState<string | null>(null);
 	const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
-	// Options for selects
-	const {
-		options: linesOptions,
-		loading: loadingLines,
-		error: errorLines,
-	} = useOptions<LineOption>('lines', () =>
-		listOptions('lines').then((res) => (res.data ?? []) as LineOption[])
-	);
-	const {
-		options: codesOptions,
-		loading: loadingCodes,
-		error: errorCodes,
-	} = useOptions<CodeOption>('codes', () =>
-		listOptions('codes').then((res) => (res.data ?? []) as CodeOption[])
-	);
-
-	useEffect(() => {
-		console.log('Material Type:', materialType);
-		console.log('Lines Options:', linesOptions);
-		console.log(
-			'Filtered Lines:',
-			linesOptions.filter((line) => line.opening === materialType)
-		);
-	}, [linesOptions, materialType]);
 
 	const fetchImages = async (line?: string, code?: string) => {
 		try {
@@ -109,8 +73,6 @@ export function PhotoGalleryModal({
 			setImagesError(null);
 		}
 	}, [nameLine, nameCode, materialType]);
-	// Filter codes based on selected line
-	const filteredCodes = codesOptions.filter((code) => code.line_name === nameLine);
 
 	const handleUpload = async () => {
 		if (!file) {
@@ -184,98 +146,21 @@ export function PhotoGalleryModal({
 				</DialogHeader>
 
 				<div className="p-6 flex flex-col gap-4">
-					<Popover open={openLine} onOpenChange={setOpenLine}>
-						<PopoverTrigger asChild>
-							<Button
-								variant="outline"
-								role="combobox"
-								className="justify-between w-full bg-background"
-							>
-								{nameLine ? nameLine : 'Seleccionar línea'}
-								<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-							</Button>
-						</PopoverTrigger>
-						<PopoverContent
-							className="w-full p-0"
-							align="start"
-							style={{ width: 'var(--radix-popover-trigger-width)' }}
-						>
-							<Command>
-								<CommandInput placeholder="Buscar línea..." />
-								<CommandEmpty>No se encontraron líneas.</CommandEmpty>
-								<CommandGroup>
-									{linesOptions
-										.filter((line) => line.opening === materialType)
-										.map((line) => (
-											<CommandItem
-												key={line.id}
-												value={line.name_line ?? ''}
-												onSelect={(value) => {
-													setNameLine(value === nameLine ? '' : value);
-													setNameCode(''); // Reset code when line changes
-													setOpenLine(false); // Close the popover
-												}}
-											>
-												<Check
-													className={cn(
-														'mr-2 h-4 w-4',
-														nameLine === line.name_line ? 'opacity-100' : 'opacity-0'
-													)}
-												/>
-												{line.name_line}
-											</CommandItem>
-										))}
-								</CommandGroup>
-							</Command>
-						</PopoverContent>
-					</Popover>
+					<LineSelect
+						value={nameLine}
+						onValueChange={(value) => {
+							setNameLine(value);
+							setNameCode(''); // Reset code when line changes
+						}}
+						materialType={materialType}
+					/>
 
-					<Popover open={openCode} onOpenChange={setOpenCode}>
-						<PopoverTrigger asChild>
-							<Button
-								variant="outline"
-								role="combobox"
-								className="justify-between w-full bg-background"
-							>
-								{nameCode
-									? nameCode
-									: nameLine
-										? 'Seleccionar código'
-										: 'Primero selecciona una línea'}
-								<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-							</Button>
-						</PopoverTrigger>
-						<PopoverContent
-							className="w-full p-0"
-							align="start"
-							style={{ width: 'var(--radix-popover-trigger-width)' }}
-						>
-							<Command>
-								<CommandInput placeholder="Buscar código..." />
-								<CommandEmpty>No se encontraron códigos.</CommandEmpty>
-								<CommandGroup>
-									{filteredCodes.map((code) => (
-										<CommandItem
-											key={code.id}
-											value={code.name_code ?? ''}
-											onSelect={(value) => {
-												setNameCode(value === nameCode ? '' : value);
-												setOpenCode(false); // Close the popover
-											}}
-										>
-											<Check
-												className={cn(
-													'mr-2 h-4 w-4',
-													nameCode === code.name_code ? 'opacity-100' : 'opacity-0'
-												)}
-											/>
-											{code.name_code}
-										</CommandItem>
-									))}
-								</CommandGroup>
-							</Command>
-						</PopoverContent>
-					</Popover>
+					<CodeSelect
+						value={nameCode}
+						onValueChange={setNameCode}
+						lineName={nameLine}
+						materialType={materialType}
+					/>
 
 					{/* Gallery results */}
 					<div className="pt-4">

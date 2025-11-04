@@ -32,7 +32,7 @@ import {
 	ColorOption,
 	SiteOption,
 } from '@/lib/stock-options';
-import { useOptions } from '@/hooks/useOptions';
+import { useOptions } from '@/hooks/use-options';
 
 interface OptionsModalProps {
 	open: boolean;

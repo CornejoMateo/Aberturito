@@ -72,7 +72,8 @@ create table if not exists public.gallery_images (
   name_line character varying not null,
   name_code character varying not null,
   material_type character varying not null,
-  image_url character varying null,
+  image_url character varying not null,
+  public_id character varying not null,
   constraint gallery_images_pkey primary key (id),
   constraint unique_code_line unique (name_code, name_line),
   constraint fk_gallery_codes foreign KEY (name_code, name_line) references codes (name_code, line_name) on update CASCADE

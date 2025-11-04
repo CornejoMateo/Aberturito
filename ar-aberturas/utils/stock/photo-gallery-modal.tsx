@@ -286,11 +286,17 @@ export function PhotoGalleryModal({
 						) : imagesError ? (
 							<div className="text-sm text-destructive">Error: {imagesError}</div>
 						) : !nameLine ? (
-							<div className="text-sm text-muted-foreground">Seleccioná línea y código para ver imágenes.</div>
+							<div className="text-sm text-muted-foreground">
+								Seleccioná línea y código para ver imágenes.
+							</div>
 						) : nameLine && !nameCode ? (
-							<div className="text-sm text-muted-foreground">Seleccioná un código para ver las imágenes de la línea seleccionada.</div>
+							<div className="text-sm text-muted-foreground">
+								Seleccioná un código para ver las imágenes de la línea seleccionada.
+							</div>
 						) : images.length === 0 ? (
-							<div className="text-sm text-muted-foreground">No se encontraron imágenes para la línea y código seleccionados.</div>
+							<div className="text-sm text-muted-foreground">
+								No se encontraron imágenes para la línea y código seleccionados.
+							</div>
 						) : (
 							<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
 								{images.map((img) => (
@@ -335,7 +341,36 @@ export function PhotoGalleryModal({
 
 					{/* Shared image viewer */}
 					{selectedImage && (
-						<ImageViewer open={!!selectedImage} onOpenChange={(v) => !v && setSelectedImage(null)} src={selectedImage} />
+						<ImageViewer
+							open={!!selectedImage}
+							onOpenChange={(v) => !v && setSelectedImage(null)}
+							src={selectedImage}
+							trash={true}
+							onDelete={async () => {
+								const res = await fetch(
+									`/api/gallery/delete?code_name=${nameCode}&line_name=${nameLine}`,
+									{
+										method: 'DELETE',
+									}
+								);
+								const data = await res.json();
+								if (data.success) {
+									toast({
+										title: 'Imagen eliminada correctamente',
+										variant: 'default',
+									});
+									setSelectedImage(null);
+									setNameCode('');
+									setNameLine('');
+								} else {
+									toast({
+										title: 'Error al eliminar imagen',
+										description: data.error || 'Ocurrió un error al eliminar la imagen',
+										variant: 'destructive',
+									});
+								}
+							}}
+						/>
 					)}
 				</div>
 			</DialogContent>

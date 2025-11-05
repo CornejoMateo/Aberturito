@@ -109,6 +109,6 @@ export async function POST(req: Request) {
 			}
 		}
 		
-		return NextResponse.json({ success: false, error: 'Ya existe una imagen con este código y línea. Por favor, utiliza valores únicos.' },  { status: 500 });
+		return NextResponse.json({ success: false, error: 'Ya existe una imagen con este código y línea.' },  { status: 500 });
 	}
 }

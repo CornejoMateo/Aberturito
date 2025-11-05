@@ -108,7 +108,7 @@ export async function POST(req: Request) {
 				console.error('Error al eliminar imagen de Cloudinary:', deleteError);
 			}
 		}
-
-		return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+		
+		return NextResponse.json({ success: false, error: 'Ya existe una imagen con este código y línea. Por favor, utiliza valores únicos.' },  { status: 500 });
 	}
 }

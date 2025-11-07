@@ -236,7 +236,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 					{/* Logo */}
 					<div className="flex h-16 items-center justify-between border-b border-border px-6">
 						<div className="flex items-center gap-2">
-							<Image src="/logo-ar.png" alt="Logo" width={92} height={92} />
+							<Image src="/logo-original.png" alt="Logo" width={80} height={80} />
 							<span className="font-semibold text-foreground">AR Aberturas</span>
 						</div>
 						<Button

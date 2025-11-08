@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/next';
 import '../styles/globals.css';
 import { Suspense } from 'react';
 import { AuthProvider } from '@/components/provider/auth-provider';
+import { ThemeProvider } from '@/components/provider/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
@@ -14,13 +15,14 @@ export const metadata: Metadata = {
 	generator: 'v0.app',
 };
 
+// Asegurarse de que el tema se aplique al body
 export default function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="es">
+		<html lang="es" suppressHydrationWarning className="h-full">
 			<head>
 				<link rel="manifest" href="/manifest.json" />
 				<link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
@@ -30,12 +32,20 @@ export default function RootLayout({
 				<meta name="apple-mobile-web-app-capable" content="yes" />
 				<meta name="apple-mobile-web-app-title" content="AR Aberturas" />
 			</head>
-			<body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
-				<AuthProvider>
-					<Suspense fallback={null}>{children}</Suspense>
-				</AuthProvider>
-				<Toaster />
-				<Analytics />
+			<body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased bg-background text-foreground min-h-screen`}>
+				<ThemeProvider 
+					attribute="class" 
+					defaultTheme="system" 
+					enableSystem 
+					disableTransitionOnChange
+					enableColorScheme
+					>
+					<AuthProvider>
+						<Suspense fallback={null}>{children}</Suspense>
+					</AuthProvider>
+					<Toaster />
+					<Analytics />
+				</ThemeProvider>
 			</body>
 		</html>
 	);

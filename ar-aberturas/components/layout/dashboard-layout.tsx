@@ -5,6 +5,8 @@ import type React from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTheme } from 'next-themes';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +34,8 @@ import {
 	ChevronDown,
 	ChevronRight,
 	Lock,
+	Sun,
+	Moon,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -397,6 +401,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 					</Button>
 					<div className="flex-1">
 						<h1 className="text-lg font-semibold text-foreground">Sistema de Gestión</h1>
+					</div>
+					<div className="flex items-center gap-2">
+						<ThemeToggle />
 					</div>
 				</header>
 

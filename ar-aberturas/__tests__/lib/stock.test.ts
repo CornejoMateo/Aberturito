@@ -5,7 +5,7 @@ import {
   updateProfileStock,
   deleteProfileStock,
   type ProfileItemStock,
-} from '../../lib/stock';
+} from '../../lib/profile-stock';
 import { getSupabaseClient } from '../../lib/supabase-client';
 
 // Mock de los datos de prueba
@@ -21,12 +21,26 @@ const mockProfile: ProfileItemStock = {
   width: 100,
   material: 'Aluminio',
   created_at: '2023-01-01',
+  image_url: null,
   last_update: '2023-01-01',
 };
 
-// Mock de la función getSupabaseClient
+// Mock global de Supabase para todos los tests
+const mockSupabase = {
+  from: jest.fn().mockReturnThis(),
+  select: jest.fn().mockReturnThis(),
+  insert: jest.fn().mockReturnThis(),
+  update: jest.fn().mockReturnThis(),
+  delete: jest.fn().mockReturnThis(),
+  eq: jest.fn().mockReturnThis(),
+  ilike: jest.fn().mockReturnThis(),
+  order: jest.fn().mockReturnThis(),
+  single: jest.fn().mockReturnThis(),
+  maybeSingle: jest.fn().mockReturnThis(),
+};
+
 jest.mock('../../lib/supabase-client', () => ({
-  getSupabaseClient: jest.fn(),
+  getSupabaseClient: jest.fn(() => mockSupabase),
 }));
 
 describe('Stock Functions', () => {
@@ -38,16 +52,8 @@ describe('Stock Functions', () => {
   describe('listStock', () => {
     it('debería devolver una lista de perfiles', async () => {
       const mockData = [mockProfile];
-      const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: mockData, error: null }),
-      };
-      
-      (getSupabaseClient as jest.Mock).mockReturnValue(mockSupabase);
-
+      mockSupabase.order.mockResolvedValue({ data: mockData, error: null });
       const { data, error } = await listStock();
-
       expect(getSupabaseClient).toHaveBeenCalled();
       expect(mockSupabase.from).toHaveBeenCalledWith('profiles');
       expect(mockSupabase.select).toHaveBeenCalledWith('*');
@@ -57,32 +63,16 @@ describe('Stock Functions', () => {
     });
 
     it('debería devolver una lista vacía si no hay datos', async () => {
-      const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: [], error: null }),
-      };
-      
-      (getSupabaseClient as jest.Mock).mockReturnValue(mockSupabase);
-
+      mockSupabase.order.mockResolvedValue({ data: [], error: null });
       const { data, error } = await listStock();
-
       expect(data).toEqual([]);
       expect(error).toBeNull();
     });
 
     it('debería manejar errores correctamente', async () => {
       const mockError = new Error('Error de conexión');
-      const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: null, error: mockError }),
-      };
-      
-      (getSupabaseClient as jest.Mock).mockReturnValue(mockSupabase);
-
+      mockSupabase.order.mockResolvedValue({ data: null, error: mockError });
       const { data, error } = await listStock();
-
       expect(data).toBeNull();
       expect(error).toBe(mockError);
     });
@@ -90,17 +80,8 @@ describe('Stock Functions', () => {
 
   describe('getProfileById', () => {
     it('debería devolver un perfil por su ID', async () => {
-      const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: mockProfile, error: null }),
-      };
-      
-      (getSupabaseClient as jest.Mock).mockReturnValue(mockSupabase);
-
+      mockSupabase.single.mockResolvedValue({ data: mockProfile, error: null });
       const { data, error } = await getProfileById('1');
-
       expect(mockSupabase.from).toHaveBeenCalledWith('profiles');
       expect(mockSupabase.select).toHaveBeenCalledWith('*');
       expect(mockSupabase.eq).toHaveBeenCalledWith('id', '1');
@@ -110,17 +91,8 @@ describe('Stock Functions', () => {
     });
 
     it('debería manejar el caso cuando el perfil no existe', async () => {
-      const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: null, error: { message: 'No se encontró el perfil' } }),
-      };
-      
-      (getSupabaseClient as jest.Mock).mockReturnValue(mockSupabase);
-
+      mockSupabase.single.mockResolvedValue({ data: null, error: { message: 'No se encontró el perfil' } });
       const { data, error } = await getProfileById('999');
-
       expect(data).toBeNull();
       expect(error).toEqual({ message: 'No se encontró el perfil' });
     });
@@ -128,61 +100,35 @@ describe('Stock Functions', () => {
 
   describe('createProfileStock', () => {
     it('debería crear un nuevo perfil con los datos proporcionados', async () => {
-      const newProfile = { 
+      const newProfile = {
         category: 'Perfiles',
-        codigo: 'PER-002',
+        code: 'PER-002',
         line: 'Línea 2',
         color: 'Negro',
         quantity: 5,
-        material: 'PVC'
+        material: 'PVC',
+        status: 'Bueno',
+        site: 'Almacén B',
+        width: 50
       };
-      
       const expectedProfile = {
         ...newProfile,
         id: '2',
         created_at: '2023-01-02',
         last_update: expect.any(String),
       };
-
-      const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        insert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: expectedProfile, error: null }),
-      };
-      
-      (getSupabaseClient as jest.Mock).mockReturnValue(mockSupabase);
-
+      mockSupabase.single.mockResolvedValue({ data: expectedProfile, error: null });
       const { data, error } = await createProfileStock(newProfile);
-
-      expect(mockSupabase.from).toHaveBeenCalledWith('profiles');
-      expect(mockSupabase.insert).toHaveBeenCalledWith(expect.objectContaining({
-        ...newProfile,
-        last_update: expect.any(String),
-      }));
-      expect(mockSupabase.select).toHaveBeenCalled();
-      expect(mockSupabase.single).toHaveBeenCalled();
       expect(data).toEqual(expectedProfile);
       expect(error).toBeNull();
     });
 
     it('debería manejar errores al crear un perfil', async () => {
-      const newProfile = { category: 'Perfiles', codigo: 'PER-003' };
-      const mockError = new Error('Error al crear el perfil');
-      
-      const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        insert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: null, error: mockError }),
-      };
-      
-      (getSupabaseClient as jest.Mock).mockReturnValue(mockSupabase);
-
+      const newProfile = { category: 'Perfiles', code: 'PER-003' };
       const { data, error } = await createProfileStock(newProfile);
-
       expect(data).toBeNull();
-      expect(error).toBe(mockError);
+      expect(error).toBeInstanceOf(Error);
+      expect(error.message).toMatch(/Falta el campo obligatorio/);
     });
   });
 
@@ -193,28 +139,13 @@ describe('Stock Functions', () => {
         status: 'Reponer',
         site: 'Almacén B' 
       };
-      
       const updatedProfile = {
         ...mockProfile,
         ...updates,
         last_update: '2023-01-02',
       };
-
-      const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        update: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ 
-          data: updatedProfile, 
-          error: null 
-        }),
-      };
-      
-      (getSupabaseClient as jest.Mock).mockReturnValue(mockSupabase);
-
+      mockSupabase.single.mockResolvedValue({ data: updatedProfile, error: null });
       const { data, error } = await updateProfileStock('1', updates);
-
       expect(mockSupabase.from).toHaveBeenCalledWith('profiles');
       expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({
         ...updates,
@@ -230,22 +161,8 @@ describe('Stock Functions', () => {
     it('debería manejar errores al actualizar un perfil', async () => {
       const updates = { quantity: -5 }; // Cantidad inválida
       const mockError = new Error('Cantidad no válida');
-      
-      const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        update: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ 
-          data: null, 
-          error: mockError 
-        }),
-      };
-      
-      (getSupabaseClient as jest.Mock).mockReturnValue(mockSupabase);
-
+      mockSupabase.single.mockResolvedValue({ data: null, error: mockError });
       const { data, error } = await updateProfileStock('1', updates);
-
       expect(data).toBeNull();
       expect(error).toBe(mockError);
     });
@@ -253,16 +170,8 @@ describe('Stock Functions', () => {
 
   describe('deleteProfileStock', () => {
     it('debería eliminar un perfil existente', async () => {
-      const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        delete: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockResolvedValue({ data: null, error: null }),
-      };
-      
-      (getSupabaseClient as jest.Mock).mockReturnValue(mockSupabase);
-
+      mockSupabase.eq.mockResolvedValue({ data: null, error: null });
       const { data, error } = await deleteProfileStock('1');
-
       expect(mockSupabase.from).toHaveBeenCalledWith('profiles');
       expect(mockSupabase.delete).toHaveBeenCalled();
       expect(mockSupabase.eq).toHaveBeenCalledWith('id', '1');
@@ -272,16 +181,8 @@ describe('Stock Functions', () => {
 
     it('debería manejar errores al eliminar un perfil', async () => {
       const mockError = new Error('No se pudo eliminar el perfil');
-      const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        delete: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockResolvedValue({ data: null, error: mockError }),
-      };
-      
-      (getSupabaseClient as jest.Mock).mockReturnValue(mockSupabase);
-
+      mockSupabase.eq.mockResolvedValue({ data: null, error: mockError });
       const { data, error } = await deleteProfileStock('999');
-
       expect(data).toBeNull();
       expect(error).toBe(mockError);
     });

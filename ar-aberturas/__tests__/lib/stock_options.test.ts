@@ -6,7 +6,7 @@ import {
   type ColorOption,
   type CodeOption,
   type SiteOption,
-} from '@/lib/stock_options';
+} from '../../lib/stock-options';
 import { getSupabaseClient } from '@/lib/supabase-client';
 
 // Mock de Supabase
@@ -54,29 +54,25 @@ describe('stock_options', () => {
   });
 
   describe('createOption', () => {
-    it('debería crear una nueva opción', async () => {
+    it('debería crear una nueva opción con los datos proporcionados', async () => {
       const newLine = {
-        name_line: 'Nueva Línea',
-        opening: '3.0',
+        name_line: 'Línea 1',
+        opening: '2.5',
       };
-
-      const createdLine = {
+      const expectedLine = {
         ...newLine,
-        id: 2,
-        created_at: '2023-01-02',
+        id: 1,
+        created_at: '2023-01-01',
       };
 
       const mockSupabase = {
         from: jest.fn().mockReturnThis(),
         insert: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: createdLine, error: null }),
+        single: jest.fn().mockResolvedValue({ data: expectedLine, error: null }),
       };
-      
       (getSupabaseClient as jest.Mock).mockReturnValue(mockSupabase);
-
       const { data, error } = await createOption<LineOption>('lines', newLine);
-
       expect(mockSupabase.from).toHaveBeenCalledWith('lines');
       expect(mockSupabase.insert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -84,26 +80,41 @@ describe('stock_options', () => {
           created_at: expect.any(String),
         })
       );
-      expect(data).toEqual(createdLine);
+      expect(data).toEqual(expectedLine);
       expect(error).toBeNull();
+    });
+
+    it('debería arrojar error si falta un campo obligatorio', async () => {
+      const newLine = { name_line: 'Línea 1' }; // Falta opening
+      const { data, error } = await createOption<LineOption>('lines', newLine);
+      expect(data).toBeNull();
+      expect(error).toBeInstanceOf(Error);
+      expect(error.message).toMatch(/Falta el campo obligatorio/);
     });
   });
 
   describe('deleteOption', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
     it('debería eliminar una opción', async () => {
-      const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        delete: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockResolvedValue({ data: null, error: null }),
-      };
-      
-      (getSupabaseClient as jest.Mock).mockReturnValue(mockSupabase);
+      // Mock de fetch
+      global.fetch = jest.fn().mockResolvedValue({
+        json: jest.fn().mockResolvedValue({
+          success: true,
+          error: null,
+          data: null,
+        }),
+      });
 
-      const { data, error } = await deleteOption('lines', 1);
+      const { data, error, success } = await deleteOption('lines', 1);
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('lines');
-      expect(mockSupabase.delete).toHaveBeenCalled();
-      expect(mockSupabase.eq).toHaveBeenCalledWith('id', 1);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/options/delete?table=lines&id=1'),
+        expect.objectContaining({ method: 'DELETE' })
+      );
+      expect(success).toBe(true);
       expect(data).toBeNull();
       expect(error).toBeNull();
     });

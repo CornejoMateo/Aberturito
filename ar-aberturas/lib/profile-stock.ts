@@ -1,19 +1,19 @@
 import { getSupabaseClient } from './supabase-client';
 
 export type ProfileItemStock = {
-	id?: string;
-	category?: string | null;
-	code?: string | null;
-	line?: string | null;
-	color?: string | null;
-	status?: string | null;
-	quantity?: number | null;
-	site?: string | null;
-	width?: number | null;
-	material?: string | null;
-	image_url?: string | null;
-	created_at?: string | null;
-	last_update?: string | null;
+	id: string;
+	category: string;
+	code: string;
+	line: string;
+	color: string;
+	status: string;
+	quantity: number;
+	site: string;
+	width: number;
+	material: string;
+	image_url: string | null;
+	created_at: string | null;
+	last_update: string | null;
 };
 
 const TABLE = 'profiles';
@@ -38,6 +38,27 @@ export async function getProfileById(
 export async function createProfileStock(
 	item: Partial<ProfileItemStock>
 ): Promise<{ data: ProfileItemStock | null; error: any }> {
+	// Validación runtime de campos obligatorios
+	const requiredFields = [
+		'code',
+		'material',
+		'category',
+		'line',
+		'color',
+		'status',
+		'quantity',
+		'site',
+		'width',
+	];
+	for (const field of requiredFields) {
+		if (
+			item[field as keyof ProfileItemStock] === undefined ||
+			item[field as keyof ProfileItemStock] === null
+		) {
+			return { data: null, error: new Error(`Falta el campo obligatorio: ${field}`) };
+		}
+	}
+
 	const supabase = getSupabaseClient();
 
 	// Fetch matching image from gallery_images table

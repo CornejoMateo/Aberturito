@@ -1,30 +1,30 @@
 import { getSupabaseClient } from './supabase-client';
 
 export type LineOption = {
-	id?: number;
-	name_line?: string | null;
-	opening?: string | null;
-	created_at?: string | null;
+	id: number;
+	name_line: string;
+	opening: string;
+	created_at: string | null;
 };
 
 export type ColorOption = {
-	id?: number;
-	name_color?: string | null;
-	created_at?: string | null;
-	line_name?: string | null;
+	id: number;
+	name_color: string;
+	created_at: string | null;
+	line_name: string;
 };
 
 export type CodeOption = {
-	id?: number;
-	name_code?: string | null;
-	created_at?: string | null;
-	line_name?: string | null;
+	id: number;
+	name_code: string;
+	created_at: string | null;
+	line_name: string;
 };
 
 export type SiteOption = {
-	id?: number;
-	name_site?: string | null;
-	created_at?: string | null;
+	id: number;
+	name_site: string;
+	created_at: string | null;
 };
 
 export async function listOptions<T>(table: string): Promise<{ data: T[] | null; error: any }> {
@@ -40,6 +40,18 @@ export async function createOption<T>(
 	table: string,
 	item: Partial<T>
 ): Promise<{ data: T | null; error: any }> {
+	// Validación runtime de campos obligatorios según la tabla
+	let requiredFields: string[] = [];
+	if (table === 'lines') requiredFields = ['name_line', 'opening'];
+	if (table === 'colors') requiredFields = ['name_color', 'line_name'];
+	if (table === 'codes') requiredFields = ['name_code', 'line_name'];
+	if (table === 'sites') requiredFields = ['name_site'];
+	for (const field of requiredFields) {
+		if (item[field as keyof T] === undefined || item[field as keyof T] === null) {
+			return { data: null, error: new Error(`Falta el campo obligatorio: ${field}`) };
+		}
+	}
+
 	const supabase = getSupabaseClient();
 	const now = new Date().toISOString();
 	const payload: any = { ...item };
@@ -50,14 +62,21 @@ export async function createOption<T>(
 	return { data, error };
 }
 
-export async function deleteOption(table: string, id: number): Promise<{ success: boolean; error?: any }> {
-    try {
-        const res = await fetch(`/api/options/delete?table=${table}&id=${id}`, {
-            method: 'DELETE',
-        });
-        const data = await res.json();
-        return data;
-    } catch (error: any) {
-        return { success: false, error: error.message };
-    }
+export async function deleteOption(
+	table: string,
+	id: number
+): Promise<{ success: boolean; error?: any; data?: any }> {
+	try {
+		const res = await fetch(`/api/options/delete?table=${table}&id=${id}`, {
+			method: 'DELETE',
+		});
+		const data = await res.json();
+		return {
+			success: data.success ?? true,
+			error: data.error ?? null,
+			data: data.data ?? null,
+		};
+	} catch (error: any) {
+		return { success: false, error: error.message, data: null };
+	}
 }

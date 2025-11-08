@@ -1,27 +1,30 @@
 import { getSupabaseClient } from './supabase-client';
 
 export type AccessoryItemStock = {
-	id?: string;
-	created_at?: string;
+	id: string;
+	created_at: string;
 	accessory_line: string;
 	accessory_code: string;
-	accessory_description?: string;
+	accessory_description: string;
 	accessory_color: string;
 	accessory_quantity_for_lump: number;
 	accessory_quantity_lump: number;
 	accessory_quantity: number;
 	accessory_site: string;
 	accessory_material: string;
-	accessory_image_url?: string | null;
+	accessory_image_url: string | null;
 };
 
 const TABLE = 'accesories';
 
-export async function listAccesoriesStock(): Promise<{ data: AccessoryItemStock[] | null; error: any }> {
+export async function listAccesoriesStock(): Promise<{
+	data: AccessoryItemStock[] | null;
+	error: any;
+}> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('*')	
+		.select('*')
 		.order('created_at', { ascending: false });
 	return { data, error };
 }

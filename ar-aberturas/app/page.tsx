@@ -44,7 +44,7 @@ export default function HomePage() {
 		case 'Fabrica':
 			return (
 				<DashboardLayout>
-					<StockManagement />
+					<StockManagement category="Perfiles" materialType="Aluminio" />
 				</DashboardLayout>
 			);
 		case 'Ventas':

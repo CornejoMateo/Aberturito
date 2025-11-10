@@ -29,9 +29,10 @@ import { PhotoGalleryModal } from '@/utils/stock/photo-gallery-modal';
 
 interface StockManagementProps {
 	materialType?: 'Aluminio' | 'PVC';
+	category?: 'Perfiles' | 'Accesorios' | 'Herrajes';
 }
 
-export function StockManagement({ materialType = 'Aluminio' }: StockManagementProps) {
+export function StockManagement({ materialType = 'Aluminio', category = 'Perfiles' }: StockManagementProps) {
 	const {
 		data: stock,
 		loading,
@@ -44,7 +45,7 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 	});
 
 	const [searchTerm, setSearchTerm] = useState('');
-	const [selectedCategory, setSelectedCategory] = useState('Perfiles');
+	const [selectedCategory, setSelectedCategory] = useState(category);
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<ProfileItemStock | null>(null);
@@ -62,8 +63,7 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 				(item.line?.toLowerCase() || '').includes(searchLower) ||
 				(item.color?.toLowerCase() || '').includes(searchLower) ||
 				(item.site?.toLowerCase() || '').includes(searchLower);
-			const matchesCategory =
-				selectedCategory === 'Perfiles' || item.category === selectedCategory;
+			const matchesCategory = item.category === selectedCategory;
 			const matchesMaterial =
 				!materialType || item.material?.toLowerCase() === materialType.toLowerCase();
 			return matchesSearch && matchesCategory && matchesMaterial;
@@ -87,24 +87,26 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 	)[0];
 
 	const getTitle = () => {
+		const categoryName = category === 'Perfiles' ? 'Perfiles' : category === 'Accesorios' ? 'Accesorios' : 'Herrajes';
 		switch (materialType) {
 			case 'Aluminio':
-				return 'Stock de Aluminio';
+				return `${categoryName} de Aluminio`;
 			case 'PVC':
-				return 'Stock de PVC';
+				return `${categoryName} de PVC`;
 			default:
-				return 'Gestión de Stock';
+				return `Gestión de ${categoryName}`;
 		}
 	};
 
 	const getDescription = () => {
+		const categoryName = category === 'Perfiles' ? 'Perfiles' : category === 'Accesorios' ? 'Accesorios' : 'Herrajes';
 		switch (materialType) {
 			case 'Aluminio':
-				return 'Control de inventario de productos de aluminio';
+				return `Control de inventario de ${categoryName.toLowerCase()} de aluminio`;
 			case 'PVC':
-				return 'Control de inventario de productos de PVC';
+				return `Control de inventario de ${categoryName.toLowerCase()} de PVC`;
 			default:
-				return 'Control de inventario y materiales';
+				return `Control de inventario de ${categoryName.toLowerCase()}`;
 		}
 	};
 
@@ -187,28 +189,22 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 				<p className="text-destructive">Error: {String(error)}</p>
 			) : (
 				<>
-					{selectedCategory === 'Perfiles' && (
-						<ProfileTable
-							filteredStock={currentItems}
-							onEdit={handleEdit}
-							onDelete={async (id) => {
-								const { error } = await deleteProfileStock(id);
-								if (error) console.error('Error al eliminar perfil:', error);
-							}}
-							onUpdateQuantity={async (id, newQuantity) => {
-								if (newQuantity < 0) return;
-								const { error } = await updateProfileStock(id, {
-									quantity: newQuantity,
-								});
-								if (error)
-									console.error('Error al actualizar la cantidad:', error);
-							}}
-						/>
-					)}
-
-					{selectedCategory === 'Accesorios' && (
-						<p>Tabla de accesorios en desarrollo.</p>
-					)}
+					<ProfileTable
+						filteredStock={currentItems}
+						onEdit={handleEdit}
+						onDelete={async (id) => {
+							const { error } = await deleteProfileStock(id);
+							if (error) console.error('Error al eliminar perfil:', error);
+						}}
+						onUpdateQuantity={async (id, newQuantity) => {
+							if (newQuantity < 0) return;
+							const { error } = await updateProfileStock(id, {
+								quantity: newQuantity,
+							});
+							if (error)
+								console.error('Error al actualizar la cantidad:', error);
+						}}
+					/>
 
 					{/* Pagination */}
 					{filteredStock.length > itemsPerPage && (

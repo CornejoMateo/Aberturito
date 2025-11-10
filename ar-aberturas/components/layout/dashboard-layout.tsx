@@ -47,13 +47,33 @@ const navigation = [
 		disabled: true,
 	},
 	{
-		name: 'Stock',
+		name: 'Perfiles',
 		href: '/stock',
 		icon: Package,
 		disabled: false,
 		subItems: [
 			{ name: 'Aluminio', href: '/stock/aluminio' },
 			{ name: 'PVC', href: '/stock/pvc' },
+		],
+	},
+	{
+		name: 'Accesorios',
+		href: '/accesorios',
+		icon: Package,
+		disabled: false,
+		subItems: [
+			{ name: 'Aluminio', href: '/accesorios/aluminio' },
+			{ name: 'PVC', href: '/accesorios/pvc' },
+		],
+	},
+	{
+		name: 'Herrajes',
+		href: '/herrajes',
+		icon: Package,
+		disabled: false,
+		subItems: [
+			{ name: 'Aluminio', href: '/herrajes/aluminio' },
+			{ name: 'PVC', href: '/herrajes/pvc' },
 		],
 	},
 	{
@@ -112,18 +132,34 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 		return pathname === item.href;
 	};
 
-	// Función para obtener el texto dinámico del menú Stock
-	const getStockMenuText = () => {
-		if (pathname === '/stock/aluminio') return 'Stock Aluminio';
-		if (pathname === '/stock/pvc') return 'Stock PVC';
-		if (pathname === '/stock') return 'Stock';
-		return 'Stock';
+	// Función para obtener el texto dinámico del menú según la ruta
+	const getMenuText = (itemName: string) => {
+		if (itemName === 'Perfiles') {
+			if (pathname === '/stock/aluminio') return 'Perfiles Aluminio';
+			if (pathname === '/stock/pvc') return 'Perfiles PVC';
+			return 'Perfiles';
+		}
+		if (itemName === 'Accesorios') {
+			if (pathname === '/accesorios/aluminio') return 'Accesorios Aluminio';
+			if (pathname === '/accesorios/pvc') return 'Accesorios PVC';
+			return 'Accesorios';
+		}
+		if (itemName === 'Herrajes') {
+			if (pathname === '/herrajes/aluminio') return 'Herrajes Aluminio';
+			if (pathname === '/herrajes/pvc') return 'Herrajes PVC';
+			return 'Herrajes';
+		}
+		return itemName;
 	};
 
-	// Auto-expandir el menú Stock cuando se está en una subpágina
+	// Auto-expandir los menús cuando se está en una subpágina
 	useEffect(() => {
 		if (pathname.startsWith('/stock/')) {
-			setExpandedItems((prev) => (prev.includes('Stock') ? prev : [...prev, 'Stock']));
+			setExpandedItems((prev) => (prev.includes('Perfiles') ? prev : [...prev, 'Perfiles']));
+		} else if (pathname.startsWith('/accesorios/')) {
+			setExpandedItems((prev) => (prev.includes('Accesorios') ? prev : [...prev, 'Accesorios']));
+		} else if (pathname.startsWith('/herrajes/')) {
+			setExpandedItems((prev) => (prev.includes('Herrajes') ? prev : [...prev, 'Herrajes']));
 		}
 	}, [pathname]);
 
@@ -150,9 +186,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	// Definición de permisos por rol
 	const allowedByRole = useMemo(() => {
 		return {
-			Admin: ['Dashboard', 'Stock', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes'],
-			Fabrica: ['Stock'],
-			Ventas: ['Dashboard', 'Stock', 'Clientes', 'Presupuestos', 'Calendario'],
+			Admin: ['Dashboard', 'Perfiles', 'Accesorios', 'Herrajes', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes'],
+			Fabrica: ['Perfiles', 'Accesorios', 'Herrajes'],
+			Ventas: ['Dashboard', 'Perfiles', 'Accesorios', 'Herrajes', 'Clientes', 'Presupuestos', 'Calendario'],
 			Marketing: ['Dashboard', 'Calendario', 'Clientes', 'Reportes', 'Presupuestos'],
 			Colocador: ['Obras'],
 		} as Record<string, string[]>;
@@ -203,7 +239,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 			}
 		}
 
-		// Redirigir a Stock Aluminio por defecto si se accede a /stock o a la raíz
+		// Redirigir a Perfiles Aluminio por defecto si se accede a /stock o a la raíz
 		if (pathname === '/stock' || pathname === '/') {
 			router.replace('/stock/aluminio');
 		}
@@ -281,7 +317,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 											>
 												<div className="flex items-center gap-3">
 													<item.icon className="h-5 w-5" />
-													{item.name === 'Stock' ? getStockMenuText() : item.name}
+													{getMenuText(item.name)}
 													{item.disabled && <Lock className="h-3.5 w-3.5 ml-1" />}
 												</div>
 												{isExpanded ? (

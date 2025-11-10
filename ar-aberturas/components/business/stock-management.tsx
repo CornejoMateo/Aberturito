@@ -5,6 +5,8 @@ import { StockFormDialog } from '../../utils/stock/stock-add-dialog';
 import { StockStats } from '../../utils/stock/stock-stats';
 import { StockFilters } from '../../utils/stock/stock-filters';
 import { ProfileTable } from '../../utils/stock/profile-table';
+import { AccesoriesTable } from '@/utils/stock/accesories-table';
+import { AccessoryFormDialog } from '@/utils/stock/accessory-add-dialog';
 import { OptionsModal } from '@/utils/stock/options/options';
 import {
 	listStock,
@@ -13,6 +15,20 @@ import {
 	type ProfileItemStock,
 	updateProfileStock,
 } from '@/lib/profile-stock';
+import {
+	listAccesoriesStock,
+	createAccessoryStock,
+	updateAccessoryStock,
+	deleteAccesoryStock,
+	type AccessoryItemStock,
+} from '@/lib/accesorie-stock';
+import {
+	listHerrajesStock,
+	createHerrajeStock,
+	updateHerrajeStock,
+	deleteHerrajeStock,
+	type HerrajeItemStock,
+} from '@/lib/herraje-stock';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import {
@@ -33,42 +49,70 @@ interface StockManagementProps {
 }
 
 export function StockManagement({ materialType = 'Aluminio', category = 'Perfiles' }: StockManagementProps) {
+	// choose data source based on category
+	const tableName = category === 'Perfiles' ? 'profiles' : category === 'Accesorios' ? 'accesories' : 'herrajes';
+	const fetcher = async () => {
+		if (category === 'Perfiles') {
+			const { data, error } = await listStock();
+			if (error) throw error;
+			return data || [];
+		}
+		if (category === 'Accesorios') {
+			const { data, error } = await listAccesoriesStock();
+			if (error) throw error;
+			return data || [];
+		}
+		const { data, error } = await listHerrajesStock();
+		if (error) throw error;
+		return data || [];
+	};
+
 	const {
 		data: stock,
 		loading,
 		error,
 		refresh,
-	} = useRealtimeProfileTable<ProfileItemStock>('profiles', async () => {
-		const { data, error } = await listStock();
-		if (error) throw error;
-		return data || [];
-	});
+	} = useRealtimeProfileTable<any>(tableName, fetcher);
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedCategory, setSelectedCategory] = useState(category);
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-	const [editingItem, setEditingItem] = useState<ProfileItemStock | null>(null);
+	const [editingItem, setEditingItem] = useState<any | null>(null);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [isPhotoGalleryOpen, setIsPhotoGalleryOpen] = useState(false);
 	const itemsPerPage = 10;
 
 	const filteredStock = useMemo(() => {
-		return stock.filter((item) => {
+		return (stock || []).filter((item: any) => {
 			const searchLower = searchTerm.toLowerCase();
 			const matchesSearch =
 				(item.category?.toLowerCase() || '').includes(searchLower) ||
 				(item.code?.toLowerCase() || '').includes(searchLower) ||
 				(item.line?.toLowerCase() || '').includes(searchLower) ||
 				(item.color?.toLowerCase() || '').includes(searchLower) ||
-				(item.site?.toLowerCase() || '').includes(searchLower);
-			const matchesCategory = item.category === selectedCategory;
+				(item.site?.toLowerCase() || '').includes(searchLower) ||
+				(item.accessory_code?.toLowerCase?.() || '').includes(searchLower) ||
+				(item.accessory_description?.toLowerCase?.() || '').includes(searchLower) ||
+				(item.accessory_line?.toLowerCase?.() || '').includes(searchLower) ||
+				(item.herraje_code?.toLowerCase?.() || '').includes(searchLower) ||
+				(item.herraje_description?.toLowerCase?.() || '').includes(searchLower) ||
+				(item.herraje_line?.toLowerCase?.() || '').includes(searchLower);
+
+			let matchesCategory = true;
+			if (category === 'Perfiles') {
+				matchesCategory = item.category === selectedCategory;
+			} else if (category === 'Accesorios') {
+				matchesCategory = true; // accessories don't use the same category field
+			}
+
 			const matchesMaterial =
-				!materialType || item.material?.toLowerCase() === materialType.toLowerCase();
+				!materialType || (item.material || item.accessory_material || item.herraje_material || '').toLowerCase() === materialType.toLowerCase();
+
 			return matchesSearch && matchesCategory && matchesMaterial;
 		});
-	}, [stock, searchTerm, selectedCategory, materialType]);
+	}, [stock, searchTerm, selectedCategory, materialType, category]);
 
 	const totalPages = Math.ceil(filteredStock.length / itemsPerPage);
 
@@ -77,13 +121,16 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 		return filteredStock.slice(startIndex, startIndex + itemsPerPage);
 	}, [filteredStock, currentPage, itemsPerPage]);
 
-	const lowStockItems = stock.filter((item) => (item.quantity ?? 0) < 10);
-	const totalItems = stock.reduce((sum, item) => sum + (item.quantity ?? 0), 0);
+	const lowStockItems = (stock || []).filter((item:any) => {
+		const qty = item.quantity ?? item.accessory_quantity ?? item.herraje_quantity ?? 0;
+		return qty < 10;
+	});
+	const totalItems = (stock || []).reduce((sum:any, item:any) => sum + (item.quantity ?? item.accessory_quantity ?? item.herraje_quantity ?? 0), 0);
 
-	const lastAddedItem = [...stock].sort(
-		(a, b) =>
-			new Date(b.created_at || 0).getTime() -
-			new Date(a.created_at || 0).getTime()
+	const lastAddedItem = [...(stock || [])].sort(
+		(a: any, b: any) =>
+			new Date(b.created_at || b.last_update || 0).getTime() -
+			new Date(a.created_at || a.last_update || 0).getTime()
 	)[0];
 
 	const getTitle = () => {
@@ -149,21 +196,46 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 						onOpenChange={setIsModalOpen}
 					/>
 
-					<StockFormDialog
-						open={isAddDialogOpen}
-						onOpenChange={setIsAddDialogOpen}
-						onSave={async (newItem) => {
-							const { error } = await createProfileStock(newItem);
-							if (error) {
-								console.error('Error al crear perfil:', error);
-								return;
-							}
-							refresh(); // 🔁 Fuerza re-render inmediato si Realtime tarda
-							setIsAddDialogOpen(false);
-						}}
-						materialType={materialType}
-						triggerButton={true}
-					/>
+					{category === 'Perfiles' ? (
+						<StockFormDialog
+							open={isAddDialogOpen}
+							onOpenChange={setIsAddDialogOpen}
+							onSave={async (newItem) => {
+								const { error } = await createProfileStock(newItem);
+								if (error) {
+									console.error('Error al crear perfil:', error);
+									return;
+								}
+								refresh(); // 🔁 Fuerza re-render inmediato si Realtime tarda
+								setIsAddDialogOpen(false);
+							}}
+							materialType={materialType}
+							triggerButton={true}
+						/>
+					) : (
+						<AccessoryFormDialog
+							open={isAddDialogOpen}
+							onOpenChange={setIsAddDialogOpen}
+							category={category === 'Accesorios' ? 'Accesorios' : 'Herrajes'}
+							materialType={materialType}
+							onSave={async (newItem) => {
+								try {
+									if (category === 'Accesorios') {
+										const { error } = await createAccessoryStock(newItem as any);
+										if (error) throw error;
+									} else {
+										const { error } = await createHerrajeStock(newItem as any);
+										if (error) throw error;
+									}
+									refresh();
+									setIsAddDialogOpen(false);
+								} catch (err) {
+									console.error('Error al crear item:', err);
+								}
+							}}
+							triggerButton={true}
+						/>
+					)}
 				</div>
 			</div>
 
@@ -189,22 +261,98 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 				<p className="text-destructive">Error: {String(error)}</p>
 			) : (
 				<>
-					<ProfileTable
-						filteredStock={currentItems}
-						onEdit={handleEdit}
-						onDelete={async (id) => {
-							const { error } = await deleteProfileStock(id);
-							if (error) console.error('Error al eliminar perfil:', error);
-						}}
-						onUpdateQuantity={async (id, newQuantity) => {
-							if (newQuantity < 0) return;
-							const { error } = await updateProfileStock(id, {
-								quantity: newQuantity,
-							});
-							if (error)
-								console.error('Error al actualizar la cantidad:', error);
-						}}
-					/>
+					{category === 'Perfiles' ? (
+						<ProfileTable
+							filteredStock={currentItems}
+							onEdit={handleEdit}
+							onDelete={async (id) => {
+								const { error } = await deleteProfileStock(id);
+								if (error) console.error('Error al eliminar perfil:', error);
+							}}
+							onUpdateQuantity={async (id, newQuantity) => {
+								if (newQuantity < 0) return;
+								const { error } = await updateProfileStock(id, {
+									quantity: newQuantity,
+								});
+								if (error)
+									console.error('Error al actualizar la cantidad:', error);
+							}}
+						/>
+					) : (
+						<AccesoriesTable
+							filteredStock={currentItems}
+							onEdit={(id) => {
+								const it = (stock || []).find((s: any) => s.id === id);
+								if (it) {
+									setEditingItem(it);
+									setIsEditDialogOpen(true);
+								}
+							}}
+							onDelete={async (id) => {
+								try {
+									if (category === 'Accesorios') {
+										await deleteAccesoryStock(id);
+									} else {
+										await deleteHerrajeStock(id);
+									}
+									refresh();
+								} catch (err) {
+									console.error('Error al eliminar item:', err);
+								}
+							}}
+							onUpdateQuantity={async (id, newQuantity) => {
+								if (newQuantity < 0) return;
+								try {
+									if (category === 'Accesorios') {
+										await updateAccessoryStock(id, { accessory_quantity: newQuantity });
+									} else {
+										await updateHerrajeStock(id, { herraje_quantity: newQuantity });
+									}
+									refresh();
+								} catch (err) {
+									console.error('Error al actualizar cantidad:', err);
+								}
+							}}
+						/>
+					)}
+
+					{/* Edit dialog for selected item */}
+					{isEditDialogOpen && editingItem && (
+						(category === 'Perfiles') ? (
+							<StockFormDialog
+								open={isEditDialogOpen}
+								onOpenChange={setIsEditDialogOpen}
+								editItem={editingItem}
+								materialType={materialType}
+								onSave={async (changes) => {
+									const { error } = await updateProfileStock(editingItem.id, changes as any);
+									if (error) console.error('Error al guardar perfil:', error);
+									refresh();
+									setIsEditDialogOpen(false);
+								}}
+							/>
+						) : (
+							<AccessoryFormDialog
+								open={isEditDialogOpen}
+								onOpenChange={setIsEditDialogOpen}
+								category={category === 'Accesorios' ? 'Accesorios' : 'Herrajes'}
+								editItem={editingItem}
+								onSave={async (changes) => {
+									try {
+										if (category === 'Accesorios') {
+											await updateAccessoryStock(editingItem.id, changes as any);
+										} else {
+											await updateHerrajeStock(editingItem.id, changes as any);
+										}
+										refresh();
+									} catch (err) {
+										console.error('Error al actualizar item:', err);
+									}
+									setIsEditDialogOpen(false);
+								}}
+							/>
+						)
+					)}
 
 					{/* Pagination */}
 					{filteredStock.length > itemsPerPage && (

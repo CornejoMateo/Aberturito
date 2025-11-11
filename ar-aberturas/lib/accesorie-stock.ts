@@ -3,20 +3,22 @@ import { getSupabaseClient } from './supabase-client';
 export type AccessoryItemStock = {
 	id: string;
 	created_at: string;
+	accessory_category: string;
 	accessory_line: string;
 	accessory_code: string;
-	accessory_description: string;
+	accessory_description?: string | null;
 	accessory_color: string;
 	accessory_quantity_for_lump: number;
 	accessory_quantity_lump: number;
 	accessory_quantity: number;
 	accessory_site: string;
 	accessory_material: string;
-	accessory_image_url: string | null;
+	accessory_image_url?: string | null;
 	accessory_price?: number | null;
+	last_update: string | null;
 };
 
-const TABLE = 'accesories';
+const TABLE = 'accesories_category';
 
 export async function listAccesoriesStock(): Promise<{
 	data: AccessoryItemStock[] | null;

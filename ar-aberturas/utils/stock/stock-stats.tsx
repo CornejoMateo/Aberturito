@@ -1,14 +1,51 @@
 import { Card } from '@/components/ui/card';
 import { Package, PackagePlus, AlertTriangle } from 'lucide-react';
 import type { ProfileItemStock } from '@/lib/profile-stock';
+import type { AccessoryItemStock } from '@/lib/accesorie-stock';
+import type { IronworkItemStock } from '@/lib/ironwork-stock';
 
 interface StockStatsProps {
+	categoryState: 'Perfiles' | 'Accesorios' | 'Herrajes';
 	totalItems: number;
 	lowStockCount: number;
-	lastAddedItem?: ProfileItemStock | null;
+	lastAddedItem?: ProfileItemStock | AccessoryItemStock | IronworkItemStock | null;
 }
 
-export function StockStats({ totalItems, lowStockCount, lastAddedItem }: StockStatsProps) {
+export function StockStats({ categoryState, totalItems, lowStockCount, lastAddedItem }: StockStatsProps) {
+	const getItemDisplay = () => {
+		if (!lastAddedItem) return null;
+
+		const item = lastAddedItem as any;
+
+		if (categoryState === 'Perfiles') {
+			return {
+				line: item.line || 'Sin código',
+				code: item.code || 'Sin código',
+				color: item.color,
+				extra: item.width ? `${item.width}mm` : '',
+			};
+		}
+
+		if (categoryState === 'Accesorios') {
+			return {
+				line: item.accessory_line || 'Sin código',
+				code: item.accessory_code || 'Sin código',
+				color: item.accessory_color,
+				extra: '',
+			};
+		}
+
+		// Herrajes
+		return {
+			line: item.ironwork_line || 'Sin código',
+			code: item.ironwork_code || 'Sin código',
+			color: item.ironwork_color,
+			extra: '',
+		};
+	};
+
+	const displayItem = getItemDisplay();
+
 	return (
 		<div className="grid gap-4 md:grid-cols-3">
 			<Card className="p-6 bg-card border-border">
@@ -26,14 +63,14 @@ export function StockStats({ totalItems, lowStockCount, lastAddedItem }: StockSt
 				<div className="flex items-center justify-between">
 					<div>
 						<p className="text-sm font-medium text-muted-foreground">Último agregado</p>
-						{lastAddedItem ? (
+						{displayItem ? (
 							<div className="mt-2 space-y-1">
 								<p className="text-sm font-medium text-foreground">
-									{lastAddedItem.line || 'Sin código'}, {lastAddedItem.code || 'Sin código'}
+									{displayItem.line}, {displayItem.code}
 								</p>
 								<p className="text-xs text-muted-foreground">
-									{lastAddedItem.color ? `${lastAddedItem.color} • ` : ''}
-									{lastAddedItem.width ? `${lastAddedItem.width}mm` : ''}
+									{displayItem.color ? `${displayItem.color}` : ''}
+									{displayItem.extra ? ` • ${displayItem.extra}` : ''}
 								</p>
 							</div>
 						) : (

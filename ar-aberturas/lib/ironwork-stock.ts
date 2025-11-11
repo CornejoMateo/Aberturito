@@ -1,25 +1,27 @@
 import { getSupabaseClient } from './supabase-client';
 
-export type HerrajeItemStock = {
+export type IronworkItemStock = {
 	id: string;
 	created_at: string;
-	herraje_line: string;
-	herraje_code: string;
-	herraje_description: string;
-	herraje_color: string;
-	herraje_quantity_for_lump: number;
-	herraje_quantity_lump: number;
-	herraje_quantity: number;
-	herraje_site: string;
-	herraje_material: string;
-	herraje_image_url: string | null;
-	herraje_price?: number | null;
+	ironwork_category: string;
+	ironwork_line: string;
+	ironwork_code: string;
+	ironwork_description?: string | null;
+	ironwork_color: string;
+	ironwork_quantity_for_lump: number;
+	ironwork_quantity_lump: number;
+	ironwork_quantity: number;
+	ironwork_site: string;
+	ironwork_material: string;
+	ironwork_image_url?: string | null;
+	ironwork_price?: number | null;
+	last_update: string | null;
 };
 
-const TABLE = 'herrajes';
+const TABLE = 'ironworks_category';
 
-export async function listHerrajesStock(): Promise<{
-	data: HerrajeItemStock[] | null;
+export async function listIronworksStock(): Promise<{
+	data: IronworkItemStock[] | null;
 	error: any;
 }> {
 	const supabase = getSupabaseClient();
@@ -30,17 +32,17 @@ export async function listHerrajesStock(): Promise<{
 	return { data, error };
 }
 
-export async function getHerrajeById(
+export async function getIronworkById(
 	id: string
-): Promise<{ data: HerrajeItemStock | null; error: any }> {
+): Promise<{ data: IronworkItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
 	return { data, error };
 }
 
-export async function createHerrajeStock(
-	item: Partial<HerrajeItemStock>
-): Promise<{ data: HerrajeItemStock | null; error: any }> {
+export async function createIronworkStock(
+	item: Partial<IronworkItemStock>
+): Promise<{ data: IronworkItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 
 	const payload = {
@@ -53,17 +55,17 @@ export async function createHerrajeStock(
 	return { data, error };
 }
 
-export async function updateHerrajeStock(
+export async function updateIronworkStock(
 	id: string,
-	changes: Partial<HerrajeItemStock>
-): Promise<{ data: HerrajeItemStock | null; error: any }> {
+	changes: Partial<IronworkItemStock>
+): Promise<{ data: IronworkItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const payload = { ...changes, last_update: new Date().toISOString().split('T')[0] };
 	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();
 	return { data, error };
 }
 
-export async function deleteHerrajeStock(id: string): Promise<{ data: null; error: any }> {
+export async function deleteIronworkStock(id: string): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };

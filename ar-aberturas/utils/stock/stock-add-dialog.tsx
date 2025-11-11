@@ -119,7 +119,7 @@ export function StockFormDialog({
 			// Show success message
 			toast({
 				title: '¡Éxito!',
-				description: isEditing ? 'Item actualizado correctamente' : 'Item agregado correctamente',
+				description: isEditing ? 'Perfil actualizado correctamente' : 'Perfil agregado correctamente',
 				duration: 3000,
 			});
 
@@ -130,10 +130,10 @@ export function StockFormDialog({
 
 			onOpenChange(false);
 		} catch (error) {
-			console.error('Error al guardar el item:', error);
+			console.error('Error al guardar el perfil:', error);
 			toast({
 				title: 'Error',
-				description: 'Ocurrió un error al guardar el item. Por favor, intente nuevamente.',
+				description: 'Ocurrió un error al guardar el perfil. Por favor, intente nuevamente.',
 				variant: 'destructive',
 				duration: 5000,
 			});
@@ -146,14 +146,14 @@ export function StockFormDialog({
 				<DialogTrigger asChild>
 					<Button className="gap-2">
 						<Plus className="h-4 w-4" />
-						Agregar Item
+						Agregar perfil
 					</Button>
 				</DialogTrigger>
 			)}
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader className="flex-shrink-0">
 					<DialogTitle className="text-foreground">
-						{isEditing ? 'Editar item' : 'Agregar nuevo item'}
+						{isEditing ? 'Editar perfil' : 'Agregar nuevo perfil'}
 					</DialogTitle>
 					<DialogDescription className="text-muted-foreground">
 						{isEditing

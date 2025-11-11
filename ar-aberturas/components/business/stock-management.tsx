@@ -23,12 +23,12 @@ import {
 	type AccessoryItemStock,
 } from '@/lib/accesorie-stock';
 import {
-	listHerrajesStock,
-	createHerrajeStock,
-	updateHerrajeStock,
-	deleteHerrajeStock,
-	type HerrajeItemStock,
-} from '@/lib/herraje-stock';
+	listIronworksStock,
+	createIronworkStock,
+	updateIronworkStock,
+	deleteIronworkStock,
+	type IronworkItemStock,
+} from '@/lib/ironwork-stock';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import {
@@ -50,7 +50,7 @@ interface StockManagementProps {
 
 export function StockManagement({ materialType = 'Aluminio', category = 'Perfiles' }: StockManagementProps) {
 	// choose data source based on category
-	const tableName = category === 'Perfiles' ? 'profiles' : category === 'Accesorios' ? 'accesories' : 'herrajes';
+	const tableName = category === 'Perfiles' ? 'profiles' : category === 'Accesorios' ? 'accesories_category' : 'ironworks_category';
 	const fetcher = async () => {
 		if (category === 'Perfiles') {
 			const { data, error } = await listStock();
@@ -62,7 +62,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 			if (error) throw error;
 			return data || [];
 		}
-		const { data, error } = await listHerrajesStock();
+		const { data, error } = await listIronworksStock();
 		if (error) throw error;
 		return data || [];
 	};
@@ -96,9 +96,9 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 				(item.accessory_code?.toLowerCase?.() || '').includes(searchLower) ||
 				(item.accessory_description?.toLowerCase?.() || '').includes(searchLower) ||
 				(item.accessory_line?.toLowerCase?.() || '').includes(searchLower) ||
-				(item.herraje_code?.toLowerCase?.() || '').includes(searchLower) ||
-				(item.herraje_description?.toLowerCase?.() || '').includes(searchLower) ||
-				(item.herraje_line?.toLowerCase?.() || '').includes(searchLower);
+				(item.ironwork_code?.toLowerCase?.() || '').includes(searchLower) ||
+				(item.ironwork_description?.toLowerCase?.() || '').includes(searchLower) ||
+				(item.ironwork_line?.toLowerCase?.() || '').includes(searchLower);
 
 			let matchesCategory = true;
 			if (category === 'Perfiles') {
@@ -108,7 +108,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 			}
 
 			const matchesMaterial =
-				!materialType || (item.material || item.accessory_material || item.herraje_material || '').toLowerCase() === materialType.toLowerCase();
+				!materialType || (item.material || item.accessory_material || item.ironwork_material || '').toLowerCase() === materialType.toLowerCase();
 
 			return matchesSearch && matchesCategory && matchesMaterial;
 		});
@@ -122,10 +122,10 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 	}, [filteredStock, currentPage, itemsPerPage]);
 
 	const lowStockItems = (stock || []).filter((item:any) => {
-		const qty = item.quantity ?? item.accessory_quantity ?? item.herraje_quantity ?? 0;
+		const qty = item.quantity ?? item.accessory_quantity ?? item.ironwork_quantity ?? 0;
 		return qty < 10;
 	});
-	const totalItems = (stock || []).reduce((sum:any, item:any) => sum + (item.quantity ?? item.accessory_quantity ?? item.herraje_quantity ?? 0), 0);
+	const totalItems = (stock || []).reduce((sum:any, item:any) => sum + (item.quantity ?? item.accessory_quantity ?? item.ironwork_quantity ?? 0), 0);
 
 	const lastAddedItem = [...(stock || [])].sort(
 		(a: any, b: any) =>
@@ -206,7 +206,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 									console.error('Error al crear perfil:', error);
 									return;
 								}
-								refresh(); // 🔁 Fuerza re-render inmediato si Realtime tarda
+								refresh();
 								setIsAddDialogOpen(false);
 							}}
 							materialType={materialType}
@@ -224,12 +224,18 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 										const { error } = await createAccessoryStock(newItem as any);
 										if (error) throw error;
 									} else {
-										const { error } = await createHerrajeStock(newItem as any);
+										const { error } = await createIronworkStock(newItem as any);
 										if (error) throw error;
 									}
 									refresh();
 									setIsAddDialogOpen(false);
 								} catch (err) {
+									if (typeof err === 'object' && err !== null) {
+										console.log('Error keys:', Object.keys(err));
+										console.log('Error JSON:', JSON.stringify(err, null, 2));
+									} else {
+										console.log('Error value:', err);
+									}
 									console.error('Error al crear item:', err);
 								}
 							}}
@@ -241,6 +247,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 
 			{/* Stats */}
 			<StockStats
+				categoryState={category}
 				totalItems={totalItems}
 				lowStockCount={lowStockItems.length}
 				lastAddedItem={lastAddedItem}
@@ -280,6 +287,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 						/>
 					) : (
 						<AccesoriesTable
+							categoryState={category === 'Accesorios' ? 'Accesorios' : 'Herrajes'}
 							filteredStock={currentItems}
 							onEdit={(id) => {
 								const it = (stock || []).find((s: any) => s.id === id);
@@ -293,7 +301,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 									if (category === 'Accesorios') {
 										await deleteAccesoryStock(id);
 									} else {
-										await deleteHerrajeStock(id);
+										await deleteIronworkStock(id);
 									}
 									refresh();
 								} catch (err) {
@@ -306,7 +314,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 									if (category === 'Accesorios') {
 										await updateAccessoryStock(id, { accessory_quantity: newQuantity });
 									} else {
-										await updateHerrajeStock(id, { herraje_quantity: newQuantity });
+										await updateIronworkStock(id, { ironwork_quantity: newQuantity });
 									}
 									refresh();
 								} catch (err) {
@@ -342,7 +350,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 										if (category === 'Accesorios') {
 											await updateAccessoryStock(editingItem.id, changes as any);
 										} else {
-											await updateHerrajeStock(editingItem.id, changes as any);
+											await updateIronworkStock(editingItem.id, changes as any);
 										}
 										refresh();
 									} catch (err) {

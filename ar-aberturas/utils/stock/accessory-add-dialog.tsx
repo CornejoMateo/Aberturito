@@ -1,0 +1,218 @@
+'use client';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Plus } from 'lucide-react';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog';
+import { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { SiteSelect } from '@/components/stock/site-select';
+import { LineSelect } from '@/components/stock/line-select';
+import { ColorSelect } from '@/components/stock/color-select';
+import { CodeSelect } from '@/components/stock/code-select';
+import { type AccessoryItemStock } from '@/lib/accesorie-stock';
+import { type HerrajeItemStock } from '@/lib/herraje-stock';
+
+interface AccessoryFormDialogProps {
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	onSave: (item: Partial<AccessoryItemStock> | Partial<HerrajeItemStock>) => void;
+	materialType?: 'Aluminio' | 'PVC';
+	category: 'Accesorios' | 'Herrajes';
+	editItem?: AccessoryItemStock | HerrajeItemStock | null;
+	triggerButton?: boolean;
+}
+
+export function AccessoryFormDialog({
+	open,
+	onOpenChange,
+	onSave,
+	materialType = 'Aluminio',
+	category = 'Accesorios',
+	editItem = null,
+	triggerButton = true,
+}: AccessoryFormDialogProps) {
+	const isEditing = !!editItem;
+
+	// Fields common to accessories/herrajes
+	const [line, setLine] = useState('');
+	const [code, setCode] = useState('');
+	const [description, setDescription] = useState('');
+	const [color, setColor] = useState('');
+	const [quantityPerLump, setQuantityPerLump] = useState<number | ''>('');
+	const [lumpCount, setLumpCount] = useState<number | ''>('');
+	const [site, setSite] = useState('');
+	const [price, setPrice] = useState<number | ''>('');
+	const { toast } = useToast();
+
+	useEffect(() => {
+		if (editItem) {
+			// map fields depending on category
+			if (category === 'Accesorios') {
+				const it = editItem as AccessoryItemStock;
+				setLine(it.accessory_line || '');
+				setCode(it.accessory_code || '');
+				setDescription(it.accessory_description || '');
+				setColor(it.accessory_color || '');
+				setQuantityPerLump(it.accessory_quantity_for_lump ?? '');
+				setLumpCount(it.accessory_quantity_lump ?? '');
+				setSite(it.accessory_site || '');
+				setPrice(it['accessory_price' as keyof AccessoryItemStock] as any || '');
+			} else {
+				const it = editItem as HerrajeItemStock;
+				setLine(it.herraje_line || '');
+				setCode(it.herraje_code || '');
+				setDescription(it.herraje_description || '');
+				setColor(it.herraje_color || '');
+				setQuantityPerLump(it.herraje_quantity_for_lump ?? '');
+				setLumpCount(it.herraje_quantity_lump ?? '');
+				setSite(it.herraje_site || '');
+				setPrice(it.herraje_price ?? '');
+			}
+		} else {
+			resetForm();
+		}
+	}, [editItem, category]);
+
+	const resetForm = () => {
+		setLine('');
+		setCode('');
+		setDescription('');
+		setColor('');
+		setQuantityPerLump('');
+		setLumpCount('');
+		setSite('');
+		setPrice('');
+	};
+
+	const handleSave = () => {
+		// validation
+		if (!line || !code || !description || !color || !site || !quantityPerLump || !lumpCount) {
+			toast({
+				title: 'Error de validación',
+				description: 'Complete todos los campos obligatorios',
+				variant: 'destructive',
+				duration: 4000,
+			});
+			return;
+		}
+
+		const payload: any = {
+			created_at: isEditing && (editItem as any).created_at ? (editItem as any).created_at : new Date().toISOString().split('T')[0],
+			accessory_material: materialType,
+		};
+
+		if (category === 'Accesorios') {
+			Object.assign(payload, {
+				accessory_line: line,
+				accessory_code: code,
+				accessory_description: description,
+				accessory_color: color,
+				accessory_quantity_for_lump: Number(quantityPerLump),
+				accessory_quantity_lump: Number(lumpCount),
+				accessory_quantity: Number(quantityPerLump) * Number(lumpCount),
+				accessory_site: site,
+				accessory_price: price === '' ? null : Number(price),
+			});
+		} else {
+			Object.assign(payload, {
+				herraje_line: line,
+				herraje_code: code,
+				herraje_description: description,
+				herraje_color: color,
+				herraje_quantity_for_lump: Number(quantityPerLump),
+				herraje_quantity_lump: Number(lumpCount),
+				herraje_quantity: Number(quantityPerLump) * Number(lumpCount),
+				herraje_site: site,
+				herraje_price: price === '' ? null : Number(price),
+			});
+		}
+
+		onSave(payload);
+		if (!isEditing) resetForm();
+		onOpenChange(false);
+	};
+
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			{triggerButton && (
+				<DialogTrigger asChild>
+					<Button className="gap-2">
+						<Plus className="h-4 w-4" />
+						Agregar Item
+					</Button>
+				</DialogTrigger>
+			)}
+			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
+				<DialogHeader>
+					<DialogTitle>{isEditing ? 'Editar item' : `Agregar ${category}`}</DialogTitle>
+					<DialogDescription>
+						{isEditing ? 'Modifique los datos' : 'Complete los datos del nuevo ítem'}
+					</DialogDescription>
+				</DialogHeader>
+				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2">
+					<div className="grid gap-4">
+						<div className="grid gap-2">
+							<Label>Línea/Marca</Label>
+							<LineSelect value={line} onValueChange={(v:any)=>{setLine(v); setCode(''); setColor('');}} materialType={materialType} />
+						</div>
+
+						<div className="grid gap-2">
+							<Label>Código</Label>
+							<CodeSelect value={code} onValueChange={setCode} lineName={line} materialType={materialType} />
+						</div>
+
+						<div className="grid gap-2">
+							<Label>Descripción</Label>
+							<Input value={description} onChange={(e)=>setDescription(e.target.value)} className="bg-background" />
+						</div>
+
+						<div className="grid gap-2">
+							<Label>Color</Label>
+							<ColorSelect value={color} onValueChange={setColor} lineName={line} />
+						</div>
+
+						<div className="grid gap-2 md:grid-cols-3">
+							<div className="grid gap-2">
+								<Label>Cantidad x bulto</Label>
+								<Input type="number" value={quantityPerLump as any} onChange={(e)=>setQuantityPerLump(e.target.value ? Number(e.target.value) : '')} className="bg-background" />
+							</div>
+							<div className="grid gap-2">
+								<Label>Cantidad de bultos</Label>
+								<Input type="number" value={lumpCount as any} onChange={(e)=>setLumpCount(e.target.value ? Number(e.target.value) : '')} className="bg-background" />
+							</div>
+							<div className="grid gap-2">
+								<Label>Cantidad total</Label>
+								<Input type="number" value={( (Number(quantityPerLump) || 0) * (Number(lumpCount) || 0) ) || ''} readOnly className="bg-background" />
+							</div>
+						</div>
+
+						<div className="grid gap-2">
+							<Label>Ubicación</Label>
+							<SiteSelect value={site} onValueChange={setSite} />
+						</div>
+
+						<div className="grid gap-2">
+							<Label>Precio (opcional)</Label>
+							<Input type="number" value={price as any} onChange={(e)=>setPrice(e.target.value ? Number(e.target.value) : '')} className="bg-background" />
+						</div>
+
+					</div>
+				</div>
+				<DialogFooter className="pt-4 border-t border-border">
+					<Button variant="outline" onClick={()=>onOpenChange(false)}>Cancelar</Button>
+					<Button onClick={handleSave}>{isEditing? 'Guardar cambios' : 'Guardar'}</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
+	);
+}

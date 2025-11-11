@@ -1,14 +1,12 @@
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-import { categories } from '@/constants/stock-constants';
 
 interface StockFiltersProps {
 	searchTerm: string;
 	setSearchTerm: (term: string) => void;
-	selectedCategory: string;
-	setSelectedCategory: (category: string) => void;
+	selectedCategory: 'Perfiles' | 'Accesorios' | 'Herrajes';
+	setSelectedCategory: (category: 'Perfiles' | 'Accesorios' | 'Herrajes') => void;
 }
 
 export function StockFilters({
@@ -28,19 +26,6 @@ export function StockFilters({
 						onChange={(e) => setSearchTerm(e.target.value)}
 						className="pl-9 bg-background"
 					/>
-				</div>
-				<div className="flex gap-2 overflow-x-auto">
-					{categories.map((categoria) => (
-						<Button
-							key={categoria}
-							variant={selectedCategory === categoria ? 'default' : 'outline'}
-							size="sm"
-							onClick={() => setSelectedCategory(categoria)}
-							className="whitespace-nowrap"
-						>
-							{categoria}
-						</Button>
-					))}
 				</div>
 			</div>
 		</Card>

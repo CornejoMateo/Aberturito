@@ -1,25 +1,25 @@
 import { getSupabaseClient } from './supabase-client';
 
-export type AccessoryItemStock = {
+export type HerrajeItemStock = {
 	id: string;
 	created_at: string;
-	accessory_line: string;
-	accessory_code: string;
-	accessory_description: string;
-	accessory_color: string;
-	accessory_quantity_for_lump: number;
-	accessory_quantity_lump: number;
-	accessory_quantity: number;
-	accessory_site: string;
-	accessory_material: string;
-	accessory_image_url: string | null;
-	accessory_price?: number | null;
+	herraje_line: string;
+	herraje_code: string;
+	herraje_description: string;
+	herraje_color: string;
+	herraje_quantity_for_lump: number;
+	herraje_quantity_lump: number;
+	herraje_quantity: number;
+	herraje_site: string;
+	herraje_material: string;
+	herraje_image_url: string | null;
+	herraje_price?: number | null;
 };
 
-const TABLE = 'accesories';
+const TABLE = 'herrajes';
 
-export async function listAccesoriesStock(): Promise<{
-	data: AccessoryItemStock[] | null;
+export async function listHerrajesStock(): Promise<{
+	data: HerrajeItemStock[] | null;
 	error: any;
 }> {
 	const supabase = getSupabaseClient();
@@ -30,17 +30,17 @@ export async function listAccesoriesStock(): Promise<{
 	return { data, error };
 }
 
-export async function getAccesoryById(
+export async function getHerrajeById(
 	id: string
-): Promise<{ data: AccessoryItemStock | null; error: any }> {
+): Promise<{ data: HerrajeItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
 	return { data, error };
 }
 
-export async function createAccessoryStock(
-	item: Partial<AccessoryItemStock>
-): Promise<{ data: AccessoryItemStock | null; error: any }> {
+export async function createHerrajeStock(
+	item: Partial<HerrajeItemStock>
+): Promise<{ data: HerrajeItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 
 	const payload = {
@@ -53,20 +53,19 @@ export async function createAccessoryStock(
 	return { data, error };
 }
 
-export async function updateAccessoryStock(
+export async function updateHerrajeStock(
 	id: string,
-	changes: Partial<AccessoryItemStock>
-): Promise<{ data: AccessoryItemStock | null; error: any }> {
+	changes: Partial<HerrajeItemStock>
+): Promise<{ data: HerrajeItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const payload = { ...changes, last_update: new Date().toISOString().split('T')[0] };
 	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();
 	return { data, error };
 }
 
-export async function deleteAccesoryStock(id: string): Promise<{ data: null; error: any }> {
+export async function deleteHerrajeStock(id: string): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };
 }
 
-// Falta lo de las imagenes

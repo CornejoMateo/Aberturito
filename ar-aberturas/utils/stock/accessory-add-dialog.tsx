@@ -20,15 +20,16 @@ import { LineSelect } from '@/components/stock/line-select';
 import { ColorSelect } from '@/components/stock/color-select';
 import { CodeSelect } from '@/components/stock/code-select';
 import { type AccessoryItemStock } from '@/lib/accesorie-stock';
-import { type HerrajeItemStock } from '@/lib/herraje-stock';
+import { type IronworkItemStock } from '@/lib/ironwork-stock';
+import { set } from 'date-fns';
 
 interface AccessoryFormDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	onSave: (item: Partial<AccessoryItemStock> | Partial<HerrajeItemStock>) => void;
+	onSave: (item: Partial<AccessoryItemStock> | Partial<IronworkItemStock>) => void;
 	materialType?: 'Aluminio' | 'PVC';
 	category: 'Accesorios' | 'Herrajes';
-	editItem?: AccessoryItemStock | HerrajeItemStock | null;
+	editItem?: AccessoryItemStock | IronworkItemStock | null;
 	triggerButton?: boolean;
 }
 
@@ -43,7 +44,8 @@ export function AccessoryFormDialog({
 }: AccessoryFormDialogProps) {
 	const isEditing = !!editItem;
 
-	// Fields common to accessories/herrajes
+	// Fields common to accessories/ironworks
+	const [categoryHA, setCategoryHA] = useState('');
 	const [line, setLine] = useState('');
 	const [code, setCode] = useState('');
 	const [description, setDescription] = useState('');
@@ -59,6 +61,7 @@ export function AccessoryFormDialog({
 			// map fields depending on category
 			if (category === 'Accesorios') {
 				const it = editItem as AccessoryItemStock;
+				setCategoryHA(it.accessory_category || '');
 				setLine(it.accessory_line || '');
 				setCode(it.accessory_code || '');
 				setDescription(it.accessory_description || '');
@@ -68,15 +71,16 @@ export function AccessoryFormDialog({
 				setSite(it.accessory_site || '');
 				setPrice(it['accessory_price' as keyof AccessoryItemStock] as any || '');
 			} else {
-				const it = editItem as HerrajeItemStock;
-				setLine(it.herraje_line || '');
-				setCode(it.herraje_code || '');
-				setDescription(it.herraje_description || '');
-				setColor(it.herraje_color || '');
-				setQuantityPerLump(it.herraje_quantity_for_lump ?? '');
-				setLumpCount(it.herraje_quantity_lump ?? '');
-				setSite(it.herraje_site || '');
-				setPrice(it.herraje_price ?? '');
+				const it = editItem as IronworkItemStock;
+				setCategoryHA(it.ironwork_category || '');
+				setLine(it.ironwork_line || '');
+				setCode(it.ironwork_code || '');
+				setDescription(it.ironwork_description || '');
+				setColor(it.ironwork_color || '');
+				setQuantityPerLump(it.ironwork_quantity_for_lump ?? '');
+				setLumpCount(it.ironwork_quantity_lump ?? '');
+				setSite(it.ironwork_site || '');
+				setPrice(it.ironwork_price ?? '');
 			}
 		} else {
 			resetForm();
@@ -84,6 +88,7 @@ export function AccessoryFormDialog({
 	}, [editItem, category]);
 
 	const resetForm = () => {
+		setCategoryHA('');
 		setLine('');
 		setCode('');
 		setDescription('');
@@ -96,7 +101,7 @@ export function AccessoryFormDialog({
 
 	const handleSave = () => {
 		// validation
-		if (!line || !code || !description || !color || !site || !quantityPerLump || !lumpCount) {
+		if (!categoryHA || !line || !code || !description || !color || !site || !quantityPerLump || !lumpCount) {
 			toast({
 				title: 'Error de validación',
 				description: 'Complete todos los campos obligatorios',
@@ -108,11 +113,12 @@ export function AccessoryFormDialog({
 
 		const payload: any = {
 			created_at: isEditing && (editItem as any).created_at ? (editItem as any).created_at : new Date().toISOString().split('T')[0],
-			accessory_material: materialType,
+			...(category === 'Accesorios' ? { accessory_material: materialType } : { ironwork_material: materialType }),
 		};
 
 		if (category === 'Accesorios') {
 			Object.assign(payload, {
+				accessory_category: categoryHA,
 				accessory_line: line,
 				accessory_code: code,
 				accessory_description: description,
@@ -125,15 +131,16 @@ export function AccessoryFormDialog({
 			});
 		} else {
 			Object.assign(payload, {
-				herraje_line: line,
-				herraje_code: code,
-				herraje_description: description,
-				herraje_color: color,
-				herraje_quantity_for_lump: Number(quantityPerLump),
-				herraje_quantity_lump: Number(lumpCount),
-				herraje_quantity: Number(quantityPerLump) * Number(lumpCount),
-				herraje_site: site,
-				herraje_price: price === '' ? null : Number(price),
+				ironwork_category: categoryHA,
+				ironwork_line: line,
+				ironwork_code: code,
+				ironwork_description: description,
+				ironwork_color: color,
+				ironwork_quantity_for_lump: Number(quantityPerLump),
+				ironwork_quantity_lump: Number(lumpCount),
+				ironwork_quantity: Number(quantityPerLump) * Number(lumpCount),
+				ironwork_site: site,
+				ironwork_price: price === '' ? null : Number(price),
 			});
 		}
 
@@ -148,19 +155,24 @@ export function AccessoryFormDialog({
 				<DialogTrigger asChild>
 					<Button className="gap-2">
 						<Plus className="h-4 w-4" />
-						Agregar Item
+						{`Agregar ${category === 'Herrajes' ? 'herraje' : 'accesorio'}`}
 					</Button>
 				</DialogTrigger>
 			)}
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader>
-					<DialogTitle>{isEditing ? 'Editar item' : `Agregar ${category}`}</DialogTitle>
+					<DialogTitle>{isEditing ? `Editar ${category === 'Herrajes' ? 'herraje' : 'accesorio'}` : `Agregar  ${category === 'Herrajes' ? 'herraje' : 'accesorio'}`}</DialogTitle>
 					<DialogDescription>
 						{isEditing ? 'Modifique los datos' : 'Complete los datos del nuevo ítem'}
 					</DialogDescription>
 				</DialogHeader>
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2">
 					<div className="grid gap-4">
+						<div className="grid gap-2">
+							<Label>Categoría</Label>
+							<Input value={categoryHA} onChange={e => setCategoryHA(e.target.value)} className="bg-background" />
+						</div>
+
 						<div className="grid gap-2">
 							<Label>Línea/Marca</Label>
 							<LineSelect value={line} onValueChange={(v:any)=>{setLine(v); setCode(''); setColor('');}} materialType={materialType} />

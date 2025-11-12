@@ -5,16 +5,17 @@ export type IronworkItemStock = {
 	created_at: string;
 	ironwork_category: string;
 	ironwork_line: string;
+	ironwork_brand: string | null;
 	ironwork_code: string;
-	ironwork_description?: string | null;
+	ironwork_description: string | null;
 	ironwork_color: string;
 	ironwork_quantity_for_lump: number;
 	ironwork_quantity_lump: number;
 	ironwork_quantity: number;
 	ironwork_site: string;
 	ironwork_material: string;
-	ironwork_image_url?: string | null;
-	ironwork_price?: number | null;
+	ironwork_image_url: string | null;
+	ironwork_price: number | null;
 	last_update: string | null;
 };
 

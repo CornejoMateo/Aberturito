@@ -4,7 +4,8 @@ export type AccessoryItemStock = {
 	id: string;
 	created_at: string;
 	accessory_category: string;
-	accessory_line: string;
+	accessory_line: string | null;
+	accessory_brand: string | null;
 	accessory_code: string;
 	accessory_description?: string | null;
 	accessory_color: string;
@@ -13,8 +14,8 @@ export type AccessoryItemStock = {
 	accessory_quantity: number;
 	accessory_site: string;
 	accessory_material: string;
-	accessory_image_url?: string | null;
-	accessory_price?: number | null;
+	accessory_image_url: string | null;
+	accessory_price: number | null;
 	last_update: string | null;
 };
 

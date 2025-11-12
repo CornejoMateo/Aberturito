@@ -39,7 +39,7 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from '@/components/ui/pagination';
-import { useRealtimeProfileTable } from '@/hooks/use-realtime-profile-table';
+import { userRealtimeTables } from '@/hooks/use-realtime-tables';
 import { Image } from 'lucide-react';
 import { PhotoGalleryModal } from '@/utils/stock/photo-gallery-modal';
 
@@ -72,7 +72,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 		loading,
 		error,
 		refresh,
-	} = useRealtimeProfileTable<any>(tableName, fetcher);
+	} = userRealtimeTables<any>(tableName, fetcher);
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedCategory, setSelectedCategory] = useState(category);
@@ -446,5 +446,3 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 		</div>
 	);
 }
-
-export type { ProfileItemStock };

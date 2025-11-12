@@ -1,7 +1,7 @@
 import { getSupabaseClient } from '@/lib/supabase-client';
 import { useEffect, useState } from 'react';
 
-export function useRealtimeProfileTable<T>(table: string, fetchFromDb: () => Promise<T[]>) {
+export function userRealtimeTables<T>(table: string, fetchFromDb: () => Promise<T[]>) {
 	const [data, setData] = useState<T[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);

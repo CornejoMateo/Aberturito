@@ -41,7 +41,8 @@ import {
 } from '@/components/ui/pagination';
 import { userRealtimeTables } from '@/hooks/use-realtime-tables';
 import { Image } from 'lucide-react';
-import { PhotoGalleryModal } from '@/utils/stock/images/photo-gallery-modal';
+import { PhotoGalleryModal } from '@/utils/stock/photo-gallery-modal';
+import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
 
 interface StockManagementProps {
 	materialType?: 'Aluminio' | 'PVC';

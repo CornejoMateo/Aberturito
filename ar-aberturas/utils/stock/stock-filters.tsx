@@ -1,6 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
 
 interface StockFiltersProps {
 	searchTerm: string;
@@ -27,6 +28,11 @@ export function StockFilters({
 						className="pl-9 bg-background"
 					/>
 				</div>
+				{(selectedCategory === 'Accesorios' || selectedCategory === 'Herrajes') && (
+					<div className="ml-auto">
+						<UpdatePricesDialog />
+					</div>
+				)}
 			</div>
 		</Card>
 	);

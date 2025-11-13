@@ -5,7 +5,13 @@ interface PriceUpdateResult {
   errors: string[];
 }
 
-export async function updatePrices(file: File): Promise<PriceUpdateResult> {
+type ProgressCallback = (current: number, total: number) => void;
+
+// Function to update prices from a file
+export async function updatePrices(
+  file: File, 
+  progressCallback?: ProgressCallback
+): Promise<PriceUpdateResult> {
   const supabase = getSupabaseClient();
   const result: PriceUpdateResult = {
     updated: 0,
@@ -18,7 +24,13 @@ export async function updatePrices(file: File): Promise<PriceUpdateResult> {
     const lines = text.split('\n').filter(line => line.trim() !== '');
     
     // Procesar cada línea
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      // Actualizar el progreso
+      if (progressCallback) {
+        progressCallback(i + 1, lines.length);
+      }
       const [code, price] = line.split('\t');
       
       if (!code || !price) {

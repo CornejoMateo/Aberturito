@@ -7,19 +7,27 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { updatePrices } from '@/lib/update-prices';
+import { Progress } from '@/components/ui/progress';
+import { Loader2 } from 'lucide-react';
 
 export function UpdatePricesDialog() {
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [processedLines, setProcessedLines] = useState(0);
+  const [totalLines, setTotalLines] = useState(0);
   const { toast } = useToast();
 
+  // Function to handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
     }
   };
 
+  // Function to handle form submission
   const handleSubmit = async () => {
     if (!file) {
       toast({
@@ -31,21 +39,48 @@ export function UpdatePricesDialog() {
     }
 
     setIsLoading(true);
+    setIsProcessing(true);
+    setProcessedLines(0);
+    
     try {
-      const result = await updatePrices(file);
+      // Leer el archivo para contar las líneas
+      const text = await file.text();
+      const lines = text.split('\n').filter(line => line.trim() !== '');
+      setTotalLines(lines.length);
+      
+      // Crear un nuevo archivo para la función updatePrices
+      const fileBlob = new Blob([text], { type: 'text/plain' });
+      const newFile = new File([fileBlob], file.name, { type: 'text/plain' });
+      
+      // Función para actualizar el progreso
+      const progressCallback = (current: number, total: number) => {
+        setProcessedLines(current);
+        setProgress(Math.round((current / total) * 100));
+      };
+      
+      const result = await updatePrices(newFile, progressCallback);
+      
       toast({
-        title: 'Éxito',
+        title: '¡Actualización completada!',
         description: `Se actualizaron ${result.updated} precios correctamente`,
       });
-      setIsOpen(false);
-      setFile(null);
+      
+      // Pequeño retraso antes de cerrar para que el pana David vea el mensaje de éxito
+      setTimeout(() => {
+        setIsOpen(false);
+        setFile(null);
+        setIsProcessing(false);
+        setProgress(0);
+      }, 1000);
+      
     } catch (error) {
       console.error('Error updating prices:', error);
       toast({
         title: 'Error',
-        description: 'Ocurrió un error al actualizar los precios',
+        description: 'Ocurrió un error al actualizar los precios. Por favor, verifica el formato del archivo.',
         variant: 'destructive',
       });
+      setIsProcessing(false);
     } finally {
       setIsLoading(false);
     }
@@ -54,7 +89,7 @@ export function UpdatePricesDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" className="whitespace-nowrap">
           Actualizar Precios
         </Button>
       </DialogTrigger>
@@ -81,15 +116,28 @@ export function UpdatePricesDialog() {
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button 
-            type="submit" 
-            onClick={handleSubmit}
-            disabled={!file || isLoading}
-          >
-            {isLoading ? 'Actualizando...' : 'Actualizar precios'}
-          </Button>
-        </DialogFooter>
+        {isProcessing ? (
+          <div className="space-y-4 py-4">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>Procesando archivo...</span>
+              <span>{processedLines} de {totalLines} líneas</span>
+            </div>
+            <Progress value={progress} className="h-2" />
+            <div className="flex justify-center py-2">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          </div>
+        ) : (
+          <DialogFooter>
+            <Button 
+              type="submit" 
+              onClick={handleSubmit}
+              disabled={!file || isLoading}
+            >
+              {isLoading ? 'Cargando...' : 'Actualizar precios'}
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

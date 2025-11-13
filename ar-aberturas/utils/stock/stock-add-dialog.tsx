@@ -119,7 +119,9 @@ export function StockFormDialog({
 			// Show success message
 			toast({
 				title: '¡Éxito!',
-				description: isEditing ? 'Perfil actualizado correctamente' : 'Perfil agregado correctamente',
+				description: isEditing
+					? 'Perfil actualizado correctamente'
+					: 'Perfil agregado correctamente',
 				duration: 3000,
 			});
 

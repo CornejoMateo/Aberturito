@@ -185,13 +185,16 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 				<div className="flex gap-2">
 					<Button variant="default" onClick={() => setIsPhotoGalleryOpen(true)} className="gap-2">
 						<Image className="h-5 w-5" />
-						Agregar foto
+						Galería
 					</Button>
 					<Button variant="default" onClick={() => setIsModalOpen(true)} className="gap-2">
 						<Settings className="h-5 w-5" />
 						Ajustar opciones
 					</Button>
+					
+					
 					<PhotoGalleryModal
+						categoryState={category}
 						open={isPhotoGalleryOpen}
 						onOpenChange={setIsPhotoGalleryOpen}
 						materialType={materialType}

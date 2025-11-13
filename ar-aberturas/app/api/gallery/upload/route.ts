@@ -2,6 +2,8 @@ import { v2 as cloudinary } from 'cloudinary';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { updateImageForMatchingProfiles } from '@/lib/profile-stock';
+import { updateImageForMatchingAccesories } from '@/lib/accesorie-stock';
+import { updateImageForMatchingIronworks } from '@/lib/ironwork-stock';
 import sharp from 'sharp';
 
 cloudinary.config({
@@ -11,52 +13,89 @@ cloudinary.config({
 });
 
 export async function POST(req: Request) {
-
 	let uploadedPublicId: string | null = null;
 	try {
 		const formData = await req.formData();
 		const file = formData.get('file') as File;
-		const material_type = formData.get('material_type') as string;
-		const name_line = formData.get('name_line') as string;
-		const name_code = formData.get('name_code') as string;
+		const categoryState = formData.get('categoryState') as string;
+		let name_category = '';
+		let name_brand = '';
+		let name_code = '';
+		let material_type = '';
+		let name_line = '';
+		if (categoryState === 'Perfiles') {
+			material_type = formData.get('material_type') as string;
+			name_line = formData.get('name_line') as string;
+			name_code = formData.get('name_code') as string;
 
-		if (!file || !material_type || !name_line || !name_code) {
-			return NextResponse.json(
-				{ success: false, error: 'Faltan campos obligatorios' },
-				{ status: 400 }
-			);
+			if (!file || !material_type || !name_line || !name_code) {
+				return NextResponse.json(
+					{ success: false, error: 'Faltan campos obligatorios' },
+					{ status: 400 }
+				);
+			}
+		} else if (categoryState === 'Accesorios' || categoryState === 'Herrajes') {
+			name_category = formData.get('name_category') as string;
+			name_brand = formData.get('name_brand') as string;
+			name_line = formData.get('name_line') as string;
+			name_code = formData.get('name_code') as string;
+
+			if (!file || !name_category || !name_brand || !name_line || !name_code) {
+				return NextResponse.json(
+					{ success: false, error: 'Faltan campos obligatorios' },
+					{ status: 400 }
+				);
+			}
 		}
 
 		const arrayBuffer = await file.arrayBuffer();
 		const buffer = Buffer.from(arrayBuffer);
 
 		const compressedBuffer = await sharp(buffer)
-		.resize({
-			width: 1200,              
-			withoutEnlargement: true, 
-		})
-		.jpeg({
-			quality: 75,             
-			mozjpeg: true,          
-		})
-		.toBuffer();
+			.resize({
+				width: 1200,
+				withoutEnlargement: true,
+			})
+			.jpeg({
+				quality: 75,
+				mozjpeg: true,
+			})
+			.toBuffer();
 
-		const result = await new Promise((resolve, reject) => {
-		cloudinary.uploader
-			.upload_stream(
-			{
-				folder: 'gallery',
-				public_id: `${material_type}_${name_line}_${name_code}`,
-				format: 'jpg', 
-			},
-			(error, result) => {
-				if (error) reject(error);
-				else resolve(result);
-			}
-			)
-			.end(compressedBuffer);
-		});
-
+		let result: unknown;
+		if (categoryState === 'Accesorios' || categoryState === 'Herrajes') {
+			result = await new Promise((resolve, reject) => {
+				cloudinary.uploader
+					.upload_stream(
+						{
+							folder: categoryState === 'Accesorios' ? 'gallery_accesories' : 'gallery_ironworks',
+							public_id: `${name_category}_${name_brand}_${name_line}_${name_code}`,
+							format: 'jpg',
+						},
+						(error, result) => {
+							if (error) reject(error);
+							else resolve(result);
+						}
+					)
+					.end(compressedBuffer);
+			});
+		} else {
+			result = await new Promise((resolve, reject) => {
+				cloudinary.uploader
+					.upload_stream(
+						{
+							folder: 'gallery',
+							public_id: `${material_type}_${name_line}_${name_code}`,
+							format: 'jpg',
+						},
+						(error, result) => {
+							if (error) reject(error);
+							else resolve(result);
+						}
+					)
+					.end(compressedBuffer);
+			});
+		}
 		const uploadResult = result as { secure_url: string; public_id: string };
 		uploadedPublicId = uploadResult.public_id; // Save for potential rollback
 
@@ -65,17 +104,36 @@ export async function POST(req: Request) {
 			process.env.SUPABASE_SERVICE_ROLE_KEY!
 		);
 
-		const { data, error } = await supabase
-			.from('gallery_images')
-			.insert({
-				image_url: uploadResult.secure_url,
-				public_id: uploadResult.public_id, 
-				material_type,
-				name_line,
-				name_code,
-			})
-			.select()
-			.single();
+		let data;
+		let error;
+		if (categoryState === 'Accesorios' || categoryState === 'Herrajes') {
+			const table =
+				categoryState === 'Accesorios' ? 'gallery_images_accesories' : 'gallery_images_ironworks';
+			({ data, error } = await supabase
+				.from(table)
+				.insert({
+					image_url: uploadResult.secure_url,
+					public_id: uploadResult.public_id,
+					name_category,
+					name_brand,
+					name_line,
+					name_code,
+				})
+				.select()
+				.single());
+		} else {
+			({ data, error } = await supabase
+				.from('gallery_images')
+				.insert({
+					image_url: uploadResult.secure_url,
+					public_id: uploadResult.public_id,
+					material_type,
+					name_line,
+					name_code,
+				})
+				.select()
+				.single());
+		}
 
 		if (error) {
 			console.error('Supabase error:', error);
@@ -83,16 +141,48 @@ export async function POST(req: Request) {
 		}
 
 		// Update profiles with the new image URL
-		const { error: updateError } = await updateImageForMatchingProfiles(
-			supabase,
-			material_type,
-			name_line,
-			name_code,
-			uploadResult.secure_url
-		);
+		let updateError;
+		if (categoryState === 'Accesorios') {
+			const res = await updateImageForMatchingAccesories(
+				supabase,
+				name_category,
+				name_line,
+				name_code,
+				name_brand,
+				uploadResult.secure_url
+			);
+			updateError = res.error;
+		}
+		if (categoryState === 'Herrajes') {
+			const res = await updateImageForMatchingIronworks(
+				supabase,
+				name_category,
+				name_line,
+				name_code,
+				name_brand,
+				uploadResult.secure_url
+			);
+			updateError = res.error;
+		}
+		if (categoryState === 'Perfiles') {
+			const res = await updateImageForMatchingProfiles(
+				supabase,
+				material_type,
+				name_line,
+				name_code,
+				uploadResult.secure_url
+			);
+			updateError = res.error;
+		}
 
 		if (updateError) {
-			console.error('Error updating profiles with new image URL:', updateError);
+			if (categoryState === 'Accesorios') {
+				console.error('Error updating accessories with new image URL:', updateError);
+			} else if (categoryState === 'Herrajes') {
+				console.error('Error updating ironworks with new image URL:', updateError);
+			} else {
+				console.error('Error updating profiles with new image URL:', updateError);
+			}
 			throw updateError;
 		}
 
@@ -108,7 +198,10 @@ export async function POST(req: Request) {
 				console.error('Error al eliminar imagen de Cloudinary:', deleteError);
 			}
 		}
-		
-		return NextResponse.json({ success: false, error: 'Ya existe una imagen con este código y línea.' },  { status: 500 });
+
+		return NextResponse.json(
+			{ success: false, error: 'Ya existe una imagen para estos campos.' },
+			{ status: 500 }
+		);
 	}
 }

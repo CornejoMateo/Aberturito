@@ -6,58 +6,72 @@ import { useState } from 'react';
 import { ConfirmUpdateDialog } from '@/utils/stock/confirm-update-dialog';
 import ImageViewer from '@/components/ui/image-viewer';
 import {
-    AlertDialog,
-    AlertDialogTrigger,
-    AlertDialogContent,
-    AlertDialogTitle,
-    AlertDialogDescription,
-    AlertDialogAction,
-    AlertDialogCancel,
+	AlertDialog,
+	AlertDialogTrigger,
+	AlertDialogContent,
+	AlertDialogTitle,
+	AlertDialogDescription,
+	AlertDialogAction,
+	AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/components/provider/auth-provider';
 import type { AccessoryItemStock } from '@/lib/accesorie-stock';
 import type { IronworkItemStock } from '@/lib/ironwork-stock';
 
 interface AccesoriesTableProps {
-    categoryState: 'Accesorios' | 'Herrajes';
-    filteredStock: AccessoryItemStock[] | IronworkItemStock[];
-    onEdit: (id: string) => void;
-    onDelete: (id: string) => void;
-    onUpdateQuantity: (id: string, newQuantity: number, field?: 'accessory_quantity' | 'accessory_quantity_lump') => Promise<void>;
+	categoryState: 'Accesorios' | 'Herrajes';
+	filteredStock: AccessoryItemStock[] | IronworkItemStock[];
+	onEdit: (id: string) => void;
+	onDelete: (id: string) => void;
+	onUpdateQuantity: (
+		id: string,
+		newQuantity: number,
+		field?: 'accessory_quantity' | 'accessory_quantity_lump'
+	) => Promise<void>;
 }
 
-export function AccesoriesTable({ categoryState, filteredStock, onEdit, onDelete, onUpdateQuantity }: AccesoriesTableProps) {
-    const { user } = useAuth();
-    const [openImageUrl, setOpenImageUrl] = useState<string | null>(null);
-    const [currentAction, setCurrentAction] = useState<{
-        id: string;
-        action: 'increment' | 'decrement';
-        currentQty: number;
-    } | null>(null);
-    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-    const [isUpdating, setIsUpdating] = useState(false);
-    const [updatingId, setUpdatingId] = useState<string | null>(null);
+export function AccesoriesTable({
+	categoryState,
+	filteredStock,
+	onEdit,
+	onDelete,
+	onUpdateQuantity,
+}: AccesoriesTableProps) {
+	const { user } = useAuth();
+	const [openImageUrl, setOpenImageUrl] = useState<string | null>(null);
+	const [currentAction, setCurrentAction] = useState<{
+		id: string;
+		action: 'increment' | 'decrement';
+		currentQty: number;
+	} | null>(null);
+	const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+	const [isUpdating, setIsUpdating] = useState(false);
+	const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-    const handleQuantityAction = (id: string, action: 'increment' | 'decrement', currentQty: number) => {
-        setCurrentAction({ id, action, currentQty });
-        setConfirmDialogOpen(true);
-    };
+	const handleQuantityAction = (
+		id: string,
+		action: 'increment' | 'decrement',
+		currentQty: number
+	) => {
+		setCurrentAction({ id, action, currentQty });
+		setConfirmDialogOpen(true);
+	};
 
-    const handleConfirmUpdate = async () => {
-        if (!currentAction) return;
-        const { id, action, currentQty } = currentAction;
-        const newQuantity = action === 'increment' ? currentQty + 1 : currentQty - 1;
-        try {
-            setIsUpdating(true);
-            setUpdatingId(id);
-            await onUpdateQuantity(id, newQuantity);
-        } finally {
-            setIsUpdating(false);
-            setUpdatingId(null);
-            setConfirmDialogOpen(false);
-            setCurrentAction(null);
-        }
-    };
+	const handleConfirmUpdate = async () => {
+		if (!currentAction) return;
+		const { id, action, currentQty } = currentAction;
+		const newQuantity = action === 'increment' ? currentQty + 1 : currentQty - 1;
+		try {
+			setIsUpdating(true);
+			setUpdatingId(id);
+			await onUpdateQuantity(id, newQuantity);
+		} finally {
+			setIsUpdating(false);
+			setUpdatingId(null);
+			setConfirmDialogOpen(false);
+			setCurrentAction(null);
+		}
+	};
 
     // Mapeo de claves para cada tipo
     const keys = categoryState === 'Accesorios'
@@ -92,13 +106,13 @@ export function AccesoriesTable({ categoryState, filteredStock, onEdit, onDelete
             image: 'ironwork_image_url',
         };
 
-    const getItemName = (item: any) => {
-        return [
-            (item as any)[keys.line],
-            (item as any)[keys.code],
-            (item as any)[keys.description]
-        ].filter(Boolean).join(' ') || 'este ítem';
-    };
+	const getItemName = (item: any) => {
+		return (
+			[(item as any)[keys.line], (item as any)[keys.code], (item as any)[keys.description]]
+				.filter(Boolean)
+				.join(' ') || 'este ítem'
+		);
+	};
 
     return (
         <Card className="bg-card border-border overflow-hidden">
@@ -202,19 +216,23 @@ export function AccesoriesTable({ categoryState, filteredStock, onEdit, onDelete
                 </table>
             </div>
 
-            {currentAction && (
-                <ConfirmUpdateDialog
-                    open={confirmDialogOpen}
-                    onOpenChange={setConfirmDialogOpen}
-                    onConfirm={handleConfirmUpdate}
-                    itemName={getItemName(filteredStock.find((f)=> (f as any).id === currentAction.id)!)}
-                    action={currentAction.action}
-                    quantity={currentAction.currentQty}
-                    isLoading={isUpdating && updatingId === currentAction.id}
-                />
-            )}
+			{currentAction && (
+				<ConfirmUpdateDialog
+					open={confirmDialogOpen}
+					onOpenChange={setConfirmDialogOpen}
+					onConfirm={handleConfirmUpdate}
+					itemName={getItemName(filteredStock.find((f) => (f as any).id === currentAction.id)!)}
+					action={currentAction.action}
+					quantity={currentAction.currentQty}
+					isLoading={isUpdating && updatingId === currentAction.id}
+				/>
+			)}
 
-            <ImageViewer open={!!openImageUrl} onOpenChange={(v)=> (v? null: setOpenImageUrl(null))} src={openImageUrl} />
-        </Card>
-    );
+			<ImageViewer
+				open={!!openImageUrl}
+				onOpenChange={(v) => (v ? null : setOpenImageUrl(null))}
+				src={openImageUrl}
+			/>
+		</Card>
+	);
 }

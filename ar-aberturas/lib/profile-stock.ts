@@ -96,7 +96,7 @@ export async function updateImageForMatchingProfiles(
 	material: string,
 	name_line: string,
 	name_code: string,
-	image_url: string
+	image_url: string | null
 ): Promise<{ data: ProfileItemStock[] | null; error: any }> {
 	const { data, error } = await supabase
 		.from(TABLE)

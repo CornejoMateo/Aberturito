@@ -10,7 +10,7 @@ export default function UploadProfileImage({ onUpload }: { onUpload: (url: strin
 		if (!file) return;
 		setLoading(true);
 
-    // cloudinary upload password protection
+		// cloudinary upload password protection
 		const timestamp = Math.floor(Date.now() / 1000);
 		const paramsToSign = { timestamp };
 		const res = await fetch('/api/upload', {

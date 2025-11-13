@@ -47,6 +47,7 @@ export function AccessoryFormDialog({
 	// Fields common to accessories/ironworks
 	const [categoryHA, setCategoryHA] = useState('');
 	const [line, setLine] = useState('');
+	const [brand, setBrand] = useState('');
 	const [code, setCode] = useState('');
 	const [description, setDescription] = useState('');
 	const [color, setColor] = useState('');
@@ -63,6 +64,7 @@ export function AccessoryFormDialog({
 				const it = editItem as AccessoryItemStock;
 				setCategoryHA(it.accessory_category || '');
 				setLine(it.accessory_line || '');
+				setBrand(it.accessory_brand || '');
 				setCode(it.accessory_code || '');
 				setDescription(it.accessory_description || '');
 				setColor(it.accessory_color || '');
@@ -74,6 +76,7 @@ export function AccessoryFormDialog({
 				const it = editItem as IronworkItemStock;
 				setCategoryHA(it.ironwork_category || '');
 				setLine(it.ironwork_line || '');
+				setBrand(it.ironwork_brand || '');
 				setCode(it.ironwork_code || '');
 				setDescription(it.ironwork_description || '');
 				setColor(it.ironwork_color || '');
@@ -90,6 +93,7 @@ export function AccessoryFormDialog({
 	const resetForm = () => {
 		setCategoryHA('');
 		setLine('');
+		setBrand('');
 		setCode('');
 		setDescription('');
 		setColor('');
@@ -120,6 +124,7 @@ export function AccessoryFormDialog({
 			Object.assign(payload, {
 				accessory_category: categoryHA,
 				accessory_line: line,
+				accessory_brand: brand,
 				accessory_code: code,
 				accessory_description: description,
 				accessory_color: color,
@@ -133,6 +138,7 @@ export function AccessoryFormDialog({
 			Object.assign(payload, {
 				ironwork_category: categoryHA,
 				ironwork_line: line,
+				ironwork_brand: brand,
 				ironwork_code: code,
 				ironwork_description: description,
 				ironwork_color: color,
@@ -174,8 +180,27 @@ export function AccessoryFormDialog({
 						</div>
 
 						<div className="grid gap-2">
-							<Label>Línea/Marca</Label>
-							<LineSelect value={line} onValueChange={(v:any)=>{setLine(v); setCode(''); setColor('');}} materialType={materialType} />
+							<Label>Línea</Label>
+							<LineSelect 
+								value={line} 
+								onValueChange={(v: string) => {
+									setLine(v); 
+									setCode(''); 
+									setColor('');
+								}}
+								onBrandChange={setBrand}
+								materialType={materialType} 
+							/>
+						</div>
+
+						<div className="grid gap-2">
+							<Label>Marca</Label>
+							<Input 
+								value={brand} 
+								onChange={(e) => setBrand(e.target.value)} 
+								placeholder="Ingrese la marca"
+								className="bg-background"
+							/>
 						</div>
 
 						<div className="grid gap-2">

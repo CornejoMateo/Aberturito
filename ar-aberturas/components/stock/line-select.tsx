@@ -18,6 +18,7 @@ import { listOptions, type LineOption } from '@/lib/stock-options';
 interface LineSelectProps {
 	value: string;
 	onValueChange: (value: string) => void;
+	onBrandChange?: (brand: string) => void;
 	materialType?: 'Aluminio' | 'PVC';
 	disabled?: boolean;
 	placeholder?: string;
@@ -27,6 +28,7 @@ interface LineSelectProps {
 export function LineSelect({
 	value,
 	onValueChange,
+	onBrandChange,
 	materialType,
 	disabled = false,
 	placeholder = 'Seleccionar línea',
@@ -80,8 +82,11 @@ export function LineSelect({
 							<CommandItem
 								key={line.id}
 								value={line.name_line ?? ''}
-								onSelect={(selectedValue) => {
-									onValueChange(selectedValue === value ? '' : selectedValue);
+								onSelect={() => {
+									onValueChange(line.name_line);
+									if (onBrandChange) {
+										onBrandChange(line.brand || '');
+									}
 									setOpen(false);
 								}}
 							>

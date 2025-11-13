@@ -16,9 +16,6 @@ import {
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { SiteSelect } from '@/components/stock/site-select';
-import { LineSelect } from '@/components/stock/line-select';
-import { ColorSelect } from '@/components/stock/color-select';
-import { CodeSelect } from '@/components/stock/code-select';
 import { type AccessoryItemStock } from '@/lib/accesorie-stock';
 import { type IronworkItemStock } from '@/lib/ironwork-stock';
 import { set } from 'date-fns';
@@ -181,15 +178,11 @@ export function AccessoryFormDialog({
 
 						<div className="grid gap-2">
 							<Label>Línea</Label>
-							<LineSelect 
+							<Input 
 								value={line} 
-								onValueChange={(v: string) => {
-									setLine(v); 
-									setCode(''); 
-									setColor('');
-								}}
-								onBrandChange={setBrand}
-								materialType={materialType} 
+								onChange={(e) => setLine(e.target.value)} 
+								placeholder="Ingrese la línea"
+								className="bg-background"
 							/>
 						</div>
 
@@ -205,7 +198,12 @@ export function AccessoryFormDialog({
 
 						<div className="grid gap-2">
 							<Label>Código</Label>
-							<CodeSelect value={code} onValueChange={setCode} lineName={line} materialType={materialType} />
+							<Input 
+						value={code} 
+						onChange={(e) => setCode(e.target.value)} 
+						placeholder="Ingrese el código"
+						className="bg-background"
+					/>
 						</div>
 
 						<div className="grid gap-2">
@@ -215,7 +213,12 @@ export function AccessoryFormDialog({
 
 						<div className="grid gap-2">
 							<Label>Color</Label>
-							<ColorSelect value={color} onValueChange={setColor} lineName={line} />
+							<Input 
+						value={color} 
+						onChange={(e) => setColor(e.target.value)} 
+						placeholder="Ingrese el color"
+						className="bg-background"
+					/>
 						</div>
 
 						<div className="grid gap-2 md:grid-cols-3">

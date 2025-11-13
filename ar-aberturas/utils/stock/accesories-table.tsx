@@ -64,6 +64,7 @@ export function AccesoriesTable({ categoryState, filteredStock, onEdit, onDelete
         ? {
             category: 'accessory_category',
             line: 'accessory_line',
+            brand: 'accessory_brand',
             code: 'accessory_code',
             description: 'accessory_description',
             color: 'accessory_color',
@@ -72,11 +73,13 @@ export function AccesoriesTable({ categoryState, filteredStock, onEdit, onDelete
             qty: 'accessory_quantity',
             site: 'accessory_site',
             price: 'accessory_price',
+            createdAt: 'created_at',
             image: 'accessory_image_url',
         }
         : {
             category: 'ironwork_category',
             line: 'ironwork_line',
+            brand: 'ironwork_brand',
             code: 'ironwork_code',
             description: 'ironwork_description',
             color: 'ironwork_color',
@@ -85,6 +88,7 @@ export function AccesoriesTable({ categoryState, filteredStock, onEdit, onDelete
             qty: 'ironwork_quantity',
             site: 'ironwork_site',
             price: 'ironwork_price',
+            createdAt: 'created_at',
             image: 'ironwork_image_url',
         };
 
@@ -103,7 +107,8 @@ export function AccesoriesTable({ categoryState, filteredStock, onEdit, onDelete
                     <thead className="border-b border-border bg-secondary">
                         <tr>
                             <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Categoría</th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Línea/Marca</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Línea</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Marca</th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Código</th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Descripción</th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Color</th>
@@ -114,6 +119,7 @@ export function AccesoriesTable({ categoryState, filteredStock, onEdit, onDelete
                             {user?.role === 'Admin' || user?.role === 'Ventas' ? (
                                 <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Precio</th>
                             ) : null}
+                            <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Fecha de creación</th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Acciones</th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Imagen</th>
                         </tr>
@@ -121,7 +127,7 @@ export function AccesoriesTable({ categoryState, filteredStock, onEdit, onDelete
                     <tbody className="divide-y divide-border">
                         {filteredStock.length === 0 ? (
                             <tr>
-                                <td colSpan={11} className="px-6 py-12 text-center">
+                                <td colSpan={12} className="px-6 py-12 text-center">
                                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                                         <Package className="h-12 w-12 opacity-50" />
                                         <p className="text-lg font-medium">No hay items</p>
@@ -135,6 +141,7 @@ export function AccesoriesTable({ categoryState, filteredStock, onEdit, onDelete
                                     <tr key={(item as any).id} className="hover:bg-secondary/50 transition-colors">
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.category] || 'N/A'}</p></td>
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.line] || 'N/A'}</p></td>
+                                        <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.brand] || 'N/A'}</p></td>
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.code] || 'N/A'}</p></td>
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.description] || 'N/A'}</p></td>
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.color] || 'N/A'}</p></td>
@@ -157,6 +164,20 @@ export function AccesoriesTable({ categoryState, filteredStock, onEdit, onDelete
                                                 <p className="text-center text-sm text-foreground">{(item as any)[keys.price] ? `$${(item as any)[keys.price]}` : '—'}</p>
                                             </td>
                                         ) : null}
+                                        <td className="px-2 py-2 whitespace-nowrap">
+                                            <p className="text-center text-xs text-muted-foreground">
+                                                {(() => {
+                                                    const dateStr = (item as any)[keys.createdAt];
+                                                    if (!dateStr) return 'N/A';
+                                                    const d = new Date(dateStr);
+                                                    if (isNaN(d.getTime())) return 'N/A';
+                                                    const day = String(d.getUTCDate()).padStart(2, '0');
+                                                    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+                                                    const year = d.getUTCFullYear();
+                                                    return `${day}-${month}-${year}`;
+                                                })()}
+                                            </p>
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right">
                                             <div className="flex justify-end gap-2">
                                                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={()=> onEdit((item as any).id)}><Edit className="h-4 w-4" /></Button>

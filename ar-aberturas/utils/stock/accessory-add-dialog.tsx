@@ -16,9 +16,6 @@ import {
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { SiteSelect } from '@/components/stock/site-select';
-import { LineSelect } from '@/components/stock/line-select';
-import { ColorSelect } from '@/components/stock/color-select';
-import { CodeSelect } from '@/components/stock/code-select';
 import { type AccessoryItemStock } from '@/lib/accesorie-stock';
 import { type IronworkItemStock } from '@/lib/ironwork-stock';
 import { set } from 'date-fns';
@@ -47,6 +44,7 @@ export function AccessoryFormDialog({
 	// Fields common to accessories/ironworks
 	const [categoryHA, setCategoryHA] = useState('');
 	const [line, setLine] = useState('');
+	const [brand, setBrand] = useState('');
 	const [code, setCode] = useState('');
 	const [description, setDescription] = useState('');
 	const [color, setColor] = useState('');
@@ -63,6 +61,7 @@ export function AccessoryFormDialog({
 				const it = editItem as AccessoryItemStock;
 				setCategoryHA(it.accessory_category || '');
 				setLine(it.accessory_line || '');
+				setBrand(it.accessory_brand || '');
 				setCode(it.accessory_code || '');
 				setDescription(it.accessory_description || '');
 				setColor(it.accessory_color || '');
@@ -74,6 +73,7 @@ export function AccessoryFormDialog({
 				const it = editItem as IronworkItemStock;
 				setCategoryHA(it.ironwork_category || '');
 				setLine(it.ironwork_line || '');
+				setBrand(it.ironwork_brand || '');
 				setCode(it.ironwork_code || '');
 				setDescription(it.ironwork_description || '');
 				setColor(it.ironwork_color || '');
@@ -90,6 +90,7 @@ export function AccessoryFormDialog({
 	const resetForm = () => {
 		setCategoryHA('');
 		setLine('');
+		setBrand('');
 		setCode('');
 		setDescription('');
 		setColor('');
@@ -120,6 +121,7 @@ export function AccessoryFormDialog({
 			Object.assign(payload, {
 				accessory_category: categoryHA,
 				accessory_line: line,
+				accessory_brand: brand,
 				accessory_code: code,
 				accessory_description: description,
 				accessory_color: color,
@@ -133,6 +135,7 @@ export function AccessoryFormDialog({
 			Object.assign(payload, {
 				ironwork_category: categoryHA,
 				ironwork_line: line,
+				ironwork_brand: brand,
 				ironwork_code: code,
 				ironwork_description: description,
 				ironwork_color: color,
@@ -174,13 +177,33 @@ export function AccessoryFormDialog({
 						</div>
 
 						<div className="grid gap-2">
-							<Label>Línea/Marca</Label>
-							<LineSelect value={line} onValueChange={(v:any)=>{setLine(v); setCode(''); setColor('');}} materialType={materialType} />
+							<Label>Línea</Label>
+							<Input 
+								value={line} 
+								onChange={(e) => setLine(e.target.value)} 
+								placeholder="Ingrese la línea"
+								className="bg-background"
+							/>
+						</div>
+
+						<div className="grid gap-2">
+							<Label>Marca</Label>
+							<Input 
+								value={brand} 
+								onChange={(e) => setBrand(e.target.value)} 
+								placeholder="Ingrese la marca"
+								className="bg-background"
+							/>
 						</div>
 
 						<div className="grid gap-2">
 							<Label>Código</Label>
-							<CodeSelect value={code} onValueChange={setCode} lineName={line} materialType={materialType} />
+							<Input 
+						value={code} 
+						onChange={(e) => setCode(e.target.value)} 
+						placeholder="Ingrese el código"
+						className="bg-background"
+					/>
 						</div>
 
 						<div className="grid gap-2">
@@ -190,7 +213,12 @@ export function AccessoryFormDialog({
 
 						<div className="grid gap-2">
 							<Label>Color</Label>
-							<ColorSelect value={color} onValueChange={setColor} lineName={line} />
+							<Input 
+						value={color} 
+						onChange={(e) => setColor(e.target.value)} 
+						placeholder="Ingrese el color"
+						className="bg-background"
+					/>
 						</div>
 
 						<div className="grid gap-2 md:grid-cols-3">

@@ -43,27 +43,72 @@ export function UpdatePricesDialog() {
     setProcessedLines(0);
     
     try {
-      // Leer el archivo para contar las líneas
+      // Leer el archivo y parsear entradas (cliente sólo prepara datos; el servidor hace el upsert)
       const text = await file.text();
-      const lines = text.split('\n').filter(line => line.trim() !== '');
-      setTotalLines(lines.length);
-      
-      // Crear un nuevo archivo para la función updatePrices
-      const fileBlob = new Blob([text], { type: 'text/plain' });
-      const newFile = new File([fileBlob], file.name, { type: 'text/plain' });
-      
-      // Función para actualizar el progreso
-      const progressCallback = (current: number, total: number) => {
-        setProcessedLines(current);
-        setProgress(Math.round((current / total) * 100));
+      const rawLines = text.split('\n');
+      const entriesMap = new Map<string, number>();
+
+      for (const line of rawLines) {
+        if (!line || !line.trim()) continue;
+        const [codeRaw, priceRaw] = line.split('\t');
+        if (!codeRaw || !priceRaw) continue;
+        const code = codeRaw.trim();
+        const price = parseFloat(priceRaw.replace(',', '.'));
+        if (Number.isNaN(price)) continue;
+        entriesMap.set(code, price);
+      }
+
+      const entries = Array.from(entriesMap.entries()).map(([code, price]) => ({ code, price }));
+      setTotalLines(entries.length);
+
+      if (!entries.length) {
+        toast({ title: 'Aviso', description: 'No se encontraron entradas válidas en el archivo' });
+        setIsProcessing(false);
+        return;
+      }
+
+      // Enviar por chunks al servidor para aprovechar service_role y batching del servidor
+      const BATCH_SIZE = 500; // debe coincidir con el servidor
+      const concurrency = 3; // número de requests paralelos por lote
+      const chunks: typeof entries[] = [];
+      for (let i = 0; i < entries.length; i += BATCH_SIZE) chunks.push(entries.slice(i, i + BATCH_SIZE));
+
+      let processed = 0;
+      const runChunk = async (chunk: typeof entries) => {
+        const res = await fetch('/api/update-prices', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entries: chunk }),
+        });
+        if (!res.ok) {
+          const errorBody = await res.json().catch(() => null);
+          throw new Error(errorBody?.errors?.join(', ') || `Chunk request failed: ${res.status}`);
+        }
+        const body = await res.json();
+        return body;
       };
-      
-      const result = await updatePrices(newFile, progressCallback);
-      
-      toast({
-        title: '¡Actualización completada!',
-        description: `Se actualizaron ${result.updated} precios correctamente`,
-      });
+
+      // Ejecutar chunks con concurrencia limitada
+      for (let i = 0; i < chunks.length; i += concurrency) {
+        const group = chunks.slice(i, i + concurrency);
+        try {
+          const results = await Promise.all(group.map(c => runChunk(c)));
+          // sumar los actualizados y actualizar progreso
+          for (const r of results) {
+            processed += (r.updated || 0);
+            if (r.errors && r.errors.length) console.error('Chunk errors:', r.errors);
+          }
+          setProcessedLines(processed);
+          setProgress(Math.round((processed / entries.length) * 100));
+        } catch (err: any) {
+          console.error('Error enviando chunks:', err);
+          toast({ title: 'Error', description: 'Ocurrió un error al enviar los datos al servidor', variant: 'destructive' });
+          setIsProcessing(false);
+          return;
+        }
+      }
+
+      toast({ title: '¡Actualización completada!', description: `Se procesaron ${processed} registros` });
       
       // Pequeño retraso antes de cerrar para que el pana David vea el mensaje de éxito
       setTimeout(() => {

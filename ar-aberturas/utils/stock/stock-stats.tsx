@@ -11,7 +11,12 @@ interface StockStatsProps {
 	lastAddedItem?: ProfileItemStock | AccessoryItemStock | IronworkItemStock | null;
 }
 
-export function StockStats({ categoryState, totalItems, lowStockCount, lastAddedItem }: StockStatsProps) {
+export function StockStats({
+	categoryState,
+	totalItems,
+	lowStockCount,
+	lastAddedItem,
+}: StockStatsProps) {
 	const getItemDisplay = () => {
 		if (!lastAddedItem) return null;
 

@@ -160,7 +160,9 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader>
 					<DialogTitle>Administrar opciones</DialogTitle>
-					<DialogDescription>Gestione colores, líneas, códigos/nombres y ubicaciones</DialogDescription>
+					<DialogDescription>
+						Gestione colores, líneas, códigos/nombres y ubicaciones
+					</DialogDescription>
 				</DialogHeader>
 
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2 grid gap-6">

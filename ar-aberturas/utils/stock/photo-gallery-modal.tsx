@@ -16,6 +16,7 @@ import { LineSelect } from '@/components/stock/line-select';
 import { CodeSelect } from '@/components/stock/code-select';
 import ImageViewer from '@/components/ui/image-viewer';
 import { ca } from 'date-fns/locale';
+import { set } from 'date-fns';
 
 interface PhotoGalleryModalProps {
 	open: boolean;
@@ -72,13 +73,18 @@ export function PhotoGalleryModal({
 		}
 	};
 
-	const fetchImagesAccsIron = async (category?: string, line?: string, brand?: string, code?: string) => {
+	const fetchImagesAccsIron = async (
+		category?: string,
+		line?: string,
+		brand?: string,
+		code?: string
+	) => {
 		try {
 			setImagesLoading(true);
 			setImagesError(null);
-			setLoadingSearch(true)
+			setLoadingSearch(true);
 			const params = new URLSearchParams();
-    		params.append('mode', 'accs_iron');
+			params.append('mode', 'accs_iron');
 			if (categoryState) params.append('categoryState', categoryState);
 			if (category) params.append('category', category);
 			if (line) params.append('name_line', line);
@@ -126,13 +132,24 @@ export function PhotoGalleryModal({
 			return;
 		}
 
-		if ((!materialType && categoryState == 'Perfiles') || !nameLine || !nameCode || (!nameCategory || !nameBrand) && (categoryState !== 'Perfiles')) {
-			toast({
-				title: 'Error',
-				description: 'Completá todos los campos',
-				variant: 'destructive',
-			});
-			return;
+		if (categoryState === 'Perfiles') {
+			if (!materialType || !nameLine || !nameCode) {
+				toast({
+					title: 'Error',
+					description: 'Completá todos los campos',
+					variant: 'destructive',
+				});
+				return;
+			}
+		} else if (categoryState === 'Accesorios' || categoryState === 'Herrajes') {
+			if (!nameCategory || !nameBrand || !nameLine || !nameCode) {
+				toast({
+					title: 'Error',
+					description: 'Completá todos los campos',
+					variant: 'destructive',
+				});
+				return;
+			}
 		}
 
 		try {
@@ -140,8 +157,9 @@ export function PhotoGalleryModal({
 
 			const formData = new FormData();
 			formData.append('file', file);
-			formData.append('categoryState', categoryState ?? '');			
-			if (categoryState == "Perfiles") {
+			if (categoryState) formData.append('categoryState', categoryState);
+
+			if (categoryState === 'Perfiles') {
 				formData.append('material_type', materialType);
 			} else {
 				formData.append('name_category', nameCategory);
@@ -287,7 +305,7 @@ export function PhotoGalleryModal({
 								trash={true}
 								onDelete={async () => {
 									const res = await fetch(
-										`/api/gallery/delete?code_name=${nameCode}&line_name=${nameLine}`,
+										`/api/gallery/delete?categoryState=${categoryState}&material_type=${materialType}&code_name=${nameCode}&line_name=${nameLine}`,
 										{
 											method: 'DELETE',
 										}
@@ -316,7 +334,6 @@ export function PhotoGalleryModal({
 
 				{(categoryState === 'Accesorios' || categoryState === 'Herrajes') && (
 					<div className="p-6 flex flex-col gap-4">
-
 						<Input
 							value={nameCategory}
 							onChange={(e) => setNameCategory(e.target.value)}
@@ -356,7 +373,7 @@ export function PhotoGalleryModal({
 								<div className="text-sm text-muted-foreground">Cargando imágenes...</div>
 							) : imagesError ? (
 								<div className="text-sm text-destructive">Error: {imagesError}</div>
-							) : (images.length === 0 && searched) ? (
+							) : images.length === 0 && searched ? (
 								<div className="text-sm text-muted-foreground">
 									No se encontraron para los campos seleccionados.
 								</div>
@@ -410,7 +427,7 @@ export function PhotoGalleryModal({
 									setSearched(true);
 								}}
 								disabled={loadingSearch}
-								>
+							>
 								{loadingSearch ? 'Buscando' : 'Buscar imagen'}
 							</Button>
 						</div>
@@ -424,7 +441,7 @@ export function PhotoGalleryModal({
 								trash={true}
 								onDelete={async () => {
 									const res = await fetch(
-										`/api/gallery/delete?code_name=${nameCode}&line_name=${nameLine}`,
+										`/api/gallery/delete?categoryState=${categoryState}&name_category=${nameCategory}&name_brand=${nameBrand}&code_name=${nameCode}&line_name=${nameLine}`,
 										{
 											method: 'DELETE',
 										}
@@ -438,6 +455,8 @@ export function PhotoGalleryModal({
 										setSelectedImage(null);
 										setNameCode('');
 										setNameLine('');
+										setNameBrand('');
+										setNameCategory('');
 									} else {
 										toast({
 											title: 'Error al eliminar imagen',

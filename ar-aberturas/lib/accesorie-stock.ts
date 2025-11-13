@@ -46,8 +46,18 @@ export async function createAccessoryStock(
 ): Promise<{ data: AccessoryItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 
+	const { data: rows, error: imageError } = await supabase
+		.from('gallery_images_accesories')
+		.select('accessory_image_url')
+		.ilike('name_category', item.accessory_category || '')
+		.ilike('name_line', item.accessory_line || '')
+		.ilike('name_code', item.accessory_code || '')
+		.ilike('name_brand', item.accessory_brand || '')
+		.maybeSingle();
+
 	const payload = {
 		...item,
+		accessory_image_url: rows?.accessory_image_url ?? null,
 		last_update: item.created_at ?? new Date().toISOString().split('T')[0],
 	};
 
@@ -77,8 +87,8 @@ export async function updateImageForMatchingAccesories(
 	accessory_category: string,
 	accessory_line: string,
 	accessory_code: string,
-	accessory_brand : string,
-	accessory_image_url: string
+	accessory_brand: string,
+	accessory_image_url: string | null
 ): Promise<{ data: AccessoryItemStock[] | null; error: any }> {
 	const { data, error } = await supabase
 		.from(TABLE)

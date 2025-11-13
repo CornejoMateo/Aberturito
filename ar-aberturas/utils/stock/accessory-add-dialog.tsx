@@ -69,7 +69,7 @@ export function AccessoryFormDialog({
 				setQuantityPerLump(it.accessory_quantity_for_lump ?? '');
 				setLumpCount(it.accessory_quantity_lump ?? '');
 				setSite(it.accessory_site || '');
-				setPrice(it['accessory_price' as keyof AccessoryItemStock] as any || '');
+				setPrice((it['accessory_price' as keyof AccessoryItemStock] as any) || '');
 			} else {
 				const it = editItem as IronworkItemStock;
 				setCategoryHA(it.ironwork_category || '');
@@ -101,7 +101,16 @@ export function AccessoryFormDialog({
 
 	const handleSave = () => {
 		// validation
-		if (!categoryHA || !line || !code || !description || !color || !site || !quantityPerLump || !lumpCount) {
+		if (
+			!categoryHA ||
+			!line ||
+			!code ||
+			!description ||
+			!color ||
+			!site ||
+			!quantityPerLump ||
+			!lumpCount
+		) {
 			toast({
 				title: 'Error de validación',
 				description: 'Complete todos los campos obligatorios',
@@ -112,8 +121,13 @@ export function AccessoryFormDialog({
 		}
 
 		const payload: any = {
-			created_at: isEditing && (editItem as any).created_at ? (editItem as any).created_at : new Date().toISOString().split('T')[0],
-			...(category === 'Accesorios' ? { accessory_material: materialType } : { ironwork_material: materialType }),
+			created_at:
+				isEditing && (editItem as any).created_at
+					? (editItem as any).created_at
+					: new Date().toISOString().split('T')[0],
+			...(category === 'Accesorios'
+				? { accessory_material: materialType }
+				: { ironwork_material: materialType }),
 		};
 
 		if (category === 'Accesorios') {
@@ -161,7 +175,11 @@ export function AccessoryFormDialog({
 			)}
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader>
-					<DialogTitle>{isEditing ? `Editar ${category === 'Herrajes' ? 'herraje' : 'accesorio'}` : `Agregar  ${category === 'Herrajes' ? 'herraje' : 'accesorio'}`}</DialogTitle>
+					<DialogTitle>
+						{isEditing
+							? `Editar ${category === 'Herrajes' ? 'herraje' : 'accesorio'}`
+							: `Agregar  ${category === 'Herrajes' ? 'herraje' : 'accesorio'}`}
+					</DialogTitle>
 					<DialogDescription>
 						{isEditing ? 'Modifique los datos' : 'Complete los datos del nuevo ítem'}
 					</DialogDescription>
@@ -170,22 +188,43 @@ export function AccessoryFormDialog({
 					<div className="grid gap-4">
 						<div className="grid gap-2">
 							<Label>Categoría</Label>
-							<Input value={categoryHA} onChange={e => setCategoryHA(e.target.value)} className="bg-background" />
+							<Input
+								value={categoryHA}
+								onChange={(e) => setCategoryHA(e.target.value)}
+								className="bg-background"
+							/>
 						</div>
 
 						<div className="grid gap-2">
 							<Label>Línea/Marca</Label>
-							<LineSelect value={line} onValueChange={(v:any)=>{setLine(v); setCode(''); setColor('');}} materialType={materialType} />
+							<LineSelect
+								value={line}
+								onValueChange={(v: any) => {
+									setLine(v);
+									setCode('');
+									setColor('');
+								}}
+								materialType={materialType}
+							/>
 						</div>
 
 						<div className="grid gap-2">
 							<Label>Código</Label>
-							<CodeSelect value={code} onValueChange={setCode} lineName={line} materialType={materialType} />
+							<CodeSelect
+								value={code}
+								onValueChange={setCode}
+								lineName={line}
+								materialType={materialType}
+							/>
 						</div>
 
 						<div className="grid gap-2">
 							<Label>Descripción</Label>
-							<Input value={description} onChange={(e)=>setDescription(e.target.value)} className="bg-background" />
+							<Input
+								value={description}
+								onChange={(e) => setDescription(e.target.value)}
+								className="bg-background"
+							/>
 						</div>
 
 						<div className="grid gap-2">
@@ -196,15 +235,30 @@ export function AccessoryFormDialog({
 						<div className="grid gap-2 md:grid-cols-3">
 							<div className="grid gap-2">
 								<Label>Cantidad x bulto</Label>
-								<Input type="number" value={quantityPerLump as any} onChange={(e)=>setQuantityPerLump(e.target.value ? Number(e.target.value) : '')} className="bg-background" />
+								<Input
+									type="number"
+									value={quantityPerLump as any}
+									onChange={(e) => setQuantityPerLump(e.target.value ? Number(e.target.value) : '')}
+									className="bg-background"
+								/>
 							</div>
 							<div className="grid gap-2">
 								<Label>Cantidad de bultos</Label>
-								<Input type="number" value={lumpCount as any} onChange={(e)=>setLumpCount(e.target.value ? Number(e.target.value) : '')} className="bg-background" />
+								<Input
+									type="number"
+									value={lumpCount as any}
+									onChange={(e) => setLumpCount(e.target.value ? Number(e.target.value) : '')}
+									className="bg-background"
+								/>
 							</div>
 							<div className="grid gap-2">
 								<Label>Cantidad total</Label>
-								<Input type="number" value={( (Number(quantityPerLump) || 0) * (Number(lumpCount) || 0) ) || ''} readOnly className="bg-background" />
+								<Input
+									type="number"
+									value={(Number(quantityPerLump) || 0) * (Number(lumpCount) || 0) || ''}
+									readOnly
+									className="bg-background"
+								/>
 							</div>
 						</div>
 
@@ -215,14 +269,20 @@ export function AccessoryFormDialog({
 
 						<div className="grid gap-2">
 							<Label>Precio (opcional)</Label>
-							<Input type="number" value={price as any} onChange={(e)=>setPrice(e.target.value ? Number(e.target.value) : '')} className="bg-background" />
+							<Input
+								type="number"
+								value={price as any}
+								onChange={(e) => setPrice(e.target.value ? Number(e.target.value) : '')}
+								className="bg-background"
+							/>
 						</div>
-
 					</div>
 				</div>
 				<DialogFooter className="pt-4 border-t border-border">
-					<Button variant="outline" onClick={()=>onOpenChange(false)}>Cancelar</Button>
-					<Button onClick={handleSave}>{isEditing? 'Guardar cambios' : 'Guardar'}</Button>
+					<Button variant="outline" onClick={() => onOpenChange(false)}>
+						Cancelar
+					</Button>
+					<Button onClick={handleSave}>{isEditing ? 'Guardar cambios' : 'Guardar'}</Button>
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>

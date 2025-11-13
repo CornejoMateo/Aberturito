@@ -19,7 +19,7 @@ export async function GET(req: Request) {
 			const line = url.searchParams.get('line');
 			const code = url.searchParams.get('code');
 			let query;
-			if (categoryState == "Accesorios") {
+			if (categoryState == 'Accesorios') {
 				query = supabase.from('gallery_images_accesories').select('*');
 			} else {
 				query = supabase.from('gallery_images_ironworks').select('*');

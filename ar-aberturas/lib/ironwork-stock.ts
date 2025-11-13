@@ -46,11 +46,20 @@ export async function createIronworkStock(
 ): Promise<{ data: IronworkItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 
+	const { data: rows, error: imageError } = await supabase
+		.from('gallery_images_ironworks')
+		.select('ironwork_image_url')
+		.ilike('name_category', item.ironwork_category || '')
+		.ilike('name_line', item.ironwork_line || '')
+		.ilike('name_code', item.ironwork_code || '')
+		.ilike('name_brand', item.ironwork_brand || '')
+		.maybeSingle();
+
 	const payload = {
 		...item,
+		ironwork_image_url: rows?.ironwork_image_url ?? null,
 		last_update: item.created_at ?? new Date().toISOString().split('T')[0],
 	};
-
 	const { data, error } = await supabase.from(TABLE).insert(payload).select().single();
 
 	return { data, error };
@@ -77,8 +86,8 @@ export async function updateImageForMatchingIronworks(
 	ironwork_category: string,
 	ironwork_line: string,
 	ironwork_code: string,
-	ironwork_brand : string,
-	ironwork_image_url: string
+	ironwork_brand: string,
+	ironwork_image_url: string | null
 ): Promise<{ data: IronworkItemStock[] | null; error: any }> {
 	const { data, error } = await supabase
 		.from(TABLE)

@@ -13,7 +13,6 @@ cloudinary.config({
 });
 
 export async function POST(req: Request) {
-
 	let uploadedPublicId: string | null = null;
 	try {
 		const formData = await req.formData();
@@ -35,7 +34,6 @@ export async function POST(req: Request) {
 					{ status: 400 }
 				);
 			}
-
 		} else if (categoryState === 'Accesorios' || categoryState === 'Herrajes') {
 			name_category = formData.get('name_category') as string;
 			name_brand = formData.get('name_brand') as string;
@@ -54,50 +52,49 @@ export async function POST(req: Request) {
 		const buffer = Buffer.from(arrayBuffer);
 
 		const compressedBuffer = await sharp(buffer)
-		.resize({
-			width: 1200,              
-			withoutEnlargement: true, 
-		})
-		.jpeg({
-			quality: 75,             
-			mozjpeg: true,          
-		})
-		.toBuffer();
-	
+			.resize({
+				width: 1200,
+				withoutEnlargement: true,
+			})
+			.jpeg({
+				quality: 75,
+				mozjpeg: true,
+			})
+			.toBuffer();
+
 		let result: unknown;
 		if (categoryState === 'Accesorios' || categoryState === 'Herrajes') {
 			result = await new Promise((resolve, reject) => {
-			cloudinary.uploader
-				.upload_stream(
-				{
-					folder: categoryState === 'Accesorios' ? 'gallery_accesories' : 'gallery_ironworks',
-					public_id: `${name_category}_${name_brand}_${name_line}_${name_code}`,
-					format: 'jpg', 
-				},
-				(error, result) => {
-					if (error) reject(error);
-					else resolve(result);
-				}
-				)
-				.end(compressedBuffer);
+				cloudinary.uploader
+					.upload_stream(
+						{
+							folder: categoryState === 'Accesorios' ? 'gallery_accesories' : 'gallery_ironworks',
+							public_id: `${name_category}_${name_brand}_${name_line}_${name_code}`,
+							format: 'jpg',
+						},
+						(error, result) => {
+							if (error) reject(error);
+							else resolve(result);
+						}
+					)
+					.end(compressedBuffer);
 			});
 		} else {
 			result = await new Promise((resolve, reject) => {
-			cloudinary.uploader
-				.upload_stream(
-				{
-					folder: 'gallery',
-					public_id: `${material_type}_${name_line}_${name_code}`,
-					format: 'jpg', 
-				},
-				(error, result) => {
-					if (error) reject(error);
-					else resolve(result);
-				}
-				)
-				.end(compressedBuffer);
+				cloudinary.uploader
+					.upload_stream(
+						{
+							folder: 'gallery',
+							public_id: `${material_type}_${name_line}_${name_code}`,
+							format: 'jpg',
+						},
+						(error, result) => {
+							if (error) reject(error);
+							else resolve(result);
+						}
+					)
+					.end(compressedBuffer);
 			});
-
 		}
 		const uploadResult = result as { secure_url: string; public_id: string };
 		uploadedPublicId = uploadResult.public_id; // Save for potential rollback
@@ -110,12 +107,13 @@ export async function POST(req: Request) {
 		let data;
 		let error;
 		if (categoryState === 'Accesorios' || categoryState === 'Herrajes') {
-				const table = categoryState === 'Accesorios' ? 'gallery_images_accesories' : 'gallery_images_ironworks';
-				({data, error} = await supabase
+			const table =
+				categoryState === 'Accesorios' ? 'gallery_images_accesories' : 'gallery_images_ironworks';
+			({ data, error } = await supabase
 				.from(table)
 				.insert({
 					image_url: uploadResult.secure_url,
-					public_id: uploadResult.public_id, 
+					public_id: uploadResult.public_id,
 					name_category,
 					name_brand,
 					name_line,
@@ -124,11 +122,11 @@ export async function POST(req: Request) {
 				.select()
 				.single());
 		} else {
-			({data, error} = await supabase
+			({ data, error } = await supabase
 				.from('gallery_images')
 				.insert({
 					image_url: uploadResult.secure_url,
-					public_id: uploadResult.public_id, 
+					public_id: uploadResult.public_id,
 					material_type,
 					name_line,
 					name_code,
@@ -136,7 +134,6 @@ export async function POST(req: Request) {
 				.select()
 				.single());
 		}
-
 
 		if (error) {
 			console.error('Supabase error:', error);
@@ -146,9 +143,9 @@ export async function POST(req: Request) {
 		// Update profiles with the new image URL
 		let updateError;
 		if (categoryState === 'Accesorios') {
-			const res= await updateImageForMatchingAccesories(
+			const res = await updateImageForMatchingAccesories(
 				supabase,
-				name_category, 
+				name_category,
 				name_line,
 				name_code,
 				name_brand,
@@ -159,7 +156,7 @@ export async function POST(req: Request) {
 		if (categoryState === 'Herrajes') {
 			const res = await updateImageForMatchingIronworks(
 				supabase,
-				name_category, 
+				name_category,
 				name_line,
 				name_code,
 				name_brand,
@@ -168,7 +165,7 @@ export async function POST(req: Request) {
 			updateError = res.error;
 		}
 		if (categoryState === 'Perfiles') {
-			const res= await updateImageForMatchingProfiles(
+			const res = await updateImageForMatchingProfiles(
 				supabase,
 				material_type,
 				name_line,
@@ -178,7 +175,7 @@ export async function POST(req: Request) {
 			updateError = res.error;
 		}
 
-		if (updateError ) {
+		if (updateError) {
 			if (categoryState === 'Accesorios') {
 				console.error('Error updating accessories with new image URL:', updateError);
 			} else if (categoryState === 'Herrajes') {
@@ -201,7 +198,10 @@ export async function POST(req: Request) {
 				console.error('Error al eliminar imagen de Cloudinary:', deleteError);
 			}
 		}
-		
-		return NextResponse.json({ success: false, error: 'Ya existe una imagen con este código y línea.' },  { status: 500 });
+
+		return NextResponse.json(
+			{ success: false, error: 'Ya existe una imagen para estos campos.' },
+			{ status: 500 }
+		);
 	}
 }

@@ -64,6 +64,7 @@ export function AccesoriesTable({ categoryState, filteredStock, onEdit, onDelete
         ? {
             category: 'accessory_category',
             line: 'accessory_line',
+            brand: 'accessory_brand',
             code: 'accessory_code',
             description: 'accessory_description',
             color: 'accessory_color',
@@ -77,6 +78,7 @@ export function AccesoriesTable({ categoryState, filteredStock, onEdit, onDelete
         : {
             category: 'ironwork_category',
             line: 'ironwork_line',
+            brand: 'ironwork_brand',
             code: 'ironwork_code',
             description: 'ironwork_description',
             color: 'ironwork_color',
@@ -103,7 +105,8 @@ export function AccesoriesTable({ categoryState, filteredStock, onEdit, onDelete
                     <thead className="border-b border-border bg-secondary">
                         <tr>
                             <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Categoría</th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Línea/Marca</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Línea</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Marca</th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Código</th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Descripción</th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Color</th>
@@ -135,6 +138,7 @@ export function AccesoriesTable({ categoryState, filteredStock, onEdit, onDelete
                                     <tr key={(item as any).id} className="hover:bg-secondary/50 transition-colors">
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.category] || 'N/A'}</p></td>
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.line] || 'N/A'}</p></td>
+                                        <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.brand] || 'N/A'}</p></td>
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.code] || 'N/A'}</p></td>
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.description] || 'N/A'}</p></td>
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.color] || 'N/A'}</p></td>

@@ -36,7 +36,7 @@ import { LineSelect } from '@/components/stock/line-select';
 interface OptionFormDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	onSave?: (option: LineOption | CodeOption | ColorOption | SiteOption) => void;
+	onSave?: (option: LineOption | CodeOption | ColorOption | SiteOption) => Promise<void>;
 	triggerButton?: boolean;
 	materialType?: 'Aluminio' | 'PVC';
 	table?: 'lines' | 'codes' | 'colors' | 'sites';
@@ -140,7 +140,7 @@ export function OptionDialog({
 		}
 
 		if (onSave && data) {
-			onSave(data);
+			await onSave(data as LineOption | CodeOption | ColorOption | SiteOption);
 		}
 
 		toast({

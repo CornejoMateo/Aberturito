@@ -180,8 +180,8 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										open={isAddLineOpen}
 										onOpenChange={setIsAddLineOpen}
 										materialType={materialType}
-										onSave={async (newLine: LineOption) => {
-											const updated = [newLine, ...lines];
+										onSave={async (option) => {
+											const updated = [option as LineOption, ...lines];
 											localStorage.setItem('lines', JSON.stringify(updated));
 											updateLines(updated);
 										}}
@@ -249,8 +249,8 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 									<OptionDialog
 										open={isAddCodeOpen}
 										onOpenChange={setIsAddCodeOpen}
-										onSave={async (newCode: CodeOption) => {
-											const updated = [newCode, ...codes];
+										onSave={async (option) => {
+											const updated = [option as CodeOption, ...codes];
 											localStorage.setItem('codes', JSON.stringify(updated));
 											updateCodes(updated);
 										}}
@@ -318,8 +318,8 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 									<OptionDialog
 										open={isAddColorOpen}
 										onOpenChange={setIsAddColorOpen}
-										onSave={async (newColor: ColorOption) => {
-											const updated = [newColor, ...colors];
+										onSave={async (option) => {
+											const updated = [option as ColorOption, ...colors];
 											localStorage.setItem('colors', JSON.stringify(updated));
 											updateColors(updated);
 										}}
@@ -387,8 +387,8 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 									<OptionDialog
 										open={isAddSiteOpen}
 										onOpenChange={setIsAddSiteOpen}
-										onSave={async (newSite: SiteOption) => {
-											const updated = [newSite, ...sites];
+										onSave={async (option) => {
+											const updated = [option as SiteOption, ...sites];
 											localStorage.setItem('sites', JSON.stringify(updated));
 											updateSites(updated);
 										}}

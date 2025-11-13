@@ -8,7 +8,7 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog';
 import { useState, useEffect } from 'react';
-import { cn } from '../../lib/utils';
+import { cn } from '../../../lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,8 @@ import { CodeSelect } from '@/components/stock/code-select';
 import ImageViewer from '@/components/ui/image-viewer';
 import { ca } from 'date-fns/locale';
 import { set } from 'date-fns';
+import { fetchImages, fetchImagesAccsIron } from './gallery-api';
+import { handleUpload as uploadImage } from './gallery-upload';
 
 interface PhotoGalleryModalProps {
 	open: boolean;
@@ -47,17 +49,12 @@ export function PhotoGalleryModal({
 	const [imagesError, setImagesError] = useState<string | null>(null);
 	const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-	const fetchImages = async (line?: string, code?: string) => {
+	// Nuevo fetch para perfiles
+	const fetchImagesWrapper = async (line?: string, code?: string) => {
 		try {
 			setImagesLoading(true);
 			setImagesError(null);
-			const params = new URLSearchParams();
-			if (materialType) params.append('material_type', materialType);
-			if (line) params.append('name_line', line);
-			if (code) params.append('name_code', code);
-
-			const res = await fetch(`/api/gallery/list?${params.toString()}`);
-			const data = await res.json();
+			const data = await fetchImages(materialType, line, code);
 			if (data.success) {
 				setImages(data.images ?? []);
 			} else {
@@ -73,7 +70,8 @@ export function PhotoGalleryModal({
 		}
 	};
 
-	const fetchImagesAccsIron = async (
+	// Nuevo fetch para accesorios/herrajes
+	const fetchImagesAccsIronWrapper = async (
 		category?: string,
 		line?: string,
 		brand?: string,
@@ -83,16 +81,7 @@ export function PhotoGalleryModal({
 			setImagesLoading(true);
 			setImagesError(null);
 			setLoadingSearch(true);
-			const params = new URLSearchParams();
-			params.append('mode', 'accs_iron');
-			if (categoryState) params.append('categoryState', categoryState);
-			if (category) params.append('category', category);
-			if (line) params.append('name_line', line);
-			if (brand) params.append('brand', brand);
-			if (code) params.append('name_code', code);
-
-			const res = await fetch(`/api/gallery/list?${params.toString()}`);
-			const data = await res.json();
+			const data = await fetchImagesAccsIron(categoryState, category, line, brand, code);
 			if (data.success) {
 				setImages(data.images ?? []);
 			} else {
@@ -109,11 +98,10 @@ export function PhotoGalleryModal({
 		}
 	};
 
-	// Fetch images only when both line and code are selected
 	useEffect(() => {
 		if (categoryState === 'Perfiles') {
 			if (nameLine && nameCode) {
-				fetchImages(nameLine, nameCode);
+				fetchImagesWrapper(nameLine, nameCode);
 			} else {
 				// clear images unless both selectors are set
 				setImages([]);
@@ -122,87 +110,22 @@ export function PhotoGalleryModal({
 		}
 	}, [nameLine, nameCode, materialType, categoryState]);
 
-	const handleUpload = async () => {
-		if (!file) {
-			toast({
-				title: 'Error',
-				description: 'Seleccioná una imagen',
-				variant: 'destructive',
-			});
-			return;
-		}
-
-		if (categoryState === 'Perfiles') {
-			if (!materialType || !nameLine || !nameCode) {
-				toast({
-					title: 'Error',
-					description: 'Completá todos los campos',
-					variant: 'destructive',
-				});
-				return;
-			}
-		} else if (categoryState === 'Accesorios' || categoryState === 'Herrajes') {
-			if (!nameCategory || !nameBrand || !nameLine || !nameCode) {
-				toast({
-					title: 'Error',
-					description: 'Completá todos los campos',
-					variant: 'destructive',
-				});
-				return;
-			}
-		}
-
-		try {
-			setLoading(true);
-
-			const formData = new FormData();
-			formData.append('file', file);
-			if (categoryState) formData.append('categoryState', categoryState);
-
-			if (categoryState === 'Perfiles') {
-				formData.append('material_type', materialType);
-			} else {
-				formData.append('name_category', nameCategory);
-				formData.append('name_brand', nameBrand);
-			}
-			formData.append('name_line', nameLine);
-			formData.append('name_code', nameCode);
-
-			const res = await fetch('/api/gallery/upload', {
-				method: 'POST',
-				body: formData,
-			});
-
-			const data = await res.json();
-
-			if (data.success) {
-				toast({
-					title: '¡Éxito!',
-					description: 'Imagen subida correctamente',
-					duration: 3000,
-				});
-				setFile(null);
-				setNameLine('');
-				setNameCode('');
-				setNameBrand('');
-				setNameCategory('');
-			} else {
-				toast({
-					title: 'Error',
-					description: data.error || 'Ocurrió un error al subir la imagen',
-					variant: 'destructive',
-				});
-			}
-		} catch (err) {
-			console.error('Error al subir la imagen:', err);
-			toast({
-				title: 'Error',
-				description: 'Ocurrió un error al subir la imagen',
-				variant: 'destructive',
-			});
-		} finally {
-			setLoading(false);
-		}
+	const handleUploadClick = () => {
+		uploadImage({
+			file,
+			materialType,
+			categoryState,
+			nameCategory,
+			nameBrand,
+			nameLine,
+			nameCode,
+			setLoading,
+			setFile,
+			setNameLine,
+			setNameCode,
+			setNameBrand,
+			setNameCategory,
+		});
 	};
 
 	return (
@@ -227,14 +150,12 @@ export function PhotoGalleryModal({
 							}}
 							materialType={materialType}
 						/>
-
 						<CodeSelect
 							value={nameCode}
 							onValueChange={setNameCode}
 							lineName={nameLine}
 							materialType={materialType}
 						/>
-
 						{/* Gallery results */}
 						<div className="pt-4">
 							<h3 className="text-sm font-semibold text-foreground mb-2">Imágenes encontradas</h3>
@@ -279,7 +200,6 @@ export function PhotoGalleryModal({
 								</div>
 							)}
 						</div>
-
 						<label htmlFor="file-upload" className="w-full">
 							<div className="w-full px-4 py-2 border rounded bg-background text-muted-foreground cursor-pointer text-center">
 								{file ? file.name : 'Elegí una imagen'}
@@ -291,11 +211,9 @@ export function PhotoGalleryModal({
 								className="hidden"
 							/>
 						</label>
-
-						<Button onClick={handleUpload} disabled={loading}>
+						<Button onClick={handleUploadClick} disabled={loading}>
 							{loading ? 'Subiendo...' : 'Subir imagen'}
-						</Button>
-
+						</Button>{' '}
 						{/* Shared image viewer */}
 						{selectedImage && (
 							<ImageViewer
@@ -416,14 +334,14 @@ export function PhotoGalleryModal({
 						</label>
 
 						<div className="flex gap-2 w-full">
-							<Button className="flex-1 w-full" onClick={handleUpload} disabled={loading}>
+							<Button className="flex-1 w-full" onClick={handleUploadClick} disabled={loading}>
 								{loading ? 'Subiendo...' : 'Subir imagen'}
 							</Button>
 							<Button
 								className="flex-1 w-full"
 								variant="outline"
 								onClick={() => {
-									fetchImagesAccsIron(nameCategory, nameLine, nameBrand, nameCode);
+									fetchImagesAccsIronWrapper(nameCategory, nameLine, nameBrand, nameCode);
 									setSearched(true);
 								}}
 								disabled={loadingSearch}

@@ -72,4 +72,22 @@ export async function deleteAccesoryStock(id: string): Promise<{ data: null; err
 	return { data: null, error };
 }
 
-// Falta lo de las imagenes
+export async function updateImageForMatchingAccesories(
+	supabase: any,
+	accessory_category: string,
+	accessory_line: string,
+	accessory_code: string,
+	accessory_brand : string,
+	accessory_image_url: string
+): Promise<{ data: AccessoryItemStock[] | null; error: any }> {
+	const { data, error } = await supabase
+		.from(TABLE)
+		.update({ accessory_image_url, last_update: new Date().toISOString().split('T')[0] })
+		.eq('accessory_category', accessory_category)
+		.eq('accessory_line', accessory_line)
+		.eq('accessory_code', accessory_code)
+		.eq('accessory_brand', accessory_brand)
+		.select();
+
+	return { data, error };
+}

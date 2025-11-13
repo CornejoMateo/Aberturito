@@ -72,3 +72,22 @@ export async function deleteIronworkStock(id: string): Promise<{ data: null; err
 	return { data: null, error };
 }
 
+export async function updateImageForMatchingIronworks(
+	supabase: any,
+	ironwork_category: string,
+	ironwork_line: string,
+	ironwork_code: string,
+	ironwork_brand : string,
+	ironwork_image_url: string
+): Promise<{ data: IronworkItemStock[] | null; error: any }> {
+	const { data, error } = await supabase
+		.from(TABLE)
+		.update({ ironwork_image_url, last_update: new Date().toISOString().split('T')[0] })
+		.eq('ironwork_category', ironwork_category)
+		.eq('ironwork_line', ironwork_line)
+		.eq('ironwork_code', ironwork_code)
+		.eq('ironwork_brand', ironwork_brand)
+		.select();
+
+	return { data, error };
+}

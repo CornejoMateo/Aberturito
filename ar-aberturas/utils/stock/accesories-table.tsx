@@ -157,11 +157,23 @@ export function AccesoriesTable({
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.line] || 'N/A'}</p></td>
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.brand] || 'N/A'}</p></td>
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.code] || 'N/A'}</p></td>
-                                        <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.description] || 'N/A'}</p></td>
+                                        <td className="px-2 py-2 max-w-[500px]">
+                                            <p className="text-sm text-justify text-foreground whitespace-pre-line break-words">
+                                                {((item as any)[keys.description] || 'N/A').split(' ').reduce((acc: string[], word: string) => {
+                                                    const lastLine = acc[acc.length - 1] || '';
+                                                    if (lastLine.length + word.length <= 100) {
+                                                        acc[acc.length - 1] = lastLine ? `${lastLine} ${word}` : word;
+                                                    } else {
+                                                        acc.push(word);
+                                                    }
+                                                    return acc;
+                                                }, ['']).join('\n')}
+                                            </p>
+                                        </td>
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.color] || 'N/A'}</p></td>
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.qtyForLump] ?? 0}</p></td>
                                         <td className="px-2 py-2 whitespace-nowrap"><p className="text-center text-sm text-foreground">{(item as any)[keys.qtyLump] ?? 0}</p></td>
-                                        <td className="px-2 py-2 whitespace-nowrap">
+<td className="px-2 py-2 whitespace-nowrap">
                                             <div className="flex items-center justify-center gap-1">
                                                 <Button variant="outline" size="icon" className="h-7 w-7" onClick={()=>handleQuantityAction((item as any).id, 'decrement', (item as any)[keys.qty] ?? total)} disabled={(isUpdating && updatingId === (item as any).id) || (((item as any)[keys.qty] ?? total) <= 0)}>
                                                     <Minus className="h-3.5 w-3.5" />

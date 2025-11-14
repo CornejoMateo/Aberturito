@@ -151,14 +151,19 @@ export function UpdatePricesDialog() {
             <Label htmlFor="file" className="text-right">
               Archivo
             </Label>
-            <Input
-              id="file"
-              type="file"
-              accept=".txt"
-              className="col-span-3"
-              onChange={handleFileChange}
-              disabled={isLoading}
-            />
+            <div className="relative col-span-3">
+              <Input
+                id="file"
+                type="file"
+                accept=".txt"
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                onChange={handleFileChange}
+                disabled={isLoading}
+              />
+              <div className="flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground">
+                {file ? file.name : 'Seleccionar archivo'}
+              </div>
+            </div>
           </div>
         </div>
         {isProcessing ? (

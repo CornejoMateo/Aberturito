@@ -3,7 +3,9 @@
   "short_name": "AR Aberturas",
   "description": "Ecosistema administrativo para AR Aberturas",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#0f172a",
   "icons": [

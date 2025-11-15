@@ -8,6 +8,7 @@ import { Suspense } from 'react';
 import { AuthProvider } from '@/components/provider/auth-provider';
 import { ThemeProvider } from '@/components/provider/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
+import { RegisterSW } from './register-sw';
 
 export const metadata: Metadata = {
 	title: 'AR Aberturas - Sistema de Gestión',
@@ -27,11 +28,13 @@ export default function RootLayout({
 				<link rel="manifest" href="/manifest.json" />
 				<link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-ar-180.png" />
 				<link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-ar-512.png" />
-				<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-ar-192.png" />				<meta name="theme-color" content="#0f172a" />
+				<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-ar-192.png" />
+				<meta name="theme-color" content="#0f172a" />
 				<meta name="mobile-web-app-capable" content="yes" />
-				<meta name="theme-color" content="#000000" />
 				<meta name="apple-mobile-web-app-capable" content="yes" />
+				<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 				<meta name="apple-mobile-web-app-title" content="AR Aberturas" />
+				<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
 			</head>
 			<body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased bg-background text-foreground min-h-screen`}>
 				<ThemeProvider 
@@ -41,6 +44,7 @@ export default function RootLayout({
 					disableTransitionOnChange
 					enableColorScheme
 					>
+					<RegisterSW />
 					<AuthProvider>
 						<Suspense fallback={null}>{children}</Suspense>
 					</AuthProvider>

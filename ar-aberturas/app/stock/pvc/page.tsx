@@ -4,7 +4,7 @@ import { StockManagement } from '@/components/business/stock-management';
 export default function StockPVCPage() {
 	return (
 		<DashboardLayout>
-			<StockManagement materialType="PVC" />
+			<StockManagement category="Perfiles" materialType="PVC" />
 		</DashboardLayout>
 	);
 }

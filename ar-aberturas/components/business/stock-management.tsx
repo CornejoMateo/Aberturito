@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { StockFormDialog } from '../../utils/stock/stock-add-dialog';
 import { StockStats } from '../../utils/stock/stock-stats';
 import { StockFilters } from '../../utils/stock/stock-filters';
 import { ProfileTable } from '../../utils/stock/profile-table';
-import { AccesorieTable } from '@/utils/stock/accesories-table';
+import { AccesoriesTable } from '@/utils/stock/accesories-table';
+import { AccessoryFormDialog } from '@/utils/stock/accessory-add-dialog';
 import { OptionsModal } from '@/utils/stock/options/options';
 import {
 	listStock,
@@ -14,7 +15,20 @@ import {
 	type ProfileItemStock,
 	updateProfileStock,
 } from '@/lib/profile-stock';
-import { type AccesorieItemStock } from '@/lib/accesorie-stock';
+import {
+	listAccesoriesStock,
+	createAccessoryStock,
+	updateAccessoryStock,
+	deleteAccesoryStock,
+	type AccessoryItemStock,
+} from '@/lib/accesorie-stock';
+import {
+	listIronworksStock,
+	createIronworkStock,
+	updateIronworkStock,
+	deleteIronworkStock,
+	type IronworkItemStock,
+} from '@/lib/ironwork-stock';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import {
@@ -25,102 +39,127 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from '@/components/ui/pagination';
+import { userRealtimeTables } from '@/hooks/use-realtime-tables';
+import { Image } from 'lucide-react';
+import { PhotoGalleryModal } from '@/utils/stock/images/photo-gallery-modal';
+import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
 
 interface StockManagementProps {
 	materialType?: 'Aluminio' | 'PVC';
+	category?: 'Perfiles' | 'Accesorios' | 'Herrajes';
 }
 
-export function StockManagement({ materialType = 'Aluminio' }: StockManagementProps) {
-	const [stock, setStock] = useState<ProfileItemStock[]>([]);
+export function StockManagement({ materialType = 'Aluminio', category = 'Perfiles' }: StockManagementProps) {
+	// choose data source based on category
+	const tableName = category === 'Perfiles' ? 'profiles' : category === 'Accesorios' ? 'accesories_category' : 'ironworks_category';
+	const fetcher = async () => {
+		if (category === 'Perfiles') {
+			const { data, error } = await listStock();
+			if (error) throw error;
+			return data || [];
+		}
+		if (category === 'Accesorios') {
+			const { data, error } = await listAccesoriesStock();
+			if (error) throw error;
+			return data || [];
+		}
+		const { data, error } = await listIronworksStock();
+		if (error) throw error;
+		return data || [];
+	};
+
+	const {
+		data: stock,
+		loading,
+		error,
+		refresh,
+	} = userRealtimeTables<any>(tableName, fetcher);
+
 	const [searchTerm, setSearchTerm] = useState('');
-	const [selectedCategory, setSelectedCategory] = useState('Perfiles');
+	const [selectedCategory, setSelectedCategory] = useState(category);
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-	const [editingItem, setEditingItem] = useState<ProfileItemStock | null>(null);
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	const [editingItem, setEditingItem] = useState<any | null>(null);
 	const [currentPage, setCurrentPage] = useState(1);
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [isPhotoGalleryOpen, setIsPhotoGalleryOpen] = useState(false);
 	const itemsPerPage = 10;
 
-	const [isModalOpen, setIsModalOpen] = useState(false);
-
-	useEffect(() => {
-		let mounted = true;
-		const load = async () => {
-			setLoading(true);
-			const { data, error } = await listStock();
-			if (!mounted) return;
-			if (error) {
-				setError(error.message ?? String(error));
-			} else if (data) {
-				setStock(data ?? []);
-			}
-			setLoading(false);
-		};
-		load();
-		return () => {
-			mounted = false;
-		};
-	}, []);
-
 	const filteredStock = useMemo(() => {
-		return stock.filter((item) => {
+		return (stock || []).filter((item: any) => {
 			const searchLower = searchTerm.toLowerCase();
 			const matchesSearch =
 				(item.category?.toLowerCase() || '').includes(searchLower) ||
+				(item.accessory_category?.toLowerCase?.() || '').includes(searchLower) ||
+				(item.ironwork_category?.toLowerCase?.() || '').includes(searchLower) ||
 				(item.code?.toLowerCase() || '').includes(searchLower) ||
 				(item.line?.toLowerCase() || '').includes(searchLower) ||
+				(item.accessory_line?.toLowerCase?.() || '').includes(searchLower) ||
+				(item.ironwork_line?.toLowerCase?.() || '').includes(searchLower) ||
+				(item.accessory_brand?.toLowerCase?.() || '').includes(searchLower) ||
+				(item.ironwork_brand?.toLowerCase?.() || '').includes(searchLower) ||
 				(item.color?.toLowerCase() || '').includes(searchLower) ||
-				(item.site?.toLowerCase() || '').includes(searchLower);
-			const matchesCategory = selectedCategory === 'Perfiles' || item.category === selectedCategory;
+				(item.site?.toLowerCase() || '').includes(searchLower) ||
+				(item.accessory_code?.toLowerCase?.() || '').includes(searchLower) ||
+				(item.accessory_description?.toLowerCase?.() || '').includes(searchLower) ||
+				(item.ironwork_code?.toLowerCase?.() || '').includes(searchLower) ||
+				(item.ironwork_description?.toLowerCase?.() || '').includes(searchLower) ||
+				(item.ironwork_line?.toLowerCase?.() || '').includes(searchLower);
+
+			let matchesCategory = true;
+			if (category === 'Perfiles') {
+				matchesCategory = item.category === selectedCategory;
+			} else if (category === 'Accesorios') {
+				matchesCategory = true; // accessories don't use the same category field
+			}
+
 			const matchesMaterial =
-				!materialType || item.material?.toLowerCase() === materialType.toLowerCase();
+				!materialType || (item.material || item.accessory_material || item.ironwork_material || '').toLowerCase() === materialType.toLowerCase();
+
 			return matchesSearch && matchesCategory && matchesMaterial;
 		});
-	}, [stock, searchTerm, selectedCategory, materialType]);
+	}, [stock, searchTerm, selectedCategory, materialType, category]);
 
-	// Calcular el total de páginas
 	const totalPages = Math.ceil(filteredStock.length / itemsPerPage);
 
-	// Obtener los elementos de la página actual
 	const currentItems = useMemo(() => {
 		const startIndex = (currentPage - 1) * itemsPerPage;
 		return filteredStock.slice(startIndex, startIndex + itemsPerPage);
 	}, [filteredStock, currentPage, itemsPerPage]);
 
-	// Resetear a la primera página cuando cambian los filtros
-	useEffect(() => {
-		setCurrentPage(1);
-	}, [searchTerm, selectedCategory, materialType]);
+	const lowStockItems = (stock || []).filter((item:any) => {
+		const qty = item.quantity ?? item.accessory_quantity ?? item.ironwork_quantity ?? 0;
+		return qty < 10;
+	});
+	const totalItems = (stock || []).reduce((sum:any, item:any) => sum + (item.quantity ?? item.accessory_quantity ?? item.ironwork_quantity ?? 0), 0);
 
-	const lowStockItems = stock.filter((item) => (item.quantity ?? 0) < 10);
-	const totalItems = stock.reduce((sum, item) => sum + (item.quantity ?? 0), 0);
-
-	// Get last added item
-	const lastAddedItem = [...stock].sort(
-		(a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+	const lastAddedItem = [...(stock || [])].sort(
+		(a: any, b: any) =>
+			new Date(b.created_at || b.last_update || 0).getTime() -
+			new Date(a.created_at || a.last_update || 0).getTime()
 	)[0];
 
-	// Dinamic titles based on material type
 	const getTitle = () => {
+		const categoryName = category === 'Perfiles' ? 'Perfiles' : category === 'Accesorios' ? 'Accesorios' : 'Herrajes';
 		switch (materialType) {
 			case 'Aluminio':
-				return 'Stock de Aluminio';
+				return `${categoryName} de Aluminio`;
 			case 'PVC':
-				return 'Stock de PVC';
+				return `${categoryName} de PVC`;
 			default:
-				return 'Gestión de Stock';
+				return `Gestión de ${categoryName}`;
 		}
 	};
 
 	const getDescription = () => {
+		const categoryName = category === 'Perfiles' ? 'Perfiles' : category === 'Accesorios' ? 'Accesorios' : 'Herrajes';
 		switch (materialType) {
 			case 'Aluminio':
-				return 'Control de inventario de productos de aluminio';
+				return `Control de inventario de ${categoryName.toLowerCase()} de aluminio`;
 			case 'PVC':
-				return 'Control de inventario de productos de PVC';
+				return `Control de inventario de ${categoryName.toLowerCase()} de PVC`;
 			default:
-				return 'Control de inventario y materiales';
+				return `Control de inventario de ${categoryName.toLowerCase()}`;
 		}
 	};
 
@@ -134,71 +173,96 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 
 	return (
 		<div className="space-y-6">
+			{/* Header */}
 			<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 				<div>
-					<h2 className="text-2xl font-bold text-foreground text-balance">{getTitle()}</h2>
+					<h2 className="text-2xl font-bold text-foreground text-balance">
+						{getTitle()}
+					</h2>
 					<p className="text-muted-foreground mt-1">{getDescription()}</p>
 				</div>
-				{/* form for new item */}
+
 				<div className="flex gap-2">
-					{/* button for configure options (colors, codes and lines) */}
+					<Button variant="default" onClick={() => setIsPhotoGalleryOpen(true)} className="gap-2">
+						<Image className="h-5 w-5" />
+						Galería
+					</Button>
 					<Button variant="default" onClick={() => setIsModalOpen(true)} className="gap-2">
 						<Settings className="h-5 w-5" />
 						Ajustar opciones
 					</Button>
+					
+					
+					<PhotoGalleryModal
+						categoryState={category}
+						open={isPhotoGalleryOpen}
+						onOpenChange={setIsPhotoGalleryOpen}
+						materialType={materialType}
+					/>
 					<OptionsModal
 						materialType={materialType}
 						open={isModalOpen}
 						onOpenChange={setIsModalOpen}
 					/>
-					<StockFormDialog
-						open={isAddDialogOpen}
-						onOpenChange={setIsAddDialogOpen}
-						onSave={async (newItem) => {
-							const { data, error } = await createProfileStock(newItem);
-							if (error) {
-								setError(error.message ?? String(error));
-								return;
-							}
-							if (data) {
-								setStock((s) => [data, ...s]);
-							}
-							setIsAddDialogOpen(false);
-						}}
-						materialType={materialType}
-						triggerButton={true}
-					/>
+
+					{category === 'Perfiles' ? (
+						<StockFormDialog
+							open={isAddDialogOpen}
+							onOpenChange={setIsAddDialogOpen}
+							onSave={async (newItem) => {
+								const { error } = await createProfileStock(newItem);
+								if (error) {
+									console.error('Error al crear perfil:', error);
+									return;
+								}
+								refresh();
+								setIsAddDialogOpen(false);
+							}}
+							materialType={materialType}
+							triggerButton={true}
+						/>
+					) : (
+						<AccessoryFormDialog
+							open={isAddDialogOpen}
+							onOpenChange={setIsAddDialogOpen}
+							category={category === 'Accesorios' ? 'Accesorios' : 'Herrajes'}
+							materialType={materialType}
+							onSave={async (newItem) => {
+								try {
+									if (category === 'Accesorios') {
+										const { error } = await createAccessoryStock(newItem as any);
+										if (error) throw error;
+									} else {
+										const { error } = await createIronworkStock(newItem as any);
+										if (error) throw error;
+									}
+									refresh();
+									setIsAddDialogOpen(false);
+								} catch (err) {
+									if (typeof err === 'object' && err !== null) {
+										console.log('Error keys:', Object.keys(err));
+										console.log('Error JSON:', JSON.stringify(err, null, 2));
+									} else {
+										console.log('Error value:', err);
+									}
+									console.error('Error al crear item:', err);
+								}
+							}}
+							triggerButton={true}
+						/>
+					)}
 				</div>
-				{/* form for edit item */}
-				<StockFormDialog
-					open={isEditDialogOpen}
-					onOpenChange={setIsEditDialogOpen}
-					onSave={async (changes) => {
-						if (!editingItem?.id) return;
-						const { data, error } = await updateProfileStock(editingItem.id, changes);
-						if (error) {
-							setError(error.message ?? String(error));
-							return;
-						}
-						if (data) {
-							setStock(stock.map((item) => (item.id === editingItem.id ? data : item)));
-						}
-						setIsEditDialogOpen(false);
-					}}
-					materialType={materialType}
-					editItem={editingItem}
-					triggerButton={false}
-				/>
 			</div>
 
-			{/* stats */}
+			{/* Stats */}
 			<StockStats
+				categoryState={category}
 				totalItems={totalItems}
 				lowStockCount={lowStockItems.length}
 				lastAddedItem={lastAddedItem}
 			/>
 
-			{/* filters */}
+			{/* Filters */}
 			<StockFilters
 				searchTerm={searchTerm}
 				setSearchTerm={setSearchTerm}
@@ -206,93 +270,175 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 				setSelectedCategory={setSelectedCategory}
 			/>
 
-			{/* main table */}
+			{/* Main table */}
 			{loading ? (
 				<p>Cargando stock...</p>
 			) : error ? (
-				<p className="text-destructive">Error: {error}</p>
+				<p className="text-destructive">Error: {String(error)}</p>
 			) : (
-				<>	
-					{selectedCategory == "Perfiles" && (
-					<ProfileTable
-						filteredStock={currentItems}
-						onEdit={handleEdit}
-						onDelete={async (id) => {
-							const { error } = await deleteProfileStock(id);
-							if (error) {
-								setError(error.message ?? String(error));
-								return;
-							}
-							setStock((s) => s.filter((item) => item.id !== id));
-						}}
-						onUpdateQuantity={async (id, newQuantity) => {
-							if (newQuantity < 0) return; // Prevent negative quantities
-
-							const { data, error } = await updateProfileStock(id, { quantity: newQuantity });
-							if (error) {
-								setError(error.message ?? 'Error al actualizar la cantidad');
-								throw error; // This will be caught by the StockTable
-							}
-							if (data) {
-								setStock(
-									stock.map((item) => (item.id === id ? { ...item, quantity: newQuantity } : item))
-								);
-							}
-						}}
-					/>)}
-					{selectedCategory == "Accesorios" && ( 
-						<p>Tabla de accesorios en desarrollo.</p>
-						//<AccesorieTable />
+				<>
+					{category === 'Perfiles' ? (
+						<ProfileTable
+							filteredStock={currentItems}
+							onEdit={handleEdit}
+							onDelete={async (id) => {
+								const { error } = await deleteProfileStock(id);
+								if (error) console.error('Error al eliminar perfil:', error);
+							}}
+							onUpdateQuantity={async (id, newQuantity) => {
+								if (newQuantity < 0) return;
+								const { error } = await updateProfileStock(id, {
+									quantity: newQuantity,
+								});
+								if (error)
+									console.error('Error al actualizar la cantidad:', error);
+							}}
+						/>
+					) : (
+						<AccesoriesTable
+							categoryState={category === 'Accesorios' ? 'Accesorios' : 'Herrajes'}
+							filteredStock={currentItems}
+							onEdit={(id) => {
+								const it = (stock || []).find((s: any) => s.id === id);
+								if (it) {
+									setEditingItem(it);
+									setIsEditDialogOpen(true);
+								}
+							}}
+							onDelete={async (id) => {
+								try {
+									if (category === 'Accesorios') {
+										await deleteAccesoryStock(id);
+									} else {
+										await deleteIronworkStock(id);
+									}
+									refresh();
+								} catch (err) {
+									console.error('Error al eliminar item:', err);
+								}
+							}}
+							onUpdateQuantity={async (id, newQuantity) => {
+								if (newQuantity < 0) return;
+								try {
+									if (category === 'Accesorios') {
+										await updateAccessoryStock(id, { accessory_quantity: newQuantity });
+									} else {
+										await updateIronworkStock(id, { ironwork_quantity: newQuantity });
+									}
+									refresh();
+								} catch (err) {
+									console.error('Error al actualizar cantidad:', err);
+								}
+							}}
+						/>
 					)}
 
+					{/* Edit dialog for selected item */}
+					{isEditDialogOpen && editingItem && (
+						(category === 'Perfiles') ? (
+							<StockFormDialog
+								open={isEditDialogOpen}
+								onOpenChange={setIsEditDialogOpen}
+								editItem={editingItem}
+								materialType={materialType}
+								onSave={async (changes) => {
+									const { error } = await updateProfileStock(editingItem.id, changes as any);
+									if (error) console.error('Error al guardar perfil:', error);
+									refresh();
+									setIsEditDialogOpen(false);
+								}}
+							/>
+						) : (
+							<AccessoryFormDialog
+								open={isEditDialogOpen}
+								onOpenChange={setIsEditDialogOpen}
+								category={category === 'Accesorios' ? 'Accesorios' : 'Herrajes'}
+								editItem={editingItem}
+								onSave={async (changes) => {
+									try {
+										if (category === 'Accesorios') {
+											await updateAccessoryStock(editingItem.id, changes as any);
+										} else {
+											await updateIronworkStock(editingItem.id, changes as any);
+										}
+										refresh();
+									} catch (err) {
+										console.error('Error al actualizar item:', err);
+									}
+									setIsEditDialogOpen(false);
+								}}
+							/>
+						)
+					)}
+
+					{/* Pagination */}
 					{filteredStock.length > itemsPerPage && (
 						<div className="flex items-center justify-between px-2 mt-4">
 							<div className="text-sm text-muted-foreground">
-								Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, filteredStock.length)}-
-								{Math.min(currentPage * itemsPerPage, filteredStock.length)} de{' '}
-								{filteredStock.length} elementos
+								Mostrando{' '}
+								{Math.min(
+									(currentPage - 1) * itemsPerPage + 1,
+									filteredStock.length
+								)}
+								-
+								{Math.min(
+									currentPage * itemsPerPage,
+									filteredStock.length
+								)}{' '}
+								de {filteredStock.length} elementos
 							</div>
 
 							<Pagination className="mx-0 w-auto">
 								<PaginationContent>
 									<PaginationItem>
 										<PaginationPrevious
-											onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+											onClick={() =>
+												setCurrentPage((p) => Math.max(1, p - 1))
+											}
 											className={
-												currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+												currentPage === 1
+													? 'pointer-events-none opacity-50'
+													: 'cursor-pointer'
 											}
 										/>
 									</PaginationItem>
 
-									{Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-										// Mostrar páginas alrededor de la actual
-										let pageNum = i + 1;
-										if (totalPages > 5) {
-											if (currentPage <= 3) {
-												pageNum = i + 1;
-											} else if (currentPage >= totalPages - 2) {
-												pageNum = totalPages - 4 + i;
-											} else {
-												pageNum = currentPage - 2 + i;
+									{Array.from(
+										{ length: Math.min(5, totalPages) },
+										(_, i) => {
+											let pageNum = i + 1;
+											if (totalPages > 5) {
+												if (currentPage <= 3) {
+													pageNum = i + 1;
+												} else if (currentPage >= totalPages - 2) {
+													pageNum = totalPages - 4 + i;
+												} else {
+													pageNum = currentPage - 2 + i;
+												}
 											}
+											return (
+												<PaginationItem key={pageNum}>
+													<PaginationLink
+														isActive={currentPage === pageNum}
+														className="cursor-pointer"
+														onClick={() =>
+															setCurrentPage(pageNum)
+														}
+													>
+														{pageNum}
+													</PaginationLink>
+												</PaginationItem>
+											);
 										}
-
-										return (
-											<PaginationItem key={pageNum}>
-												<PaginationLink
-													isActive={currentPage === pageNum}
-													className="cursor-pointer"
-													onClick={() => setCurrentPage(pageNum)}
-												>
-													{pageNum}
-												</PaginationLink>
-											</PaginationItem>
-										);
-									})}
+									)}
 
 									<PaginationItem>
 										<PaginationNext
-											onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+											onClick={() =>
+												setCurrentPage((p) =>
+													Math.min(totalPages, p + 1)
+												)
+											}
 											className={
 												currentPage === totalPages
 													? 'pointer-events-none opacity-50'
@@ -309,5 +455,3 @@ export function StockManagement({ materialType = 'Aluminio' }: StockManagementPr
 		</div>
 	);
 }
-
-export type { ProfileItemStock };

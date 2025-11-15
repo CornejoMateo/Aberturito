@@ -5,6 +5,8 @@ import type React from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTheme } from 'next-themes';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +34,8 @@ import {
 	ChevronDown,
 	ChevronRight,
 	Lock,
+	Sun,
+	Moon,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -43,13 +47,33 @@ const navigation = [
 		disabled: true,
 	},
 	{
-		name: 'Stock',
+		name: 'Perfiles',
 		href: '/stock',
 		icon: Package,
 		disabled: false,
 		subItems: [
 			{ name: 'Aluminio', href: '/stock/aluminio' },
 			{ name: 'PVC', href: '/stock/pvc' },
+		],
+	},
+	{
+		name: 'Accesorios',
+		href: '/accesorios',
+		icon: Package,
+		disabled: false,
+		subItems: [
+			{ name: 'Aluminio', href: '/accesorios/aluminio' },
+			{ name: 'PVC', href: '/accesorios/pvc' },
+		],
+	},
+	{
+		name: 'Herrajes',
+		href: '/herrajes',
+		icon: Package,
+		disabled: false,
+		subItems: [
+			{ name: 'Aluminio', href: '/herrajes/aluminio' },
+			{ name: 'PVC', href: '/herrajes/pvc' },
 		],
 	},
 	{
@@ -108,18 +132,34 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 		return pathname === item.href;
 	};
 
-	// Función para obtener el texto dinámico del menú Stock
-	const getStockMenuText = () => {
-		if (pathname === '/stock/aluminio') return 'Stock Aluminio';
-		if (pathname === '/stock/pvc') return 'Stock PVC';
-		if (pathname === '/stock') return 'Stock';
-		return 'Stock';
+	// Función para obtener el texto dinámico del menú según la ruta
+	const getMenuText = (itemName: string) => {
+		if (itemName === 'Perfiles') {
+			if (pathname === '/stock/aluminio') return 'Perfiles Aluminio';
+			if (pathname === '/stock/pvc') return 'Perfiles PVC';
+			return 'Perfiles';
+		}
+		if (itemName === 'Accesorios') {
+			if (pathname === '/accesorios/aluminio') return 'Accesorios Aluminio';
+			if (pathname === '/accesorios/pvc') return 'Accesorios PVC';
+			return 'Accesorios';
+		}
+		if (itemName === 'Herrajes') {
+			if (pathname === '/herrajes/aluminio') return 'Herrajes Aluminio';
+			if (pathname === '/herrajes/pvc') return 'Herrajes PVC';
+			return 'Herrajes';
+		}
+		return itemName;
 	};
 
-	// Auto-expandir el menú Stock cuando se está en una subpágina
+	// Auto-expandir los menús cuando se está en una subpágina
 	useEffect(() => {
 		if (pathname.startsWith('/stock/')) {
-			setExpandedItems((prev) => (prev.includes('Stock') ? prev : [...prev, 'Stock']));
+			setExpandedItems((prev) => (prev.includes('Perfiles') ? prev : [...prev, 'Perfiles']));
+		} else if (pathname.startsWith('/accesorios/')) {
+			setExpandedItems((prev) => (prev.includes('Accesorios') ? prev : [...prev, 'Accesorios']));
+		} else if (pathname.startsWith('/herrajes/')) {
+			setExpandedItems((prev) => (prev.includes('Herrajes') ? prev : [...prev, 'Herrajes']));
 		}
 	}, [pathname]);
 
@@ -146,9 +186,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	// Definición de permisos por rol
 	const allowedByRole = useMemo(() => {
 		return {
-			Admin: ['Dashboard', 'Stock', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes'],
-			Fabrica: ['Stock'],
-			Ventas: ['Dashboard', 'Stock', 'Clientes', 'Presupuestos', 'Calendario'],
+			Admin: ['Dashboard', 'Perfiles', 'Accesorios', 'Herrajes', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes'],
+			Fabrica: ['Perfiles', 'Accesorios', 'Herrajes'],
+			Ventas: ['Dashboard', 'Perfiles', 'Accesorios', 'Herrajes', 'Clientes', 'Presupuestos', 'Calendario'],
 			Marketing: ['Dashboard', 'Calendario', 'Clientes', 'Reportes', 'Presupuestos'],
 			Colocador: ['Obras'],
 		} as Record<string, string[]>;
@@ -199,7 +239,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 			}
 		}
 
-		// Redirigir a Stock Aluminio por defecto si se accede a /stock o a la raíz
+		// Redirigir a Perfiles Aluminio por defecto si se accede a /stock o a la raíz
 		if (pathname === '/stock' || pathname === '/') {
 			router.replace('/stock/aluminio');
 		}
@@ -236,7 +276,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 					{/* Logo */}
 					<div className="flex h-16 items-center justify-between border-b border-border px-6">
 						<div className="flex items-center gap-2">
-							<Image src="/logo-ar.png" alt="Logo" width={92} height={92} />
+							<Image src="/logo-original.png" alt="Logo" width={80} height={80} />
 							<span className="font-semibold text-foreground">AR Aberturas</span>
 						</div>
 						<Button
@@ -277,7 +317,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 											>
 												<div className="flex items-center gap-3">
 													<item.icon className="h-5 w-5" />
-													{item.name === 'Stock' ? getStockMenuText() : item.name}
+													{getMenuText(item.name)}
 													{item.disabled && <Lock className="h-3.5 w-3.5 ml-1" />}
 												</div>
 												{isExpanded ? (
@@ -397,6 +437,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 					</Button>
 					<div className="flex-1">
 						<h1 className="text-lg font-semibold text-foreground">Sistema de Gestión</h1>
+					</div>
+					<div className="flex items-center gap-2">
+						<ThemeToggle />
 					</div>
 				</header>
 

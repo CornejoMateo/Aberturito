@@ -4,7 +4,7 @@ import { StockManagement } from '@/components/business/stock-management';
 export default function StockAluminioPage() {
 	return (
 		<DashboardLayout>
-			<StockManagement materialType="Aluminio" />
+			<StockManagement category="Perfiles" materialType="Aluminio" />
 		</DashboardLayout>
 	);
 }

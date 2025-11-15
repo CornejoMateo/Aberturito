@@ -31,11 +31,12 @@ import {
 	SiteOption,
 } from '@/lib/stock-options';
 import React from 'react';
+import { LineSelect } from '@/components/stock/line-select';
 
 interface OptionFormDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	onSave?: (option: LineOption | CodeOption | ColorOption | SiteOption) => void;
+	onSave?: (option: LineOption | CodeOption | ColorOption | SiteOption) => Promise<void>;
 	triggerButton?: boolean;
 	materialType?: 'Aluminio' | 'PVC';
 	table?: 'lines' | 'codes' | 'colors' | 'sites';
@@ -56,19 +57,6 @@ export function OptionDialog({
 	const [name, setName] = useState('');
 	const [optionName, setOptionName] = useState('');
 	const { toast } = useToast();
-
-	const [linesOptions, setLinesOptions] = useState<{ id: number; name_line: string }[]>([]);
-	React.useEffect(() => {
-		if ((table === 'codes' || table === 'colors') && open) {
-			const local = localStorage.getItem('lines');
-			if (local) {
-				try {
-					const parsed = JSON.parse(local);
-					setLinesOptions(parsed);
-				} catch {}
-			}
-		}
-	}, [table, open]);
 
 	React.useEffect(() => {
 		if (table === 'lines') {
@@ -115,31 +103,32 @@ export function OptionDialog({
 			fields.opening = dependence ?? '';
 			fieldName = 'línea';
 			successMessage = 'Línea guardada correctamente';
-			setOptionName("Linea");
+			setOptionName('Linea');
 		} else if (tableName === 'codes') {
 			fields.name_code = option ?? '';
 			fields.line_name = dependence ?? '';
 			fieldName = 'código';
 			successMessage = 'Código guardado correctamente';
-			setOptionName("Código");
+			setOptionName('Código');
 		} else if (tableName === 'colors') {
 			fields.name_color = option ?? '';
 			fields.line_name = dependence ?? '';
 			fieldName = 'color';
 			successMessage = 'Color guardado correctamente';
-			setOptionName("Color");
+			setOptionName('Color');
 		} else if (tableName === 'sites') {
 			fields.name_site = option ?? '';
 			fieldName = 'ubicación';
 			successMessage = 'Ubicación guardada correctamente';
-			setOptionName("Ubicación");
+			setOptionName('Ubicación');
 		}
 		const { data, error } = await createOption(tableName ?? '', fields);
 		if (error) {
 			console.error('Supabase error:', error);
 			let errorMessage = 'Ocurrió un error al guardar la opción';
 			if (error.message?.includes('duplicate key value violates unique constraint')) {
-				errorMessage = `Ya existe ${fieldName === 'ubicación' ? 'una' : 'un'} ${fieldName} con ese nombre`;			}
+				errorMessage = `Ya existe ${fieldName === 'ubicación' ? 'una' : 'un'} ${fieldName} con ese nombre`;
+			}
 			toast({
 				title: 'Error al guardar',
 				description: errorMessage,
@@ -151,7 +140,7 @@ export function OptionDialog({
 		}
 
 		if (onSave && data) {
-			onSave(data);
+			await onSave(data as LineOption | CodeOption | ColorOption | SiteOption);
 		}
 
 		toast({
@@ -188,21 +177,11 @@ export function OptionDialog({
 						{(table === 'codes' || table === 'colors') && (
 							<div className="grid gap-2">
 								<Label htmlFor="dependence">Linea</Label>
-								<Select value={dependence} onValueChange={setDependence}>
-									<SelectTrigger className="bg-background w-full">
-										<SelectValue placeholder="Selecciona una línea" />
-									</SelectTrigger>
-									<SelectContent>
-										{linesOptions.map((line: { id: number; name_line: string }, idx: number) => {
-											const key = `${line.id}-${line.name_line ?? idx}`;
-											return (
-												<SelectItem key={key} value={line.name_line ?? ''}>
-													{line.name_line}
-												</SelectItem>
-											);
-										})}
-									</SelectContent>
-								</Select>
+								<LineSelect
+									value={dependence}
+									onValueChange={setDependence}
+									materialType={materialType}
+								/>
 							</div>
 						)}
 						{table === 'lines' && (

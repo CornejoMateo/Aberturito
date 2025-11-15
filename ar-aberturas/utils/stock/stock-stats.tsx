@@ -1,58 +1,79 @@
 import { Card } from '@/components/ui/card';
 import { Package, PackagePlus, AlertTriangle } from 'lucide-react';
 import type { ProfileItemStock } from '@/lib/profile-stock';
+import type { AccessoryItemStock } from '@/lib/accesorie-stock';
+import type { IronworkItemStock } from '@/lib/ironwork-stock';
 
 interface StockStatsProps {
+	categoryState: 'Perfiles' | 'Accesorios' | 'Herrajes';
 	totalItems: number;
 	lowStockCount: number;
-	lastAddedItem?: ProfileItemStock | null;
+	lastAddedItem?: ProfileItemStock | AccessoryItemStock | IronworkItemStock | null;
 }
 
-export function StockStats({ totalItems, lowStockCount, lastAddedItem }: StockStatsProps) {
+export function StockStats({
+	categoryState,
+	totalItems,
+	lowStockCount,
+	lastAddedItem,
+}: StockStatsProps) {
+	const getItemDisplay = () => {
+		if (!lastAddedItem) return null;
+
+		const item = lastAddedItem as any;
+
+		if (categoryState === 'Perfiles') {
+			return {
+				line: item.line || 'Sin código',
+				code: item.code || 'Sin código',
+				color: item.color,
+				extra: item.width ? `${item.width}mm` : '',
+			};
+		}
+
+		if (categoryState === 'Accesorios') {
+			return {
+				line: item.accessory_line || 'Sin código',
+				code: item.accessory_code || 'Sin código',
+				color: item.accessory_color,
+				extra: '',
+			};
+		}
+
+		// Herrajes
+		return {
+			line: item.ironwork_line || 'Sin código',
+			code: item.ironwork_code || 'Sin código',
+			color: item.ironwork_color,
+			extra: '',
+		};
+	};
+
+	const displayItem = getItemDisplay();
+
 	return (
-		<div className="grid gap-4 md:grid-cols-3">
-			<Card className="p-6 bg-card border-border">
-				<div className="flex items-center justify-between">
-					<div>
-						<p className="text-sm font-medium text-muted-foreground">Total items</p>
-						<p className="text-2xl font-bold text-foreground mt-2">{totalItems}</p>
+		<div className="flex justify-start">
+			<Card className="bg-card border-border w-80">
+				<div className="flex items-center p-2">
+					<div className="mr-3 rounded-lg bg-secondary p-2 text-chart-2">
+						<PackagePlus className="h-5 w-5" />
 					</div>
-					<div className="rounded-lg bg-secondary p-3 text-chart-1">
-						<Package className="h-6 w-6" />
-					</div>
-				</div>
-			</Card>
-			<Card className="p-6 bg-card border-border">
-				<div className="flex items-center justify-between">
 					<div>
-						<p className="text-sm font-medium text-muted-foreground">Último agregado</p>
-						{lastAddedItem ? (
-							<div className="mt-2 space-y-1">
-								<p className="text-sm font-medium text-foreground">
-									{lastAddedItem.line || 'Sin código'}, {lastAddedItem.code || 'Sin código'}
+						<p className="text-xs font-medium text-muted-foreground">Último agregado</p>
+						{displayItem ? (
+							<div className="space-y-0.5">
+								<p className="text-lg font-medium text-foreground">
+									{displayItem.line}, {displayItem.code}
 								</p>
-								<p className="text-xs text-muted-foreground">
-									{lastAddedItem.color ? `${lastAddedItem.color} • ` : ''}
-									{lastAddedItem.width ? `${lastAddedItem.width}mm` : ''}
-								</p>
+								{displayItem.color && (
+									<p className="text-sm text-muted-foreground">
+										{displayItem.color}{displayItem.extra ? ` • ${displayItem.extra}` : ''}
+									</p>
+								)}
 							</div>
 						) : (
-							<p className="text-sm text-muted-foreground mt-2">No hay registros</p>
+							<p className="text-xs text-muted-foreground">No hay registros</p>
 						)}
-					</div>
-					<div className="rounded-lg bg-secondary p-3 text-chart-2">
-						<PackagePlus className="h-6 w-6" />
-					</div>
-				</div>
-			</Card>
-			<Card className="p-6 bg-card border-border">
-				<div className="flex items-center justify-between">
-					<div>
-						<p className="text-sm font-medium text-muted-foreground">Stock bajo</p>
-						<p className="text-2xl font-bold text-foreground mt-2">{lowStockCount}</p>
-					</div>
-					<div className="rounded-lg bg-secondary p-3 text-destructive">
-						<AlertTriangle className="h-6 w-6" />
 					</div>
 				</div>
 			</Card>

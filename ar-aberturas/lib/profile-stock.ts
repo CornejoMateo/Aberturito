@@ -1,18 +1,19 @@
 import { getSupabaseClient } from './supabase-client';
 
 export type ProfileItemStock = {
-	id?: string;
-	category?: string | null;
-	code?: string | null;
-	line?: string | null;
-	color?: string | null;
-	status?: string | null;
-	quantity?: number | null;
-	site?: string | null;
-	width?: number | null;
-	material?: string | null;
-	created_at?: string | null;
-	last_update?: string | null;
+	id: string;
+	category: string;
+	code: string;
+	line: string;
+	color: string;
+	status: string;
+	quantity: number;
+	site: string;
+	width: number;
+	material: string;
+	image_url: string | null;
+	created_at: string | null;
+	last_update: string | null;
 };
 
 const TABLE = 'profiles';
@@ -37,12 +38,46 @@ export async function getProfileById(
 export async function createProfileStock(
 	item: Partial<ProfileItemStock>
 ): Promise<{ data: ProfileItemStock | null; error: any }> {
+	// Validación runtime de campos obligatorios
+	const requiredFields = [
+		'code',
+		'material',
+		'category',
+		'line',
+		'color',
+		'status',
+		'quantity',
+		'site',
+		'width',
+	];
+	for (const field of requiredFields) {
+		if (
+			item[field as keyof ProfileItemStock] === undefined ||
+			item[field as keyof ProfileItemStock] === null
+		) {
+			return { data: null, error: new Error(`Falta el campo obligatorio: ${field}`) };
+		}
+	}
+
 	const supabase = getSupabaseClient();
+
+	// Fetch matching image from gallery_images table
+	const { data: rows, error: imageError } = await supabase
+		.from('gallery_images')
+		.select('image_url')
+		.ilike('material_type', item.material || '')
+		.ilike('name_line', item.line || '')
+		.ilike('name_code', item.code || '')
+		.maybeSingle();
+
 	const payload = {
 		...item,
+		image_url: rows?.image_url ?? null,
 		last_update: item.created_at ?? new Date().toISOString().split('T')[0],
 	};
+
 	const { data, error } = await supabase.from(TABLE).insert(payload).select().single();
+
 	return { data, error };
 }
 
@@ -53,6 +88,24 @@ export async function updateProfileStock(
 	const supabase = getSupabaseClient();
 	const payload = { ...changes, last_update: new Date().toISOString().split('T')[0] };
 	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();
+	return { data, error };
+}
+
+export async function updateImageForMatchingProfiles(
+	supabase: any,
+	material: string,
+	name_line: string,
+	name_code: string,
+	image_url: string | null
+): Promise<{ data: ProfileItemStock[] | null; error: any }> {
+	const { data, error } = await supabase
+		.from(TABLE)
+		.update({ image_url, last_update: new Date().toISOString().split('T')[0] })
+		.eq('material', material)
+		.eq('line', name_line)
+		.eq('code', name_code)
+		.select();
+
 	return { data, error };
 }
 

@@ -3,6 +3,13 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 import {
 	Dialog,
@@ -13,19 +20,14 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
 import { type ProfileItemStock } from '@/lib/profile-stock';
 import { status, categories } from '@/constants/stock-constants';
-import { listOptions, LineOption, CodeOption, ColorOption, SiteOption } from '@/lib/stock-options';
 import { useState, useEffect } from 'react';
-import { useOptions } from '@/hooks/useOptions';
 import { useToast } from '@/hooks/use-toast';
+import { LineSelect } from '@/components/stock/line-select';
+import { CodeSelect } from '@/components/stock/code-select';
+import { ColorSelect } from '@/components/stock/color-select';
+import { SiteSelect } from '@/components/stock/site-select';
 
 interface StockFormDialogProps {
 	open: boolean;
@@ -57,35 +59,6 @@ export function StockFormDialog({
 
 	// Status and options for selects
 	const [categoriesOptions, setCategoriesOptions] = useState(categories);
-
-	const {
-		options: linesOptions,
-		loading: loadingLines,
-		error: errorLines,
-	} = useOptions<LineOption>('lines', () =>
-		listOptions('lines').then((res) => (res.data ?? []) as LineOption[])
-	);
-	const {
-		options: codesOptions,
-		loading: loadingCodes,
-		error: errorCodes,
-	} = useOptions<CodeOption>('codes', () =>
-		listOptions('codes').then((res) => (res.data ?? []) as CodeOption[])
-	);
-	const {
-		options: colorsOptions,
-		loading: loadingColors,
-		error: errorColors,
-	} = useOptions<ColorOption>('colors', () =>
-		listOptions('colors').then((res) => (res.data ?? []) as ColorOption[])
-	);
-	const {
-		options: sitesOptions,
-		loading: loadingSites,
-		error: errorSites,
-	} = useOptions<SiteOption>('sites', () =>
-		listOptions('sites').then((res) => (res.data ?? []) as SiteOption[])
-	);
 	const [statusOptions, setStatusOptions] = useState<string[]>([...status]);
 	const { toast } = useToast();
 
@@ -139,14 +112,16 @@ export function StockFormDialog({
 				quantity,
 				site,
 				width,
-				material: materialType?.toLowerCase(),
+				material: materialType,
 				created_at: isEditing ? editItem.created_at : new Date().toISOString().split('T')[0],
 			});
 
 			// Show success message
 			toast({
 				title: '¡Éxito!',
-				description: isEditing ? 'Item actualizado correctamente' : 'Item agregado correctamente',
+				description: isEditing
+					? 'Perfil actualizado correctamente'
+					: 'Perfil agregado correctamente',
 				duration: 3000,
 			});
 
@@ -157,10 +132,10 @@ export function StockFormDialog({
 
 			onOpenChange(false);
 		} catch (error) {
-			console.error('Error al guardar el item:', error);
+			console.error('Error al guardar el perfil:', error);
 			toast({
 				title: 'Error',
-				description: 'Ocurrió un error al guardar el item. Por favor, intente nuevamente.',
+				description: 'Ocurrió un error al guardar el perfil. Por favor, intente nuevamente.',
 				variant: 'destructive',
 				duration: 5000,
 			});
@@ -173,14 +148,14 @@ export function StockFormDialog({
 				<DialogTrigger asChild>
 					<Button className="gap-2">
 						<Plus className="h-4 w-4" />
-						Agregar Item
+						Agregar perfil
 					</Button>
 				</DialogTrigger>
 			)}
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader className="flex-shrink-0">
 					<DialogTitle className="text-foreground">
-						{isEditing ? 'Editar item' : 'Agregar nuevo item'}
+						{isEditing ? 'Editar perfil' : 'Agregar nuevo perfil'}
 					</DialogTitle>
 					<DialogDescription className="text-muted-foreground">
 						{isEditing
@@ -195,8 +170,8 @@ export function StockFormDialog({
 								Categoria
 							</Label>
 							<Select value={category} onValueChange={setCategory}>
-								<SelectTrigger className="bg-background w-full">
-									<SelectValue placeholder="Seleccionar categoria" />
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Seleccionar categoría" />
 								</SelectTrigger>
 								<SelectContent>
 									{categoriesOptions.map((cat) => (
@@ -212,60 +187,34 @@ export function StockFormDialog({
 							<Label htmlFor="line" className="text-foreground">
 								Línea
 							</Label>
-							<Select value={line} onValueChange={setLine}>
-								<SelectTrigger className="bg-background w-full">
-									<SelectValue placeholder="Seleccionar línea" />
-								</SelectTrigger>
-								<SelectContent>
-									{linesOptions
-										.filter((l) => l.opening === materialType)
-										.map((l, idx) => (
-											<SelectItem key={`${l.id}-${idx}`} value={l.name_line ?? ''}>
-												{l.name_line}
-											</SelectItem>
-										))}
-								</SelectContent>
-							</Select>
+							<LineSelect
+								value={line}
+								onValueChange={(value) => {
+									setLine(value);
+									setCode(''); // Reset code when line changes
+									setColor(''); // Reset color when line changes
+								}}
+								materialType={materialType}
+							/>
 						</div>
 
 						<div className="grid gap-2">
 							<Label htmlFor="code" className="text-foreground">
-								{materialType == "PVC" ? "Nombre" : "Código"}
+								{materialType == 'PVC' ? 'Nombre' : 'Código'}
 							</Label>
-							<Select value={code} onValueChange={setCode}>
-								<SelectTrigger className="bg-background w-full">
-									<SelectValue placeholder={materialType == "PVC" ? "Seleccionar nombre" : "Seleccionar código"} />
-								</SelectTrigger>
-								<SelectContent>
-									{codesOptions
-										.filter((cod) => cod.line_name === line)
-										.map((cod) => (
-											<SelectItem key={cod.id} value={cod.name_code ?? ''}>
-												{cod.name_code}
-											</SelectItem>
-										))}
-								</SelectContent>
-							</Select>
+							<CodeSelect
+								value={code}
+								onValueChange={setCode}
+								lineName={line}
+								materialType={materialType}
+							/>
 						</div>
 
 						<div className="grid gap-2">
 							<Label htmlFor="color" className="text-foreground">
 								Color
 							</Label>
-							<Select value={color} onValueChange={setColor}>
-								<SelectTrigger className="bg-background w-full">
-									<SelectValue placeholder="Seleccionar color" />
-								</SelectTrigger>
-								<SelectContent>
-									{colorsOptions
-										.filter((c) => c.line_name === line)
-										.map((c, idx) => (
-											<SelectItem key={`${c.id}-${idx}`} value={c.name_color ?? ''}>
-												{c.name_color}
-											</SelectItem>
-										))}
-								</SelectContent>
-							</Select>
+							<ColorSelect value={color} onValueChange={setColor} lineName={line} />
 						</div>
 
 						<div className="grid gap-2">
@@ -273,7 +222,7 @@ export function StockFormDialog({
 								Estado
 							</Label>
 							<Select value={itemStatus} onValueChange={setItemStatus}>
-								<SelectTrigger className="bg-background w-full">
+								<SelectTrigger className="w-full">
 									<SelectValue placeholder="Seleccionar estado" />
 								</SelectTrigger>
 								<SelectContent>
@@ -305,18 +254,7 @@ export function StockFormDialog({
 							<Label htmlFor="site" className="text-foreground">
 								Ubicación
 							</Label>
-							<Select value={site} onValueChange={setSite}>
-								<SelectTrigger className="bg-background w-full">
-									<SelectValue placeholder="Seleccionar ubicación" />
-								</SelectTrigger>
-								<SelectContent>
-									{sitesOptions.map((s) => (
-										<SelectItem key={s.id} value={s.name_site ?? ''}>
-											{s.name_site}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
+							<SiteSelect value={site} onValueChange={setSite} />
 						</div>
 
 						<div className="grid gap-2">

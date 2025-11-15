@@ -8,7 +8,6 @@ import { Suspense } from 'react';
 import { AuthProvider } from '@/components/provider/auth-provider';
 import { ThemeProvider } from '@/components/provider/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
-import { RegisterSW } from './register-sw';
 
 export const metadata: Metadata = {
 	title: 'AR Aberturas - Sistema de Gestión',
@@ -44,7 +43,6 @@ export default function RootLayout({
 					disableTransitionOnChange
 					enableColorScheme
 					>
-					<RegisterSW />
 					<AuthProvider>
 						<Suspense fallback={null}>{children}</Suspense>
 					</AuthProvider>

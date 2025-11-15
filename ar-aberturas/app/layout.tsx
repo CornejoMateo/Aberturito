@@ -29,6 +29,7 @@ export default function RootLayout({
 				<link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-ar-512.png" />
 				<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-ar-192.png" />				<meta name="theme-color" content="#0f172a" />
 				<meta name="mobile-web-app-capable" content="yes" />
+				<meta name="theme-color" content="#000000" />
 				<meta name="apple-mobile-web-app-capable" content="yes" />
 				<meta name="apple-mobile-web-app-title" content="AR Aberturas" />
 			</head>

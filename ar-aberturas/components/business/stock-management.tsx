@@ -187,11 +187,13 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 						<Image className="h-5 w-5" />
 						Galería
 					</Button>
-					<Button variant="default" onClick={() => setIsModalOpen(true)} className="gap-2">
-						<Settings className="h-5 w-5" />
-						Ajustar opciones
-					</Button>
-					
+
+					{category === 'Perfiles' && (
+						<Button variant="default" onClick={() => setIsModalOpen(true)} className="gap-2">
+							<Settings className="h-5 w-5" />
+							Ajustar opciones
+						</Button>
+					)}
 					
 					<PhotoGalleryModal
 						categoryState={category}
@@ -199,6 +201,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 						onOpenChange={setIsPhotoGalleryOpen}
 						materialType={materialType}
 					/>
+
 					<OptionsModal
 						materialType={materialType}
 						open={isModalOpen}

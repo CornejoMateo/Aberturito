@@ -39,7 +39,6 @@ export function useOptions<T>(key: string, fetchFromDb: () => Promise<T[]>) {
 		if (!key) return;
 
 		console.log('Suscribiendo a realtime para', key);
-
 		const channel = supabase
 			.channel(`${key}-realtime`)
 			.on('postgres_changes', { event: '*', schema: 'public', table: key }, async (payload) => {

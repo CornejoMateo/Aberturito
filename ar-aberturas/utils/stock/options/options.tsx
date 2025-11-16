@@ -77,6 +77,12 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 	} = useOptions<LineOption>('lines', () =>
 		listOptions('lines').then((res) => (res.data ?? []) as LineOption[])
 	);
+
+	// Filtrar líneas según materialType
+	const filteredLines = materialType
+		? lines.filter((line) => line.opening === materialType)
+		: lines;
+
 	const {
 		options: codes,
 		loading: loadingCodes,
@@ -84,6 +90,12 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 	} = useOptions<CodeOption>('codes', () =>
 		listOptions('codes').then((res) => (res.data ?? []) as CodeOption[])
 	);
+
+	// Filtrar códigos según las líneas del materialType actual
+	const filteredCodes = materialType
+		? codes.filter((code) => filteredLines.some((line) => line.name_line === code.line_name))
+		: codes;
+
 	const {
 		options: colors,
 		loading: loadingColors,
@@ -91,6 +103,12 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 	} = useOptions<ColorOption>('colors', () =>
 		listOptions('colors').then((res) => (res.data ?? []) as ColorOption[])
 	);
+
+	// Filtrar colores según las líneas del materialType actual
+	const filteredColors = materialType
+		? colors.filter((color) => filteredLines.some((line) => line.name_line === color.line_name))
+		: colors;
+
 	const {
 		options: sites,
 		loading: loadingSites,
@@ -181,7 +199,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										onOpenChange={setIsAddLineOpen}
 										materialType={materialType}
 										onSave={async (option) => {
-											const updated = [option as LineOption, ...lines];
+											const updated = [...lines, option as LineOption].sort((a, b) => a.name_line.localeCompare(b.name_line));
 											localStorage.setItem('lines', JSON.stringify(updated));
 											updateLines(updated);
 										}}
@@ -207,7 +225,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										</tr>
 									</thead>
 									<tbody>
-										{lines.map((line: LineOption, idx: number) => (
+										{filteredLines.map((line: LineOption, idx: number) => (
 											<tr key={`${line.id}-${line.name_line}-${idx}`} className="border-b">
 												<td className="p-1">{line.name_line}</td>
 												<td className="p-1">{line.opening}</td>
@@ -256,6 +274,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										}}
 										triggerButton={true}
 										table="codes"
+										materialType={materialType}
 									/>
 									{openSections.codes ? (
 										<ChevronUp className="w-4 h-4" />
@@ -276,7 +295,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										</tr>
 									</thead>
 									<tbody>
-										{codes.map((code: CodeOption, idx: number) => (
+										{filteredCodes.map((code: CodeOption, idx: number) => (
 											<tr key={`${code.id}-${code.name_code}-${idx}`} className="border-b">
 												<td className="p-1">{code.name_code}</td>
 												<td className="p-1">{code.line_name}</td>
@@ -325,6 +344,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										}}
 										triggerButton={true}
 										table="colors"
+										materialType={materialType}
 									/>
 									{openSections.colors ? (
 										<ChevronUp className="w-4 h-4" />
@@ -345,7 +365,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										</tr>
 									</thead>
 									<tbody>
-										{colors.map((color: ColorOption, idx: number) => (
+										{filteredColors.map((color: ColorOption, idx: number) => (
 											<tr key={`${color.id}-${color.name_color}-${idx}`} className="border-b">
 												<td className="p-1">{color.name_color}</td>
 												<td className="p-1">{color.line_name}</td>

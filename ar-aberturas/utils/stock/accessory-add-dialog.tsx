@@ -127,8 +127,8 @@ export function AccessoryFormDialog({
 					? (editItem as any).created_at
 					: new Date().toISOString().split('T')[0],
 			...(category === 'Accesorios'
-				? { accessory_material: materialType }
-				: { ironwork_material: materialType }),
+				? { accessory_material: isEditing ? (editItem as any).accessory_material || materialType : materialType }
+				: { ironwork_material: isEditing ? (editItem as any).ironwork_material || materialType : materialType }),
 		};
 
 		if (category === 'Accesorios') {

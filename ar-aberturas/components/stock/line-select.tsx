@@ -84,9 +84,6 @@ export function LineSelect({
 								value={line.name_line ?? ''}
 								onSelect={() => {
 									onValueChange(line.name_line);
-									if (onBrandChange) {
-										onBrandChange(line.brand || '');
-									}
 									setOpen(false);
 								}}
 							>

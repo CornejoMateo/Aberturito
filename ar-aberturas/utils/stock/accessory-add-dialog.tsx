@@ -19,6 +19,7 @@ import { SiteSelect } from '@/components/stock/site-select';
 import { type AccessoryItemStock } from '@/lib/accesorie-stock';
 import { type IronworkItemStock } from '@/lib/ironwork-stock';
 import { set } from 'date-fns';
+import { useAuth } from '@/components/provider/auth-provider';
 
 interface AccessoryFormDialogProps {
 	open: boolean;
@@ -53,6 +54,8 @@ export function AccessoryFormDialog({
 	const [site, setSite] = useState('');
 	const [price, setPrice] = useState<number | ''>('');
 	const { toast } = useToast();
+
+	const {user} = useAuth();
 
 	useEffect(() => {
 		if (editItem) {
@@ -282,6 +285,7 @@ export function AccessoryFormDialog({
 							<SiteSelect value={site} onValueChange={setSite} />
 						</div>
 
+                    {user?.role === 'Admin' || user?.role === 'Ventas' && (
 						<div className="grid gap-2">
 							<Label>Precio (opcional)</Label>
 							<Input
@@ -291,6 +295,7 @@ export function AccessoryFormDialog({
 								className="bg-background"
 							/>
 						</div>
+					)}
 					</div>
 				</div>
 				<DialogFooter className="pt-4 border-t border-border">

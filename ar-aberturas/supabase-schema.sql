@@ -96,7 +96,11 @@ create table if not exists public.ironworks_category (
   ironwork_category character varying not null,
   last_update timestamp without time zone null,
   ironwork_brand character varying null,
-  constraint ironworks_category_pkey primary key (id)
+  constraint ironworks_category_pkey primary key (id),
+  constraint chk_ironwork_price_non_negative check ((ironwork_price >= (0)::numeric)),
+  constraint chk_ironwork_quantity_for_lump_non_negative check ((ironwork_quantity_for_lump >= 0)),
+  constraint chk_ironwork_quantity_lump_non_negative check ((ironwork_quantity_lump >= 0)),
+  constraint chk_ironwork_quantity_non_negative check ((ironwork_quantity >= 0))
 ) TABLESPACE pg_default;
 
 create table if not exists public.accesories_category (
@@ -116,7 +120,11 @@ create table if not exists public.accesories_category (
   accessory_category character varying not null,
   last_update timestamp without time zone null,
   accessory_brand character varying null,
-  constraint accesories_category_pkey primary key (id)
+  constraint accesories_category_pkey primary key (id),
+  constraint chk_accessory_price_non_negative check ((accessory_price >= (0)::numeric)),
+  constraint chk_accessory_quantity_for_lump_non_negative check ((accessory_quantity_for_lump >= 0)),
+  constraint chk_accessory_quantity_lump_non_negative check ((accessory_quantity_lump >= 0)),
+  constraint chk_accessory_quantity_non_negative check ((accessory_quantity >= 0))
 ) TABLESPACE pg_default;
 
 create table if not exists public.gallery_images_accesories (

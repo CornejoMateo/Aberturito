@@ -143,7 +143,6 @@ export function UpdatePricesDialog() {
           <DialogTitle>Actualizar precios desde archivo</DialogTitle>
           <DialogDescription>
             Sube un archivo .txt con los códigos y precios actualizados.
-            Formato: CÓDIGO[tab]PRECIO
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">

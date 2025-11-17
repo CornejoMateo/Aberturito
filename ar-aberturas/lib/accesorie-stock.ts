@@ -44,6 +44,24 @@ export async function getAccesoryById(
 export async function createAccessoryStock(
 	item: Partial<AccessoryItemStock>
 ): Promise<{ data: AccessoryItemStock | null; error: any }> {
+	// Validación de campos obligatorios
+	const requiredFields = [
+		'accessory_category',
+		'accessory_code',
+		'accessory_color',
+		'accessory_quantity',
+		'accessory_material',
+		'accessory_site',
+	];
+	for (const field of requiredFields) {
+		if (!(item as any)[field]) {
+			return {
+				data: null,
+				error: new Error(`Falta el campo obligatorio: ${field}`),
+			};
+		}
+	}
+
 	const supabase = getSupabaseClient();
 
 	const { data: rows, error: imageError } = await supabase
@@ -70,6 +88,12 @@ export async function updateAccessoryStock(
 	id: string,
 	changes: Partial<AccessoryItemStock>
 ): Promise<{ data: AccessoryItemStock | null; error: any }> {
+	if (!id) {
+		return {
+			data: null,
+			error: new Error('El accesorio no pudo ser actualizado.'),
+		};
+	}
 	const supabase = getSupabaseClient();
 	const payload = { ...changes, last_update: new Date().toISOString().split('T')[0] };
 	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();

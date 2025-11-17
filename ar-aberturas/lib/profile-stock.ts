@@ -85,6 +85,12 @@ export async function updateProfileStock(
 	id: string,
 	changes: Partial<ProfileItemStock>
 ): Promise<{ data: ProfileItemStock | null; error: any }> {
+	if (!id) {
+		return {
+			data: null,
+			error: new Error('El accesorio no pudo ser actualizado.'),
+		};
+	}
 	const supabase = getSupabaseClient();
 	const payload = { ...changes, last_update: new Date().toISOString().split('T')[0] };
 	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();

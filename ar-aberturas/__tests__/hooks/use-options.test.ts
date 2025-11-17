@@ -30,7 +30,6 @@ describe('useOptions', () => {
 		];
 		localStorage.setItem('testKey', JSON.stringify(localData));
 
-		// El mock debe devolver los mismos datos que localStorage
 		const { result } = renderHook(() => useOptions('testKey', mockFetchSuccess(localData)));
 
 		await waitFor(() => expect(result.current.loading).toBe(false));
@@ -48,7 +47,6 @@ describe('useOptions', () => {
 
 		const { result } = renderHook(() => useOptions('testKey', fetchFn));
 
-		// Esperar a que se complete la carga
 		await act(async () => {
 			await Promise.resolve();
 		});
@@ -76,38 +74,31 @@ describe('useOptions', () => {
 	});
 
 	it('debería actualizar las opciones correctamente', async () => {
-		// Primero cargamos datos iniciales
 		const initialData = [{ id: 1, name: 'Opción 1' }];
 		const updatedData = [{ id: 1, name: 'Opción actualizada' }];
 
-		// Configuramos el mock para devolver los datos iniciales
 		const fetchFn = mockFetchSuccess(initialData);
 
 		const { result } = renderHook(() => useOptions('testKey', fetchFn));
 
-		// Esperamos a que se carguen los datos iniciales
 		await act(async () => {
 			await Promise.resolve();
 		});
 
-		// Verificamos que los datos iniciales se cargaron correctamente
 		expect(result.current.options).toEqual(initialData);
 
-		// Actualizamos las opciones
 		await act(async () => {
 			result.current.updateOptions(updatedData);
 			await Promise.resolve();
 		});
 
-		// Verificamos que las opciones se actualizaron correctamente
 		expect(result.current.options).toEqual(updatedData);
 		expect(localStorage.getItem('testKey')).toBe(JSON.stringify(updatedData));
 	});
 
 	it('debería arrojar error si falta un campo obligatorio al crear una opción', async () => {
 		const { createOption } = require('../../lib/stock-options');
-		const newOption = { name_line: 'Línea 1' }; // Falta opening
-		// No es necesario mockear Supabase porque la validación retorna antes
+		const newOption = { name_line: 'Línea 1' };
 		const { data, error } = await createOption('lines', newOption);
 		expect(data).toBeNull();
 		expect(error).toBeInstanceOf(Error);

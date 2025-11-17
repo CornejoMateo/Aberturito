@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
 	Command,
@@ -35,6 +35,7 @@ export function LineSelect({
 	className,
 }: LineSelectProps) {
 	const [open, setOpen] = useState(false);
+	const scrollContainerRef = useRef<HTMLDivElement>(null);
 
 	const {
 		options: linesOptions,
@@ -47,6 +48,13 @@ export function LineSelect({
 	const filteredLines = materialType
 		? linesOptions.filter((line) => line.opening === materialType)
 		: linesOptions;
+
+	const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+		if (scrollContainerRef.current) {
+			e.preventDefault();
+			scrollContainerRef.current.scrollTop += e.deltaY;
+		}
+	};
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
@@ -72,21 +80,31 @@ export function LineSelect({
 			<PopoverContent
 				className="w-full p-0"
 				align="start"
-				style={{ width: 'var(--radix-popover-trigger-width)' }}
+				style={{ 
+					width: 'var(--radix-popover-trigger-width)',
+					maxHeight: '240px'
+				}}
 			>
 				<Command>
 					<CommandInput placeholder="Buscar línea..." />
 					<CommandEmpty>No se encontraron líneas.</CommandEmpty>
-					<CommandGroup className="max-h-60 overflow-auto">
-						{filteredLines.map((line) => (
+					<div 
+						ref={scrollContainerRef}
+						className="max-h-60 overflow-y-auto"
+						style={{
+							overscrollBehavior: 'contain',
+							WebkitOverflowScrolling: 'touch',
+							scrollbarWidth: 'auto'
+						}}
+						onWheel={handleWheel}
+					>
+						<CommandGroup>
+							{filteredLines.map((line) => (
 							<CommandItem
 								key={line.id}
 								value={line.name_line ?? ''}
 								onSelect={() => {
 									onValueChange(line.name_line);
-									if (onBrandChange) {
-										onBrandChange(line.brand || '');
-									}
 									setOpen(false);
 								}}
 							>
@@ -99,7 +117,8 @@ export function LineSelect({
 								{line.name_line}
 							</CommandItem>
 						))}
-					</CommandGroup>
+						</CommandGroup>
+					</div>
 				</Command>
 			</PopoverContent>
 		</Popover>

@@ -224,11 +224,11 @@ export function AccessoryFormDialog({
 						<div className="grid gap-2">
 							<Label>Código</Label>
 							<Input 
-						value={code} 
-						onChange={(e) => setCode(e.target.value)} 
-						placeholder="Ingrese el código"
-						className="bg-background"
-					/>
+								value={code} 
+								onChange={(e) => setCode(e.target.value)} 
+								placeholder="Ingrese el código"
+								className="bg-background"
+							/>
 						</div>
 
 						<div className="grid gap-2">
@@ -243,11 +243,11 @@ export function AccessoryFormDialog({
 						<div className="grid gap-2">
 							<Label>Color</Label>
 							<Input 
-						value={color} 
-						onChange={(e) => setColor(e.target.value)} 
-						placeholder="Ingrese el color"
-						className="bg-background"
-					/>
+								value={color} 
+								onChange={(e) => setColor(e.target.value)} 
+								placeholder="Ingrese el color"
+								className="bg-background"
+							/>
 						</div>
 
 						<div className="grid gap-2 md:grid-cols-3">
@@ -282,7 +282,12 @@ export function AccessoryFormDialog({
 
 						<div className="grid gap-2">
 							<Label>Ubicación</Label>
-							<SiteSelect value={site} onValueChange={setSite} />
+							<Input 
+								value={site} 
+								onChange={(e) => setSite(e.target.value)} 
+								placeholder="Ingrese la ubicación"
+								className="bg-background"
+							/>
 						</div>
 
                     {(user?.role === 'Admin' || user?.role === 'Ventas') && (

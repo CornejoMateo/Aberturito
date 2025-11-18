@@ -285,7 +285,7 @@ export function AccessoryFormDialog({
 							<SiteSelect value={site} onValueChange={setSite} />
 						</div>
 
-                    {user?.role === 'Admin' || user?.role === 'Ventas' && (
+                    {(user?.role === 'Admin' || user?.role === 'Ventas') && (
 						<div className="grid gap-2">
 							<Label>Precio (opcional)</Label>
 							<Input

@@ -185,8 +185,8 @@ export function AccessoryFormDialog({
 			!description ||
 			!color ||
 			!site ||
-			quantityPerLump === '' ||
-			lumpCount === ''
+			!quantityPerLump ||
+			!lumpCount 
 		) {
 			toast({
 				title: 'Error de validación',
@@ -349,38 +349,9 @@ export function AccessoryFormDialog({
 										type="number"
 										value={(Number(quantityPerLump) || 0) * (Number(lumpCount) || 0 ) || 0}
 										readOnly
-										className={`bg-background flex-1 ${isEditing ? 'text-muted-foreground' : ''}`}
+										className="bg-background flex-1"
 									/>
-									{!isEditing && (
-										<>
-											<Button
-												type="button"
-												variant="outline"
-												size="sm"
-												onClick={() => {
-													setQuantityDialogType('decrease');
-													setQuantityChange('');
-													setShowQuantityDialog(true);
-												}}
-												className="px-2"
-											>
-												-
-											</Button>
-											<Button
-												type="button"
-												variant="outline"
-												size="sm"
-												onClick={() => {
-													setQuantityDialogType('increase');
-													setQuantityChange('');
-													setShowQuantityDialog(true);
-												}}
-												className="px-2"
-											>
-												+
-											</Button>
-										</>
-									)}
+									
 								</div>
 							</div>
 						</div>

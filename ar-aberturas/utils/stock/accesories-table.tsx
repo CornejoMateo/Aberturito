@@ -14,6 +14,15 @@ import {
 	AlertDialogAction,
 	AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/components/provider/auth-provider';
 import type { AccessoryItemStock } from '@/lib/accesorie-stock';
 import type { IronworkItemStock } from '@/lib/ironwork-stock';
@@ -47,29 +56,66 @@ export function AccesoriesTable({
 	const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 	const [isUpdating, setIsUpdating] = useState(false);
 	const [updatingId, setUpdatingId] = useState<string | null>(null);
+	const [showQuantityDialog, setShowQuantityDialog] = useState(false);
+	const [quantityDialogType, setQuantityDialogType] = useState<'increase' | 'decrease' | null>(null);
+	const [quantityChange, setQuantityChange] = useState<number | ''>('');
+	const [currentItemId, setCurrentItemId] = useState<string | null>(null);
+	const [currentItemTotal, setCurrentItemTotal] = useState<number>(0);
 
 	const handleQuantityAction = (
 		id: string,
 		action: 'increment' | 'decrement',
 		currentQty: number
 	) => {
-		setCurrentAction({ id, action, currentQty });
-		setConfirmDialogOpen(true);
+		setQuantityDialogType(action === 'increment' ? 'increase' : 'decrease');
+		setQuantityChange('');
+		setCurrentItemId(id);
+		setCurrentItemTotal(currentQty);
+		setShowQuantityDialog(true);
 	};
 
 	const handleConfirmUpdate = async () => {
-		if (!currentAction) return;
-		const { id, action, currentQty } = currentAction;
-		const newQuantity = action === 'increment' ? currentQty + 1 : currentQty - 1;
+		if (!currentItemId || quantityChange === '' || !quantityDialogType) return;
+		
+		const adjustment = Number(quantityChange);
+		
+		if (quantityDialogType === 'decrease') {
+			if (adjustment > currentItemTotal) {
+				alert('No puede disminuir más que la cantidad total actual');
+				return;
+			}
+			if (adjustment < 0) {
+				alert('La cantidad a disminuir debe ser positiva');
+				return;
+			}
+		}
+		
+		if (quantityDialogType === 'increase' && adjustment < 0) {
+			alert('La cantidad a aumentar debe ser positiva');
+			return;
+		}
+		
+		const newQuantity = quantityDialogType === 'increase' 
+			? currentItemTotal + adjustment 
+			: currentItemTotal - adjustment;
+		
+		if (newQuantity < 0) {
+			alert('La cantidad total no puede ser negativa');
+			return;
+		}
+		
 		try {
 			setIsUpdating(true);
-			setUpdatingId(id);
-			await onUpdateQuantity(id, newQuantity);
+			setUpdatingId(currentItemId);
+			await onUpdateQuantity(currentItemId, newQuantity);
 		} finally {
 			setIsUpdating(false);
 			setUpdatingId(null);
-			setConfirmDialogOpen(false);
-			setCurrentAction(null);
+			setShowQuantityDialog(false);
+			setQuantityChange('');
+			setQuantityDialogType(null);
+			setCurrentItemId(null);
+			setCurrentItemTotal(0);
 		}
 	};
 
@@ -228,16 +274,39 @@ export function AccesoriesTable({
                 </table>
             </div>
 
-			{currentAction && (
-				<ConfirmUpdateDialog
-					open={confirmDialogOpen}
-					onOpenChange={setConfirmDialogOpen}
-					onConfirm={handleConfirmUpdate}
-					itemName={getItemName(filteredStock.find((f) => (f as any).id === currentAction.id)!)}
-					action={currentAction.action}
-					quantity={currentAction.currentQty}
-					isLoading={isUpdating && updatingId === currentAction.id}
-				/>
+			{showQuantityDialog && (
+				<Dialog open={showQuantityDialog} onOpenChange={setShowQuantityDialog}>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>
+								{quantityDialogType === 'increase' ? 'Aumentar cantidad' : 'Disminuir cantidad'}
+							</DialogTitle>
+							<DialogDescription>
+								{quantityDialogType === 'increase' 
+									? '¿Cuántas unidades desea aumentar?' 
+									: '¿Cuántas unidades desea disminuir?'}
+							</DialogDescription>
+						</DialogHeader>
+						<div className="py-4">
+							<Input
+								type="number"
+								value={quantityChange as any}
+								onChange={(e) => setQuantityChange(e.target.value ? Number(e.target.value) : '')}
+								placeholder="Ingrese la cantidad"
+								className="bg-background"
+								min="0"
+							/>
+						</div>
+						<DialogFooter>
+							<Button variant="outline" onClick={() => setShowQuantityDialog(false)}>
+								Cancelar
+							</Button>
+							<Button onClick={handleConfirmUpdate}>
+								{quantityDialogType === 'increase' ? 'Aumentar' : 'Disminuir'}
+							</Button>
+						</DialogFooter>
+					</DialogContent>
+				</Dialog>
 			)}
 
 			<ImageViewer

@@ -128,8 +128,22 @@ export function PhotoGalleryModal({
 		});
 	};
 
+	const handleOpenChange = (newOpen: boolean) => {
+		if (!newOpen) {
+			setSelectedImage(null);
+			setNameCode('');
+			setNameLine('');
+			setNameBrand('');
+			setNameCategory('');
+			setImages([]);
+			setImagesError(null);
+			setSearched(false);
+		}
+		onOpenChange(newOpen);
+	};
+
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
+		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogContent className="max-w-[600px] w-full">
 				<DialogHeader>
 					<DialogTitle>Agregar y buscar fotos</DialogTitle>

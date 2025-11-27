@@ -254,28 +254,28 @@ export function PhotoGalleryModal({
 					<div className="p-6 flex flex-col gap-4">
 						<Input
 							value={nameCategory}
-							onChange={(e) => setNameCategory(e.target.value)}
+							onChange={(e) => {setNameCategory(e.target.value); setSelectedImage(null)}}
 							placeholder="Categoría"
 							className="w-full"
 						/>
 
 						<Input
 							value={nameLine}
-							onChange={(e) => setNameLine(e.target.value)}
+							onChange={(e) => {setNameLine(e.target.value); setSelectedImage(null)}}
 							placeholder="Línea"
 							className="w-full"
 						/>
 
 						<Input
 							value={nameBrand}
-							onChange={(e) => setNameBrand(e.target.value)}
+							onChange={(e) => {setNameBrand(e.target.value); setSelectedImage(null)}}
 							placeholder="Marca"
 							className="w-full"
 						/>
 
 						<Input
 							value={nameCode}
-							onChange={(e) => setNameCode(e.target.value)}
+							onChange={(e) => {setNameCode(e.target.value); setSelectedImage(null)}}
 							placeholder="Código"
 							className="w-full"
 						/>

@@ -181,8 +181,8 @@ export function AccessoryFormDialog({
 		if (
 			!categoryHA ||
 			!line ||
+			!brand ||
 			!code ||
-			!description ||
 			!color ||
 			!site ||
 			quantityPerLump === '' ||

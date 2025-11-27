@@ -185,8 +185,10 @@ export function AccessoryFormDialog({
 			!description ||
 			!color ||
 			!site ||
-			!quantityPerLump ||
-			!lumpCount 
+			quantityPerLump === '' ||
+			quantityPerLump < 0 ||
+			lumpCount === '' ||
+			lumpCount < 0
 		) {
 			toast({
 				title: 'Error de validación',
@@ -297,11 +299,11 @@ export function AccessoryFormDialog({
 						<div className="grid gap-2">
 							<Label>Código</Label>
 							<Input 
-								value={code} 
-								onChange={(e) => setCode(e.target.value)} 
-								placeholder="Ingrese el código"
-								className="bg-background"
-							/>
+						value={code} 
+						onChange={(e) => setCode(e.target.value)} 
+						placeholder="Ingrese el código"
+						className="bg-background"
+					/>
 						</div>
 
 						<div className="grid gap-2">
@@ -316,11 +318,11 @@ export function AccessoryFormDialog({
 						<div className="grid gap-2">
 							<Label>Color</Label>
 							<Input 
-								value={color} 
-								onChange={(e) => setColor(e.target.value)} 
-								placeholder="Ingrese el color"
-								className="bg-background"
-							/>
+						value={color} 
+						onChange={(e) => setColor(e.target.value)} 
+						placeholder="Ingrese el color"
+						className="bg-background"
+					/>
 						</div>
 
 						<div className="grid gap-2 md:grid-cols-3">
@@ -344,15 +346,12 @@ export function AccessoryFormDialog({
 							</div>
 							<div className="grid gap-2">
 								<Label>Cantidad total</Label>
-								<div className="flex gap-2">
-									<Input
-										type="number"
-										value={(Number(quantityPerLump) || 0) * (Number(lumpCount) || 0 ) || 0}
-										readOnly
-										className="bg-background flex-1"
-									/>
-									
-								</div>
+								<Input
+									type="number"
+									value={(Number(quantityPerLump) || 0) * (Number(lumpCount) || 0) || 0}
+									readOnly
+									className="bg-background"
+								/>
 							</div>
 						</div>
 
@@ -366,7 +365,7 @@ export function AccessoryFormDialog({
 							/>
 						</div>
 
-                    {(user?.role === 'Admin' || user?.role === 'Ventas') && (
+                    {user?.role === 'Admin' || user?.role === 'Ventas' && (
 						<div className="grid gap-2">
 							<Label>Precio (opcional)</Label>
 							<Input

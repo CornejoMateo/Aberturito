@@ -49,7 +49,6 @@ export async function createAccessoryStock(
 		'accessory_category',
 		'accessory_code',
 		'accessory_color',
-		'accessory_quantity',
 		'accessory_material',
 		'accessory_site',
 	];

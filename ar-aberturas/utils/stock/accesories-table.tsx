@@ -17,17 +17,18 @@ import {
 import { useAuth } from '@/components/provider/auth-provider';
 import type { AccessoryItemStock } from '@/lib/accesorie-stock';
 import type { IronworkItemStock } from '@/lib/ironwork-stock';
+import type { SupplyItemStock } from '@/lib/supplies-stock';
 
 interface AccesoriesTableProps {
-	categoryState: 'Accesorios' | 'Herrajes';
-	filteredStock: AccessoryItemStock[] | IronworkItemStock[];
+    categoryState: 'Accesorios' | 'Herrajes' | 'Insumos';
+    filteredStock: AccessoryItemStock[] | IronworkItemStock[] | SupplyItemStock[];
 	onEdit: (id: string) => void;
 	onDelete: (id: string) => void;
-	onUpdateQuantity: (
-		id: string,
-		newQuantity: number,
-		field?: 'accessory_quantity' | 'accessory_quantity_lump'
-	) => Promise<void>;
+    onUpdateQuantity: (
+        id: string,
+        newQuantity: number,
+        field?: 'accessory_quantity' | 'accessory_quantity_lump' | 'supply_quantity' | 'supply_quantity_lump'
+    ) => Promise<void>;
 }
 
 export function AccesoriesTable({
@@ -90,7 +91,8 @@ export function AccesoriesTable({
             createdAt: 'created_at',
             image: 'accessory_image_url',
         }
-        : {
+        : categoryState === 'Herrajes'
+        ? {
             category: 'ironwork_category',
             line: 'ironwork_line',
             brand: 'ironwork_brand',
@@ -104,6 +106,21 @@ export function AccesoriesTable({
             price: 'ironwork_price',
             createdAt: 'created_at',
             image: 'ironwork_image_url',
+        }
+        : {
+            category: 'supply_category',
+            line: 'supply_line',
+            brand: 'supply_brand',
+            code: 'supply_code',
+            description: 'supply_description',
+            color: 'supply_color',
+            qtyForLump: 'supply_quantity_for_lump',
+            qtyLump: 'supply_quantity_lump',
+            qty: 'supply_quantity',
+            site: 'supply_site',
+            price: 'supply_price',
+            createdAt: 'created_at',
+            image: 'supply_image_url',
         };
 
 	const getItemName = (item: any) => {

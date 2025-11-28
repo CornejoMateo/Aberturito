@@ -24,7 +24,7 @@ interface PhotoGalleryModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	materialType?: 'Aluminio' | 'PVC';
-	categoryState?: 'Accesorios' | 'Herrajes' | 'Perfiles';
+    categoryState?: 'Accesorios' | 'Herrajes' | 'Perfiles' | 'Insumos';
 }
 
 export function PhotoGalleryModal({
@@ -250,7 +250,7 @@ export function PhotoGalleryModal({
 					</div>
 				)}
 
-				{(categoryState === 'Accesorios' || categoryState === 'Herrajes') && (
+				{(categoryState === 'Accesorios' || categoryState === 'Herrajes' || categoryState === 'Insumos') && (
 					<div className="p-6 flex flex-col gap-4">
 						<Input
 							value={nameCategory}

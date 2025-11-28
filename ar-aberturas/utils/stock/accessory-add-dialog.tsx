@@ -18,15 +18,16 @@ import { useToast } from '@/hooks/use-toast';
 import { SiteSelect } from '@/components/stock/site-select';
 import { type AccessoryItemStock } from '@/lib/accesorie-stock';
 import { type IronworkItemStock } from '@/lib/ironwork-stock';
+import { type SupplyItemStock } from '@/lib/supplies-stock';
 import { set } from 'date-fns';
 
 interface AccessoryFormDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	onSave: (item: Partial<AccessoryItemStock> | Partial<IronworkItemStock>) => void;
+	onSave: (item: Partial<AccessoryItemStock> | Partial<IronworkItemStock> | Partial<SupplyItemStock>) => void;
 	materialType?: 'Aluminio' | 'PVC';
-	category: 'Accesorios' | 'Herrajes';
-	editItem?: AccessoryItemStock | IronworkItemStock | null;
+	category: 'Accesorios' | 'Herrajes' | 'Insumos';
+	editItem?: AccessoryItemStock | IronworkItemStock | SupplyItemStock | null;
 	triggerButton?: boolean;
 }
 
@@ -69,7 +70,7 @@ export function AccessoryFormDialog({
 				setLumpCount(it.accessory_quantity_lump ?? '');
 				setSite(it.accessory_site || '');
 				setPrice((it['accessory_price' as keyof AccessoryItemStock] as any) || '');
-			} else {
+			} else if (category === 'Herrajes') {
 				const it = editItem as IronworkItemStock;
 				setCategoryHA(it.ironwork_category || '');
 				setLine(it.ironwork_line || '');
@@ -81,6 +82,18 @@ export function AccessoryFormDialog({
 				setLumpCount(it.ironwork_quantity_lump ?? '');
 				setSite(it.ironwork_site || '');
 				setPrice(it.ironwork_price ?? '');
+			} else if (category === 'Insumos') {
+				const it = editItem as SupplyItemStock;
+				setCategoryHA(it.supply_category || '');
+				setLine(it.supply_line || '');
+				setBrand(it.supply_brand || '');
+				setCode(it.supply_code || '');
+				setDescription(it.supply_description || '');
+				setColor(it.supply_color || '');
+				setQuantityPerLump(it.supply_quantity_for_lump ?? '');
+				setLumpCount(it.supply_quantity_lump ?? '');
+				setSite(it.supply_site || '');
+				setPrice(it.supply_price ?? '');
 			}
 		} else {
 			resetForm();
@@ -128,6 +141,8 @@ export function AccessoryFormDialog({
 					: new Date().toISOString().split('T')[0],
 			...(category === 'Accesorios'
 				? { accessory_material: isEditing ? (editItem as any).accessory_material || materialType : materialType }
+				: category === 'Insumos'
+				? { supply_material: isEditing ? (editItem as any).supply_material || materialType : materialType }
 				: { ironwork_material: isEditing ? (editItem as any).ironwork_material || materialType : materialType }),
 		};
 
@@ -145,7 +160,7 @@ export function AccessoryFormDialog({
 				accessory_site: site,
 				accessory_price: price === '' ? null : Number(price),
 			});
-		} else {
+		} else if (category === 'Herrajes') {
 			Object.assign(payload, {
 				ironwork_category: categoryHA,
 				ironwork_line: line,
@@ -158,6 +173,20 @@ export function AccessoryFormDialog({
 				ironwork_quantity: Number(quantityPerLump) * Number(lumpCount),
 				ironwork_site: site,
 				ironwork_price: price === '' ? null : Number(price),
+			});
+		} else if (category === 'Insumos') {
+			Object.assign(payload, {
+				supply_category: categoryHA,
+				supply_line: line,
+				supply_brand: brand,
+				supply_code: code,
+				supply_description: description,
+				supply_color: color,
+				supply_quantity_for_lump: Number(quantityPerLump),
+				supply_quantity_lump: Number(lumpCount),
+				supply_quantity: Number(quantityPerLump) * Number(lumpCount),
+				supply_site: site,
+				supply_price: price === '' ? null : Number(price),
 			});
 		}
 
@@ -172,7 +201,7 @@ export function AccessoryFormDialog({
 				<DialogTrigger asChild>
 					<Button className="gap-2">
 						<Plus className="h-4 w-4" />
-						{`Agregar ${category === 'Herrajes' ? 'herraje' : 'accesorio'}`}
+						{`Agregar ${category === 'Herrajes' ? 'herraje' : category === 'Insumos' ? 'insumo' : 'accesorio'}`}
 					</Button>
 				</DialogTrigger>
 			)}
@@ -180,8 +209,8 @@ export function AccessoryFormDialog({
 				<DialogHeader>
 					<DialogTitle>
 						{isEditing
-							? `Editar ${category === 'Herrajes' ? 'herraje' : 'accesorio'}`
-							: `Agregar  ${category === 'Herrajes' ? 'herraje' : 'accesorio'}`}
+							? `Editar ${category === 'Herrajes' ? 'herraje' : category === 'Insumos' ? 'insumo' : 'accesorio'}`
+							: `Agregar  ${category === 'Herrajes' ? 'herraje' : category === 'Insumos' ? 'insumo' : 'accesorio'}`}
 					</DialogTitle>
 					<DialogDescription>
 						{isEditing ? 'Modifique los datos' : 'Complete los datos del nuevo ítem'}

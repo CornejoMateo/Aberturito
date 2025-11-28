@@ -3,12 +3,13 @@ import { Package, PackagePlus, AlertTriangle } from 'lucide-react';
 import type { ProfileItemStock } from '@/lib/profile-stock';
 import type { AccessoryItemStock } from '@/lib/accesorie-stock';
 import type { IronworkItemStock } from '@/lib/ironwork-stock';
+import type { SupplyItemStock } from '@/lib/supplies-stock';
 
 interface StockStatsProps {
-	categoryState: 'Perfiles' | 'Accesorios' | 'Herrajes';
+	categoryState: 'Perfiles' | 'Accesorios' | 'Herrajes' | 'Insumos';
 	totalItems: number;
 	lowStockCount: number;
-	lastAddedItem?: ProfileItemStock | AccessoryItemStock | IronworkItemStock | null;
+	lastAddedItem?: ProfileItemStock | AccessoryItemStock | IronworkItemStock | SupplyItemStock | null;
 }
 
 export function StockStats({
@@ -36,6 +37,15 @@ export function StockStats({
 				line: item.accessory_line || 'Sin código',
 				code: item.accessory_code || 'Sin código',
 				color: item.accessory_color,
+				extra: '',
+			};
+		}
+
+		if (categoryState === 'Insumos') {
+			return {
+				line: item.supply_line || 'Sin código',
+				code: item.supply_code || 'Sin código',
+				color: item.supply_color,
 				extra: '',
 			};
 		}

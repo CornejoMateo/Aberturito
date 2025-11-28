@@ -48,6 +48,52 @@ export async function POST(req: Request) {
 			}
 		}
 
+		const supabase = createClient(
+			process.env.NEXT_PUBLIC_SUPABASE_URL!,
+			process.env.SUPABASE_SERVICE_ROLE_KEY!
+		);
+
+		// Check if there are matching rows BEFORE uploading
+		let matchingRows;
+		if (categoryState === 'Accesorios') {
+			const { data, error } = await supabase
+				.from('accesories_category')
+				.select('id')
+				.eq('accessory_category', name_category)
+				.eq('accessory_line', name_line)
+				.eq('accessory_code', name_code)
+				.eq('accessory_brand', name_brand);
+			if (error) throw error;
+			matchingRows = data;
+		} else if (categoryState === 'Herrajes') {
+			const { data, error } = await supabase
+				.from('ironworks_category')
+				.select('id')
+				.eq('ironwork_category', name_category)
+				.eq('ironwork_line', name_line)
+				.eq('ironwork_code', name_code)
+				.eq('ironwork_brand', name_brand);
+			if (error) throw error;
+			matchingRows = data;
+		} else if (categoryState === 'Perfiles') {
+			const { data, error } = await supabase
+				.from('profiles')
+				.select('id')
+				.eq('material', material_type)
+				.eq('line', name_line)
+				.eq('code', name_code);
+			if (error) throw error;
+			matchingRows = data;
+		}
+
+		// If no matching rows found, don't upload
+		if (!matchingRows || matchingRows.length === 0) {
+			return NextResponse.json(
+				{ success: false, error: 'No se encontraron registros que coincidan con los campos proporcionados.' },
+				{ status: 404 }
+			);
+		}
+
 		const arrayBuffer = await file.arrayBuffer();
 		const buffer = Buffer.from(arrayBuffer);
 
@@ -99,11 +145,6 @@ export async function POST(req: Request) {
 		const uploadResult = result as { secure_url: string; public_id: string };
 		uploadedPublicId = uploadResult.public_id; // Save for potential rollback
 
-		const supabase = createClient(
-			process.env.NEXT_PUBLIC_SUPABASE_URL!,
-			process.env.SUPABASE_SERVICE_ROLE_KEY!
-		);
-
 		let data;
 		let error;
 		if (categoryState === 'Accesorios' || categoryState === 'Herrajes') {
@@ -140,49 +181,32 @@ export async function POST(req: Request) {
 			throw error;
 		}
 
-		// Update profiles with the new image URL
+		// Update the matching rows with the new image URL (reuse matchingRows from earlier check)
+		const idsToUpdate = matchingRows.map((row: any) => row.id);
 		let updateError;
+		
 		if (categoryState === 'Accesorios') {
-			const res = await updateImageForMatchingAccesories(
-				supabase,
-				name_category,
-				name_line,
-				name_code,
-				name_brand,
-				uploadResult.secure_url
-			);
-			updateError = res.error;
-		}
-		if (categoryState === 'Herrajes') {
-			const res = await updateImageForMatchingIronworks(
-				supabase,
-				name_category,
-				name_line,
-				name_code,
-				name_brand,
-				uploadResult.secure_url
-			);
-			updateError = res.error;
-		}
-		if (categoryState === 'Perfiles') {
-			const res = await updateImageForMatchingProfiles(
-				supabase,
-				material_type,
-				name_line,
-				name_code,
-				uploadResult.secure_url
-			);
-			updateError = res.error;
+			const { error: err } = await supabase
+				.from('accesories_category')
+				.update({ accessory_image_url: uploadResult.secure_url, last_update: new Date().toISOString().split('T')[0] })
+				.in('id', idsToUpdate);
+			updateError = err;
+		} else if (categoryState === 'Herrajes') {
+			const { error: err } = await supabase
+				.from('ironworks_category')
+				.update({ ironwork_image_url: uploadResult.secure_url, last_update: new Date().toISOString().split('T')[0] })
+				.in('id', idsToUpdate);
+			updateError = err;
+		} else if (categoryState === 'Perfiles') {
+			const { error: err } = await supabase
+				.from('profiles')
+				.update({ image_url: uploadResult.secure_url, last_update: new Date().toISOString().split('T')[0] })
+				.in('id', idsToUpdate);
+			updateError = err;
 		}
 
 		if (updateError) {
-			if (categoryState === 'Accesorios') {
-				console.error('Error updating accessories with new image URL:', updateError);
-			} else if (categoryState === 'Herrajes') {
-				console.error('Error updating ironworks with new image URL:', updateError);
-			} else {
-				console.error('Error updating profiles with new image URL:', updateError);
-			}
+			console.error('Error updating rows with new image URL:', updateError);
 			throw updateError;
 		}
 

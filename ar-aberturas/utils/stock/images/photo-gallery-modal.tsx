@@ -17,7 +17,7 @@ import { CodeSelect } from '@/components/stock/code-select';
 import ImageViewer from '@/components/ui/image-viewer';
 import { ca } from 'date-fns/locale';
 import { set } from 'date-fns';
-import { fetchImages, fetchImagesAccsIron } from './gallery-api';
+import { fetchImages, fetchImagesAccsIronSupply } from './gallery-api';
 import { handleUpload as uploadImage } from './gallery-upload';
 
 interface PhotoGalleryModalProps {
@@ -81,7 +81,7 @@ export function PhotoGalleryModal({
 			setImagesLoading(true);
 			setImagesError(null);
 			setLoadingSearch(true);
-			const data = await fetchImagesAccsIron(categoryState, category, line, brand, code);
+			const data = await fetchImagesAccsIronSupply(categoryState, category, line, brand, code);
 			if (data.success) {
 				setImages(data.images ?? []);
 			} else {

@@ -16,17 +16,17 @@ import {
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { SiteSelect } from '@/components/stock/site-select';
+import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock-config';
 import { type AccessoryItemStock } from '@/lib/accesorie-stock';
 import { type IronworkItemStock } from '@/lib/ironwork-stock';
 import { type SupplyItemStock } from '@/lib/supplies-stock';
-import { set } from 'date-fns';
 
 interface AccessoryFormDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onSave: (item: Partial<AccessoryItemStock> | Partial<IronworkItemStock> | Partial<SupplyItemStock>) => void;
 	materialType?: 'Aluminio' | 'PVC';
-	category: 'Accesorios' | 'Herrajes' | 'Insumos';
+	category: StockCategory;
 	editItem?: AccessoryItemStock | IronworkItemStock | SupplyItemStock | null;
 	triggerButton?: boolean;
 }
@@ -41,6 +41,7 @@ export function AccessoryFormDialog({
 	triggerButton = true,
 }: AccessoryFormDialogProps) {
 	const isEditing = !!editItem;
+	const config = STOCK_CONFIGS[category];
 
 	// Fields common to accessories/ironworks
 	const [categoryHA, setCategoryHA] = useState('');
@@ -57,44 +58,19 @@ export function AccessoryFormDialog({
 
 	useEffect(() => {
 		if (editItem) {
-			// map fields depending on category
-			if (category === 'Accesorios') {
-				const it = editItem as AccessoryItemStock;
-				setCategoryHA(it.accessory_category || '');
-				setLine(it.accessory_line || '');
-				setBrand(it.accessory_brand || '');
-				setCode(it.accessory_code || '');
-				setDescription(it.accessory_description || '');
-				setColor(it.accessory_color || '');
-				setQuantityPerLump(it.accessory_quantity_for_lump ?? '');
-				setLumpCount(it.accessory_quantity_lump ?? '');
-				setSite(it.accessory_site || '');
-				setPrice((it['accessory_price' as keyof AccessoryItemStock] as any) || '');
-			} else if (category === 'Herrajes') {
-				const it = editItem as IronworkItemStock;
-				setCategoryHA(it.ironwork_category || '');
-				setLine(it.ironwork_line || '');
-				setBrand(it.ironwork_brand || '');
-				setCode(it.ironwork_code || '');
-				setDescription(it.ironwork_description || '');
-				setColor(it.ironwork_color || '');
-				setQuantityPerLump(it.ironwork_quantity_for_lump ?? '');
-				setLumpCount(it.ironwork_quantity_lump ?? '');
-				setSite(it.ironwork_site || '');
-				setPrice(it.ironwork_price ?? '');
-			} else if (category === 'Insumos') {
-				const it = editItem as SupplyItemStock;
-				setCategoryHA(it.supply_category || '');
-				setLine(it.supply_line || '');
-				setBrand(it.supply_brand || '');
-				setCode(it.supply_code || '');
-				setDescription(it.supply_description || '');
-				setColor(it.supply_color || '');
-				setQuantityPerLump(it.supply_quantity_for_lump ?? '');
-				setLumpCount(it.supply_quantity_lump ?? '');
-				setSite(it.supply_site || '');
-				setPrice(it.supply_price ?? '');
-			}
+			const fields = config.fields;
+			const item = editItem as any;
+			
+			setCategoryHA(item[fields.category] || '');
+			setLine(item[fields.line] || '');
+			setBrand(item[fields.brand] || '');
+			setCode(item[fields.code] || '');
+			setDescription(item[fields.description] || '');
+			setColor(item[fields.color] || '');
+			setQuantityPerLump(item[fields.quantityForLump] ?? '');
+			setLumpCount(item[fields.quantityLump] ?? '');
+			setSite(item[fields.site] || '');
+			setPrice(item[fields.price] ?? '');
 		} else {
 			resetForm();
 		}
@@ -119,7 +95,6 @@ export function AccessoryFormDialog({
 			!categoryHA ||
 			!line ||
 			!code ||
-			!description ||
 			!color ||
 			!site ||
 			!quantityPerLump ||
@@ -134,61 +109,26 @@ export function AccessoryFormDialog({
 			return;
 		}
 
+		const fields = config.fields;
+		
 		const payload: any = {
-			created_at:
-				isEditing && (editItem as any).created_at
-					? (editItem as any).created_at
+			[fields.createdAt]:
+				isEditing && (editItem as any)[fields.createdAt]
+					? (editItem as any)[fields.createdAt]
 					: new Date().toISOString().split('T')[0],
-			...(category === 'Accesorios'
-				? { accessory_material: isEditing ? (editItem as any).accessory_material || materialType : materialType }
-				: category === 'Insumos'
-				? { supply_material: isEditing ? (editItem as any).supply_material || materialType : materialType }
-				: { ironwork_material: isEditing ? (editItem as any).ironwork_material || materialType : materialType }),
+			[fields.material]: isEditing ? (editItem as any)[fields.material] || materialType : materialType,
+			[fields.category]: categoryHA,
+			[fields.line]: line,
+			[fields.brand]: brand,
+			[fields.code]: code,
+			[fields.description]: description,
+			[fields.color]: color,
+			[fields.quantityForLump]: Number(quantityPerLump),
+			[fields.quantityLump]: Number(lumpCount),
+			[fields.quantity]: Number(quantityPerLump) * Number(lumpCount),
+			[fields.site]: site,
+			[fields.price]: price === '' ? null : Number(price),
 		};
-
-		if (category === 'Accesorios') {
-			Object.assign(payload, {
-				accessory_category: categoryHA,
-				accessory_line: line,
-				accessory_brand: brand,
-				accessory_code: code,
-				accessory_description: description,
-				accessory_color: color,
-				accessory_quantity_for_lump: Number(quantityPerLump),
-				accessory_quantity_lump: Number(lumpCount),
-				accessory_quantity: Number(quantityPerLump) * Number(lumpCount),
-				accessory_site: site,
-				accessory_price: price === '' ? null : Number(price),
-			});
-		} else if (category === 'Herrajes') {
-			Object.assign(payload, {
-				ironwork_category: categoryHA,
-				ironwork_line: line,
-				ironwork_brand: brand,
-				ironwork_code: code,
-				ironwork_description: description,
-				ironwork_color: color,
-				ironwork_quantity_for_lump: Number(quantityPerLump),
-				ironwork_quantity_lump: Number(lumpCount),
-				ironwork_quantity: Number(quantityPerLump) * Number(lumpCount),
-				ironwork_site: site,
-				ironwork_price: price === '' ? null : Number(price),
-			});
-		} else if (category === 'Insumos') {
-			Object.assign(payload, {
-				supply_category: categoryHA,
-				supply_line: line,
-				supply_brand: brand,
-				supply_code: code,
-				supply_description: description,
-				supply_color: color,
-				supply_quantity_for_lump: Number(quantityPerLump),
-				supply_quantity_lump: Number(lumpCount),
-				supply_quantity: Number(quantityPerLump) * Number(lumpCount),
-				supply_site: site,
-				supply_price: price === '' ? null : Number(price),
-			});
-		}
 
 		onSave(payload);
 		if (!isEditing) resetForm();
@@ -199,19 +139,17 @@ export function AccessoryFormDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			{triggerButton && (
 				<DialogTrigger asChild>
-					<Button className="gap-2">
-						<Plus className="h-4 w-4" />
-						{`Agregar ${category === 'Herrajes' ? 'herraje' : category === 'Insumos' ? 'insumo' : 'accesorio'}`}
-					</Button>
+				<Button className="gap-2">
+					<Plus className="h-4 w-4" />
+					Agregar {config.title.slice(0, -1).toLowerCase()}
+				</Button>
 				</DialogTrigger>
 			)}
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
-				<DialogHeader>
-					<DialogTitle>
-						{isEditing
-							? `Editar ${category === 'Herrajes' ? 'herraje' : category === 'Insumos' ? 'insumo' : 'accesorio'}`
-							: `Agregar  ${category === 'Herrajes' ? 'herraje' : category === 'Insumos' ? 'insumo' : 'accesorio'}`}
-					</DialogTitle>
+			<DialogHeader>
+				<DialogTitle>
+					{isEditing ? `Editar ${config.title.slice(0, -1).toLowerCase()}` : `Agregar ${config.title.slice(0, -1).toLowerCase()}`}
+				</DialogTitle>
 					<DialogDescription>
 						{isEditing ? 'Modifique los datos' : 'Complete los datos del nuevo ítem'}
 					</DialogDescription>

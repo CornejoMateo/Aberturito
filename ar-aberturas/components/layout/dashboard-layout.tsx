@@ -67,12 +67,6 @@ const navigation = [
 		],
 	},
 	{
-		name: 'Insumos',
-		href: '/supplies',
-		icon: Package,
-		disabled: false,
-	},
-	{
 		name: 'Herrajes',
 		href: '/herrajes',
 		icon: Package,
@@ -81,6 +75,12 @@ const navigation = [
 			{ name: 'Aluminio', href: '/herrajes/aluminio' },
 			{ name: 'PVC', href: '/herrajes/pvc' },
 		],
+	},
+	{
+		name: 'Insumos',
+		href: '/supplies',
+		icon: Package,
+		disabled: false,
 	},
 	{
 		name: 'Clientes',

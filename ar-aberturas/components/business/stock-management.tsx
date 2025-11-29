@@ -50,22 +50,18 @@ import { userRealtimeTables } from '@/hooks/use-realtime-tables';
 import { Image } from 'lucide-react';
 import { PhotoGalleryModal } from '@/utils/stock/images/photo-gallery-modal';
 import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
+import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock-config';
 
 interface StockManagementProps {
 	materialType?: 'Aluminio' | 'PVC';
-	category?: 'Perfiles' | 'Accesorios' | 'Herrajes' | 'Insumos';
+	category?: 'Perfiles' | StockCategory;
 }
 
 export function StockManagement({ materialType = 'Aluminio', category = 'Perfiles' }: StockManagementProps) {
 	// choose data source based on category
-	const tableName =
-		category === 'Perfiles'
-			? 'profiles'
-			: category === 'Accesorios'
-			? 'accesories_category'
-			: category === 'Insumos'
-			? 'supplies_category'
-			: 'ironworks_category';
+	const tableName = category === 'Perfiles' 
+		? 'profiles' 
+		: STOCK_CONFIGS[category as StockCategory].tableName;
 	const fetcher = async () => {
 		if (category === 'Perfiles') {
 			const { data, error } = await listStock();
@@ -159,7 +155,10 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 	)[0];
 
 	const getTitle = () => {
-		const categoryName = category === 'Perfiles' ? 'Perfiles' : category === 'Accesorios' ? 'Accesorios' : 'Herrajes';
+		const categoryName = category === 'Perfiles' ? 'Perfiles' : STOCK_CONFIGS[category as StockCategory].title;
+		if (category === 'Insumos') {
+			return `Gestión de ${categoryName}`;
+		}
 		switch (materialType) {
 			case 'Aluminio':
 				return `${categoryName} de Aluminio`;
@@ -171,7 +170,10 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 	};
 
 	const getDescription = () => {
-		const categoryName = category === 'Perfiles' ? 'Perfiles' : category === 'Accesorios' ? 'Accesorios' : 'Herrajes';
+		const categoryName = category === 'Perfiles' ? 'Perfiles' : STOCK_CONFIGS[category as StockCategory].title;
+		if (category === 'Insumos') {
+			return `Control de inventario de ${categoryName.toLowerCase()}`;
+		}
 		switch (materialType) {
 			case 'Aluminio':
 				return `Control de inventario de ${categoryName.toLowerCase()} de aluminio`;
@@ -247,7 +249,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 						<AccessoryFormDialog
 							open={isAddDialogOpen}
 							onOpenChange={setIsAddDialogOpen}
-							category={category === 'Accesorios' ? 'Accesorios' : category === 'Insumos' ? 'Insumos' : 'Herrajes'}
+							category={category as StockCategory}
 							materialType={materialType}
 							onSave={async (newItem) => {
 								try {
@@ -321,7 +323,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 						/>
 					) : (
 						<AccesoriesTable
-							categoryState={category === 'Accesorios' ? 'Accesorios' : category === 'Insumos' ? 'Insumos' : 'Herrajes'}
+							categoryState={category as StockCategory}
 							filteredStock={currentItems}
 							onEdit={(id) => {
 								const it = (stock || []).find((s: any) => s.id === id);
@@ -377,7 +379,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 							<AccessoryFormDialog
 								open={isEditDialogOpen}
 								onOpenChange={setIsEditDialogOpen}
-								category={category === 'Accesorios' ? 'Accesorios' : category === 'Insumos' ? 'Insumos' : 'Herrajes'}
+								category={category as StockCategory}
 								editItem={editingItem}
 								onSave={async (changes) => {
 									try {

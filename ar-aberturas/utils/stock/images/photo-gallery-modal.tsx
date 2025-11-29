@@ -19,12 +19,13 @@ import { ca } from 'date-fns/locale';
 import { set } from 'date-fns';
 import { fetchImages, fetchImagesAccsIronSupply } from './gallery-api';
 import { handleUpload as uploadImage } from './gallery-upload';
+import type { StockCategory } from '@/lib/stock-config';
 
 interface PhotoGalleryModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	materialType?: 'Aluminio' | 'PVC';
-    categoryState?: 'Accesorios' | 'Herrajes' | 'Perfiles' | 'Insumos';
+    categoryState?: 'Perfiles' | StockCategory;
 }
 
 export function PhotoGalleryModal({

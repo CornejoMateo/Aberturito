@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/components/provider/auth-provider';
+import { useToast } from '@/hooks/use-toast';
 import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock-config';
 import type { AccessoryItemStock } from '@/lib/accesorie-stock';
 import type { IronworkItemStock } from '@/lib/ironwork-stock';
@@ -45,6 +46,7 @@ export function AccesoriesTable({
 	onUpdateQuantity,
 }: AccesoriesTableProps) {
 	const { user } = useAuth();
+	const { toast } = useToast();
 	const [openImageUrl, setOpenImageUrl] = useState<string | null>(null);
 	const [currentAction, setCurrentAction] = useState<{
 		id: string;
@@ -73,23 +75,25 @@ export function AccesoriesTable({
 	};
 
 	const handleConfirmUpdate = async () => {
-		if (!currentItemId || quantityChange === '' || !quantityDialogType) return;
+		if (!currentItemId || quantityChange === '' || !quantityDialogType) {
+			toast({
+				title: 'Error',
+				description: 'Ingrese una cantidad válida',
+				variant: 'destructive',
+				duration: 3000,
+			});
+			return;
+		}
 		
 		const adjustment = Number(quantityChange);
 		
-		if (quantityDialogType === 'decrease') {
-			if (adjustment > currentItemTotal) {
-				alert('No puede disminuir más que la cantidad total actual');
-				return;
-			}
-			if (adjustment < 0) {
-				alert('La cantidad a disminuir debe ser positiva');
-				return;
-			}
-		}
-		
-		if (quantityDialogType === 'increase' && adjustment < 0) {
-			alert('La cantidad a aumentar debe ser positiva');
+		if (adjustment < 0) {
+			toast({
+				title: 'Error',
+				description: 'La cantidad debe ser un número positivo',
+				variant: 'destructive',
+				duration: 3000,
+			});
 			return;
 		}
 		
@@ -98,7 +102,12 @@ export function AccesoriesTable({
 			: currentItemTotal - adjustment;
 		
 		if (newQuantity < 0) {
-			alert('La cantidad total no puede ser negativa');
+			toast({
+				title: 'Error',
+				description: `No puede disminuir ${adjustment} unidades. Solo tiene ${currentItemTotal} disponibles`,
+				variant: 'destructive',
+				duration: 3000,
+			});
 			return;
 		}
 		
@@ -199,27 +208,27 @@ export function AccesoriesTable({
 									<tr key={(item as any).id} className="hover:bg-secondary/50 transition-colors">
 										<td className="px-2 py-2 whitespace-nowrap">
 											<p className="text-center text-sm text-foreground">
-												{(item as any)[keys.category] || 'N/A'}
+												{(item as any)[keys.category] || '—'}
 											</p>
 										</td>
 										<td className="px-2 py-2 whitespace-nowrap">
 											<p className="text-center text-sm text-foreground">
-												{(item as any)[keys.line] || 'N/A'}
+												{(item as any)[keys.line] || '-'}
 											</p>
 										</td>
 										<td className="px-2 py-2 whitespace-nowrap">
 											<p className="text-center text-sm text-foreground">
-												{(item as any)[keys.brand] || 'N/A'}
+												{(item as any)[keys.brand] || '-'}
 											</p>
 										</td>
 										<td className="px-2 py-2 whitespace-nowrap">
 											<p className="text-center text-sm text-foreground">
-												{(item as any)[keys.code] || 'N/A'}
+												{(item as any)[keys.code] || '-'}
 											</p>
 										</td>
 										<td className="px-2 py-2 max-w-[500px]">
 											<p className="text-sm text-justify text-foreground whitespace-pre-line break-words">
-												{((item as any)[keys.description] || 'N/A')
+												{((item as any)[keys.description] || '')
 													.split(' ')
 													.reduce(
 														(acc: string[], word: string) => {
@@ -238,7 +247,7 @@ export function AccesoriesTable({
 										</td>
 										<td className="px-2 py-2 whitespace-nowrap">
 											<p className="text-center text-sm text-foreground">
-												{(item as any)[keys.color] || 'N/A'}
+												{(item as any)[keys.color] || ''}
 											</p>
 										</td>
 										<td className="px-2 py-2 whitespace-nowrap">
@@ -296,7 +305,7 @@ export function AccesoriesTable({
 										</td>
 										<td className="px-2 py-2 whitespace-nowrap">
 											<p className="text-center text-sm text-muted-foreground">
-												{(item as any)[keys.site] || 'N/A'}
+												{(item as any)[keys.site] || ''}
 											</p>
 										</td>
 										{user?.role === 'Admin' || user?.role === 'Ventas' ? (

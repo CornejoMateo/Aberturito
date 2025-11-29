@@ -4,9 +4,10 @@ import type { ProfileItemStock } from '@/lib/profile-stock';
 import type { AccessoryItemStock } from '@/lib/accesorie-stock';
 import type { IronworkItemStock } from '@/lib/ironwork-stock';
 import type { SupplyItemStock } from '@/lib/supplies-stock';
+import type { StockCategory } from '@/lib/stock-config';
 
 interface StockStatsProps {
-	categoryState: 'Perfiles' | 'Accesorios' | 'Herrajes' | 'Insumos';
+	categoryState: 'Perfiles' | StockCategory;
 	totalItems: number;
 	lowStockCount: number;
 	lastAddedItem?: ProfileItemStock | AccessoryItemStock | IronworkItemStock | SupplyItemStock | null;

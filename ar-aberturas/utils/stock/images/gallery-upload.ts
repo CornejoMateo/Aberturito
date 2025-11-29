@@ -89,6 +89,7 @@ export const handleUpload = async ({
 				title: 'Error',
 				description: data.error || 'Ocurrió un error al subir la imagen',
 				variant: 'destructive',
+				duration: 5000,
 			});
 		}
 	} catch (err) {

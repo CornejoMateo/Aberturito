@@ -20,6 +20,7 @@ import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock-config';
 import { type AccessoryItemStock } from '@/lib/accesorie-stock';
 import { type IronworkItemStock } from '@/lib/ironwork-stock';
 import { type SupplyItemStock } from '@/lib/supplies-stock';
+import { useAuth } from '@/components/provider/auth-provider';
 
 interface AccessoryFormDialogProps {
 	open: boolean;
@@ -54,7 +55,12 @@ export function AccessoryFormDialog({
 	const [lumpCount, setLumpCount] = useState<number | ''>('');
 	const [site, setSite] = useState('');
 	const [price, setPrice] = useState<number | ''>('');
+	const [showQuantityDialog, setShowQuantityDialog] = useState(false);
+	const [quantityDialogType, setQuantityDialogType] = useState<'increase' | 'decrease' | null>(null);
+	const [quantityChange, setQuantityChange] = useState<number | ''>('');
 	const { toast } = useToast();
+
+	const {user} = useAuth();
 
 	useEffect(() => {
 		if (editItem) {
@@ -87,6 +93,76 @@ export function AccessoryFormDialog({
 		setLumpCount('');
 		setSite('');
 		setPrice('');
+		setQuantityChange('');
+	};
+
+	const handleQuantityAdjustment = () => {
+		if (quantityChange === '') return;
+		
+		const currentTotal = (Number(quantityPerLump) || 0) * (Number(lumpCount) || 0);
+		const adjustment = Number(quantityChange);
+		
+		if (quantityDialogType === 'decrease') {
+			if (adjustment > currentTotal) {
+				toast({
+					title: 'Error',
+					description: 'No puede disminuir más que la cantidad total actual',
+					variant: 'destructive',
+					duration: 3000,
+				});
+				return;
+			}
+			if (adjustment < 0) {
+				toast({
+					title: 'Error',
+					description: 'La cantidad a disminuir debe ser positiva',
+					variant: 'destructive',
+					duration: 3000,
+				});
+				return;
+			}
+		}
+		
+		if (quantityDialogType === 'increase' && adjustment < 0) {
+			toast({
+				title: 'Error',
+				description: 'La cantidad a aumentar debe ser positiva',
+				variant: 'destructive',
+				duration: 3000,
+			});
+			return;
+		}
+		
+		const newTotal = quantityDialogType === 'increase' 
+			? currentTotal + adjustment 
+			: currentTotal - adjustment;
+		
+		if (newTotal < 0) {
+			toast({
+				title: 'Error',
+				description: 'La cantidad total no puede ser negativa',
+				variant: 'destructive',
+				duration: 3000,
+			});
+			return;
+		}
+		
+		// Try to distribute the new total across lumps
+		const currentQuantityPerLump = Number(quantityPerLump) || 1;
+		const currentLumpCount = Number(lumpCount) || 1;
+		
+		// If we can keep the same quantity per lump and adjust lump count
+		if (newTotal % currentQuantityPerLump === 0) {
+			setLumpCount(newTotal / currentQuantityPerLump);
+		} else {
+			// Otherwise, adjust quantity per lump and keep lump count
+			setQuantityPerLump(Math.ceil(newTotal / currentLumpCount));
+			setLumpCount(currentLumpCount);
+		}
+		
+		setShowQuantityDialog(false);
+		setQuantityChange('');
+		setQuantityDialogType(null);
 	};
 
 	const handleSave = () => {
@@ -94,11 +170,14 @@ export function AccessoryFormDialog({
 		if (
 			!categoryHA ||
 			!line ||
+			!brand ||
 			!code ||
 			!color ||
 			!site ||
-			!quantityPerLump ||
-			!lumpCount
+			quantityPerLump === '' ||
+			quantityPerLump < 0 ||
+			lumpCount === '' ||
+			lumpCount < 0
 		) {
 			toast({
 				title: 'Error de validación',
@@ -237,7 +316,7 @@ export function AccessoryFormDialog({
 								<Label>Cantidad total</Label>
 								<Input
 									type="number"
-									value={(Number(quantityPerLump) || 0) * (Number(lumpCount) || 0) || ''}
+									value={(Number(quantityPerLump) || 0) * (Number(lumpCount) || 0) || 0}
 									readOnly
 									className="bg-background"
 								/>
@@ -246,9 +325,15 @@ export function AccessoryFormDialog({
 
 						<div className="grid gap-2">
 							<Label>Ubicación</Label>
-							<SiteSelect value={site} onValueChange={setSite} />
+							<Input 
+								value={site} 
+								onChange={(e) => setSite(e.target.value)} 
+								placeholder="Ingrese la ubicación"
+								className="bg-background"
+							/>
 						</div>
 
+                    {user?.role === 'Admin' || user?.role === 'Ventas' && (
 						<div className="grid gap-2">
 							<Label>Precio (opcional)</Label>
 							<Input
@@ -258,6 +343,7 @@ export function AccessoryFormDialog({
 								className="bg-background"
 							/>
 						</div>
+					)}
 					</div>
 				</div>
 				<DialogFooter className="pt-4 border-t border-border">
@@ -267,6 +353,38 @@ export function AccessoryFormDialog({
 					<Button onClick={handleSave}>{isEditing ? 'Guardar cambios' : 'Guardar'}</Button>
 				</DialogFooter>
 			</DialogContent>
+			<Dialog open={showQuantityDialog} onOpenChange={setShowQuantityDialog}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>
+							{quantityDialogType === 'increase' ? 'Aumentar cantidad' : 'Disminuir cantidad'}
+						</DialogTitle>
+						<DialogDescription>
+							{quantityDialogType === 'increase' 
+								? '¿Cuántas unidades desea aumentar?' 
+								: '¿Cuántas unidades desea disminuir?'}
+						</DialogDescription>
+					</DialogHeader>
+					<div className="py-4">
+						<Input
+							type="number"
+							value={quantityChange as any}
+							onChange={(e) => setQuantityChange(e.target.value ? Number(e.target.value) : '')}
+							placeholder="Ingrese la cantidad"
+							className="bg-background"
+							min="0"
+						/>
+					</div>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setShowQuantityDialog(false)}>
+							Cancelar
+						</Button>
+						<Button onClick={handleQuantityAdjustment}>
+							{quantityDialogType === 'increase' ? 'Aumentar' : 'Disminuir'}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</Dialog>
 	);
 }

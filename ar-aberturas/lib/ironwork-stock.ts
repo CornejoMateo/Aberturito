@@ -44,6 +44,24 @@ export async function getIronworkById(
 export async function createIronworkStock(
 	item: Partial<IronworkItemStock>
 ): Promise<{ data: IronworkItemStock | null; error: any }> {
+	// Validación de campos obligatorios
+	const requiredFields = [
+		'ironwork_category',
+		'ironwork_code',
+		'ironwork_color',
+		'ironwork_quantity',
+		'ironwork_material',
+		'ironwork_site',
+	];
+	for (const field of requiredFields) {
+		if (!(item as any)[field]) {
+			return {
+				data: null,
+				error: new Error(`Falta el campo obligatorio: ${field}`),
+			};
+		}
+	}
+
 	const supabase = getSupabaseClient();
 
 	const { data: rows, error: imageError } = await supabase
@@ -69,6 +87,12 @@ export async function updateIronworkStock(
 	id: string,
 	changes: Partial<IronworkItemStock>
 ): Promise<{ data: IronworkItemStock | null; error: any }> {
+	if (!id) {
+		return {
+			data: null,
+			error: new Error('El accesorio no pudo ser actualizado.'),
+		};
+	}
 	const supabase = getSupabaseClient();
 	const payload = { ...changes, last_update: new Date().toISOString().split('T')[0] };
 	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();

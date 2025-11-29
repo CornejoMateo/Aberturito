@@ -38,13 +38,14 @@ import {
 	Moon,
 } from 'lucide-react';
 import Image from 'next/image';
+import { ro } from 'date-fns/locale';
 
 const navigation = [
 	{
 		name: 'Dashboard',
 		href: '/',
 		icon: LayoutDashboard,
-		disabled: true,
+		disabled: false,
 	},
 	{
 		name: 'Perfiles',
@@ -58,51 +59,51 @@ const navigation = [
 	},
 	{
 		name: 'Accesorios',
-		href: '/accesorios',
+		href: '/accesories',
 		icon: Package,
 		disabled: false,
 		subItems: [
-			{ name: 'Aluminio', href: '/accesorios/aluminio' },
-			{ name: 'PVC', href: '/accesorios/pvc' },
+			{ name: 'Aluminio', href: '/accessories/aluminio' },
+			{ name: 'PVC', href: '/accessories/pvc' },
 		],
 	},
 	{
 		name: 'Herrajes',
-		href: '/herrajes',
+		href: '/ironworks',
 		icon: Package,
 		disabled: false,
 		subItems: [
-			{ name: 'Aluminio', href: '/herrajes/aluminio' },
-			{ name: 'PVC', href: '/herrajes/pvc' },
+			{ name: 'Aluminio', href: '/ironworks/aluminio' },
+			{ name: 'PVC', href: '/ironworks/pvc' },
 		],
 	},
 	{
 		name: 'Clientes',
-		href: '/clientes',
+		href: '/clients',
 		icon: Users,
-		disabled: true,
+		disabled: false,
 	},
 	{
 		name: 'Presupuestos',
-		href: '/presupuestos',
+		href: '/budgets',
 		icon: FileText,
 		disabled: true,
 	},
 	{
 		name: 'Obras',
-		href: '/obras',
+		href: '/works',
 		icon: ClipboardCheck,
-		disabled: true,
+		disabled: false,
 	},
 	{
 		name: 'Calendario',
-		href: '/calendario',
+		href: '/calendar',
 		icon: Calendar,
-		disabled: true,
+		disabled: false,
 	},
 	{
 		name: 'Reportes',
-		href: '/reportes',
+		href: '/reports',
 		icon: BarChart3,
 		disabled: true,
 	},
@@ -140,13 +141,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 			return 'Perfiles';
 		}
 		if (itemName === 'Accesorios') {
-			if (pathname === '/accesorios/aluminio') return 'Accesorios Aluminio';
-			if (pathname === '/accesorios/pvc') return 'Accesorios PVC';
+			if (pathname === '/accessories/aluminio') return 'Accesorios Aluminio';
+			if (pathname === '/accessories/pvc') return 'Accesorios PVC';
 			return 'Accesorios';
 		}
 		if (itemName === 'Herrajes') {
-			if (pathname === '/herrajes/aluminio') return 'Herrajes Aluminio';
-			if (pathname === '/herrajes/pvc') return 'Herrajes PVC';
+			if (pathname === '/ironworks/aluminio') return 'Herrajes Aluminio';
+			if (pathname === '/ironworks/pvc') return 'Herrajes PVC';
 			return 'Herrajes';
 		}
 		return itemName;
@@ -156,9 +157,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	useEffect(() => {
 		if (pathname.startsWith('/stock/')) {
 			setExpandedItems((prev) => (prev.includes('Perfiles') ? prev : [...prev, 'Perfiles']));
-		} else if (pathname.startsWith('/accesorios/')) {
+		} else if (pathname.startsWith('/accessories/')) {
 			setExpandedItems((prev) => (prev.includes('Accesorios') ? prev : [...prev, 'Accesorios']));
-		} else if (pathname.startsWith('/herrajes/')) {
+		} else if (pathname.startsWith('/ironworks/')) {
 			setExpandedItems((prev) => (prev.includes('Herrajes') ? prev : [...prev, 'Herrajes']));
 		}
 	}, [pathname]);
@@ -173,15 +174,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 				router.push('/login');
 			} else if (pathname === '/') {
 				setShouldRedirect(true);
-				router.replace('/stock/aluminio');
+				// Redirigir según el rol del usuario
+				if (user.role === 'Fabrica') {
+					router.replace('/stock/aluminio');
+				} else if (user.role === 'Colocador') {
+					router.replace('/obras');
+				}
 			}
 		}
 	}, [loading, user, pathname, router]);
-
-	// Si estamos en proceso de redirección, mostramos un loader
-	if (shouldRedirect || (pathname === '/' && user)) {
-		return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
-	}
 
 	// Definición de permisos por rol
 	const allowedByRole = useMemo(() => {
@@ -240,7 +241,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 		}
 
 		// Redirigir a Perfiles Aluminio por defecto si se accede a /stock o a la raíz
-		if (pathname === '/stock' || pathname === '/') {
+		if (pathname === '/stock' || (pathname === '/' && user?.role === 'Fabrica')) {
 			router.replace('/stock/aluminio');
 		}
 	}, [loading, user?.role, pathname, router, allowedByRole]);

@@ -53,7 +53,7 @@ export function StockStats({
 
 	return (
 		<div className="flex justify-start">
-			<Card className="bg-card border-border w-80">
+			<Card className="bg-card border-border w-100 h-32 mr-4 p-4">
 				<div className="flex items-center p-2">
 					<div className="mr-3 rounded-lg bg-secondary p-2 text-chart-2">
 						<PackagePlus className="h-5 w-5" />

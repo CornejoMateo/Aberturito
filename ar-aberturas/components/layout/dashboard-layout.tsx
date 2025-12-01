@@ -41,12 +41,12 @@ import Image from 'next/image';
 import { ro } from 'date-fns/locale';
 
 const navigation = [
-/* 	{
+	{
 		name: 'Dashboard',
 		href: '/',
 		icon: LayoutDashboard,
-		disabled: false,
-	}, */
+		disabled: true,
+	},
 	{
 		name: 'Perfiles',
 		href: '/stock',
@@ -186,7 +186,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 			} else if (pathname === '/') {
 				setShouldRedirect(true);
 				// Redirigir según el rol del usuario
-				if (user.role === 'Fabrica') {
+				if (user.role === 'Fabrica' || user.role === 'Admin' || user.role === 'Ventas') {
 					router.replace('/stock/aluminio');
 				} else if (user.role === 'Colocador') {
 					router.replace('/obras');
@@ -198,10 +198,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	// Definición de permisos por rol
 	const allowedByRole = useMemo(() => {
 		return {
-			Admin: ['Dashboard', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes'],
+			Admin: ['Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes'],
 			Fabrica: ['Perfiles', 'Accesorios', 'Herrajes', 'Insumos'],
-			Ventas: ['Dashboard', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Calendario'],
-			Marketing: ['Dashboard', 'Calendario', 'Clientes', 'Reportes', 'Presupuestos'],
+			Ventas: ['Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Calendario'],
+			Marketing: ['Calendario', 'Clientes', 'Reportes', 'Presupuestos'],
 			Colocador: ['Obras'],
 		} as Record<string, string[]>;
 	}, []);
@@ -252,7 +252,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 		}
 
 		// Redirigir a Perfiles Aluminio por defecto si se accede a /stock o a la raíz
-		if (pathname === '/stock' || (pathname === '/' && user?.role === 'Fabrica')) {
+		if (pathname === '/stock' || pathname === '/') {
 			router.replace('/stock/aluminio');
 		}
 	}, [loading, user?.role, pathname, router, allowedByRole]);

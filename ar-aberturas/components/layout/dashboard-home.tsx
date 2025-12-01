@@ -67,9 +67,12 @@ export function DashboardHome() {
 					Bienvenido al Sistema de Gestión
 				</h2>
 				<p className="text-muted-foreground mt-1">Resumen de actividades y métricas principales</p>
+				<h2 className="text-2xl font-bold text-foreground text-balance">
+					Módulo opcional
+				</h2>
 			</div>
 
-			{/* Stats grid */}
+			{/* Stats grid
 			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 				{stats.map((stat) => (
 					<Card key={stat.name} className="p-6 bg-card border-border">
@@ -89,9 +92,10 @@ export function DashboardHome() {
 					</Card>
 				))}
 			</div>
+			*/}
 
+			{/* Recent activity and alerts
 			<div className="grid gap-6 lg:grid-cols-2">
-				{/* Recent activity */}
 				<Card className="p-6 bg-card border-border">
 					<h3 className="text-lg font-semibold text-foreground mb-4">Actividad reciente</h3>
 					<div className="space-y-4">
@@ -108,7 +112,6 @@ export function DashboardHome() {
 					</div>
 				</Card>
 
-				{/* Alerts */}
 				<Card className="p-6 bg-card border-border">
 					<h3 className="text-lg font-semibold text-foreground mb-4">Alertas y notificaciones</h3>
 					<div className="space-y-4">
@@ -129,6 +132,7 @@ export function DashboardHome() {
 					</div>
 				</Card>
 			</div>
+			*/}
 		</div>
 	);
 }

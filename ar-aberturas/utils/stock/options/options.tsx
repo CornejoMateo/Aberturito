@@ -22,7 +22,7 @@ import {
 import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { OptionDialog } from './option-add';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 
 import { deleteOption } from '@/lib/stock-options';
 import {

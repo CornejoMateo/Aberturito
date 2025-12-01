@@ -1,6 +1,6 @@
 // Función para subir imágenes a la galería
 
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 
 export const handleUpload = async ({
 	file,
@@ -89,6 +89,7 @@ export const handleUpload = async ({
 				title: 'Error',
 				description: data.error || 'Ocurrió un error al subir la imagen',
 				variant: 'destructive',
+				duration: 5000,
 			});
 		}
 	} catch (err) {

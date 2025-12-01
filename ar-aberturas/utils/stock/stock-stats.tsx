@@ -3,12 +3,14 @@ import { Package, PackagePlus, AlertTriangle } from 'lucide-react';
 import type { ProfileItemStock } from '@/lib/profile-stock';
 import type { AccessoryItemStock } from '@/lib/accesorie-stock';
 import type { IronworkItemStock } from '@/lib/ironwork-stock';
+import type { SupplyItemStock } from '@/lib/supplies-stock';
+import type { StockCategory } from '@/lib/stock-config';
 
 interface StockStatsProps {
-	categoryState: 'Perfiles' | 'Accesorios' | 'Herrajes';
+	categoryState: 'Perfiles' | StockCategory;
 	totalItems: number;
 	lowStockCount: number;
-	lastAddedItem?: ProfileItemStock | AccessoryItemStock | IronworkItemStock | null;
+	lastAddedItem?: ProfileItemStock | AccessoryItemStock | IronworkItemStock | SupplyItemStock | null;
 }
 
 export function StockStats({
@@ -40,6 +42,15 @@ export function StockStats({
 			};
 		}
 
+		if (categoryState === 'Insumos') {
+			return {
+				line: item.supply_line || 'Sin código',
+				code: item.supply_code || 'Sin código',
+				color: item.supply_color,
+				extra: '',
+			};
+		}
+
 		// Herrajes
 		return {
 			line: item.ironwork_line || 'Sin código',
@@ -53,7 +64,7 @@ export function StockStats({
 
 	return (
 		<div className="flex justify-start">
-			<Card className="bg-card border-border w-80">
+			<Card className="bg-card border-border w-100 h-32 mr-4 p-4">
 				<div className="flex items-center p-2">
 					<div className="mr-3 rounded-lg bg-secondary p-2 text-chart-2">
 						<PackagePlus className="h-5 w-5" />

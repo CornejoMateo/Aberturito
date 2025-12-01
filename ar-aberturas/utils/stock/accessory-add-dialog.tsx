@@ -14,20 +14,21 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog';
 import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { SiteSelect } from '@/components/stock/site-select';
+import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock-config';
+import { useToast } from '@/components/ui/use-toast';
 import { type AccessoryItemStock } from '@/lib/accesorie-stock';
 import { type IronworkItemStock } from '@/lib/ironwork-stock';
-import { set } from 'date-fns';
+import { type SupplyItemStock } from '@/lib/supplies-stock';
 import { useAuth } from '@/components/provider/auth-provider';
 
 interface AccessoryFormDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	onSave: (item: Partial<AccessoryItemStock> | Partial<IronworkItemStock>) => void;
+	onSave: (item: Partial<AccessoryItemStock> | Partial<IronworkItemStock> | Partial<SupplyItemStock>) => void;
 	materialType?: 'Aluminio' | 'PVC';
-	category: 'Accesorios' | 'Herrajes';
-	editItem?: AccessoryItemStock | IronworkItemStock | null;
+	category: StockCategory;
+	editItem?: AccessoryItemStock | IronworkItemStock | SupplyItemStock | null;
 	triggerButton?: boolean;
 }
 
@@ -41,6 +42,7 @@ export function AccessoryFormDialog({
 	triggerButton = true,
 }: AccessoryFormDialogProps) {
 	const isEditing = !!editItem;
+	const config = STOCK_CONFIGS[category];
 
 	// Fields common to accessories/ironworks
 	const [categoryHA, setCategoryHA] = useState('');
@@ -51,44 +53,44 @@ export function AccessoryFormDialog({
 	const [color, setColor] = useState('');
 	const [quantityPerLump, setQuantityPerLump] = useState<number | ''>('');
 	const [lumpCount, setLumpCount] = useState<number | ''>('');
+	const [quantity, setQuantity] = useState<number | ''>('');
 	const [site, setSite] = useState('');
 	const [price, setPrice] = useState<number | ''>('');
+	const [showQuantityDialog, setShowQuantityDialog] = useState(false);
+	const [quantityDialogType, setQuantityDialogType] = useState<'increase' | 'decrease' | null>(null);
+	const [quantityChange, setQuantityChange] = useState<number | ''>('');
+	const [changeQuantityFlag, setChangeQuantityFlag] = useState(false);
 	const { toast } = useToast();
 
 	const {user} = useAuth();
 
 	useEffect(() => {
 		if (editItem) {
-			// map fields depending on category
-			if (category === 'Accesorios') {
-				const it = editItem as AccessoryItemStock;
-				setCategoryHA(it.accessory_category || '');
-				setLine(it.accessory_line || '');
-				setBrand(it.accessory_brand || '');
-				setCode(it.accessory_code || '');
-				setDescription(it.accessory_description || '');
-				setColor(it.accessory_color || '');
-				setQuantityPerLump(it.accessory_quantity_for_lump ?? '');
-				setLumpCount(it.accessory_quantity_lump ?? '');
-				setSite(it.accessory_site || '');
-				setPrice((it['accessory_price' as keyof AccessoryItemStock] as any) || '');
-			} else {
-				const it = editItem as IronworkItemStock;
-				setCategoryHA(it.ironwork_category || '');
-				setLine(it.ironwork_line || '');
-				setBrand(it.ironwork_brand || '');
-				setCode(it.ironwork_code || '');
-				setDescription(it.ironwork_description || '');
-				setColor(it.ironwork_color || '');
-				setQuantityPerLump(it.ironwork_quantity_for_lump ?? '');
-				setLumpCount(it.ironwork_quantity_lump ?? '');
-				setSite(it.ironwork_site || '');
-				setPrice(it.ironwork_price ?? '');
-			}
+			const fields = config.fields;
+			const item = editItem as any;
+			
+			setCategoryHA(item[fields.category] || '');
+			setLine(item[fields.line] || '');
+			setBrand(item[fields.brand] || '');
+			setCode(item[fields.code] || '');
+			setDescription(item[fields.description] || '');
+			setColor(item[fields.color] || '');
+			setQuantityPerLump(item[fields.quantityForLump] ?? '');
+			setLumpCount(item[fields.quantityLump] ?? '');
+			setQuantity(item[fields.quantity] ?? '');
+			setSite(item[fields.site] || '');
+			setPrice(item[fields.price] ?? '');
 		} else {
 			resetForm();
 		}
 	}, [editItem, category]);
+
+	// Auto-calculate quantity when quantityPerLump or lumpCount changes
+	useEffect(() => {
+		if (quantityPerLump !== '' && lumpCount !== '' && changeQuantityFlag) {
+			setQuantity(Number(quantityPerLump) * Number(lumpCount));
+		}
+	}, [quantityPerLump, lumpCount, changeQuantityFlag]);
 
 	const resetForm = () => {
 		setCategoryHA('');
@@ -99,21 +101,79 @@ export function AccessoryFormDialog({
 		setColor('');
 		setQuantityPerLump('');
 		setLumpCount('');
+		setQuantity('');
 		setSite('');
 		setPrice('');
+		setQuantityChange('');
+	};
+
+	const handleQuantityAdjustment = () => {
+		if (quantityChange === '') return;
+		
+		const currentTotal = (quantity as number) || 0;
+		const adjustment = Number(quantityChange);
+		
+		if (quantityDialogType === 'decrease') {
+			if (adjustment > currentTotal) {
+				toast({
+					title: 'Error',
+					description: 'No puede disminuir más que la cantidad total actual',
+					variant: 'destructive',
+					duration: 3000,
+				});
+				return;
+			}
+			if (adjustment < 0) {
+				toast({
+					title: 'Error',
+					description: 'La cantidad a disminuir debe ser positiva',
+					variant: 'destructive',
+					duration: 3000,
+				});
+				return;
+			}
+		}
+		
+		if (quantityDialogType === 'increase' && adjustment < 0) {
+			toast({
+				title: 'Error',
+				description: 'La cantidad a aumentar debe ser positiva',
+				variant: 'destructive',
+				duration: 3000,
+			});
+			return;
+		}
+		
+		const newTotal = quantityDialogType === 'increase' 
+			? currentTotal + adjustment 
+			: currentTotal - adjustment;
+		
+		if (newTotal < 0) {
+			toast({
+				title: 'Error',
+				description: 'La cantidad total no puede ser negativa',
+				variant: 'destructive',
+				duration: 3000,
+			});
+			return;
+		}
+		
+		setQuantity(newTotal);
+		setShowQuantityDialog(false);
+		setQuantityChange('');
+		setQuantityDialogType(null);
 	};
 
 	const handleSave = () => {
 		// validation
 		if (
 			!categoryHA ||
-			!line ||
 			!code ||
-			!description ||
 			!color ||
 			!site ||
-			!quantityPerLump ||
-			!lumpCount
+			quantityPerLump === '' ||
+			lumpCount === '' ||
+			quantity === ''
 		) {
 			toast({
 				title: 'Error de validación',
@@ -123,48 +183,40 @@ export function AccessoryFormDialog({
 			});
 			return;
 		}
-
-		const payload: any = {
-			created_at:
-				isEditing && (editItem as any).created_at
-					? (editItem as any).created_at
-					: new Date().toISOString().split('T')[0],
-			...(category === 'Accesorios'
-				? { accessory_material: isEditing ? (editItem as any).accessory_material || materialType : materialType }
-				: { ironwork_material: isEditing ? (editItem as any).ironwork_material || materialType : materialType }),
-		};
-
-		if (category === 'Accesorios') {
-			Object.assign(payload, {
-				accessory_category: categoryHA,
-				accessory_line: line,
-				accessory_brand: brand,
-				accessory_code: code,
-				accessory_description: description,
-				accessory_color: color,
-				accessory_quantity_for_lump: Number(quantityPerLump),
-				accessory_quantity_lump: Number(lumpCount),
-				accessory_quantity: Number(quantityPerLump) * Number(lumpCount),
-				accessory_site: site,
-				accessory_price: price === '' ? null : Number(price),
+		
+		if (quantityPerLump < 0 || lumpCount < 0 || quantity < 0) {
+			toast({
+				title: 'Error de validación',
+				description: 'Las cantidades no pueden ser negativas',
+				variant: 'destructive',
+				duration: 4000,
 			});
-		} else {
-			Object.assign(payload, {
-				ironwork_category: categoryHA,
-				ironwork_line: line,
-				ironwork_brand: brand,
-				ironwork_code: code,
-				ironwork_description: description,
-				ironwork_color: color,
-				ironwork_quantity_for_lump: Number(quantityPerLump),
-				ironwork_quantity_lump: Number(lumpCount),
-				ironwork_quantity: Number(quantityPerLump) * Number(lumpCount),
-				ironwork_site: site,
-				ironwork_price: price === '' ? null : Number(price),
-			});
+			return;
 		}
 
+		const fields = config.fields;
+
+		const payload: any = {
+			[fields.createdAt]:
+				isEditing && (editItem as any)[fields.createdAt]
+					? (editItem as any)[fields.createdAt]
+					: new Date().toISOString().split('T')[0],
+			[fields.material]: isEditing ? (editItem as any)[fields.material] || materialType : materialType,
+			[fields.category]: categoryHA,
+			[fields.line]: line,
+			[fields.brand]: brand,
+			[fields.code]: code,
+			[fields.description]: description,
+			[fields.color]: color,
+			[fields.quantityForLump]: Number(quantityPerLump),
+			[fields.quantityLump]: Number(lumpCount),
+			[fields.quantity]: Number(quantity),
+			[fields.site]: site,
+			[fields.price]: price === '' ? null : Number(price),
+		};
+
 		onSave(payload);
+		setChangeQuantityFlag(false);
 		if (!isEditing) resetForm();
 		onOpenChange(false);
 	};
@@ -173,19 +225,17 @@ export function AccessoryFormDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			{triggerButton && (
 				<DialogTrigger asChild>
-					<Button className="gap-2">
-						<Plus className="h-4 w-4" />
-						{`Agregar ${category === 'Herrajes' ? 'herraje' : 'accesorio'}`}
-					</Button>
+				<Button className="gap-2">
+					<Plus className="h-4 w-4" />
+					Agregar {config.title.slice(0, -1).toLowerCase()}
+				</Button>
 				</DialogTrigger>
 			)}
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
-				<DialogHeader>
-					<DialogTitle>
-						{isEditing
-							? `Editar ${category === 'Herrajes' ? 'herraje' : 'accesorio'}`
-							: `Agregar  ${category === 'Herrajes' ? 'herraje' : 'accesorio'}`}
-					</DialogTitle>
+			<DialogHeader>
+				<DialogTitle>
+					{isEditing ? `Editar ${config.title.slice(0, -1).toLowerCase()}` : `Agregar ${config.title.slice(0, -1).toLowerCase()}`}
+				</DialogTitle>
 					<DialogDescription>
 						{isEditing ? 'Modifique los datos' : 'Complete los datos del nuevo ítem'}
 					</DialogDescription>
@@ -224,11 +274,11 @@ export function AccessoryFormDialog({
 						<div className="grid gap-2">
 							<Label>Código</Label>
 							<Input 
-								value={code} 
-								onChange={(e) => setCode(e.target.value)} 
-								placeholder="Ingrese el código"
-								className="bg-background"
-							/>
+						value={code} 
+						onChange={(e) => setCode(e.target.value)} 
+						placeholder="Ingrese el código"
+						className="bg-background"
+					/>
 						</div>
 
 						<div className="grid gap-2">
@@ -243,11 +293,11 @@ export function AccessoryFormDialog({
 						<div className="grid gap-2">
 							<Label>Color</Label>
 							<Input 
-								value={color} 
-								onChange={(e) => setColor(e.target.value)} 
-								placeholder="Ingrese el color"
-								className="bg-background"
-							/>
+						value={color} 
+						onChange={(e) => setColor(e.target.value)} 
+						placeholder="Ingrese el color"
+						className="bg-background"
+					/>
 						</div>
 
 						<div className="grid gap-2 md:grid-cols-3">
@@ -256,7 +306,10 @@ export function AccessoryFormDialog({
 								<Input
 									type="number"
 									value={quantityPerLump as any}
-									onChange={(e) => setQuantityPerLump(e.target.value ? Number(e.target.value) : '')}
+									onChange={(e) => {
+										setQuantityPerLump(e.target.value ? Number(e.target.value) : ''); 
+										setChangeQuantityFlag(true);
+									}}
 									className="bg-background"
 								/>
 							</div>
@@ -265,7 +318,10 @@ export function AccessoryFormDialog({
 								<Input
 									type="number"
 									value={lumpCount as any}
-									onChange={(e) => setLumpCount(e.target.value ? Number(e.target.value) : '')}
+									onChange={(e) => {
+										setLumpCount(e.target.value ? Number(e.target.value) : '');
+										setChangeQuantityFlag(true);
+									}}
 									className="bg-background"
 								/>
 							</div>
@@ -273,8 +329,8 @@ export function AccessoryFormDialog({
 								<Label>Cantidad total</Label>
 								<Input
 									type="number"
-									value={(Number(quantityPerLump) || 0) * (Number(lumpCount) || 0) || ''}
-									readOnly
+									value={quantity}
+									onChange={(e) => setQuantity(e.target.value ? Number(e.target.value) : '')}
 									className="bg-background"
 								/>
 							</div>
@@ -290,7 +346,7 @@ export function AccessoryFormDialog({
 							/>
 						</div>
 
-                    {(user?.role === 'Admin' || user?.role === 'Ventas') && (
+                    {user?.role === 'Admin' || user?.role === 'Ventas' && (
 						<div className="grid gap-2">
 							<Label>Precio (opcional)</Label>
 							<Input
@@ -310,6 +366,38 @@ export function AccessoryFormDialog({
 					<Button onClick={handleSave}>{isEditing ? 'Guardar cambios' : 'Guardar'}</Button>
 				</DialogFooter>
 			</DialogContent>
+			<Dialog open={showQuantityDialog} onOpenChange={setShowQuantityDialog}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>
+							{quantityDialogType === 'increase' ? 'Aumentar cantidad' : 'Disminuir cantidad'}
+						</DialogTitle>
+						<DialogDescription>
+							{quantityDialogType === 'increase' 
+								? '¿Cuántas unidades desea aumentar?' 
+								: '¿Cuántas unidades desea disminuir?'}
+						</DialogDescription>
+					</DialogHeader>
+					<div className="py-4">
+						<Input
+							type="number"
+							value={quantityChange as any}
+							onChange={(e) => setQuantityChange(e.target.value ? Number(e.target.value) : '')}
+							placeholder="Ingrese la cantidad"
+							className="bg-background"
+							min="0"
+						/>
+					</div>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setShowQuantityDialog(false)}>
+							Cancelar
+						</Button>
+						<Button onClick={handleQuantityAdjustment}>
+							{quantityDialogType === 'increase' ? 'Aumentar' : 'Disminuir'}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</Dialog>
 	);
 }

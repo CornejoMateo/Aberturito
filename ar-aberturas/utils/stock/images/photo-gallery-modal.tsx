@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { useState, useEffect } from 'react';
 import { cn } from '../../../lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LineSelect } from '@/components/stock/line-select';
@@ -17,14 +17,15 @@ import { CodeSelect } from '@/components/stock/code-select';
 import ImageViewer from '@/components/ui/image-viewer';
 import { ca } from 'date-fns/locale';
 import { set } from 'date-fns';
-import { fetchImages, fetchImagesAccsIron } from './gallery-api';
+import { fetchImages, fetchImagesAccsIronSupply } from './gallery-api';
 import { handleUpload as uploadImage } from './gallery-upload';
+import type { StockCategory } from '@/lib/stock-config';
 
 interface PhotoGalleryModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	materialType?: 'Aluminio' | 'PVC';
-	categoryState?: 'Accesorios' | 'Herrajes' | 'Perfiles';
+    categoryState?: 'Perfiles' | StockCategory;
 }
 
 export function PhotoGalleryModal({
@@ -81,7 +82,7 @@ export function PhotoGalleryModal({
 			setImagesLoading(true);
 			setImagesError(null);
 			setLoadingSearch(true);
-			const data = await fetchImagesAccsIron(categoryState, category, line, brand, code);
+			const data = await fetchImagesAccsIronSupply(categoryState, category, line, brand, code);
 			if (data.success) {
 				setImages(data.images ?? []);
 			} else {
@@ -128,8 +129,22 @@ export function PhotoGalleryModal({
 		});
 	};
 
+	const handleOpenChange = (newOpen: boolean) => {
+		if (!newOpen) {
+			setSelectedImage(null);
+			setNameCode('');
+			setNameLine('');
+			setNameBrand('');
+			setNameCategory('');
+			setImages([]);
+			setImagesError(null);
+			setSearched(false);
+		}
+		onOpenChange(newOpen);
+	};
+
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
+		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogContent className="max-w-[600px] w-full">
 				<DialogHeader>
 					<DialogTitle>Agregar y buscar fotos</DialogTitle>
@@ -250,32 +265,32 @@ export function PhotoGalleryModal({
 					</div>
 				)}
 
-				{(categoryState === 'Accesorios' || categoryState === 'Herrajes') && (
+				{(categoryState === 'Accesorios' || categoryState === 'Herrajes' || categoryState === 'Insumos') && (
 					<div className="p-6 flex flex-col gap-4">
 						<Input
 							value={nameCategory}
-							onChange={(e) => setNameCategory(e.target.value)}
+							onChange={(e) => {setNameCategory(e.target.value); setSelectedImage(null)}}
 							placeholder="Categoría"
 							className="w-full"
 						/>
 
 						<Input
 							value={nameLine}
-							onChange={(e) => setNameLine(e.target.value)}
+							onChange={(e) => {setNameLine(e.target.value); setSelectedImage(null)}}
 							placeholder="Línea"
 							className="w-full"
 						/>
 
 						<Input
 							value={nameBrand}
-							onChange={(e) => setNameBrand(e.target.value)}
+							onChange={(e) => {setNameBrand(e.target.value); setSelectedImage(null)}}
 							placeholder="Marca"
 							className="w-full"
 						/>
 
 						<Input
 							value={nameCode}
-							onChange={(e) => setNameCode(e.target.value)}
+							onChange={(e) => {setNameCode(e.target.value); setSelectedImage(null)}}
 							placeholder="Código"
 							className="w-full"
 						/>

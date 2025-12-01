@@ -12,7 +12,7 @@ export async function GET(req: Request) {
 		);
 
 		// Modo de búsqueda para accesorios/herrajes
-		if (mode === 'accs_iron') {
+		if (mode === 'accs_iron_supply') {
 			const categoryState = url.searchParams.get('categoryState');
 			const category = url.searchParams.get('category');
 			const brand = url.searchParams.get('brand');
@@ -21,8 +21,10 @@ export async function GET(req: Request) {
 			let query;
 			if (categoryState == 'Accesorios') {
 				query = supabase.from('gallery_images_accesories').select('*');
-			} else {
+			} else if (categoryState == 'Herrajes') {
 				query = supabase.from('gallery_images_ironworks').select('*');
+			} else {
+				query = supabase.from('gallery_images_supplies').select('*');
 			}
 			if (category) query = query.eq('name_category', category);
 			if (brand) query = query.eq('name_brand', brand);

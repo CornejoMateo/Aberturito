@@ -23,6 +23,13 @@ import {
 	type AccessoryItemStock,
 } from '@/lib/accesorie-stock';
 import {
+  listSuppliesStock,
+  createSupplyStock,
+  updateSupplyStock,
+  deleteSupplyStock,
+  type SupplyItemStock,
+} from '@/lib/supplies-stock';
+import {
 	listIronworksStock,
 	createIronworkStock,
 	updateIronworkStock,
@@ -43,16 +50,19 @@ import { userRealtimeTables } from '@/hooks/use-realtime-tables';
 import { Image } from 'lucide-react';
 import { PhotoGalleryModal } from '@/utils/stock/images/photo-gallery-modal';
 import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
+import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock-config';
 import { filterStockItems } from '@/utils/stock/stock-filters-logic';
 
 interface StockManagementProps {
 	materialType?: 'Aluminio' | 'PVC';
-	category?: 'Perfiles' | 'Accesorios' | 'Herrajes';
+	category?: 'Perfiles' | StockCategory;
 }
 
 export function StockManagement({ materialType = 'Aluminio', category = 'Perfiles' }: StockManagementProps) {
 	// choose data source based on category
-	const tableName = category === 'Perfiles' ? 'profiles' : category === 'Accesorios' ? 'accesories_category' : 'ironworks_category';
+	const tableName = category === 'Perfiles' 
+		? 'profiles' 
+		: STOCK_CONFIGS[category as StockCategory].tableName;
 	const fetcher = async () => {
 		if (category === 'Perfiles') {
 			const { data, error } = await listStock();
@@ -61,6 +71,11 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 		}
 		if (category === 'Accesorios') {
 			const { data, error } = await listAccesoriesStock();
+			if (error) throw error;
+			return data || [];
+		}
+		if (category === 'Insumos') {
+			const { data, error } = await listSuppliesStock();
 			if (error) throw error;
 			return data || [];
 		}
@@ -110,7 +125,10 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 	)[0];
 
 	const getTitle = () => {
-		const categoryName = category === 'Perfiles' ? 'Perfiles' : category === 'Accesorios' ? 'Accesorios' : 'Herrajes';
+		const categoryName = category === 'Perfiles' ? 'Perfiles' : STOCK_CONFIGS[category as StockCategory].title;
+		if (category === 'Insumos') {
+			return `Gestión de ${categoryName}`;
+		}
 		switch (materialType) {
 			case 'Aluminio':
 				return `${categoryName} de Aluminio`;
@@ -122,7 +140,10 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 	};
 
 	const getDescription = () => {
-		const categoryName = category === 'Perfiles' ? 'Perfiles' : category === 'Accesorios' ? 'Accesorios' : 'Herrajes';
+		const categoryName = category === 'Perfiles' ? 'Perfiles' : STOCK_CONFIGS[category as StockCategory].title;
+		if (category === 'Insumos') {
+			return `Control de inventario de ${categoryName.toLowerCase()}`;
+		}
 		switch (materialType) {
 			case 'Aluminio':
 				return `Control de inventario de ${categoryName.toLowerCase()} de aluminio`;
@@ -198,12 +219,15 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 						<AccessoryFormDialog
 							open={isAddDialogOpen}
 							onOpenChange={setIsAddDialogOpen}
-							category={category === 'Accesorios' ? 'Accesorios' : 'Herrajes'}
+							category={category as StockCategory}
 							materialType={materialType}
 							onSave={async (newItem) => {
 								try {
 									if (category === 'Accesorios') {
 										const { error } = await createAccessoryStock(newItem as any);
+										if (error) throw error;
+									} else if (category === 'Insumos') {
+										const { error } = await createSupplyStock(newItem as any);
 										if (error) throw error;
 									} else {
 										const { error } = await createIronworkStock(newItem as any);
@@ -269,7 +293,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 						/>
 					) : (
 						<AccesoriesTable
-							categoryState={category === 'Accesorios' ? 'Accesorios' : 'Herrajes'}
+							categoryState={category as StockCategory}
 							filteredStock={currentItems}
 							onEdit={(id) => {
 								const it = (stock || []).find((s: any) => s.id === id);
@@ -282,6 +306,8 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 								try {
 									if (category === 'Accesorios') {
 										await deleteAccesoryStock(id);
+									} else if (category === 'Insumos') {
+										await deleteSupplyStock(id);
 									} else {
 										await deleteIronworkStock(id);
 									}
@@ -295,6 +321,8 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 								try {
 									if (category === 'Accesorios') {
 										await updateAccessoryStock(id, { accessory_quantity: newQuantity });
+									} else if (category === 'Insumos') {
+										await updateSupplyStock(id, { supply_quantity: newQuantity });
 									} else {
 										await updateIronworkStock(id, { ironwork_quantity: newQuantity });
 									}
@@ -325,12 +353,14 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 							<AccessoryFormDialog
 								open={isEditDialogOpen}
 								onOpenChange={setIsEditDialogOpen}
-								category={category === 'Accesorios' ? 'Accesorios' : 'Herrajes'}
+								category={category as StockCategory}
 								editItem={editingItem}
 								onSave={async (changes) => {
 									try {
 										if (category === 'Accesorios') {
 											await updateAccessoryStock(editingItem.id, changes as any);
+										} else if (category === 'Insumos') {
+											await updateSupplyStock(editingItem.id, changes as any);
 										} else {
 											await updateIronworkStock(editingItem.id, changes as any);
 										}

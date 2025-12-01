@@ -14,23 +14,38 @@ export default function LoginPage() {
 	const [usuario, setUsuario] = useState('');
 	const [contraseña, setContraseña] = useState('');
 	const [error, setError] = useState<string | null>(null);
+	const [isRedirecting, setIsRedirecting] = useState(false);
 
 	// Redirect to dashboard after auth state resolved
 	React.useEffect(() => {
-		if (user) {
+		if (user && !isRedirecting) {
+			setIsRedirecting(true);
 			router.push('/');
 		}
-	}, [user, router]);
+	}, [user, router, isRedirecting]);
 
 	async function onSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		setError(null);
 		try {
 			await signIn(usuario, contraseña);
+			setIsRedirecting(true);
 			router.push('/');
 		} catch (err: any) {
 			setError(err?.message || 'Error al iniciar sesión');
 		}
+	}
+
+	// Mostrar pantalla de carga durante la redirección
+	if (isRedirecting) {
+		return (
+			<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
+				<div className="text-center">
+					<div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+					<p className="text-white text-lg">Cargando...</p>
+				</div>
+			</div>
+		);
 	}
 
 	return (

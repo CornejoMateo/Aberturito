@@ -46,7 +46,7 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from '@/components/ui/pagination';
-import { userRealtimeTables } from '@/hooks/use-realtime-tables';
+import { useOptimizedRealtimeStock } from '@/hooks/use-optimized-realtime-stock';
 import { Image } from 'lucide-react';
 import { PhotoGalleryModal } from '@/utils/stock/images/photo-gallery-modal';
 import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
@@ -89,7 +89,8 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 		loading,
 		error,
 		refresh,
-	} = userRealtimeTables<any>(tableName, fetcher);
+		invalidateCache
+	} = useOptimizedRealtimeStock<any>(tableName, fetcher, `stock_${category}_${materialType}`);
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedCategory, setSelectedCategory] = useState(category);
@@ -209,7 +210,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 									console.error('Error al crear perfil:', error);
 									return;
 								}
-								refresh();
+								// No es necesario hacer refresh, el realtime lo actualizará
 								setIsAddDialogOpen(false);
 							}}
 							materialType={materialType}
@@ -233,7 +234,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 										const { error } = await createIronworkStock(newItem as any);
 										if (error) throw error;
 									}
-									refresh();
+									// No es necesario hacer refresh, el realtime lo actualizará
 									setIsAddDialogOpen(false);
 								} catch (err) {
 									if (typeof err === 'object' && err !== null) {
@@ -281,6 +282,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 							onDelete={async (id) => {
 								const { error } = await deleteProfileStock(id);
 								if (error) console.error('Error al eliminar perfil:', error);
+								// No es necesario hacer refresh, el realtime lo actualizará
 							}}
 							onUpdateQuantity={async (id, newQuantity) => {
 								if (newQuantity < 0) return;
@@ -289,6 +291,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 								});
 								if (error)
 									console.error('Error al actualizar la cantidad:', error);
+								// No es necesario hacer refresh, el realtime lo actualizará
 							}}
 						/>
 					) : (
@@ -311,7 +314,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 									} else {
 										await deleteIronworkStock(id);
 									}
-									refresh();
+									// No es necesario hacer refresh, el realtime lo actualizará
 								} catch (err) {
 									console.error('Error al eliminar item:', err);
 								}
@@ -326,7 +329,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 									} else {
 										await updateIronworkStock(id, { ironwork_quantity: newQuantity });
 									}
-									refresh();
+									// No es necesario hacer refresh, el realtime lo actualizará
 								} catch (err) {
 									console.error('Error al actualizar cantidad:', err);
 								}
@@ -345,7 +348,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 								onSave={async (changes) => {
 									const { error } = await updateProfileStock(editingItem.id, changes as any);
 									if (error) console.error('Error al guardar perfil:', error);
-									refresh();
+									// No es necesario hacer refresh, el realtime lo actualizará
 									setIsEditDialogOpen(false);
 								}}
 							/>
@@ -364,7 +367,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 										} else {
 											await updateIronworkStock(editingItem.id, changes as any);
 										}
-										refresh();
+										// No es necesario hacer refresh, el realtime lo actualizará
 									} catch (err) {
 										console.error('Error al actualizar item:', err);
 									}

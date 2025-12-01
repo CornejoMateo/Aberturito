@@ -77,6 +77,7 @@ export function AccessoryFormDialog({
 			setColor(item[fields.color] || '');
 			setQuantityPerLump(item[fields.quantityForLump] ?? '');
 			setLumpCount(item[fields.quantityLump] ?? '');
+			setQuantity(item[fields.quantity] ?? '');
 			setSite(item[fields.site] || '');
 			setPrice(item[fields.price] ?? '');
 		} else {

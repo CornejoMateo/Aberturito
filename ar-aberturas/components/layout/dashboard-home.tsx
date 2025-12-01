@@ -4,29 +4,29 @@ import { Package, Users, FileText, ClipboardCheck, TrendingUp, AlertCircle } fro
 const stats = [
 	{
 		name: 'Stock total',
-		value: '1,247',
-		change: '+12%',
+		value: '',
+		change: '',
 		icon: Package,
 		color: 'text-chart-1',
 	},
 	{
 		name: 'Clientes activos',
-		value: '342',
-		change: '+8%',
+		value: '',
+		change: '',
 		icon: Users,
 		color: 'text-chart-2',
 	},
 	{
 		name: 'Presupuestos',
-		value: '89',
-		change: '+23%',
+		value: '',
+		change: '',
 		icon: FileText,
 		color: 'text-chart-3',
 	},
 	{
 		name: 'Obras en curso',
-		value: '24',
-		change: '+5%',
+		value: '',
+		change: '',
 		icon: ClipboardCheck,
 		color: 'text-chart-4',
 	},
@@ -34,37 +34,27 @@ const stats = [
 
 const recentActivity = [
 	{
-		title: 'Nuevo presupuesto creado',
-		description: 'Cliente: Juan Pérez - Ventana 150x120cm',
-		time: 'Hace 5 minutos',
+		title: '',
+		description: '',
+		time: '',
 	},
 	{
-		title: 'Obra completada',
-		description: 'Instalación en Av. Libertador 1234',
-		time: 'Hace 1 hora',
+		title: '',
+		description: '',
+		time: '',
 	},
 	{
-		title: 'Stock actualizado',
-		description: 'Perfiles de aluminio - 50 unidades',
-		time: 'Hace 2 horas',
-	},
-	{
-		title: 'Cliente registrado',
-		description: 'María González - Villa Carlos Paz',
-		time: 'Hace 3 horas',
+		title: '',
+		description: '',
+		time: '',
 	},
 ];
 
 const alerts = [
 	{
-		title: 'Stock bajo',
-		description: 'Silicona transparente - Solo 5 unidades',
-		type: 'warning',
-	},
-	{
-		title: 'Entrega pendiente',
-		description: 'Obra #1234 - Programada para mañana',
-		type: 'info',
+		title: '',
+		description: '',
+		type: '',
 	},
 ];
 
@@ -89,7 +79,7 @@ export function DashboardHome() {
 								<p className="text-2xl font-bold text-foreground mt-2">{stat.value}</p>
 								<p className="text-xs text-accent mt-1 flex items-center gap-1">
 									<TrendingUp className="h-3 w-3" />
-									{stat.change} vs. mes anterior
+									{stat.change}
 								</p>
 							</div>
 							<div className={`rounded-lg bg-secondary p-3 ${stat.color}`}>

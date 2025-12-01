@@ -6,8 +6,8 @@ import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
 interface StockFiltersProps {
 	searchTerm: string;
 	setSearchTerm: (term: string) => void;
-	selectedCategory: 'Perfiles' | 'Accesorios' | 'Herrajes';
-	setSelectedCategory: (category: 'Perfiles' | 'Accesorios' | 'Herrajes') => void;
+	selectedCategory: 'Perfiles' | 'Accesorios' | 'Herrajes' | 'Insumos';
+	setSelectedCategory: (category: 'Perfiles' | 'Accesorios' | 'Herrajes' | 'Insumos') => void;
 }
 
 export function StockFilters({
@@ -28,7 +28,7 @@ export function StockFilters({
 						className="pl-9 bg-background"
 					/>
 				</div>
-				{(selectedCategory === 'Accesorios' || selectedCategory === 'Herrajes') && (
+				{(selectedCategory === 'Accesorios' || selectedCategory === 'Herrajes' || selectedCategory === 'Insumos') && (
 					<div className="ml-auto">
 						<UpdatePricesDialog />
 					</div>

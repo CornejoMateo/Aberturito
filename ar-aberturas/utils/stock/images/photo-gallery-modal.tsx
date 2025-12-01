@@ -17,14 +17,15 @@ import { CodeSelect } from '@/components/stock/code-select';
 import ImageViewer from '@/components/ui/image-viewer';
 import { ca } from 'date-fns/locale';
 import { set } from 'date-fns';
-import { fetchImages, fetchImagesAccsIron } from './gallery-api';
+import { fetchImages, fetchImagesAccsIronSupply } from './gallery-api';
 import { handleUpload as uploadImage } from './gallery-upload';
+import type { StockCategory } from '@/lib/stock-config';
 
 interface PhotoGalleryModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	materialType?: 'Aluminio' | 'PVC';
-	categoryState?: 'Accesorios' | 'Herrajes' | 'Perfiles';
+    categoryState?: 'Perfiles' | StockCategory;
 }
 
 export function PhotoGalleryModal({
@@ -81,7 +82,7 @@ export function PhotoGalleryModal({
 			setImagesLoading(true);
 			setImagesError(null);
 			setLoadingSearch(true);
-			const data = await fetchImagesAccsIron(categoryState, category, line, brand, code);
+			const data = await fetchImagesAccsIronSupply(categoryState, category, line, brand, code);
 			if (data.success) {
 				setImages(data.images ?? []);
 			} else {
@@ -264,7 +265,7 @@ export function PhotoGalleryModal({
 					</div>
 				)}
 
-				{(categoryState === 'Accesorios' || categoryState === 'Herrajes') && (
+				{(categoryState === 'Accesorios' || categoryState === 'Herrajes' || categoryState === 'Insumos') && (
 					<div className="p-6 flex flex-col gap-4">
 						<Input
 							value={nameCategory}

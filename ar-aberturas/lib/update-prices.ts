@@ -60,10 +60,11 @@ export async function updatePrices(
 
 		for (const chunk of codeChunks) {
 			// Query which codes exist in each table in a single request per table
-			const [{ data: accData, error: accErr }, { data: ironData, error: ironErr }] =
+			const [{ data: accData, error: accErr }, { data: ironData, error: ironErr }, {data: supplyData, error, supplyErr}] =
 				await Promise.all([
 					supabase.from('accesories_category').select('accessory_code').in('accessory_code', chunk),
 					supabase.from('ironworks_category').select('ironwork_code').in('ironwork_code', chunk),
+					supabase.from('supplies_category').select('supply_code').in('supply_code', chunk),
 				] as any);
 
 			if (accErr) {
@@ -76,8 +77,14 @@ export async function updatePrices(
 				result.errors.push('Error al leer herrajes (chunk)');
 			}
 
+			if (supplyErr) {
+				console.error('Error fetching supplies chunk:', supplyErr);
+				result.errors.push('Error al leer insumos (chunk)');
+			}
+
 			const accCodes: string[] = (accData || []).map((r: any) => r.accessory_code);
 			const ironCodes: string[] = (ironData || []).map((r: any) => r.ironwork_code);
+			const supplyCodes: string[] = (supplyData || []).map((r: any) => r.supply_code);
 
 			// Prepare upsert payloads (only for existing codes in that table)
 			const accPayload = accCodes.map((code) => ({
@@ -90,24 +97,28 @@ export async function updatePrices(
 				ironwork_price: entriesMap.get(code) as number,
 			}));
 
-			// Run upserts in parallel; use minimal returning to reduce payload
-			const upsertPromises: Promise<any>[] = [];
-			if (accPayload.length) {
-				upsertPromises.push(
-					supabase.from('accesories_category').upsert(accPayload, { returning: 'minimal' })
-				);
-			}
-			if (ironPayload.length) {
-				upsertPromises.push(
-					supabase.from('ironworks_category').upsert(ironPayload, { returning: 'minimal' })
-				);
-			}
+			const supplyPayload = supplyCodes.map((code) => ({
+				supply_code: code,
+				supply_price: entriesMap.get(code) as number,
+			}));
 
+			// Run upserts sequentially to avoid type issues
 			try {
-				const responses = await Promise.all(upsertPromises);
-				// Each response may be [data, error] style depending on client — adjust counts conservatively
-				// If upsert succeeded we assume all payload rows were updated.
-				result.updated += accPayload.length + ironPayload.length;
+				if (accPayload.length) {
+					const { error } = await supabase.from('accesories_category').upsert(accPayload);
+					if (error) throw error;
+					result.updated += accPayload.length;
+				}
+				if (ironPayload.length) {
+					const { error } = await supabase.from('ironworks_category').upsert(ironPayload);
+					if (error) throw error;
+					result.updated += ironPayload.length;
+				}
+				if (supplyPayload.length) {
+					const { error } = await supabase.from('supplies_category').upsert(supplyPayload);
+					if (error) throw error;
+					result.updated += supplyPayload.length;
+				}
 			} catch (err) {
 				console.error('Error during upsert chunk:', err);
 				result.errors.push('Error al actualizar precios (chunk)');

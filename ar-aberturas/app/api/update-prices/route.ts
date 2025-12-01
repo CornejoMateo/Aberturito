@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     console.log(`Looking up codes in tables...`);
 
     // First pass: identify which codes exist in which table
-    const [{ data: accCodes, error: accErr }, { data: ironCodes, error: ironErr }] = await Promise.all([
+    const [{ data: accCodes, error: accErr }, { data: ironCodes, error: ironErr }, {data: supplyCodes, error: supplyErr}] = await Promise.all([
       supabase
         .from('accesories_category')
         .select('accessory_code')
@@ -57,21 +57,28 @@ export async function POST(req: Request) {
         .from('ironworks_category')
         .select('ironwork_code')
         .in('ironwork_code', codes),
+      supabase
+        .from('supplies_category')
+        .select('supply_code')
+        .in('supply_code', codes),
     ] as any);
 
     if (accErr) console.error('Error fetching accessories:', accErr);
     if (ironErr) console.error('Error fetching ironworks:', ironErr);
+    if (supplyErr) console.error('Error fetching supplies:', supplyErr);
 
     const accCodeSet = new Set((accCodes || []).map((r: any) => r.accessory_code));
     const ironCodeSet = new Set((ironCodes || []).map((r: any) => r.ironwork_code));
+    const supplyCodeSet = new Set((supplyCodes || []).map((r: any) => r.supply_code));
 
-    console.log(`Found ${accCodeSet.size} accessories, ${ironCodeSet.size} ironworks`);
+    console.log(`Found ${accCodeSet.size} accessories, ${supplyCodeSet.size} supplies, ${ironCodeSet.size} ironworks to update.`);
 
     let updated = 0;
 
     // Separate entries by table
     const accEntries = entries.filter(e => accCodeSet.has(e.code));
     const ironEntries = entries.filter(e => ironCodeSet.has(e.code));
+    const supplyEntries = entries.filter(e => supplyCodeSet.has(e.code));
 
     // Update accessories in parallel groups
     const ACC_CONCURRENCY = 10;
@@ -122,6 +129,32 @@ export async function POST(req: Request) {
       const results = await Promise.all(updatePromises);
       const count = results.reduce((sum: number, c: number) => sum + c, 0);
       console.log(`Updated ${count} ironworks in group`);
+      updated += count;
+    }
+
+    // Update supplies in parallel groups
+    const SUPPLY_CONCURRENCY = 10;
+    for (let i = 0; i < supplyEntries.length; i += SUPPLY_CONCURRENCY) {
+      const group = supplyEntries.slice(i, i + SUPPLY_CONCURRENCY);
+      const updatePromises = group.map(async (entry) => {
+        const { error } = await supabase
+          .from('supplies_category')
+          .update({ 
+            supply_price: entry.price, 
+            last_update: now 
+          })
+          .eq('supply_code', entry.code);
+
+        if (error) {
+          console.error(`Error updating supply ${entry.code}:`, error);
+          return 0;
+        }
+        return 1;
+      });
+
+      const results = await Promise.all(updatePromises);
+      const count = results.reduce((sum: number, c: number) => sum + c, 0);
+      console.log(`Updated ${count} supplies in group`);
       updated += count;
     }
 

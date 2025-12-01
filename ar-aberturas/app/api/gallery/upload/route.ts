@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { updateImageForMatchingProfiles } from '@/lib/profile-stock';
 import { updateImageForMatchingAccesories } from '@/lib/accesorie-stock';
 import { updateImageForMatchingIronworks } from '@/lib/ironwork-stock';
+import { updateImageForMatchingSupplies } from '@/lib/supplies-stock';
 import sharp from 'sharp';
 
 cloudinary.config({
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
 					{ status: 400 }
 				);
 			}
-		} else if (categoryState === 'Accesorios' || categoryState === 'Herrajes') {
+		} else if (categoryState === 'Accesorios' || categoryState === 'Herrajes' || categoryState === 'Insumos') {
 			name_category = formData.get('name_category') as string;
 			name_brand = formData.get('name_brand') as string;
 			name_line = formData.get('name_line') as string;
@@ -109,12 +110,12 @@ export async function POST(req: Request) {
 			.toBuffer();
 
 		let result: unknown;
-		if (categoryState === 'Accesorios' || categoryState === 'Herrajes') {
+		if (categoryState === 'Accesorios' || categoryState === 'Herrajes' || categoryState === 'Insumos') {
 			result = await new Promise((resolve, reject) => {
 				cloudinary.uploader
 					.upload_stream(
 						{
-							folder: categoryState === 'Accesorios' ? 'gallery_accesories' : 'gallery_ironworks',
+							folder: categoryState === 'Accesorios' ? 'gallery_accesories' : categoryState === 'Herrajes' ? 'gallery_ironworks' : 'gallery_supplies',
 							public_id: `${name_category}_${name_brand}_${name_line}_${name_code}`,
 							format: 'jpg',
 						},
@@ -147,9 +148,9 @@ export async function POST(req: Request) {
 
 		let data;
 		let error;
-		if (categoryState === 'Accesorios' || categoryState === 'Herrajes') {
+		if (categoryState === 'Accesorios' || categoryState === 'Herrajes' || categoryState === 'Insumos') {
 			const table =
-				categoryState === 'Accesorios' ? 'gallery_images_accesories' : 'gallery_images_ironworks';
+				categoryState === 'Accesorios' ? 'gallery_images_accesories' : categoryState === 'Herrajes' ? 'gallery_images_ironworks' : 'gallery_images_supplies';
 			({ data, error } = await supabase
 				.from(table)
 				.insert({
@@ -204,9 +205,28 @@ export async function POST(req: Request) {
 				.in('id', idsToUpdate);
 			updateError = err;
 		}
+		if (categoryState === 'Insumos') {
+			const res = await updateImageForMatchingSupplies(
+				supabase,
+				name_category,
+				name_line,
+				name_code,
+				name_brand,
+				uploadResult.secure_url
+			);
+			updateError = res.error;
+		}
 
 		if (updateError) {
-			console.error('Error updating rows with new image URL:', updateError);
+			if (categoryState === 'Accesorios') {
+				console.error('Error updating accessories with new image URL:', updateError);
+			} else if (categoryState === 'Herrajes') {
+				console.error('Error updating ironworks with new image URL:', updateError);
+			} else if (categoryState === 'Insumos') {
+				console.error('Error updating supplies with new image URL:', updateError);
+			} else {
+				console.error('Error updating profiles with new image URL:', updateError);
+			}
 			throw updateError;
 		}
 

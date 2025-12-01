@@ -14,7 +14,7 @@ export const fetchImages = async (materialType?: string, line?: string, code?: s
 	}
 };
 
-export const fetchImagesAccsIron = async (
+export const fetchImagesAccsIronSupply = async (
 	categoryState?: string,
 	category?: string,
 	line?: string,
@@ -23,7 +23,7 @@ export const fetchImagesAccsIron = async (
 ) => {
 	try {
 		const params = new URLSearchParams();
-		params.append('mode', 'accs_iron');
+		params.append('mode', 'accs_iron_supply');
 		if (categoryState) params.append('categoryState', categoryState);
 		if (category) params.append('category', category);
 		if (line) params.append('name_line', line);

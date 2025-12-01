@@ -78,6 +78,12 @@ const navigation = [
 		],
 	},
 	{
+		name: 'Insumos',
+		href: '/supplies',
+		icon: Package,
+		disabled: false,
+	},
+	{
 		name: 'Clientes',
 		href: '/clients',
 		icon: Users,
@@ -150,6 +156,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 			if (pathname === '/ironworks/pvc') return 'Herrajes PVC';
 			return 'Herrajes';
 		}
+		if (itemName === 'Insumos') {
+			return 'Insumos';
+		}
 		return itemName;
 	};
 
@@ -161,6 +170,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 			setExpandedItems((prev) => (prev.includes('Accesorios') ? prev : [...prev, 'Accesorios']));
 		} else if (pathname.startsWith('/ironworks/')) {
 			setExpandedItems((prev) => (prev.includes('Herrajes') ? prev : [...prev, 'Herrajes']));
+		} else if (pathname.startsWith('/supplies')) {
+			setExpandedItems((prev) => (prev.includes('Insumos') ? prev : [...prev, 'Insumos']));
 		}
 	}, [pathname]);
 
@@ -187,9 +198,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	// Definición de permisos por rol
 	const allowedByRole = useMemo(() => {
 		return {
-			Admin: ['Dashboard', 'Perfiles', 'Accesorios', 'Herrajes', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes'],
-			Fabrica: ['Perfiles', 'Accesorios', 'Herrajes'],
-			Ventas: ['Dashboard', 'Perfiles', 'Accesorios', 'Herrajes', 'Clientes', 'Presupuestos', 'Calendario'],
+			Admin: ['Dashboard', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes'],
+			Fabrica: ['Perfiles', 'Accesorios', 'Herrajes', 'Insumos'],
+			Ventas: ['Dashboard', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Calendario'],
 			Marketing: ['Dashboard', 'Calendario', 'Clientes', 'Reportes', 'Presupuestos'],
 			Colocador: ['Obras'],
 		} as Record<string, string[]>;

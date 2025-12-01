@@ -23,7 +23,7 @@ import {
 import { type ProfileItemStock } from '@/lib/profile-stock';
 import { status, categories } from '@/constants/stock-constants';
 import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { LineSelect } from '@/components/stock/line-select';
 import { CodeSelect } from '@/components/stock/code-select';
 import { ColorSelect } from '@/components/stock/color-select';

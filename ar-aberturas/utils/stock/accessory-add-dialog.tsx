@@ -14,9 +14,9 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog';
 import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { SiteSelect } from '@/components/stock/site-select';
 import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock-config';
+import { useToast } from '@/components/ui/use-toast';
 import { type AccessoryItemStock } from '@/lib/accesorie-stock';
 import { type IronworkItemStock } from '@/lib/ironwork-stock';
 import { type SupplyItemStock } from '@/lib/supplies-stock';
@@ -53,11 +53,13 @@ export function AccessoryFormDialog({
 	const [color, setColor] = useState('');
 	const [quantityPerLump, setQuantityPerLump] = useState<number | ''>('');
 	const [lumpCount, setLumpCount] = useState<number | ''>('');
+	const [quantity, setQuantity] = useState<number | ''>('');
 	const [site, setSite] = useState('');
 	const [price, setPrice] = useState<number | ''>('');
 	const [showQuantityDialog, setShowQuantityDialog] = useState(false);
 	const [quantityDialogType, setQuantityDialogType] = useState<'increase' | 'decrease' | null>(null);
 	const [quantityChange, setQuantityChange] = useState<number | ''>('');
+	const [changeQuantityFlag, setChangeQuantityFlag] = useState(false);
 	const { toast } = useToast();
 
 	const {user} = useAuth();
@@ -82,6 +84,13 @@ export function AccessoryFormDialog({
 		}
 	}, [editItem, category]);
 
+	// Auto-calculate quantity when quantityPerLump or lumpCount changes
+	useEffect(() => {
+		if (quantityPerLump !== '' && lumpCount !== '' && changeQuantityFlag) {
+			setQuantity(Number(quantityPerLump) * Number(lumpCount));
+		}
+	}, [quantityPerLump, lumpCount, changeQuantityFlag]);
+
 	const resetForm = () => {
 		setCategoryHA('');
 		setLine('');
@@ -91,6 +100,7 @@ export function AccessoryFormDialog({
 		setColor('');
 		setQuantityPerLump('');
 		setLumpCount('');
+		setQuantity('');
 		setSite('');
 		setPrice('');
 		setQuantityChange('');
@@ -99,7 +109,7 @@ export function AccessoryFormDialog({
 	const handleQuantityAdjustment = () => {
 		if (quantityChange === '') return;
 		
-		const currentTotal = (Number(quantityPerLump) || 0) * (Number(lumpCount) || 0);
+		const currentTotal = (quantity as number) || 0;
 		const adjustment = Number(quantityChange);
 		
 		if (quantityDialogType === 'decrease') {
@@ -147,19 +157,7 @@ export function AccessoryFormDialog({
 			return;
 		}
 		
-		// Try to distribute the new total across lumps
-		const currentQuantityPerLump = Number(quantityPerLump) || 1;
-		const currentLumpCount = Number(lumpCount) || 1;
-		
-		// If we can keep the same quantity per lump and adjust lump count
-		if (newTotal % currentQuantityPerLump === 0) {
-			setLumpCount(newTotal / currentQuantityPerLump);
-		} else {
-			// Otherwise, adjust quantity per lump and keep lump count
-			setQuantityPerLump(Math.ceil(newTotal / currentLumpCount));
-			setLumpCount(currentLumpCount);
-		}
-		
+		setQuantity(newTotal);
 		setShowQuantityDialog(false);
 		setQuantityChange('');
 		setQuantityDialogType(null);
@@ -169,15 +167,12 @@ export function AccessoryFormDialog({
 		// validation
 		if (
 			!categoryHA ||
-			!line ||
-			!brand ||
 			!code ||
 			!color ||
 			!site ||
 			quantityPerLump === '' ||
-			quantityPerLump < 0 ||
 			lumpCount === '' ||
-			lumpCount < 0
+			quantity === ''
 		) {
 			toast({
 				title: 'Error de validación',
@@ -187,9 +182,19 @@ export function AccessoryFormDialog({
 			});
 			return;
 		}
+		
+		if (quantityPerLump < 0 || lumpCount < 0 || quantity < 0) {
+			toast({
+				title: 'Error de validación',
+				description: 'Las cantidades no pueden ser negativas',
+				variant: 'destructive',
+				duration: 4000,
+			});
+			return;
+		}
 
 		const fields = config.fields;
-		
+
 		const payload: any = {
 			[fields.createdAt]:
 				isEditing && (editItem as any)[fields.createdAt]
@@ -204,12 +209,13 @@ export function AccessoryFormDialog({
 			[fields.color]: color,
 			[fields.quantityForLump]: Number(quantityPerLump),
 			[fields.quantityLump]: Number(lumpCount),
-			[fields.quantity]: Number(quantityPerLump) * Number(lumpCount),
+			[fields.quantity]: Number(quantity),
 			[fields.site]: site,
 			[fields.price]: price === '' ? null : Number(price),
 		};
 
 		onSave(payload);
+		setChangeQuantityFlag(false);
 		if (!isEditing) resetForm();
 		onOpenChange(false);
 	};
@@ -299,7 +305,10 @@ export function AccessoryFormDialog({
 								<Input
 									type="number"
 									value={quantityPerLump as any}
-									onChange={(e) => setQuantityPerLump(e.target.value ? Number(e.target.value) : '')}
+									onChange={(e) => {
+										setQuantityPerLump(e.target.value ? Number(e.target.value) : ''); 
+										setChangeQuantityFlag(true);
+									}}
 									className="bg-background"
 								/>
 							</div>
@@ -308,7 +317,10 @@ export function AccessoryFormDialog({
 								<Input
 									type="number"
 									value={lumpCount as any}
-									onChange={(e) => setLumpCount(e.target.value ? Number(e.target.value) : '')}
+									onChange={(e) => {
+										setLumpCount(e.target.value ? Number(e.target.value) : '');
+										setChangeQuantityFlag(true);
+									}}
 									className="bg-background"
 								/>
 							</div>
@@ -316,8 +328,8 @@ export function AccessoryFormDialog({
 								<Label>Cantidad total</Label>
 								<Input
 									type="number"
-									value={(Number(quantityPerLump) || 0) * (Number(lumpCount) || 0) || 0}
-									readOnly
+									value={quantity}
+									onChange={(e) => setQuantity(e.target.value ? Number(e.target.value) : '')}
 									className="bg-background"
 								/>
 							</div>

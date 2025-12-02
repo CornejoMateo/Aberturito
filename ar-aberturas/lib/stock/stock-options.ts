@@ -1,4 +1,4 @@
-import { getSupabaseClient } from './supabase-client';
+import { getSupabaseClient } from '../supabase-client';
 
 export type LineOption = {
 	id: number;

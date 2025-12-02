@@ -14,28 +14,28 @@ import {
 	deleteProfileStock,
 	type ProfileItemStock,
 	updateProfileStock,
-} from '@/lib/profile-stock';
+} from '@/lib/stock/profile-stock';
 import {
 	listAccesoriesStock,
 	createAccessoryStock,
 	updateAccessoryStock,
 	deleteAccesoryStock,
 	type AccessoryItemStock,
-} from '@/lib/accesorie-stock';
+} from '@/lib/stock/accesorie-stock';
 import {
   listSuppliesStock,
   createSupplyStock,
   updateSupplyStock,
   deleteSupplyStock,
   type SupplyItemStock,
-} from '@/lib/supplies-stock';
+} from '@/lib/stock/supplies-stock';
 import {
 	listIronworksStock,
 	createIronworkStock,
 	updateIronworkStock,
 	deleteIronworkStock,
 	type IronworkItemStock,
-} from '@/lib/ironwork-stock';
+} from '@/lib/stock/ironwork-stock';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import {
@@ -50,7 +50,7 @@ import { useOptimizedRealtimeStock } from '@/hooks/use-optimized-realtime-stock'
 import { Image } from 'lucide-react';
 import { PhotoGalleryModal } from '@/utils/stock/images/photo-gallery-modal';
 import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
-import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock-config';
+import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock/stock-config';
 import { filterStockItems } from '@/utils/stock/stock-filters-logic';
 
 interface StockManagementProps {

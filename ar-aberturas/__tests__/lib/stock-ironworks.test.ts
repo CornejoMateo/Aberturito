@@ -5,7 +5,7 @@ import {
 	updateIronworkStock,
 	deleteIronworkStock,
 	type IronworkItemStock,
-} from '../../lib/ironwork-stock';
+} from '../../lib/stock/ironwork-stock';
 import { getSupabaseClient } from '../../lib/supabase-client';
 
 const mockIronwork: IronworkItemStock = {

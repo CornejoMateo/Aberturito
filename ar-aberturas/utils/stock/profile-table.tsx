@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Package, TrendingDown, TrendingUp, Edit, Trash2, Plus, Minus } from 'lucide-react';
-import { type ProfileItemStock } from '@/lib/profile-stock';
+import { type ProfileItemStock } from '@/lib/stock/profile-stock';
 import { useState } from 'react';
 import { ConfirmUpdateDialog } from '@/utils/stock/confirm-update-dialog';
 import ImageViewer from '@/components/ui/image-viewer';

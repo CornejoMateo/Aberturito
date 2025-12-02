@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { updatePrices } from '@/lib/update-prices';
+import { updatePrices } from '@/lib/stock/update-prices';
 import { Progress } from '@/components/ui/progress';
 import { Loader2 } from 'lucide-react';
 

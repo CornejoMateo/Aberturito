@@ -1,10 +1,10 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { updateImageForMatchingProfiles } from '@/lib/profile-stock';
-import { updateImageForMatchingAccesories } from '@/lib/accesorie-stock';
-import { updateImageForMatchingIronworks } from '@/lib/ironwork-stock';
-import { updateImageForMatchingSupplies } from '@/lib/supplies-stock';
+import { updateImageForMatchingProfiles } from '@/lib/stock/profile-stock';
+import { updateImageForMatchingAccesories } from '@/lib/stock/accesorie-stock';
+import { updateImageForMatchingIronworks } from '@/lib/stock/ironwork-stock';
+import { updateImageForMatchingSupplies } from '@/lib/stock/supplies-stock';
 
 cloudinary.config({
 	cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,

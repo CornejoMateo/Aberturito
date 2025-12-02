@@ -20,7 +20,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog';
-import { type ProfileItemStock } from '@/lib/profile-stock';
+import { type ProfileItemStock } from '@/lib/stock/profile-stock';
 import { status, categories } from '@/constants/stock-constants';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';

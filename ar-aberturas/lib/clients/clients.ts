@@ -2,12 +2,11 @@ import { getSupabaseClient } from '../supabase-client';
 
 export type Client = {
 	id: string;
-	created_at: string;
+	created_at?: string;
 	name: string;
     last_name: string;
 	phone_number?: string | null;
 	locality?: string | null;
-	addres?: string | null;
     email?: string | null;
 };
 
@@ -17,7 +16,7 @@ export async function listClients(): Promise<{ data: Client[] | null; error: any
     const supabase = getSupabaseClient();
     const { data, error } = await supabase
         .from(TABLE)
-        .select('*')
+        .select('name, last_name, id, email, phone_number, email')
         .order('created_at', { ascending: false });
     return { data, error };
 }

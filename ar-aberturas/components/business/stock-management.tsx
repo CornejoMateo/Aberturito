@@ -210,7 +210,6 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 									console.error('Error al crear perfil:', error);
 									return;
 								}
-								// No es necesario hacer refresh, el realtime lo actualizará
 								setIsAddDialogOpen(false);
 							}}
 							materialType={materialType}
@@ -234,7 +233,6 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 										const { error } = await createIronworkStock(newItem as any);
 										if (error) throw error;
 									}
-									// No es necesario hacer refresh, el realtime lo actualizará
 									setIsAddDialogOpen(false);
 								} catch (err) {
 									if (typeof err === 'object' && err !== null) {
@@ -282,7 +280,6 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 							onDelete={async (id) => {
 								const { error } = await deleteProfileStock(id);
 								if (error) console.error('Error al eliminar perfil:', error);
-								// No es necesario hacer refresh, el realtime lo actualizará
 							}}
 							onUpdateQuantity={async (id, newQuantity) => {
 								if (newQuantity < 0) return;
@@ -291,7 +288,6 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 								});
 								if (error)
 									console.error('Error al actualizar la cantidad:', error);
-								// No es necesario hacer refresh, el realtime lo actualizará
 							}}
 						/>
 					) : (
@@ -314,7 +310,6 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 									} else {
 										await deleteIronworkStock(id);
 									}
-									// No es necesario hacer refresh, el realtime lo actualizará
 								} catch (err) {
 									console.error('Error al eliminar item:', err);
 								}
@@ -329,7 +324,6 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 									} else {
 										await updateIronworkStock(id, { ironwork_quantity: newQuantity });
 									}
-									// No es necesario hacer refresh, el realtime lo actualizará
 								} catch (err) {
 									console.error('Error al actualizar cantidad:', err);
 								}
@@ -348,7 +342,6 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 								onSave={async (changes) => {
 									const { error } = await updateProfileStock(editingItem.id, changes as any);
 									if (error) console.error('Error al guardar perfil:', error);
-									// No es necesario hacer refresh, el realtime lo actualizará
 									setIsEditDialogOpen(false);
 								}}
 							/>
@@ -367,7 +360,6 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 										} else {
 											await updateIronworkStock(editingItem.id, changes as any);
 										}
-										// No es necesario hacer refresh, el realtime lo actualizará
 									} catch (err) {
 										console.error('Error al actualizar item:', err);
 									}

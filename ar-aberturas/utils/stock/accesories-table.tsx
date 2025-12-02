@@ -1,6 +1,5 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Package, Edit, Trash2, Plus, Minus } from 'lucide-react';
 import { useState } from 'react';
 import { ConfirmUpdateDialog } from '@/utils/stock/confirm-update-dialog';
@@ -29,6 +28,7 @@ import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock-config';
 import type { AccessoryItemStock } from '@/lib/accesorie-stock';
 import type { IronworkItemStock } from '@/lib/ironwork-stock';
 import type { SupplyItemStock } from '@/lib/supplies-stock';
+import { useIsMobile } from '@/components/ui/use-mobile';
 
 interface AccesoriesTableProps {
 	categoryState: StockCategory;
@@ -61,6 +61,8 @@ export function AccesoriesTable({
 	const [quantityChange, setQuantityChange] = useState<number | ''>('');
 	const [currentItemId, setCurrentItemId] = useState<string | null>(null);
 	const [currentItemTotal, setCurrentItemTotal] = useState<number>(0);
+
+	const isMobile = useIsMobile();
 
 	const handleQuantityAction = (
 		id: string,
@@ -146,12 +148,16 @@ export function AccesoriesTable({
 							<th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
 								Categoría
 							</th>
-							<th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
-								Línea
-							</th>
-							<th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
-								Marca
-							</th>
+							{!isMobile && (
+								<>
+									<th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
+										Línea
+									</th>
+									<th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
+										Marca
+									</th>
+								</>
+							)}
 							<th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
 								Código
 							</th>
@@ -211,16 +217,20 @@ export function AccesoriesTable({
 												{(item as any)[keys.category] || '—'}
 											</p>
 										</td>
-										<td className="px-2 py-2 whitespace-nowrap">
-											<p className="text-center text-sm text-foreground">
-												{(item as any)[keys.line] || '-'}
-											</p>
-										</td>
-										<td className="px-2 py-2 whitespace-nowrap">
-											<p className="text-center text-sm text-foreground">
-												{(item as any)[keys.brand] || '-'}
-											</p>
-										</td>
+										{!isMobile && (
+											<>
+												<td className="px-2 py-2 whitespace-nowrap">
+													<p className="text-center text-sm text-foreground">
+														{(item as any)[keys.line] || '-'}
+													</p>
+												</td>
+												<td className="px-2 py-2 whitespace-nowrap">
+													<p className="text-center text-sm text-foreground">
+														{(item as any)[keys.brand] || '-'}
+													</p>
+												</td>
+											</>
+										)}
 										<td className="px-2 py-2 whitespace-nowrap">
 											<p className="text-center text-sm text-foreground">
 												{(item as any)[keys.code] || '-'}

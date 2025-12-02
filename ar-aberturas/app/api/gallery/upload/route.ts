@@ -85,6 +85,16 @@ export async function POST(req: Request) {
 				.eq('code', name_code);
 			if (error) throw error;
 			matchingRows = data;
+		} else if (categoryState === 'Insumos') {
+			const { data, error } = await supabase
+				.from('supplies_category')
+				.select('id')
+				.eq('supply_category', name_category)
+				.eq('supply_line', name_line)
+				.eq('supply_code', name_code)
+				.eq('supply_brand', name_brand);
+			if (error) throw error;
+			matchingRows = data;
 		}
 
 		// If no matching rows found, don't upload

@@ -11,7 +11,7 @@ export type ProfileItemStock = {
 	site: string;
 	width: number;
 	material: string;
-	image_url: string | null;
+	image_url?: string | null;
 	created_at: string | null;
 	last_update: string | null;
 };
@@ -22,7 +22,20 @@ export async function listStock(): Promise<{ data: ProfileItemStock[] | null; er
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('*')
+		.select(`
+			id,
+			category,
+			code,
+			line,
+			color,
+			status,
+			quantity,
+			site,
+			width,
+			material,
+			created_at,
+			last_update
+		`)
 		.order('created_at', { ascending: false });
 	return { data, error };
 }

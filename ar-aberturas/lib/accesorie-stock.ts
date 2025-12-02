@@ -14,7 +14,7 @@ export type AccessoryItemStock = {
 	accessory_quantity: number;
 	accessory_site: string;
 	accessory_material: string;
-	accessory_image_url: string | null;
+	accessory_image_url?: string | null;
 	accessory_price: number | null;
 	last_update: string | null;
 };
@@ -28,7 +28,23 @@ export async function listAccesoriesStock(): Promise<{
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('*')
+		.select(`
+			id,
+			created_at,
+			accessory_category,
+			accessory_line,
+			accessory_brand,
+			accessory_code,
+			accessory_description,
+			accessory_color,
+			accessory_quantity_for_lump,
+			accessory_quantity_lump,
+			accessory_quantity,
+			accessory_site,
+			accessory_material,
+			accessory_price,
+			last_update
+		`)
 		.order('created_at', { ascending: false });
 	return { data, error };
 }

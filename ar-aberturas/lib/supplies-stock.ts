@@ -13,7 +13,7 @@ export type SupplyItemStock = {
 	supply_quantity: number;
 	supply_site: string;
 	supply_material: string;
-	supply_image_url: string | null;
+	supply_image_url?: string | null;
 	supply_price: number | null;
 	created_at?: string | null;
 	last_update?: string | null;
@@ -25,7 +25,23 @@ export async function listSuppliesStock(): Promise<{ data: SupplyItemStock[] | n
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('*')
+		.select(`
+			id,
+			supply_category,
+			supply_line,
+			supply_brand,
+			supply_code,
+			supply_description,
+			supply_color,
+			supply_quantity_for_lump,
+			supply_quantity_lump,
+			supply_quantity,
+			supply_site,
+			supply_material,
+			supply_price,
+			created_at,
+			last_update
+		`)
 		.order('created_at', { ascending: false });
 	return { data, error };
 }

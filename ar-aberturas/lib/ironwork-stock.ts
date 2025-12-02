@@ -14,7 +14,7 @@ export type IronworkItemStock = {
 	ironwork_quantity: number;
 	ironwork_site: string;
 	ironwork_material: string;
-	ironwork_image_url: string | null;
+	ironwork_image_url?: string | null;
 	ironwork_price: number | null;
 	last_update: string | null;
 };
@@ -28,7 +28,23 @@ export async function listIronworksStock(): Promise<{
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('*')
+		.select(`
+			id,
+			created_at,
+			ironwork_category,
+			ironwork_line,
+			ironwork_brand,
+			ironwork_code,
+			ironwork_description,
+			ironwork_color,
+			ironwork_quantity_for_lump,
+			ironwork_quantity_lump,
+			ironwork_quantity,
+			ironwork_site,
+			ironwork_material,
+			ironwork_price,
+			last_update
+		`)
 		.order('created_at', { ascending: false });
 	return { data, error };
 }

@@ -87,7 +87,7 @@ const navigation = [
 		name: 'Clientes',
 		href: '/clients',
 		icon: Users,
-		disabled: true,
+		disabled: false,
 	},
 	{
 		name: 'Presupuestos',

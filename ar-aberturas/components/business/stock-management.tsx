@@ -94,6 +94,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedCategory, setSelectedCategory] = useState(category);
+	const [showOutOfStock, setShowOutOfStock] = useState(false);
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<any | null>(null);
@@ -103,8 +104,20 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 	const itemsPerPage = 10;
 
 	const filteredStock = useMemo(() => {
-		return filterStockItems(stock, searchTerm, selectedCategory, materialType, category);
-	}, [stock, searchTerm, selectedCategory, materialType, category]);
+		// First apply the standard filters (search, category, material)
+		let result = filterStockItems(stock, searchTerm, selectedCategory, materialType, category);
+		
+		// Then apply the out-of-stock filter if enabled
+		if (showOutOfStock) {
+			result = result.filter((item: any) => {
+				// Check all possible quantity fields and default to 0 if undefined
+				const qty = item.quantity ?? item.accessory_quantity ?? item.ironwork_quantity ?? item.supply_quantity ?? 0;
+				// Only include items with exactly 0 quantity
+				return qty === 0;
+			});
+		}
+		return result;
+	}, [stock, searchTerm, selectedCategory, materialType, category, showOutOfStock]);
 
 	const totalPages = Math.ceil(filteredStock.length / itemsPerPage);
 
@@ -264,6 +277,8 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 				setSearchTerm={setSearchTerm}
 				selectedCategory={selectedCategory}
 				setSelectedCategory={setSelectedCategory}
+				showOutOfStock={showOutOfStock}
+				setShowOutOfStock={setShowOutOfStock}
 			/>
 
 			{/* Main table */}

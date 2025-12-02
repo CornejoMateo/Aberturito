@@ -5,7 +5,7 @@ import { StockFormDialog } from '../../utils/stock/stock-add-dialog';
 import { StockStats } from '../../utils/stock/stock-stats';
 import { StockFilters } from '../../utils/stock/stock-filters';
 import { ProfileTable } from '../../utils/stock/profile-table';
-import { AccesoriesTable } from '@/utils/stock/accesories-table';
+import { AccesoriesTable } from '@/utils/stock/stock-tables';
 import { AccessoryFormDialog } from '@/utils/stock/accessory-add-dialog';
 import { OptionsModal } from '@/utils/stock/options/options';
 import {

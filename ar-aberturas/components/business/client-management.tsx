@@ -34,6 +34,7 @@ export function ClientManagement() {
 
 	// Hacer en handle preguntando por el nombre y el apellido antes de guardar, NADA MÁS
 	// Sacar tabs porque no usamos
+	// Agregar paginación si hay mas de 10 clientes (o otra forma para evitar renderizaciones)
 
 	return (
 		<div className="space-y-6">

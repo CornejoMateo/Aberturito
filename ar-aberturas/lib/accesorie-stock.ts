@@ -14,7 +14,7 @@ export type AccessoryItemStock = {
 	accessory_quantity: number;
 	accessory_site: string;
 	accessory_material: string;
-	accessory_image_url: string | null;
+	accessory_image_url?: string | null;
 	accessory_price: number | null;
 	last_update: string | null;
 };

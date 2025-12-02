@@ -14,7 +14,7 @@ export type IronworkItemStock = {
 	ironwork_quantity: number;
 	ironwork_site: string;
 	ironwork_material: string;
-	ironwork_image_url: string | null;
+	ironwork_image_url?: string | null;
 	ironwork_price: number | null;
 	last_update: string | null;
 };

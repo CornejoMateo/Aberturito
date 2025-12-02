@@ -11,7 +11,7 @@ export type ProfileItemStock = {
 	site: string;
 	width: number;
 	material: string;
-	image_url: string | null;
+	image_url?: string | null;
 	created_at: string | null;
 	last_update: string | null;
 };

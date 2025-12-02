@@ -13,7 +13,7 @@ export type SupplyItemStock = {
 	supply_quantity: number;
 	supply_site: string;
 	supply_material: string;
-	supply_image_url: string | null;
+	supply_image_url?: string | null;
 	supply_price: number | null;
 	created_at?: string | null;
 	last_update?: string | null;

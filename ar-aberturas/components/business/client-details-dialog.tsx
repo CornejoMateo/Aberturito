@@ -61,7 +61,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                   <div>
                     <h4 className="font-medium">Información Adicional</h4>
                     <p className="text-sm text-muted-foreground">
-                      Aca va tal vez, no lo se, puede ser que si, puede ser que no, mas info del cliente.
+                      Aca va tal vez, no lo se, puede ser que si, puede ser que no, mas info del cliente...
                     </p>
                   </div>
                 </div>

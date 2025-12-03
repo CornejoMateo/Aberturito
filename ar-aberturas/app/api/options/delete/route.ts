@@ -1,20 +1,14 @@
-import { v2 as cloudinary } from 'cloudinary';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-
-cloudinary.config({
-	cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
-	api_key: process.env.CLOUDINARY_API_KEY!,
-	api_secret: process.env.CLOUDINARY_API_SECRET!,
-});
 
 export async function DELETE(req: Request) {
 	try {
 		const { searchParams } = new URL(req.url);
 		const table = searchParams.get('table');
 		const id = searchParams.get('id');
-
-		if (!table || !id) {
+		const material_type = searchParams.get('material_type');
+	
+		if (!table || !id || !material_type) {
 			return NextResponse.json(
 				{ success: false, error: 'Faltan parámetros: tabla o identificador' },
 				{ status: 400 }
@@ -24,7 +18,10 @@ export async function DELETE(req: Request) {
 		const supabase = createClient(
 			process.env.NEXT_PUBLIC_SUPABASE_URL!,
 			process.env.SUPABASE_SERVICE_ROLE_KEY!
+			
 		);
+
+		const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
 		// if the table is 'codes', we need to delete associated images from Cloudinary
 		if (table === 'codes') {
@@ -35,35 +32,10 @@ export async function DELETE(req: Request) {
 				.eq('id', id)
 				.single();
 
-			// search for associated images in gallery_images
-			if (codeData?.name_code && codeData?.line_name) {
-				const { data: galleryImages } = await supabase
-					.from('gallery_images')
-					.select('public_id')
-					.eq('name_code', codeData.name_code)
-					.eq('name_line', codeData.line_name);
-
-				// Delete images from Cloudinary
-				if (galleryImages && galleryImages.length > 0) {
-					for (const image of galleryImages) {
-						if (image.public_id) {
-							try {
-								const result = await cloudinary.uploader.destroy(image.public_id);
-								console.log('Resultado:', result);
-							} catch (cloudErr) {
-								console.error('Error:', cloudErr);
-							}
-						}
-					}
-
-					// 4. Delete image from gallery_images table
-					await supabase
-						.from('gallery_images')
-						.delete()
-						.eq('name_code', codeData.name_code)
-						.eq('name_line', codeData.line_name);
-				}
-			}
+			await fetch(
+  				`${baseUrl}/api/gallery/delete?categoryState=Perfiles&code_name=${codeData?.name_code}&line_name=${codeData?.line_name}&material_type=${material_type}`,
+				{ method: 'DELETE' }
+			);
 		}
 
 		// 5. Delete the option from the specified table

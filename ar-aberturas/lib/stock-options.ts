@@ -40,7 +40,6 @@ export async function createOption<T>(
 	table: string,
 	item: Partial<T>
 ): Promise<{ data: T | null; error: any }> {
-	// Validación runtime de campos obligatorios según la tabla
 	let requiredFields: string[] = [];
 	if (table === 'lines') requiredFields = ['name_line', 'opening'];
 	if (table === 'colors') requiredFields = ['name_color', 'line_name'];
@@ -64,10 +63,11 @@ export async function createOption<T>(
 
 export async function deleteOption(
 	table: string,
-	id: number
+	id: number,
+	material_type?: string
 ): Promise<{ success: boolean; error?: any; data?: any }> {
 	try {
-		const res = await fetch(`/api/options/delete?table=${table}&id=${id}`, {
+		const res = await fetch(`/api/options/delete?table=${table}&id=${id}&material_type=${material_type}`, {
 			method: 'DELETE',
 		});
 		const data = await res.json();

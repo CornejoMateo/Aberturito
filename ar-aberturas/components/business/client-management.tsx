@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Users, Plus, Search, MapPin, Phone, Mail, Eye, Edit, TrendingUp } from 'lucide-react';
+import { updateClient } from '@/lib/clients/clients';
 import {
 	Dialog,
 	DialogContent,
@@ -24,6 +25,7 @@ export function ClientManagement() {
 	const [clients, setClients] = useState<Client[]>([])
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
 	useEffect(() => {
@@ -47,6 +49,23 @@ export function ClientManagement() {
 		}
 	};
 
+	const handleEditClient = (client: Client) => {
+		setSelectedClient(client);
+		setIsEditDialogOpen(true);
+	};
+
+	const handleUpdateClient = async (updatedClient: Client) => {
+		try {
+			await updateClient(updatedClient.id, updatedClient);
+			const { data } = await listClients();
+			setClients(data ?? []);
+			setIsEditDialogOpen(false);
+			setSelectedClient(null);
+		} catch (err) {
+			console.error('Error actualizando cliente:', err);
+		}
+	};
+
 	const filteredClients = clients.filter(
 		(client) =>
 			client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -65,7 +84,20 @@ export function ClientManagement() {
 					<h2 className="text-2xl font-bold text-foreground text-balance">Gestión de Clientes</h2>
 					<p className="text-muted-foreground mt-1">Administración de clientes y contactos</p>
 				</div>
-				<ClientsAddDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} onClientAdded={handleClientAdded} />
+				<ClientsAddDialog 
+				open={isAddDialogOpen} 
+				onOpenChange={setIsAddDialogOpen} 
+				onClientAdded={handleClientAdded} 
+			/>
+			{selectedClient && (
+				<ClientsAddDialog 
+					open={isEditDialogOpen} 
+					onOpenChange={setIsEditDialogOpen} 
+					onClientAdded={handleClientAdded}
+					clientToEdit={selectedClient}
+					onUpdateClient={handleUpdateClient}
+				/>
+			)}
 			</div>
 
 			{/* Stats */}
@@ -147,7 +179,12 @@ export function ClientManagement() {
 											<Eye className="h-4 w-4" />
 											Ver
 										</Button>
-										<Button variant="outline" size="sm" className="flex-1 gap-2 bg-transparent">
+										<Button 
+											variant="outline" 
+											size="sm" 
+											className="flex-1 gap-2 bg-transparent"
+											onClick={() => handleEditClient(client)}
+										>
 											<Edit className="h-4 w-4" />
 											Editar
 										</Button>

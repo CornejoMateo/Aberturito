@@ -18,6 +18,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        {/* tratar de hacer mas grande el modal, yo no pude xd */}
       <DialogContent className="max-w-[90vw] w-[90vw] h-[85vh] flex flex-col" showCloseButton={false}>
         <DialogHeader>
           <div className="flex justify-between items-center">
@@ -47,6 +48,8 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
               </div>
             </div>
           </div>
+
+        {/* TODO: Add client notes or additional info here, aca podria ir la firma del cliente. */}
 
           <Tabs defaultValue="info" className="w-full">
             <TabsList>

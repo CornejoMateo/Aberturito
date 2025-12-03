@@ -1,3 +1,5 @@
+{/* para usar luego en obra */}
+{/* implementar para el mapa de ios */}
 'use client';
 
 import { MapPin } from 'lucide-react';

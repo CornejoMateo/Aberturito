@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Search, MapPin, Phone, Mail, Eye, Edit, TrendingUp } from 'lucide-react';
+import { Users, Plus, Search, MapPin, Phone, Mail, Eye, Edit, Trash2, AlertTriangle } from 'lucide-react';
 import { updateClient } from '@/lib/clients/clients';
 import {
 	Dialog,
@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Client, listClients } from '@/lib/clients/clients';
+import { Client, listClients, deleteClient } from '@/lib/clients/clients';
 import { ClientsAddDialog } from '@/utils/clients/clients-add-dialog';
 
 export function ClientManagement() {
@@ -27,6 +27,7 @@ export function ClientManagement() {
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+	const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
 
 	useEffect(() => {
 		async function load() {
@@ -66,6 +67,26 @@ export function ClientManagement() {
 		}
 	};
 
+	const handleDeleteClick = (client: Client) => {
+		setClientToDelete(client);
+	};
+
+	const confirmDelete = async () => {
+		if (!clientToDelete) return;
+
+		try {
+			const { error } = await deleteClient(clientToDelete.id);
+			if (error) throw error;
+
+			// Refresh the clients list
+			const { data } = await listClients();
+			setClients(data ?? []);
+			setClientToDelete(null);
+		} catch (err) {
+			console.error('Error eliminando el cliente:', err);
+		}
+	};
+
 	const filteredClients = clients.filter(
 		(client) =>
 			client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -78,6 +99,29 @@ export function ClientManagement() {
 
 	return (
 		<div className="space-y-6">
+			{/* Delete Confirmation Dialog */}
+			<Dialog open={!!clientToDelete} onOpenChange={(open) => !open && setClientToDelete(null)}>
+				<DialogContent className="sm:max-w-[425px]">
+					<DialogHeader>
+						<DialogTitle className="text-destructive flex items-center gap-2">
+							<AlertTriangle className="h-5 w-5" />
+							Eliminar cliente
+						</DialogTitle>
+						<DialogDescription>
+							¿Estás seguro de que deseas eliminar a {clientToDelete?.name} {clientToDelete?.last_name}? Esta acción no se puede deshacer.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setClientToDelete(null)}>
+							Cancelar
+						</Button>
+						<Button variant="destructive" onClick={confirmDelete}>
+							<Trash2 className="mr-2 h-4 w-4" />
+							Eliminar
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 			{/* Header */}
 			<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 				<div>
@@ -139,7 +183,7 @@ export function ClientManagement() {
 								className="p-6 bg-card border-border hover:border-primary/50 transition-colors"
 							>
 								<div className="space-y-4">
-									<div className="flex items-start justify-between">
+									<div className="flex items-center justify-between w-full">
 										<div className="flex items-center gap-3">
 											<div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
 												<span className="font-semibold text-primary text-lg">
@@ -157,6 +201,13 @@ export function ClientManagement() {
 												</h3>
 											</div>
 										</div>
+										<button 
+											onClick={() => handleDeleteClick(client)}
+											className="text-muted-foreground hover:text-destructive transition-colors p-0.1 -mt-13 -mr-3"
+											title="Eliminar cliente"
+										>
+											<Trash2 className="h-4 w-4" />
+										</button>
 									</div>
 
 									<div className="space-y-2 text-sm pt-2">

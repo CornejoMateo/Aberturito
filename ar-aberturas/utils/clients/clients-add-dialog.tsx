@@ -98,12 +98,6 @@ export function ClientsAddDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogTrigger asChild>
-				<Button className="gap-2">
-					<Plus className="h-4 w-4" />
-					Nuevo cliente
-				</Button>
-			</DialogTrigger>
 			<DialogContent className="bg-card max-w-2xl">
 				<DialogHeader>
 					<DialogTitle className="text-foreground">

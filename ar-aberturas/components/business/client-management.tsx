@@ -128,20 +128,24 @@ export function ClientManagement() {
 					<h2 className="text-2xl font-bold text-foreground text-balance">Gestión de Clientes</h2>
 					<p className="text-muted-foreground mt-1">Administración de clientes y contactos</p>
 				</div>
+				<Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
+					<Plus className="h-4 w-4" />
+					Nuevo cliente
+				</Button>
 				<ClientsAddDialog 
-				open={isAddDialogOpen} 
-				onOpenChange={setIsAddDialogOpen} 
-				onClientAdded={handleClientAdded} 
-			/>
-			{selectedClient && (
-				<ClientsAddDialog 
-					open={isEditDialogOpen} 
-					onOpenChange={setIsEditDialogOpen} 
-					onClientAdded={handleClientAdded}
-					clientToEdit={selectedClient}
-					onUpdateClient={handleUpdateClient}
+					open={isAddDialogOpen} 
+					onOpenChange={setIsAddDialogOpen} 
+					onClientAdded={handleClientAdded} 
 				/>
-			)}
+				{selectedClient && (
+					<ClientsAddDialog 
+						open={isEditDialogOpen} 
+						onOpenChange={setIsEditDialogOpen} 
+						onClientAdded={handleClientAdded}
+						clientToEdit={selectedClient}
+						onUpdateClient={handleUpdateClient}
+					/>
+				)}
 			</div>
 
 			{/* Stats */}

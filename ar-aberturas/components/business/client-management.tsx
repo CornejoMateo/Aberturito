@@ -20,16 +20,20 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Client, listClients, deleteClient } from '@/lib/clients/clients';
 import { ClientsAddDialog } from '@/utils/clients/clients-add-dialog';
+import { ClientDetailsDialog } from './client-details-dialog'; 
 
 export function ClientManagement() {
-	const [clients, setClients] = useState<Client[]>([])
-	const [searchTerm, setSearchTerm] = useState('');
-	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-	const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-	const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
-	const [currentPage, setCurrentPage] = useState(1);
-	const itemsPerPage = 6;
+  // Estados
+  const [clients, setClients] = useState<Client[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+  const [viewingClient, setViewingClient] = useState<Client | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
 	useEffect(() => {
 		async function load() {
@@ -55,6 +59,19 @@ export function ClientManagement() {
 	const handleEditClient = (client: Client) => {
 		setSelectedClient(client);
 		setIsEditDialogOpen(true);
+	};
+
+	const handleViewClient = (client: Client) => {
+		setViewingClient(client);
+		setIsViewDialogOpen(true);
+	};
+
+	const handleEditFromView = () => {
+		if (viewingClient) {
+			setSelectedClient(viewingClient);
+			setIsViewDialogOpen(false);
+			setIsEditDialogOpen(true);
+		}
 	};
 
 	const handleUpdateClient = async (updatedClient: Client) => {
@@ -178,9 +195,8 @@ export function ClientManagement() {
 				</Card>
 			</div>
 
-			<Tabs defaultValue="list" className="space-y-4">
-
-				<TabsContent value="list" className="space-y-4">
+			<Tabs defaultValue="clients" className="space-y-6">
+				<TabsContent value="clients" className="space-y-6">
 					{/* Search */}
 					<Card className="p-4 bg-card border-border">
 						<div className="relative">
@@ -245,7 +261,12 @@ export function ClientManagement() {
 									</div>
 
 									<div className="flex gap-2 pt-2">
-										<Button variant="outline" size="sm" className="flex-1 gap-2 bg-transparent">
+										<Button 
+											variant="outline" 
+											size="sm" 
+											className="flex-1 gap-2 bg-transparent"
+											onClick={() => handleViewClient(client)}
+										>
 											<Eye className="h-4 w-4" />
 											Ver
 										</Button>
@@ -262,71 +283,77 @@ export function ClientManagement() {
 								</div>
 							</Card>
 						))}
-						</div>
+					</div>
 
-						{/* Controles de paginación */}
-						{filteredClients.length > itemsPerPage && (
-							<div className="flex items-center justify-between px-2 mt-6">
-								<div className="text-sm text-muted-foreground">
-									Mostrando{' '}
-									{Math.min(
-										(currentPage - 1) * itemsPerPage + 1,
-										filteredClients.length
-									)}
-									-
-									{Math.min(
-										currentPage * itemsPerPage,
-										filteredClients.length
-									)}{' '}
-									de {filteredClients.length} clientes
-								</div>
-
-								<Pagination className="mx-0 w-auto">
-									<PaginationContent>
-										<PaginationItem>
-											<PaginationPrevious
-												onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-												className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-											/>
-										</PaginationItem>
-
-										{Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-											let pageNum = i + 1;
-											if (totalPages > 5) {
-												if (currentPage <= 3) {
-													pageNum = i + 1;
-												} else if (currentPage >= totalPages - 2) {
-													pageNum = totalPages - 4 + i;
-												} else {
-													pageNum = currentPage - 2 + i;
-												}
-											}
-											return (
-												<PaginationItem key={pageNum}>
-													<PaginationLink
-														isActive={currentPage === pageNum}
-														className="cursor-pointer"
-														onClick={() => setCurrentPage(pageNum)}
-													>
-														{pageNum}
-													</PaginationLink>
-												</PaginationItem>
-											);
-										})}
-
-										<PaginationItem>
-											<PaginationNext
-												onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-												className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-											/>
-										</PaginationItem>
-									</PaginationContent>
-								</Pagination>
+					{/* Controles de paginación */}
+					{filteredClients.length > itemsPerPage && (
+						<div className="flex items-center justify-between px-2 mt-6">
+							<div className="text-sm text-muted-foreground">
+								Mostrando{' '}
+								{Math.min(
+									(currentPage - 1) * itemsPerPage + 1,
+									filteredClients.length
+								)}
+								-
+								{Math.min(
+									currentPage * itemsPerPage,
+									filteredClients.length
+								)}{' '}
+								de {filteredClients.length} clientes
 							</div>
-						)}
-					</TabsContent>
 
-				</Tabs>
+							<Pagination className="mx-0 w-auto">
+								<PaginationContent>
+									<PaginationItem>
+										<PaginationPrevious
+											onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+											className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+										/>
+									</PaginationItem>
+
+									{Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+										let pageNum = i + 1;
+										if (totalPages > 5) {
+											if (currentPage <= 3) {
+												pageNum = i + 1;
+											} else if (currentPage >= totalPages - 2) {
+												pageNum = totalPages - 4 + i;
+											} else {
+												pageNum = currentPage - 2 + i;
+											}
+										}
+										return (
+											<PaginationItem key={pageNum}>
+												<PaginationLink
+													isActive={currentPage === pageNum}
+													className="cursor-pointer"
+													onClick={() => setCurrentPage(pageNum)}
+												>
+													{pageNum}
+												</PaginationLink>
+											</PaginationItem>
+										);
+									})}
+
+									<PaginationItem>
+										<PaginationNext
+											onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+											className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+										/>
+									</PaginationItem>
+								</PaginationContent>
+							</Pagination>
+						</div>
+					)}
+				</TabsContent>
+			</Tabs>
+
+			<ClientDetailsDialog 
+				client={viewingClient}
+				isOpen={isViewDialogOpen}
+				onClose={() => setIsViewDialogOpen(false)}
+				onEdit={handleEditFromView}
+			/>
 		</div>
 	);
 }

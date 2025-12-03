@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Client } from '@/lib/clients/clients';
+import { Client, listClients } from '@/lib/clients/clients';
 import { ClientsAddDialog } from '@/utils/clients/clients-add-dialog';
 
 export function ClientManagement() {
@@ -25,6 +25,27 @@ export function ClientManagement() {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
+	useEffect(() => {
+		async function load() {
+			try {
+				const { data } = await listClients();
+				setClients(data ?? []);
+			} catch (err) {
+				console.error('Error cargando clientes', err);
+			}
+		}
+		load();
+	}, []);
+
+	const handleClientAdded = async () => {
+		try {
+			const { data } = await listClients();
+			setClients(data ?? []);
+		} catch (err) {
+			console.error('Error refrescando clientes', err);
+		}
+	};
 
 	const filteredClients = clients.filter(
 		(client) =>
@@ -44,7 +65,7 @@ export function ClientManagement() {
 					<h2 className="text-2xl font-bold text-foreground text-balance">Gestión de Clientes</h2>
 					<p className="text-muted-foreground mt-1">Administración de clientes y contactos</p>
 				</div>
-				<ClientsAddDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} />
+				<ClientsAddDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} onClientAdded={handleClientAdded} />
 			</div>
 
 			{/* Stats */}

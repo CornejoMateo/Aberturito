@@ -119,10 +119,15 @@ export function ClientManagement() {
 														.slice(0, 2)}
 												</span>
 											</div>
+											<div>
+												<h3 className="font-semibold text-foreground">
+													{client.name} {client.last_name}
+												</h3>
+											</div>
 										</div>
 									</div>
 
-									<div className="space-y-2 text-sm">
+									<div className="space-y-2 text-sm pt-2">
 										<div className="flex items-center gap-2 text-muted-foreground">
 											<Mail className="h-4 w-4" />
 											<span className="truncate">{client.email}</span>

@@ -65,7 +65,6 @@ export async function createIronworkStock(
 		'ironwork_category',
 		'ironwork_code',
 		'ironwork_color',
-		'ironwork_quantity',
 		'ironwork_material',
 		'ironwork_site',
 	];

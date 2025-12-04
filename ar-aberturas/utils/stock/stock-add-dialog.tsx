@@ -53,9 +53,9 @@ export function StockFormDialog({
 	const [line, setLine] = useState('');
 	const [color, setColor] = useState('');
 	const [itemStatus, setItemStatus] = useState('');
-	const [quantity, setQuantity] = useState(0);
+	const [quantity, setQuantity] = useState<number | ''>('');
 	const [site, setSite] = useState('');
-	const [width, setWidth] = useState(0);
+	const [width, setWidth] = useState<number | ''>('');
 
 	// Status and options for selects
 	const [categoriesOptions, setCategoriesOptions] = useState(categories);
@@ -85,17 +85,27 @@ export function StockFormDialog({
 		setLine('');
 		setColor('');
 		setItemStatus('');
-		setQuantity(0);
+		setQuantity('');
 		setSite('');
-		setWidth(0);
+		setWidth('');
 	};
 
 	const handleSave = () => {
 		// Validate required fields
-		if (!category || !code || !line || !color || !site || quantity <= 0 || width <= 0) {
+		if (!category || !code || !line || !color || !site) {
 			toast({
 				title: 'Error de validación',
 				description: 'Por favor complete todos los campos obligatorios',
+				variant: 'destructive',
+				duration: 5000,
+			});
+			return;
+		}
+
+		if (Number(quantity) < 0 || Number(width) < 0) {
+			toast({
+				title: 'Error de validación',
+				description: 'La cantidad y el largo no pueden ser negativos',
 				variant: 'destructive',
 				duration: 5000,
 			});
@@ -109,9 +119,9 @@ export function StockFormDialog({
 				line,
 				color,
 				status: itemStatus,
-				quantity,
+				quantity: quantity || 0,
 				site,
-				width,
+				width: width || 0,
 				material: materialType,
 				created_at: isEditing ? editItem.created_at : new Date().toISOString().split('T')[0],
 			});
@@ -242,10 +252,9 @@ export function StockFormDialog({
 							<Input
 								id="cantidad"
 								type="number"
-								placeholder="0"
 								className="bg-background"
-								value={quantity || ''}
-								onChange={(e) => setQuantity(Number(e.target.value))}
+								value={quantity}
+								onChange={(e) => setQuantity(Number(e.target.value) || '')}
 								required
 							/>
 						</div>
@@ -264,10 +273,9 @@ export function StockFormDialog({
 							<Input
 								id="largo"
 								type="number"
-								placeholder="0"
 								className="bg-background"
-								value={width || ''}
-								onChange={(e) => setWidth(Number(e.target.value))}
+								value={width}
+								onChange={(e) => setWidth(Number(e.target.value) || '')}
 								required
 							/>
 						</div>

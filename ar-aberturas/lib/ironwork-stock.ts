@@ -14,7 +14,8 @@ export type IronworkItemStock = {
 	ironwork_quantity: number;
 	ironwork_site: string;
 	ironwork_material: string;
-	ironwork_image_url?: string | null;
+	image_url?: string | null;
+	image_path?: string | null;
 	ironwork_price: number | null;
 	last_update: string | null;
 };
@@ -79,20 +80,30 @@ export async function createIronworkStock(
 
 	const supabase = getSupabaseClient();
 
-	const { data: rows, error: imageError } = await supabase
-		.from('gallery_images_ironworks')
-		.select('ironwork_image_url')
-		.ilike('name_category', item.ironwork_category || '')
-		.ilike('name_line', item.ironwork_line || '')
-		.ilike('name_code', item.ironwork_code || '')
-		.ilike('name_brand', item.ironwork_brand || '')
-		.maybeSingle();
+	const { data: existing, error: searchError } = await supabase
+		.from(TABLE)
+		.select('image_url, image_path')
+		.eq('ironwork_category', item.ironwork_category)
+		.eq('ironwork_line', item.ironwork_line)
+		.eq('ironwork_brand', item.ironwork_brand)
+		.eq('ironwork_code', item.ironwork_code)
+		.not('image_url', 'is', null)
+		.limit(1);
+
+	let image_url = null;
+	let image_path = null;
+	if (existing && existing.length > 0) {
+		image_url = existing[0].image_url;
+		image_path = existing[0].image_path;
+	}
 
 	const payload = {
 		...item,
-		ironwork_image_url: rows?.ironwork_image_url ?? null,
-		last_update: item.created_at ?? new Date().toISOString().split('T')[0],
+		image_url,
+		image_path,
+		last_update: new Date().toISOString().split('T')[0],
 	};
+		
 	const { data, error } = await supabase.from(TABLE).insert(payload).select().single();
 
 	return { data, error };
@@ -118,24 +129,4 @@ export async function deleteIronworkStock(id: string): Promise<{ data: null; err
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };
-}
-
-export async function updateImageForMatchingIronworks(
-	supabase: any,
-	ironwork_category: string,
-	ironwork_line: string,
-	ironwork_code: string,
-	ironwork_brand: string,
-	ironwork_image_url: string | null
-): Promise<{ data: IronworkItemStock[] | null; error: any }> {
-	const { data, error } = await supabase
-		.from(TABLE)
-		.update({ ironwork_image_url, last_update: new Date().toISOString().split('T')[0] })
-		.eq('ironwork_category', ironwork_category)
-		.eq('ironwork_line', ironwork_line)
-		.eq('ironwork_code', ironwork_code)
-		.eq('ironwork_brand', ironwork_brand)
-		.select();
-
-	return { data, error };
 }

@@ -14,7 +14,8 @@ export type AccessoryItemStock = {
 	accessory_quantity: number;
 	accessory_site: string;
 	accessory_material: string;
-	accessory_image_url?: string | null;
+	image_url?: string | null;
+	image_path?: string | null;
 	accessory_price: number | null;
 	last_update: string | null;
 };
@@ -57,6 +58,7 @@ export async function getAccesoryById(
 	return { data, error };
 }
 
+
 export async function createAccessoryStock(
 	item: Partial<AccessoryItemStock>
 ): Promise<{ data: AccessoryItemStock | null; error: any }> {
@@ -79,19 +81,28 @@ export async function createAccessoryStock(
 
 	const supabase = getSupabaseClient();
 
-	const { data: rows, error: imageError } = await supabase
-		.from('gallery_images_accesories')
-		.select('accessory_image_url')
-		.ilike('name_category', item.accessory_category || '')
-		.ilike('name_line', item.accessory_line || '')
-		.ilike('name_code', item.accessory_code || '')
-		.ilike('name_brand', item.accessory_brand || '')
-		.maybeSingle();
+	const { data: existing, error: searchError } = await supabase
+		.from(TABLE)
+		.select('image_url, image_path')
+		.eq('accessory_category', item.accessory_category)
+		.eq('accessory_line', item.accessory_line)
+		.eq('accessory_brand', item.accessory_brand)
+		.eq('accessory_code', item.accessory_code)
+		.not('image_url', 'is', null)
+		.limit(1);
+
+	let image_url = null;
+	let image_path = null;
+	if (existing && existing.length > 0) {
+		image_url = existing[0].image_url;
+		image_path = existing[0].image_path;
+	}
 
 	const payload = {
 		...item,
-		accessory_image_url: rows?.accessory_image_url ?? null,
-		last_update: item.created_at ?? new Date().toISOString().split('T')[0],
+		image_url,
+		image_path,
+		last_update: new Date().toISOString().split('T')[0],
 	};
 
 	const { data, error } = await supabase.from(TABLE).insert(payload).select().single();
@@ -119,24 +130,4 @@ export async function deleteAccesoryStock(id: string): Promise<{ data: null; err
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };
-}
-
-export async function updateImageForMatchingAccesories(
-	supabase: any,
-	accessory_category: string,
-	accessory_line: string,
-	accessory_code: string,
-	accessory_brand: string,
-	accessory_image_url: string | null
-): Promise<{ data: AccessoryItemStock[] | null; error: any }> {
-	const { data, error } = await supabase
-		.from(TABLE)
-		.update({ accessory_image_url, last_update: new Date().toISOString().split('T')[0] })
-		.eq('accessory_category', accessory_category)
-		.eq('accessory_line', accessory_line)
-		.eq('accessory_code', accessory_code)
-		.eq('accessory_brand', accessory_brand)
-		.select();
-
-	return { data, error };
 }

@@ -127,6 +127,8 @@ export function PhotoGalleryModal({
 			setNameBrand,
 			setNameCategory,
 		});
+		setSearched(false);
+
 	};
 
 	const handleOpenChange = (newOpen: boolean) => {
@@ -138,6 +140,8 @@ export function PhotoGalleryModal({
 			setNameCategory('');
 			setImages([]);
 			setImagesError(null);
+			setSearched(false);
+			setFile(null);
 			setSearched(false);
 		}
 		onOpenChange(newOpen);
@@ -252,6 +256,8 @@ export function PhotoGalleryModal({
 										setSelectedImage(null);
 										setNameCode('');
 										setNameLine('');
+										setImages([]);
+										setImagesError(null);
 									} else {
 										toast({
 											title: 'Error al eliminar imagen',
@@ -390,6 +396,9 @@ export function PhotoGalleryModal({
 										setNameLine('');
 										setNameBrand('');
 										setNameCategory('');
+										setSearched(false);
+										setImages([]);
+										setImagesError(null);
 									} else {
 										toast({
 											title: 'Error al eliminar imagen',

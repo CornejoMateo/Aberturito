@@ -44,6 +44,8 @@ export async function listAccesoriesStock(): Promise<{
 			accessory_site,
 			accessory_material,
 			accessory_price,
+			image_url,
+			image_path,
 			last_update
 		`)
 		.order('created_at', { ascending: false });

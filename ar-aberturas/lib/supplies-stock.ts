@@ -40,6 +40,8 @@ export async function listSuppliesStock(): Promise<{ data: SupplyItemStock[] | n
 			supply_site,
 			supply_material,
 			supply_price,
+			image_url,
+			image_path,
 			created_at,
 			last_update
 		`)

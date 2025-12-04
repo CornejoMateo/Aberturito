@@ -44,6 +44,8 @@ export async function listIronworksStock(): Promise<{
 			ironwork_site,
 			ironwork_material,
 			ironwork_price,
+			image_url,
+			image_path,
 			last_update
 		`)
 		.order('created_at', { ascending: false });
@@ -61,46 +63,22 @@ export async function getIronworkById(
 export async function createIronworkStock(
 	item: Partial<IronworkItemStock>
 ): Promise<{ data: IronworkItemStock | null; error: any }> {
-	// Validación de campos obligatorios
-	const requiredFields = [
-		'ironwork_category',
-		'ironwork_code',
-		'ironwork_color',
-		'ironwork_material',
-		'ironwork_site',
-	];
-	for (const field of requiredFields) {
-		if (!(item as any)[field]) {
-			return {
-				data: null,
-				error: new Error(`Falta el campo obligatorio: ${field}`),
-			};
-		}
-	}
-
 	const supabase = getSupabaseClient();
 
-	const { data: existing, error: searchError } = await supabase
-		.from(TABLE)
-		.select('image_url, image_path')
-		.eq('ironwork_code', item.ironwork_code)
-		.not('image_url', 'is', null)
-		.limit(1);
-
-	let image_url = null;
-	let image_path = null;
-	if (existing && existing.length > 0) {
-		image_url = existing[0].image_url;
-		image_path = existing[0].image_path;
-	}
+	const { data: rows, error: imageError } = await supabase
+		.from('gallery_images_ironworks')
+		.select('ironwork_image_url')
+		.ilike('name_category', item.ironwork_category || '')
+		.ilike('name_line', item.ironwork_line || '')
+		.ilike('name_code', item.ironwork_code || '')
+		.ilike('name_brand', item.ironwork_brand || '')
+		.maybeSingle();
 
 	const payload = {
 		...item,
-		image_url,
-		image_path,
-		last_update: new Date().toISOString().split('T')[0],
+		ironwork_image_url: rows?.ironwork_image_url ?? null,
+		last_update: item.created_at ?? new Date().toISOString().split('T')[0],
 	};
-		
 	const { data, error } = await supabase.from(TABLE).insert(payload).select().single();
 
 	return { data, error };
@@ -110,12 +88,6 @@ export async function updateIronworkStock(
 	id: string,
 	changes: Partial<IronworkItemStock>
 ): Promise<{ data: IronworkItemStock | null; error: any }> {
-	if (!id) {
-		return {
-			data: null,
-			error: new Error('El accesorio no pudo ser actualizado.'),
-		};
-	}
 	const supabase = getSupabaseClient();
 	const payload = { ...changes, last_update: new Date().toISOString().split('T')[0] };
 	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();

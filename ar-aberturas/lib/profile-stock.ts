@@ -52,7 +52,7 @@ export async function getProfileById(
 export async function createProfileStock(
 	item: Partial<ProfileItemStock>
 ): Promise<{ data: ProfileItemStock | null; error: any }> {
-	// Validación runtime de campos obligatorios
+
 	const requiredFields = [
 		'code',
 		'material',
@@ -118,8 +118,8 @@ export async function updateProfileStock(
 		const { data: existing, error: searchError } = await supabase
 			.from(TABLE)
 			.select('image_url, image_path')
-			.eq('accessory_code', changes.code)
 			.eq('line', changes.line)
+			.eq('code', changes.code)
 			.not('image_url', 'is', null)
 			.limit(1);
 

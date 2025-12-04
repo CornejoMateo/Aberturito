@@ -117,9 +117,9 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 		listOptions('sites').then((res) => (res.data ?? []) as SiteOption[])
 	);
 
-	const handleDeleteOption = async (table: string, id: number) => {
+	const handleDeleteOption = async (table: string, id: number, material_type: string) => {
 		try {
-			const { error } = await deleteOption(table, id);
+			const { error } = await deleteOption(table, id, material_type);
 
 			if (error) {
 				console.error('Error al eliminar:', error);
@@ -480,7 +480,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 								className="bg-destructive text-white hover:bg-destructive/90"
 								onClick={async () => {
 									if (deleteDialog.id)
-										await handleDeleteOption(deleteDialog.table, deleteDialog.id);
+										await handleDeleteOption(deleteDialog.table, deleteDialog.id, materialType || '');
 									setDeleteDialog({ open: false, table: '', id: undefined, label: '' });
 								}}
 							>

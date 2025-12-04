@@ -39,9 +39,6 @@ export function PhotoGalleryModal({
 	const [nameLine, setNameLine] = useState('');
 	const [nameCode, setNameCode] = useState('');
 
-	const [nameCategory, setNameCategory] = useState('');
-	const [nameBrand, setNameBrand] = useState('');
-
 	const [loadingSearch, setLoadingSearch] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [searched, setSearched] = useState(false);
@@ -72,17 +69,12 @@ export function PhotoGalleryModal({
 	};
 
 	// Nuevo fetch para accesorios/herrajes
-	const fetchImagesAccsIronWrapper = async (
-		category?: string,
-		line?: string,
-		brand?: string,
-		code?: string
-	) => {
+	const fetchImagesAccsIronWrapper = async (code?: string) => {
 		try {
 			setImagesLoading(true);
 			setImagesError(null);
 			setLoadingSearch(true);
-			const data = await fetchImagesAccsIronSupply(categoryState, category, line, brand, code);
+			const data = await fetchImagesAccsIronSupply(categoryState, code);
 			if (data.success) {
 				setImages(data.images ?? []);
 			} else {
@@ -116,17 +108,15 @@ export function PhotoGalleryModal({
 			file,
 			materialType,
 			categoryState,
-			nameCategory,
-			nameBrand,
 			nameLine,
 			nameCode,
 			setLoading,
 			setFile,
 			setNameLine,
 			setNameCode,
-			setNameBrand,
-			setNameCategory,
+			setImages,
 		});
+		setSearched(false);
 	};
 
 	const handleOpenChange = (newOpen: boolean) => {
@@ -134,11 +124,10 @@ export function PhotoGalleryModal({
 			setSelectedImage(null);
 			setNameCode('');
 			setNameLine('');
-			setNameBrand('');
-			setNameCategory('');
 			setImages([]);
 			setImagesError(null);
 			setSearched(false);
+			setFile(null);
 		}
 		onOpenChange(newOpen);
 	};
@@ -148,11 +137,11 @@ export function PhotoGalleryModal({
 			<DialogContent className="max-w-[600px] w-full">
 				<DialogHeader>
 					<DialogTitle>Agregar y buscar fotos</DialogTitle>
-					<DialogDescription>
-						{categoryState == 'Perfiles'
-							? 'Subí imágenes según línea y código.'
-							: 'Subí imágenes según categoría, linea, marca y código'}
-					</DialogDescription>
+				<DialogDescription>
+					{categoryState == 'Perfiles'
+						? 'Subí imágenes según línea y código.'
+						: 'Subí imágenes según código'}
+				</DialogDescription>
 				</DialogHeader>
 
 				{categoryState === 'Perfiles' && (
@@ -162,6 +151,10 @@ export function PhotoGalleryModal({
 							onValueChange={(value) => {
 								setNameLine(value);
 								setNameCode(''); // Reset code when line changes
+								setSelectedImage(null);
+								setImages([]);
+								setImagesError(null);
+								setSearched(false);
 							}}
 							materialType={materialType}
 						/>
@@ -252,6 +245,8 @@ export function PhotoGalleryModal({
 										setSelectedImage(null);
 										setNameCode('');
 										setNameLine('');
+										setImages([]);
+										setImagesError(null);
 									} else {
 										toast({
 											title: 'Error al eliminar imagen',
@@ -265,50 +260,33 @@ export function PhotoGalleryModal({
 					</div>
 				)}
 
-				{(categoryState === 'Accesorios' || categoryState === 'Herrajes' || categoryState === 'Insumos') && (
-					<div className="p-6 flex flex-col gap-4">
-						<Input
-							value={nameCategory}
-							onChange={(e) => {setNameCategory(e.target.value); setSelectedImage(null)}}
-							placeholder="Categoría"
-							className="w-full"
-						/>
-
-						<Input
-							value={nameLine}
-							onChange={(e) => {setNameLine(e.target.value); setSelectedImage(null)}}
-							placeholder="Línea"
-							className="w-full"
-						/>
-
-						<Input
-							value={nameBrand}
-							onChange={(e) => {setNameBrand(e.target.value); setSelectedImage(null)}}
-							placeholder="Marca"
-							className="w-full"
-						/>
-
-						<Input
-							value={nameCode}
-							onChange={(e) => {setNameCode(e.target.value); setSelectedImage(null)}}
-							placeholder="Código"
-							className="w-full"
-						/>
-
-						{/* Gallery results */}
-						<div className="pt-4">
-							<h3 className="text-sm font-semibold text-foreground mb-2">Imágenes encontradas</h3>
-							{!nameLine || !nameCategory || !nameBrand || !nameCode ? (
-								<div className="text-sm text-muted-foreground">
-									Rellena los campos para ver imágenes.
-								</div>
+			{(categoryState === 'Accesorios' || categoryState === 'Herrajes' || categoryState === 'Insumos') && (
+				<div className="p-6 flex flex-col gap-4">
+					<Input
+						value={nameCode}
+						onChange={(e) => {
+							setNameCode(e.target.value); 
+							setSelectedImage(null);
+							setImages([]);
+							setImagesError(null);
+							setSearched(false);
+						}}
+						placeholder="Código"
+						className="w-full"
+					/>					
+					<div className="pt-4">
+						<h3 className="text-sm font-semibold text-foreground mb-2">Imágenes encontradas</h3>
+						{!nameCode ? (
+							<div className="text-sm text-muted-foreground">
+								Ingresá un código para ver imágenes.
+							</div>
 							) : imagesLoading ? (
 								<div className="text-sm text-muted-foreground">Cargando imágenes...</div>
 							) : imagesError ? (
 								<div className="text-sm text-destructive">Error: {imagesError}</div>
 							) : images.length === 0 && searched ? (
 								<div className="text-sm text-muted-foreground">
-									No se encontraron para los campos seleccionados.
+									No se encontro el código.
 								</div>
 							) : (
 								<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -356,7 +334,7 @@ export function PhotoGalleryModal({
 								className="flex-1 w-full"
 								variant="outline"
 								onClick={() => {
-									fetchImagesAccsIronWrapper(nameCategory, nameLine, nameBrand, nameCode);
+									fetchImagesAccsIronWrapper(nameCode);
 									setSearched(true);
 								}}
 								disabled={loadingSearch}
@@ -374,7 +352,7 @@ export function PhotoGalleryModal({
 								trash={true}
 								onDelete={async () => {
 									const res = await fetch(
-										`/api/gallery/delete?categoryState=${categoryState}&name_category=${nameCategory}&name_brand=${nameBrand}&code_name=${nameCode}&line_name=${nameLine}`,
+										`/api/gallery/delete?categoryState=${categoryState}&code_name=${nameCode}`,
 										{
 											method: 'DELETE',
 										}
@@ -387,9 +365,9 @@ export function PhotoGalleryModal({
 										});
 										setSelectedImage(null);
 										setNameCode('');
-										setNameLine('');
-										setNameBrand('');
-										setNameCategory('');
+										setSearched(false);
+										setImages([]);
+										setImagesError(null);
 									} else {
 										toast({
 											title: 'Error al eliminar imagen',

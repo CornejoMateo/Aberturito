@@ -13,41 +13,49 @@ export async function GET(req: Request) {
 
 		// Modo de búsqueda para accesorios/herrajes
 		if (mode === 'accs_iron_supply') {
-			const categoryState = url.searchParams.get('categoryState');
-			const category = url.searchParams.get('category');
-			const brand = url.searchParams.get('brand');
-			const line = url.searchParams.get('line');
-			const code = url.searchParams.get('code');
-			let query;
-			if (categoryState == 'Accesorios') {
-				query = supabase.from('gallery_images_accesories').select('*');
-			} else if (categoryState == 'Herrajes') {
-				query = supabase.from('gallery_images_ironworks').select('*');
-			} else {
-				query = supabase.from('gallery_images_supplies').select('*');
+			const categoryState = url.searchParams.get("categoryState");
+			const code = url.searchParams.get("name_code");
+
+			let table = "";
+
+			if (categoryState === "Accesorios") table = "accesories_category";
+			if (categoryState === "Herrajes") table = "ironworks_category";
+			if (categoryState === "Insumos") table = "supplies_category";
+
+			let query = supabase.from(table).select("*").limit(1);
+
+			if (categoryState === "Accesorios") {
+				if (code) query = query.eq("accessory_code", code);
 			}
-			if (category) query = query.eq('name_category', category);
-			if (brand) query = query.eq('name_brand', brand);
-			if (line) query = query.eq('name_line', line);
-			if (code) query = query.eq('name_code', code);
+			
+			if (categoryState === "Herrajes") {
+				if (code) query = query.eq("ironwork_code", code);
+			}
+
+			if (categoryState === "Insumos") {
+				if (code) query = query.eq("supply_code", code);
+			}
 
 			const { data, error } = await query;
 			if (error) throw error;
+
 			return NextResponse.json({ success: true, images: data });
 		}
 
-		// Modo de búsqueda automática (perfiles)
-		const material_type = url.searchParams.get('material_type');
-		const name_line = url.searchParams.get('name_line');
-		const name_code = url.searchParams.get('name_code');
 
-		let query = supabase.from('gallery_images').select('*');
-		if (material_type) query = query.eq('material_type', material_type);
-		if (name_line) query = query.eq('name_line', name_line);
-		if (name_code) query = query.eq('name_code', name_code);
+		const material_type = url.searchParams.get("material_type");
+		const name_line = url.searchParams.get("name_line");
+		const name_code = url.searchParams.get("name_code");
+
+		let query = supabase.from("profiles").select("*").limit(1);
+
+		if (material_type) query = query.eq("material", material_type);
+		if (name_line) query = query.eq("line", name_line);
+		if (name_code) query = query.eq("code", name_code);
 
 		const { data, error } = await query;
 		if (error) throw error;
+
 		return NextResponse.json({ success: true, images: data });
 	} catch (error: any) {
 		console.error('Error fetching gallery images:', error);

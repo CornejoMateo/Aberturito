@@ -10,6 +10,7 @@ export const handleUpload = async ({
 	setFile,
 	setNameLine,
 	setNameCode,
+	setImages,
 }: {
 	file: File | null;
 	materialType?: string;
@@ -20,6 +21,7 @@ export const handleUpload = async ({
 	setFile: (v: File | null) => void;
 	setNameLine: (v: string) => void;
 	setNameCode: (v: string) => void;
+	setImages: (v: { id?: number; image_url?: string | null }[]) => void;
 }) => {
 	if (!file) {
 		toast({
@@ -69,6 +71,7 @@ export const handleUpload = async ({
 			setFile(null);
 			setNameLine('');
 			setNameCode('');
+			setImages([]);
 		} else {
 			toast({
 				title: 'Error',

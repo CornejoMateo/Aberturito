@@ -114,13 +114,9 @@ export function PhotoGalleryModal({
 			setFile,
 			setNameLine,
 			setNameCode,
+			setImages,
 		});
-		setImages([]);
-		setImagesError(null);
-		setNameCode('');
-		setNameLine('');
 		setSearched(false);
-
 	};
 
 	const handleOpenChange = (newOpen: boolean) => {
@@ -290,7 +286,7 @@ export function PhotoGalleryModal({
 								<div className="text-sm text-destructive">Error: {imagesError}</div>
 							) : images.length === 0 && searched ? (
 								<div className="text-sm text-muted-foreground">
-									No se encontraron imágenes para el código ingresado.
+									No se encontro el código.
 								</div>
 							) : (
 								<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">

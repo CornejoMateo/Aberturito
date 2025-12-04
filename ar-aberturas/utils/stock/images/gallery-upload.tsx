@@ -1,5 +1,3 @@
-// Función para subir imágenes a la galería
-
 import { toast } from '@/components/ui/use-toast';
 
 export const handleUpload = async ({

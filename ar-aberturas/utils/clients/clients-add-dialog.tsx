@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Plus } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/clients/clients';
-import { createClientFolder } from '@/lib/clients/client-folders';
+import { createClientFolder } from '@/lib/clients/clients';
 
 interface ClientsAddDialogProps {
 	open: boolean;
@@ -78,12 +78,16 @@ export function ClientsAddDialog({
 				onOpenChange(false);
 			} else {
 				// Create new client
+				console.log('Creating client with payload:', payload);
 				const { data: client, error } = await createClient(payload);
+				console.log('Create client result:', { client, error });
 				if (error) throw error;
 
 				if (client) {
 					// Create folder in Storage
-					await createClientFolder(client.id);
+					console.log('Creating folder for client ID:', client.id);
+					const folderResult = await createClientFolder(client.id);
+					console.log('Create folder result:', folderResult);
 					onClientAdded?.();
 					onOpenChange(false);
 					setFormData({ name: '', last_name: '', email: '', phone_number: '', locality: '' });

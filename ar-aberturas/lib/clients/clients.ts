@@ -64,3 +64,28 @@ export async function deleteClient(id: string): Promise<{ data: null; error: any
         .eq('id', id);
     return { data: null, error };
 }
+
+export async function createClientFolder(clientId: string) {
+  const supabase = getSupabaseClient();
+
+  const filePath = `${clientId}/.keep.txt`;
+
+  const blob = new Blob(["Cliente creado correctamente"], {
+    type: "text/plain",
+  });
+
+  try {
+    const { data, error } = await supabase.storage
+      .from("clients")
+      .upload(filePath, blob);
+
+    if (error) {
+      console.error('Storage upload error:', error);
+    }
+
+    return { data, error };
+  } catch (err) {
+    console.error('Unexpected error creating folder:', err);
+    return { data: null, error: err };
+  }
+}

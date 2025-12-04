@@ -8,15 +8,11 @@ export async function DELETE(req: Request) {
 		const code_name = searchParams.get('code_name')!;
 		const line_name = searchParams.get('line_name')!;
 		let material_type = '';
-		let name_category = '';
-		let name_brand = '';
 		if (categoryState !== 'Perfiles') {
-			name_category = searchParams.get('name_category')!;
-			name_brand = searchParams.get('name_brand')!;
 
-			if (!code_name || !line_name || !name_category || !name_brand) {
+			if (!code_name) {
 				return NextResponse.json(
-					{ success: false, error: 'Faltan parámetros: categoría, código, linea o marca' },
+					{ success: false, error: 'Código no completado' },
 					{ status: 400 }
 				);
 			}
@@ -58,21 +54,12 @@ export async function DELETE(req: Request) {
 			.eq("material", material_type);
 		} else if (categoryState === "Accesorios") {
 			query
-				.eq("accessory_category", name_category)
-				.eq("accessory_brand", name_brand)
-				.eq("accessory_line", line_name)
 				.eq("accessory_code", code_name);
 		} else if (categoryState === "Herrajes") {
 			query
-				.eq("ironwork_category", name_category)
-				.eq("ironwork_brand", name_brand)
-				.eq("ironwork_line", line_name)
 				.eq("ironwork_code", code_name);
 		} else if (categoryState === "Insumos") {
 			query
-				.eq("supply_category", name_category)
-				.eq("supply_brand", name_brand)
-				.eq("supply_line", line_name)
 				.eq("supply_code", code_name);
 		}
 

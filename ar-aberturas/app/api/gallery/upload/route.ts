@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 			const { data, error } = await supabase
 				.from('accesories_category')
 				.select('id')
-				.eq('accessory_code', name_code)
+				.eq('accessory_code', name_code);
 			if (error) throw error;
 			matchingRows = data;
 		} else if (categoryState === 'Herrajes') {
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
 			const { data, error } = await supabase
 				.from('ironworks_category')
 				.select('id')
-				.eq('ironwork_code', name_code)
+				.eq('ironwork_code', name_code);
 			if (error) throw error;
 			matchingRows = data;
 		} else if (categoryState === 'Perfiles') {
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
 			const { data, error } = await supabase
 				.from('supplies_category')
 				.select('id')
-				.eq('supply_code', name_code)
+				.eq('supply_code', name_code);
 			if (error) throw error;
 			matchingRows = data;
 		}
@@ -125,7 +125,7 @@ export async function POST(req: Request) {
 
 		// Update the matching rows with the new image URL (reuse matchingRows from earlier check)
 		const idsToUpdate = matchingRows.map((row: any) => row.id);
-
+		
 		const { error } = await supabase
 			.from(table)
 			.update({

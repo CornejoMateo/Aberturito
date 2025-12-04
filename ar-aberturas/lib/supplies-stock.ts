@@ -26,7 +26,8 @@ export async function listSuppliesStock(): Promise<{ data: SupplyItemStock[] | n
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select(`
+		.select(
+			`
 			id,
 			supply_category,
 			supply_line,
@@ -44,7 +45,8 @@ export async function listSuppliesStock(): Promise<{ data: SupplyItemStock[] | n
 			image_path,
 			created_at,
 			last_update
-		`)
+		`
+		)
 		.order('created_at', { ascending: false });
 	return { data, error };
 }
@@ -111,7 +113,7 @@ export async function updateSupplyStock(
 		}
 	}
 
-  	const payload = { ...changes, last_update: new Date().toISOString().split('T')[0] };
+	const payload = { ...changes, last_update: new Date().toISOString().split('T')[0] };
 	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();
 	return { data, error };
 }

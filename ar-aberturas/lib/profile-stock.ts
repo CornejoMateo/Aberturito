@@ -23,7 +23,8 @@ export async function listStock(): Promise<{ data: ProfileItemStock[] | null; er
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select(`
+		.select(
+			`
 			id,
 			category,
 			code,
@@ -36,7 +37,8 @@ export async function listStock(): Promise<{ data: ProfileItemStock[] | null; er
 			material,
 			created_at,
 			last_update
-		`)
+		`
+		)
 		.order('created_at', { ascending: false });
 	return { data, error };
 }
@@ -52,7 +54,6 @@ export async function getProfileById(
 export async function createProfileStock(
 	item: Partial<ProfileItemStock>
 ): Promise<{ data: ProfileItemStock | null; error: any }> {
-
 	const requiredFields = [
 		'code',
 		'material',
@@ -134,7 +135,7 @@ export async function updateProfileStock(
 
 	const payload = { ...changes, last_update: new Date().toISOString().split('T')[0] };
 	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();
-	
+
 	return { data, error };
 }
 

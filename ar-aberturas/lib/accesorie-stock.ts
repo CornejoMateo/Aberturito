@@ -29,7 +29,8 @@ export async function listAccesoriesStock(): Promise<{
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select(`
+		.select(
+			`
 			id,
 			created_at,
 			accessory_category,
@@ -47,7 +48,8 @@ export async function listAccesoriesStock(): Promise<{
 			image_url,
 			image_path,
 			last_update
-		`)
+		`
+		)
 		.order('created_at', { ascending: false });
 	return { data, error };
 }
@@ -59,7 +61,6 @@ export async function getAccesoryById(
 	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
 	return { data, error };
 }
-
 
 export async function createAccessoryStock(
 	item: Partial<AccessoryItemStock>
@@ -120,7 +121,7 @@ export async function updateAccessoryStock(
 		};
 	}
 	const supabase = getSupabaseClient();
-	
+
 	// if the accessory_code is being changed, check for existing image
 	if (changes.accessory_code) {
 		const { data: existing, error: searchError } = await supabase
@@ -138,10 +139,10 @@ export async function updateAccessoryStock(
 			changes.image_path = null;
 		}
 	}
-	
+
 	const payload = { ...changes, last_update: new Date().toISOString().split('T')[0] };
 	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();
-	
+
 	return { data, error };
 }
 

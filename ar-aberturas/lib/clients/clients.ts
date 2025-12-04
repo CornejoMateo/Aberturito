@@ -16,7 +16,7 @@ export async function listClients(): Promise<{ data: Client[] | null; error: any
     const supabase = getSupabaseClient();
     const { data, error } = await supabase
         .from(TABLE)
-        .select('name, last_name, id, phone_number, email')
+        .select('name, last_name, id, phone_number, email, locality')
         .order('created_at', { ascending: false });
     return { data, error };
 }

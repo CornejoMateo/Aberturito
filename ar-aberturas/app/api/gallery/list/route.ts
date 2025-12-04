@@ -14,10 +14,7 @@ export async function GET(req: Request) {
 		// Modo de búsqueda para accesorios/herrajes
 		if (mode === 'accs_iron_supply') {
 			const categoryState = url.searchParams.get("categoryState");
-			const category = url.searchParams.get("category");
-			const brand = url.searchParams.get("brand");
-			const line = url.searchParams.get("line");
-			const code = url.searchParams.get("code");
+			const code = url.searchParams.get("name_code");
 
 			let table = "";
 
@@ -28,24 +25,14 @@ export async function GET(req: Request) {
 			let query = supabase.from(table).select("*").limit(1);
 
 			if (categoryState === "Accesorios") {
-
-				if (category) query = query.eq("accessory_category", category);
-				if (brand) query = query.eq("accessory_brand", brand);
-				if (line) query = query.eq("accessory_line", line);
 				if (code) query = query.eq("accessory_code", code);
 			}
 			
 			if (categoryState === "Herrajes") {
-				if (category) query = query.eq("ironwork_category", category);
-				if (brand) query = query.eq("ironwork_brand", brand);
-				if (line) query = query.eq("ironwork_line", line);
 				if (code) query = query.eq("ironwork_code", code);
 			}
 
 			if (categoryState === "Insumos") {
-				if (category) query = query.eq("supply_category", category);
-				if (brand) query = query.eq("supply_brand", brand);
-				if (line) query = query.eq("supply_line", line);
 				if (code) query = query.eq("supply_code", code);
 			}
 

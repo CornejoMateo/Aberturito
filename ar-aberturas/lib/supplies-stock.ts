@@ -64,9 +64,6 @@ export async function createSupplyStock(
 		.from(TABLE)
 		.select('image_url, image_path')
 		.eq('supply_code', item.supply_code)
-		.eq('supply_line', item.supply_line)
-		.eq('supply_brand', item.supply_brand)
-		.eq('supply_code', item.supply_code)
 		.not('image_url', 'is', null)
 		.limit(1);
 

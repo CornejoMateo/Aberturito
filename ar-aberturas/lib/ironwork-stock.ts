@@ -83,9 +83,6 @@ export async function createIronworkStock(
 	const { data: existing, error: searchError } = await supabase
 		.from(TABLE)
 		.select('image_url, image_path')
-		.eq('ironwork_category', item.ironwork_category)
-		.eq('ironwork_line', item.ironwork_line)
-		.eq('ironwork_brand', item.ironwork_brand)
 		.eq('ironwork_code', item.ironwork_code)
 		.not('image_url', 'is', null)
 		.limit(1);

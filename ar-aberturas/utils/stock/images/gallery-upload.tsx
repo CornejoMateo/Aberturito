@@ -4,30 +4,22 @@ export const handleUpload = async ({
 	file,
 	materialType,
 	categoryState,
-	nameCategory,
-	nameBrand,
 	nameLine,
 	nameCode,
 	setLoading,
 	setFile,
 	setNameLine,
 	setNameCode,
-	setNameBrand,
-	setNameCategory,
 }: {
 	file: File | null;
 	materialType?: string;
 	categoryState?: string;
-	nameCategory: string;
-	nameBrand: string;
 	nameLine: string;
 	nameCode: string;
 	setLoading: (v: boolean) => void;
 	setFile: (v: File | null) => void;
 	setNameLine: (v: string) => void;
 	setNameCode: (v: string) => void;
-	setNameBrand: (v: string) => void;
-	setNameCategory: (v: string) => void;
 }) => {
 	if (!file) {
 		toast({
@@ -40,8 +32,8 @@ export const handleUpload = async ({
 
 	if (
 		(categoryState === 'Perfiles' && (!materialType || !nameLine || !nameCode)) ||
-		((categoryState === 'Accesorios' || categoryState === 'Herrajes') &&
-			(!nameCategory || !nameBrand || !nameLine || !nameCode))
+		((categoryState === 'Accesorios' || categoryState === 'Herrajes' || categoryState === 'Insumos') &&
+			(!nameCode))
 	) {
 		toast({
 			title: 'Error',
@@ -58,11 +50,8 @@ export const handleUpload = async ({
 		if (categoryState) formData.append('categoryState', categoryState);
 		if (categoryState === 'Perfiles') {
 			formData.append('material_type', materialType ?? '');
-		} else {
-			formData.append('name_category', nameCategory);
-			formData.append('name_brand', nameBrand);
+			formData.append('name_line', nameLine);
 		}
-		formData.append('name_line', nameLine);
 		formData.append('name_code', nameCode);
 
 		const res = await fetch('/api/gallery/upload', {
@@ -80,8 +69,6 @@ export const handleUpload = async ({
 			setFile(null);
 			setNameLine('');
 			setNameCode('');
-			setNameBrand('');
-			setNameCategory('');
 		} else {
 			toast({
 				title: 'Error',

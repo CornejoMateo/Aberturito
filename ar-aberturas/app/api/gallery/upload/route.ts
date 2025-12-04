@@ -7,8 +7,6 @@ export async function POST(req: Request) {
 		const formData = await req.formData();
 		const file = formData.get('file') as File;
 		const categoryState = formData.get('categoryState') as string;
-		let name_category = '';
-		let name_brand = '';
 		let name_code = '';
 		let material_type = '';
 		let name_line = '';
@@ -28,12 +26,9 @@ export async function POST(req: Request) {
 			categoryState === 'Herrajes' ||
 			categoryState === 'Insumos'
 		) {
-			name_category = formData.get('name_category') as string;
-			name_brand = formData.get('name_brand') as string;
-			name_line = formData.get('name_line') as string;
 			name_code = formData.get('name_code') as string;
 
-			if (!file || !name_category || !name_brand || !name_line || !name_code) {
+			if (!file || !name_code) {
 				return NextResponse.json(
 					{ success: false, error: 'Faltan campos obligatorios' },
 					{ status: 400 }
@@ -56,10 +51,7 @@ export async function POST(req: Request) {
 			const { data, error } = await supabase
 				.from('accesories_category')
 				.select('id')
-				.eq('accessory_category', name_category)
-				.eq('accessory_line', name_line)
 				.eq('accessory_code', name_code)
-				.eq('accessory_brand', name_brand);
 			if (error) throw error;
 			matchingRows = data;
 		} else if (categoryState === 'Herrajes') {
@@ -68,10 +60,7 @@ export async function POST(req: Request) {
 			const { data, error } = await supabase
 				.from('ironworks_category')
 				.select('id')
-				.eq('ironwork_category', name_category)
-				.eq('ironwork_line', name_line)
 				.eq('ironwork_code', name_code)
-				.eq('ironwork_brand', name_brand);
 			if (error) throw error;
 			matchingRows = data;
 		} else if (categoryState === 'Perfiles') {
@@ -91,10 +80,7 @@ export async function POST(req: Request) {
 			const { data, error } = await supabase
 				.from('supplies_category')
 				.select('id')
-				.eq('supply_category', name_category)
-				.eq('supply_line', name_line)
 				.eq('supply_code', name_code)
-				.eq('supply_brand', name_brand);
 			if (error) throw error;
 			matchingRows = data;
 		}

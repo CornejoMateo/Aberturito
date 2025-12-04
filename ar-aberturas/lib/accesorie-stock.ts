@@ -84,9 +84,6 @@ export async function createAccessoryStock(
 	const { data: existing, error: searchError } = await supabase
 		.from(TABLE)
 		.select('image_url, image_path')
-		.eq('accessory_category', item.accessory_category)
-		.eq('accessory_line', item.accessory_line)
-		.eq('accessory_brand', item.accessory_brand)
 		.eq('accessory_code', item.accessory_code)
 		.not('image_url', 'is', null)
 		.limit(1);

@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Plus } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/clients/clients';
-import { createClientFolder } from '@/lib/storage/client-folders';
+import { createClientFolder } from '@/lib/clients/client-folders';
 
 interface ClientsAddDialogProps {
 	open: boolean;
@@ -13,8 +13,8 @@ interface ClientsAddDialogProps {
 	onClientAdded?: () => void;
 	clientToEdit?: {
 		id: string;
-		name: string;
-		last_name: string;
+		name: string | null;
+		last_name: string | null;
 		email?: string | null;
 		phone_number?: string | null;
 		locality?: string | null;

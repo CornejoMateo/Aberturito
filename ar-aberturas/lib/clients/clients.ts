@@ -3,8 +3,8 @@ import { getSupabaseClient } from '../supabase-client';
 export type Client = {
 	id: string;
 	created_at?: string;
-	name: string;
-    last_name: string;
+	name?: string | null;
+    last_name?: string| null;
 	phone_number?: string | null;
 	locality?: string | null;
     email?: string | null;

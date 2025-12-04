@@ -20,7 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Client, listClients, deleteClient } from '@/lib/clients/clients';
 import { ClientsAddDialog } from '@/utils/clients/clients-add-dialog';
-import { ClientDetailsDialog } from './client-details-dialog'; 
+import { ClientDetailsDialog } from '../../utils/clients/client-details-dialog'; 
 
 export function ClientManagement() {
   // Estados
@@ -108,7 +108,7 @@ export function ClientManagement() {
 
 	const filteredClients = clients.filter(
 		(client) =>
-			client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			client.locality?.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
@@ -174,7 +174,18 @@ export function ClientManagement() {
 						open={isEditDialogOpen} 
 						onOpenChange={setIsEditDialogOpen} 
 						onClientAdded={handleClientAdded}
-						clientToEdit={selectedClient}
+						clientToEdit={
+						selectedClient
+							? {
+								id: selectedClient.id ?? '',
+								name: selectedClient.name ?? '',
+								last_name: selectedClient.last_name ?? '',
+								email: selectedClient.email ?? '',
+								phone_number: selectedClient.phone_number ?? '',
+								locality: selectedClient.locality ?? '',
+							}
+							: undefined
+						}
 						onUpdateClient={handleUpdateClient}
 					/>
 				)}
@@ -223,7 +234,7 @@ export function ClientManagement() {
 											<div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
 												<span className="font-semibold text-primary text-lg">
 													{client.name
-														.split(' ')
+														?.split(' ')
 														.map((n) => n[0])
 														.join('')
 														.toUpperCase()

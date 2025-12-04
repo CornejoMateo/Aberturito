@@ -120,8 +120,28 @@ export async function updateAccessoryStock(
 		};
 	}
 	const supabase = getSupabaseClient();
+	
+	// if the accessory_code is being changed, check for existing image
+	if (changes.accessory_code) {
+		const { data: existing, error: searchError } = await supabase
+			.from(TABLE)
+			.select('image_url, image_path')
+			.eq('accessory_code', changes.accessory_code)
+			.not('image_url', 'is', null)
+			.limit(1);
+
+		if (existing && existing.length > 0) {
+			changes.image_url = existing[0].image_url;
+			changes.image_path = existing[0].image_path;
+		} else {
+			changes.image_url = null;
+			changes.image_path = null;
+		}
+	}
+	
 	const payload = { ...changes, last_update: new Date().toISOString().split('T')[0] };
 	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();
+	
 	return { data, error };
 }
 

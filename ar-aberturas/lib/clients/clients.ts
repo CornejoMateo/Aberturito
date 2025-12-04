@@ -58,6 +58,24 @@ export async function updateClient(id: string, changes: Partial<Client>): Promis
 
 export async function deleteClient(id: string): Promise<{ data: null; error: any }> {
     const supabase = getSupabaseClient();
+    
+    // First, delete all files in the client's folder
+    try {
+        const { data: files, error: listError } = await supabase.storage
+            .from('clients')
+            .list(id);
+        
+        if (!listError && files && files.length > 0) {
+            const filePaths = files.map(file => `${id}/${file.name}`);
+            await supabase.storage
+                .from('clients')
+                .remove(filePaths);
+        }
+    } catch (err) {
+        console.error('Error deleting client folder:', err);
+    }
+    
+    // Then delete the client record
     const { error } = await supabase
         .from(TABLE)
         .delete()

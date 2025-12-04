@@ -18,10 +18,10 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-[90vw] w-[90vw] h-[85vh] flex flex-col" showCloseButton={false}>
+      <DialogContent className="!max-w-[60vw] !w-[90vw] !h-[85vh] flex flex-col" showCloseButton={false}>
         <DialogHeader>
           <div className="flex justify-between items-center">
-            <DialogTitle>Detalles del Cliente</DialogTitle>
+            <DialogTitle>Detalles del cliente</DialogTitle>
             <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
               <X className="h-4 w-4" />
             </Button>
@@ -61,7 +61,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
               <TabsContent value="info">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-medium">Información Adicional</h4>
+                    <h4 className="font-medium">Información adicional</h4>
                     <p className="text-sm text-muted-foreground">
                       Aca va tal vez, no lo se, puede ser que si, puede ser que no, mas info del cliente...
                     </p>

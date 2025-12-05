@@ -9,7 +9,6 @@ export async function DELETE(req: Request) {
 		const line_name = searchParams.get('line_name')!;
 		let material_type = '';
 		if (categoryState !== 'Perfiles') {
-
 			if (!code_name) {
 				return NextResponse.json(
 					{ success: false, error: 'Código no completado' },
@@ -45,22 +44,16 @@ export async function DELETE(req: Request) {
 			table = 'supplies_category';
 		}
 
-		const query = supabase.from(table).select("id, image_path");
+		const query = supabase.from(table).select('id, image_path');
 
-		if (categoryState === "Perfiles") {
-		query
-			.eq("line", line_name)
-			.eq("code", code_name)
-			.eq("material", material_type);
-		} else if (categoryState === "Accesorios") {
-			query
-				.eq("accessory_code", code_name);
-		} else if (categoryState === "Herrajes") {
-			query
-				.eq("ironwork_code", code_name);
-		} else if (categoryState === "Insumos") {
-			query
-				.eq("supply_code", code_name);
+		if (categoryState === 'Perfiles') {
+			query.eq('line', line_name).eq('code', code_name).eq('material', material_type);
+		} else if (categoryState === 'Accesorios') {
+			query.eq('accessory_code', code_name);
+		} else if (categoryState === 'Herrajes') {
+			query.eq('ironwork_code', code_name);
+		} else if (categoryState === 'Insumos') {
+			query.eq('supply_code', code_name);
 		}
 
 		const { data: rows, error } = await query;
@@ -74,21 +67,18 @@ export async function DELETE(req: Request) {
 		const imagePath = rows[0].image_path;
 
 		if (imagePath) {
-			await supabase.storage.from("images").remove([imagePath]);
+			await supabase.storage.from('images').remove([imagePath]);
 		}
 
-		const ids = rows.map(r => r.id);
+		const ids = rows.map((r) => r.id);
 
 		const { error: updateError } = await supabase
 			.from(table)
 			.update({ image_url: null, image_path: null })
-			.in("id", ids);
+			.in('id', ids);
 
 		if (updateError) {
-			return NextResponse.json(
-				{ success: false, error: updateError.message },
-				{ status: 500 }
-			);
+			return NextResponse.json({ success: false, error: updateError.message }, { status: 500 });
 		}
 
 		return NextResponse.json({ success: true });

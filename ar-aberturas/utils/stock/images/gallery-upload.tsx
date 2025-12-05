@@ -34,8 +34,10 @@ export const handleUpload = async ({
 
 	if (
 		(categoryState === 'Perfiles' && (!materialType || !nameLine || !nameCode)) ||
-		((categoryState === 'Accesorios' || categoryState === 'Herrajes' || categoryState === 'Insumos') &&
-			(!nameCode))
+		((categoryState === 'Accesorios' ||
+			categoryState === 'Herrajes' ||
+			categoryState === 'Insumos') &&
+			!nameCode)
 	) {
 		toast({
 			title: 'Error',

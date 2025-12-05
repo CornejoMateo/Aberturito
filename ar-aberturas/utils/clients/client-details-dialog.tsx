@@ -60,7 +60,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                 <TabsTrigger value="budgets" disabled>Presupuestos</TabsTrigger>
               </TabsList>
               
-              <div className="mt-2 p-2 sm:p-3 border rounded-lg bg-muted/10">
+              <div className="mt-2">
                 <TabsContent value="info">
                   <div className="space-y-4">
                     <div>
@@ -71,42 +71,36 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                     </div>
                   </div>
                 </TabsContent>
-                <TabsContent value="works">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h4 className="font-medium text-xs">Obras del cliente</h4>
-                      <Button onClick={() => setIsCreatingWork(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Crear obra
-                      </Button>
+                <TabsContent value="works" className="relative">
+                  <Button 
+                    onClick={() => setIsCreatingWork(true)}
+                    className="absolute top-0 right-0"
+                    size="sm"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Crear obra
+                  </Button>
+                  
+                  {isCreatingWork && (
+                    <div className="mt-8">
+                      <h5 className="font-medium mb-3">Nueva Obra</h5>
+                      <WorkForm
+                        clientId={client.id}
+                        onCancel={() => setIsCreatingWork(false)}
+                        onSubmit={async (workData) => {
+                          try {
+                            await createWork({
+                              ...workData,
+                              client_id: client.id,
+                            });
+                            setIsCreatingWork(false);
+                          } catch (error) {
+                            console.error('Error al crear la obra:', error);
+                          }
+                        }}
+                      />
                     </div>
-                    
-                    {isCreatingWork ? (
-                      <div className="p-4 border rounded-lg bg-card">
-                        <h5 className="font-medium mb-4">Nueva Obra</h5>
-                        <WorkForm
-                          clientId={client.id}
-                          onCancel={() => setIsCreatingWork(false)}
-                          onSubmit={async (workData) => {
-                            try {
-                              await createWork({
-                                ...workData,
-                                client_id: client.id,
-                              });
-                              // Aquí podrías actualizar la lista de obras si es necesario
-                              setIsCreatingWork(false);
-                            } catch (error) {
-                              console.error('Error al crear la obra:', error);
-                            }
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        Aquí se mostrarán las obras del cliente.
-                      </p>
-                    )}
-                  </div>
+                  )}
                 </TabsContent>
                 <TabsContent value="budgets">
                   <p className="text-sm text-muted-foreground">

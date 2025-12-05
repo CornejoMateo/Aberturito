@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Client } from '@/lib/clients/clients';
-import { Mail, Phone, MapPin, X } from 'lucide-react';
+import { Mail, Phone, MapPin, X, Plus } from 'lucide-react';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -67,9 +67,18 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                   </div>
                 </TabsContent>
                 <TabsContent value="works">
-                  <p className="text-sm text-muted-foreground">
-                    Aquí se mostrarán las obras del cliente.
-                  </p>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium">Obras del cliente</h4>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Crear obra
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Aquí se mostrarán las obras del cliente.
+                    </p>
+                  </div>
                 </TabsContent>
                 <TabsContent value="budgets">
                   <p className="text-sm text-muted-foreground">

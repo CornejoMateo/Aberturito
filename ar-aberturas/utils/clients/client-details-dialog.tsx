@@ -28,58 +28,57 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto space-y-6 py-4 pr-2 -mr-2">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">{client.name} {client.last_name}</h3>
-
-            <div className="space-y-2">
+        <div className="flex-1 overflow-y-auto p-4 pt-2">
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3">{client.name} {client.last_name}</h3>
+            <div className="flex flex-wrap gap-6">
               <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
+                <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <span>{client.email}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
+                <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <span>{client.phone_number}</span>
               </div>
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <span>{client.locality}</span>
               </div>
             </div>
           </div>
 
-        {/* TODO: Add client notes or additional info here, aca podria ir la firma del cliente. */}
-
-          <Tabs defaultValue="info" className="w-full">
-            <TabsList>
-              <TabsTrigger value="info">Información</TabsTrigger>
-              <TabsTrigger value="works" disabled>Obras</TabsTrigger>
-              <TabsTrigger value="budgets" disabled>Presupuestos</TabsTrigger>
-            </TabsList>
-            
-            <div className="mt-4 p-6 border rounded-lg bg-muted/10">
-              <TabsContent value="info">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium">Información adicional</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Aca va tal vez, no lo se, puede ser que si, puede ser que no, mas info del cliente...
-                    </p>
+          <div className="border-t pt-4">
+            <Tabs defaultValue="info" className="w-full">
+              <TabsList>
+                <TabsTrigger value="info">Información</TabsTrigger>
+                <TabsTrigger value="works" disabled>Obras</TabsTrigger>
+                <TabsTrigger value="budgets" disabled>Presupuestos</TabsTrigger>
+              </TabsList>
+              
+              <div className="mt-4 p-6 border rounded-lg bg-muted/10">
+                <TabsContent value="info">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium">Información adicional</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Aca va tal vez, no lo se, puede ser que si, puede ser que no, mas info del cliente...
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </TabsContent>
-              <TabsContent value="works">
-                <p className="text-sm text-muted-foreground">
-                  Aquí se mostrarán las obras del cliente.
-                </p>
-              </TabsContent>
-              <TabsContent value="budgets">
-                <p className="text-sm text-muted-foreground">
-                  Aquí se mostrarán los presupuestos del cliente.
-                </p>
-              </TabsContent>
-            </div>
-          </Tabs>
+                </TabsContent>
+                <TabsContent value="works">
+                  <p className="text-sm text-muted-foreground">
+                    Aquí se mostrarán las obras del cliente.
+                  </p>
+                </TabsContent>
+                <TabsContent value="budgets">
+                  <p className="text-sm text-muted-foreground">
+                    Aquí se mostrarán los presupuestos del cliente.
+                  </p>
+                </TabsContent>
+              </div>
+            </Tabs>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

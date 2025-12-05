@@ -66,7 +66,7 @@ export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
           <Label htmlFor="status">Estado</Label>
           <Select
             name="status"
-            value={formData.status}
+            value={formData.status || 'Sin empezar'}
             onValueChange={(value) => 
               setFormData(prev => ({
                 ...prev,

@@ -1,6 +1,6 @@
 // Helper para crear evento y asociar date_id correctamente
 import { getSupabaseClient } from '../supabase-client';
-import { CalendarDate } from '../calendar/dates';
+import { createDate } from '../calendar/dates';
 
 export type Event = {
 	id: string;
@@ -46,16 +46,11 @@ export async function createEvent(
 	if (dateData && dateData.id) {
 		dateId = dateData.id;
 	} else {
-		const { data: newDate, error: newDateError } = await supabase
-			.from('dates')
-			.insert({ date: event.date })
-			.select('id')
-			.single();
-		if (newDate && newDate.id) {
-			dateId = newDate.id;
-		} else {
-			return { data: null, error: newDateError || dateError };
-		}
+		const { data: newDateData, error: newDateError } = await createDate({ date: event.date! });
+        if (newDateError) {
+            return { data: null, error: newDateError };
+        }
+        dateId = newDateData!.id;
 	}
 
 	const payload = {

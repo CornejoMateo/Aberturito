@@ -14,4 +14,6 @@ export const aluminioChecklistNames = [
   'Colocacion herrajes y trabas',
   'Sellado Marco',
   'Sellado VIdrio',
+  'Accesorios',
+  'Herrajes'
 ];

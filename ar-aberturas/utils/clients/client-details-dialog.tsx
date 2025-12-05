@@ -17,7 +17,7 @@ interface ClientDetailsDialogProps {
 }
 
 export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientDetailsDialogProps) {
-  const [isCreatingWork, setIsCreatingWork] = useState(false);
+  const [isWorkFormOpen, setIsWorkFormOpen] = useState(false);
   
   if (!client) return null;
 
@@ -73,34 +73,13 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                 </TabsContent>
                 <TabsContent value="works" className="relative">
                   <Button 
-                    onClick={() => setIsCreatingWork(true)}
+                    onClick={() => setIsWorkFormOpen(true)}
                     className="absolute top-0 right-0"
                     size="sm"
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Crear obra
                   </Button>
-                  
-                  {isCreatingWork && (
-                    <div className="mt-8">
-                      <h5 className="font-medium mb-3">Nueva Obra</h5>
-                      <WorkForm
-                        clientId={client.id}
-                        onCancel={() => setIsCreatingWork(false)}
-                        onSubmit={async (workData) => {
-                          try {
-                            await createWork({
-                              ...workData,
-                              client_id: client.id,
-                            });
-                            setIsCreatingWork(false);
-                          } catch (error) {
-                            console.error('Error al crear la obra:', error);
-                          }
-                        }}
-                      />
-                    </div>
-                  )}
                 </TabsContent>
                 <TabsContent value="budgets">
                   <p className="text-sm text-muted-foreground">
@@ -112,6 +91,29 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           </div>
         </div>
       </DialogContent>
+      
+      <Dialog open={isWorkFormOpen} onOpenChange={setIsWorkFormOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nueva Obra</DialogTitle>
+          </DialogHeader>
+          <WorkForm
+            clientId={client?.id || ''}
+            onCancel={() => setIsWorkFormOpen(false)}
+            onSubmit={async (workData) => {
+              try {
+                await createWork({
+                  ...workData,
+                  client_id: client?.id || '',
+                });
+                setIsWorkFormOpen(false);
+              } catch (error) {
+                console.error('Error al crear la obra:', error);
+              }
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

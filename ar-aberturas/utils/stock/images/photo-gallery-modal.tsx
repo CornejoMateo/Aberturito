@@ -19,7 +19,7 @@ import { ca } from 'date-fns/locale';
 import { set } from 'date-fns';
 import { fetchImages, fetchImagesAccsIronSupply } from './gallery-api';
 import { handleUpload as uploadImage } from './gallery-upload';
-import type { StockCategory } from '@/lib/stock-config';
+import type { StockCategory } from '@/lib/stock/stock-config';
 
 interface PhotoGalleryModalProps {
 	open: boolean;

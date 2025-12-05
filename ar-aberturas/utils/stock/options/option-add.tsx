@@ -29,7 +29,7 @@ import {
 	CodeOption,
 	ColorOption,
 	SiteOption,
-} from '@/lib/stock-options';
+} from '@/lib/stock/stock-options';
 import React from 'react';
 import { LineSelect } from '@/components/stock/line-select';
 

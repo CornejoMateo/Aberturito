@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOptions } from '@/hooks/use-options';
-import { listOptions, type LineOption } from '@/lib/stock-options';
+import { listOptions, type LineOption } from '@/lib/stock/stock-options';
 
 interface LineSelectProps {
 	value: string;

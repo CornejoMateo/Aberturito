@@ -1,41 +1,52 @@
-import { getSupabaseClient } from './supabase-client';
+import { getSupabaseClient } from '../supabase-client';
 
-export type ProfileItemStock = {
+export type AccessoryItemStock = {
 	id: string;
-	category: string;
-	code: string;
-	line: string;
-	color: string;
-	status: string;
-	quantity: number;
-	site: string;
-	width: number;
-	material: string;
+	created_at: string;
+	accessory_category: string;
+	accessory_line: string | null;
+	accessory_brand: string | null;
+	accessory_code: string;
+	accessory_description?: string | null;
+	accessory_color: string;
+	accessory_quantity_for_lump: number;
+	accessory_quantity_lump: number;
+	accessory_quantity: number;
+	accessory_site: string;
+	accessory_material: string;
 	image_url?: string | null;
 	image_path?: string | null;
-	created_at: string | null;
+	accessory_price: number | null;
 	last_update: string | null;
 };
 
-const TABLE = 'profiles';
+const TABLE = 'accesories_category';
 
-export async function listStock(): Promise<{ data: ProfileItemStock[] | null; error: any }> {
+export async function listAccesoriesStock(): Promise<{
+	data: AccessoryItemStock[] | null;
+	error: any;
+}> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
 		.select(
 			`
 			id,
-			category,
-			code,
-			line,
-			color,
-			status,
-			quantity,
-			site,
-			width,
-			material,
 			created_at,
+			accessory_category,
+			accessory_line,
+			accessory_brand,
+			accessory_code,
+			accessory_description,
+			accessory_color,
+			accessory_quantity_for_lump,
+			accessory_quantity_lump,
+			accessory_quantity,
+			accessory_site,
+			accessory_material,
+			accessory_price,
+			image_url,
+			image_path,
 			last_update
 		`
 		)
@@ -43,33 +54,31 @@ export async function listStock(): Promise<{ data: ProfileItemStock[] | null; er
 	return { data, error };
 }
 
-export async function getProfileById(
+export async function getAccesoryById(
 	id: string
-): Promise<{ data: ProfileItemStock | null; error: any }> {
+): Promise<{ data: AccessoryItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
 	return { data, error };
 }
 
-export async function createProfileStock(
-	item: Partial<ProfileItemStock>
-): Promise<{ data: ProfileItemStock | null; error: any }> {
+export async function createAccessoryStock(
+	item: Partial<AccessoryItemStock>
+): Promise<{ data: AccessoryItemStock | null; error: any }> {
+	// Validación de campos obligatorios
 	const requiredFields = [
-		'code',
-		'material',
-		'category',
-		'line',
-		'color',
-		'status',
-		'site',
-		'width',
+		'accessory_category',
+		'accessory_code',
+		'accessory_color',
+		'accessory_material',
+		'accessory_site',
 	];
 	for (const field of requiredFields) {
-		if (
-			item[field as keyof ProfileItemStock] === undefined ||
-			item[field as keyof ProfileItemStock] === null
-		) {
-			return { data: null, error: new Error(`Falta el campo obligatorio: ${field}`) };
+		if (!(item as any)[field]) {
+			return {
+				data: null,
+				error: new Error(`Falta el campo obligatorio: ${field}`),
+			};
 		}
 	}
 
@@ -78,8 +87,7 @@ export async function createProfileStock(
 	const { data: existing, error: searchError } = await supabase
 		.from(TABLE)
 		.select('image_url, image_path')
-		.eq('line', item.line)
-		.eq('code', item.code)
+		.eq('accessory_code', item.accessory_code)
 		.not('image_url', 'is', null)
 		.limit(1);
 
@@ -102,10 +110,10 @@ export async function createProfileStock(
 	return { data, error };
 }
 
-export async function updateProfileStock(
+export async function updateAccessoryStock(
 	id: string,
-	changes: Partial<ProfileItemStock>
-): Promise<{ data: ProfileItemStock | null; error: any }> {
+	changes: Partial<AccessoryItemStock>
+): Promise<{ data: AccessoryItemStock | null; error: any }> {
 	if (!id) {
 		return {
 			data: null,
@@ -115,12 +123,11 @@ export async function updateProfileStock(
 	const supabase = getSupabaseClient();
 
 	// if the accessory_code is being changed, check for existing image
-	if (changes.code || changes.line) {
+	if (changes.accessory_code) {
 		const { data: existing, error: searchError } = await supabase
 			.from(TABLE)
 			.select('image_url, image_path')
-			.eq('line', changes.line)
-			.eq('code', changes.code)
+			.eq('accessory_code', changes.accessory_code)
 			.not('image_url', 'is', null)
 			.limit(1);
 
@@ -139,7 +146,7 @@ export async function updateProfileStock(
 	return { data, error };
 }
 
-export async function deleteProfileStock(id: string): Promise<{ data: null; error: any }> {
+export async function deleteAccesoryStock(id: string): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };

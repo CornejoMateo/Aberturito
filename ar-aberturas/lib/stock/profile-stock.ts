@@ -1,48 +1,40 @@
-import { getSupabaseClient } from './supabase-client';
+import { getSupabaseClient } from '../supabase-client';
 
-export type SupplyItemStock = {
+export type ProfileItemStock = {
 	id: string;
-	supply_category: string;
-	supply_line: string | null;
-	supply_brand: string | null;
-	supply_code: string;
-	supply_description?: string | null;
-	supply_color: string;
-	supply_quantity_for_lump: number;
-	supply_quantity_lump: number;
-	supply_quantity: number;
-	supply_site: string;
-	supply_material: string;
+	category: string;
+	code: string;
+	line: string;
+	color: string;
+	status: string;
+	quantity: number;
+	site: string;
+	width: number;
+	material: string;
 	image_url?: string | null;
 	image_path?: string | null;
-	supply_price: number | null;
-	created_at?: string | null;
-	last_update?: string | null;
+	created_at: string | null;
+	last_update: string | null;
 };
 
-const TABLE = 'supplies_category';
+const TABLE = 'profiles';
 
-export async function listSuppliesStock(): Promise<{ data: SupplyItemStock[] | null; error: any }> {
+export async function listStock(): Promise<{ data: ProfileItemStock[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
 		.select(
 			`
 			id,
-			supply_category,
-			supply_line,
-			supply_brand,
-			supply_code,
-			supply_description,
-			supply_color,
-			supply_quantity_for_lump,
-			supply_quantity_lump,
-			supply_quantity,
-			supply_site,
-			supply_material,
-			supply_price,
-			image_url,
-			image_path,
+			category,
+			code,
+			line,
+			color,
+			status,
+			quantity,
+			site,
+			width,
+			material,
 			created_at,
 			last_update
 		`
@@ -51,23 +43,43 @@ export async function listSuppliesStock(): Promise<{ data: SupplyItemStock[] | n
 	return { data, error };
 }
 
-export async function getSupplyById(
+export async function getProfileById(
 	id: string
-): Promise<{ data: SupplyItemStock | null; error: any }> {
+): Promise<{ data: ProfileItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
 	return { data, error };
 }
 
-export async function createSupplyStock(
-	item: Partial<SupplyItemStock>
-): Promise<{ data: SupplyItemStock | null; error: any }> {
+export async function createProfileStock(
+	item: Partial<ProfileItemStock>
+): Promise<{ data: ProfileItemStock | null; error: any }> {
+	const requiredFields = [
+		'code',
+		'material',
+		'category',
+		'line',
+		'color',
+		'status',
+		'site',
+		'width',
+	];
+	for (const field of requiredFields) {
+		if (
+			item[field as keyof ProfileItemStock] === undefined ||
+			item[field as keyof ProfileItemStock] === null
+		) {
+			return { data: null, error: new Error(`Falta el campo obligatorio: ${field}`) };
+		}
+	}
+
 	const supabase = getSupabaseClient();
 
 	const { data: existing, error: searchError } = await supabase
 		.from(TABLE)
 		.select('image_url, image_path')
-		.eq('supply_code', item.supply_code)
+		.eq('line', item.line)
+		.eq('code', item.code)
 		.not('image_url', 'is', null)
 		.limit(1);
 
@@ -86,21 +98,29 @@ export async function createSupplyStock(
 	};
 
 	const { data, error } = await supabase.from(TABLE).insert(payload).select().single();
+
 	return { data, error };
 }
 
-export async function updateSupplyStock(
+export async function updateProfileStock(
 	id: string,
-	changes: Partial<SupplyItemStock>
-): Promise<{ data: SupplyItemStock | null; error: any }> {
+	changes: Partial<ProfileItemStock>
+): Promise<{ data: ProfileItemStock | null; error: any }> {
+	if (!id) {
+		return {
+			data: null,
+			error: new Error('El accesorio no pudo ser actualizado.'),
+		};
+	}
 	const supabase = getSupabaseClient();
 
-	// if the supply code is being changed, check for existing image
-	if (changes.supply_code) {
+	// if the accessory_code is being changed, check for existing image
+	if (changes.code || changes.line) {
 		const { data: existing, error: searchError } = await supabase
 			.from(TABLE)
 			.select('image_url, image_path')
-			.eq('supply_code', changes.supply_code)
+			.eq('line', changes.line)
+			.eq('code', changes.code)
 			.not('image_url', 'is', null)
 			.limit(1);
 
@@ -115,10 +135,11 @@ export async function updateSupplyStock(
 
 	const payload = { ...changes, last_update: new Date().toISOString().split('T')[0] };
 	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();
+
 	return { data, error };
 }
 
-export async function deleteSupplyStock(id: string): Promise<{ data: null; error: any }> {
+export async function deleteProfileStock(id: string): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };

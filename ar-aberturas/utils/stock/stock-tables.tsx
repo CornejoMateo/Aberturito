@@ -24,10 +24,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/components/provider/auth-provider';
 import { useToast } from '@/components/ui/use-toast';
-import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock-config';
-import type { AccessoryItemStock } from '@/lib/accesorie-stock';
-import type { IronworkItemStock } from '@/lib/ironwork-stock';
-import type { SupplyItemStock } from '@/lib/supplies-stock';
+import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock/stock-config';
+import type { AccessoryItemStock } from '@/lib/stock/accesorie-stock';
+import type { IronworkItemStock } from '@/lib/stock/ironwork-stock';
+import type { SupplyItemStock } from '@/lib/stock/supplies-stock';
 import { useIsMobile } from '@/components/ui/use-mobile';
 
 interface AccesoriesTableProps {

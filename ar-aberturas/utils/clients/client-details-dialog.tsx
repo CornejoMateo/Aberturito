@@ -23,7 +23,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[60vw] h-[90vh] sm:h-[85vh] flex flex-col p-0 sm:p-6" showCloseButton={false}>
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[60vw] h-[90vh] sm:h-[85vh] flex flex-col p-0 sm:p-1"  showCloseButton={false}>
         <DialogHeader>
           <div className="flex justify-between items-center">
             <DialogTitle>Detalles del cliente</DialogTitle>
@@ -33,26 +33,26 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 pt-2">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3">{client.name} {client.last_name}</h3>
-            <div className="flex flex-wrap gap-6">
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <span>{client.email}</span>
+        <div className="flex-1 overflow-y-auto p-2 sm:p-3 pt-0">
+          <div className="mb-2">
+            <h3 className="text-sm text-center font-semibold mb-1">{client.name} {client.last_name}</h3>
+            <div className="flex flex-wrap justify-center gap-6">
+              <div className="flex items-center justify-center gap-1 text-xs">
+                <Mail className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                <span className="text-xs ">{client.email}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <span>{client.phone_number}</span>
+              <div className="flex items-center justify-center gap-1 text-xs">
+                <Phone className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                <span className="text-xs ">{client.phone_number}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <span>{client.locality}</span>
+              <div className="flex items-center justify-center gap-1 text-xs">
+                <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                <span className="text-xs">{client.locality}</span>
               </div>
             </div>
           </div>
 
-          <div className="border-t pt-4">
+          <div className="border-t pt-2">
             <Tabs defaultValue="info" className="w-full">
               <TabsList>
                 <TabsTrigger value="info">Información</TabsTrigger>
@@ -60,12 +60,12 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                 <TabsTrigger value="budgets" disabled>Presupuestos</TabsTrigger>
               </TabsList>
               
-              <div className="mt-4 p-4 sm:p-6 border rounded-lg bg-muted/10">
+              <div className="mt-2 p-2 sm:p-3 border rounded-lg bg-muted/10">
                 <TabsContent value="info">
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-medium">Información adicional</h4>
-                      <p className="text-sm text-muted-foreground">
+                      <h4 className="font-medium text-xs">Información adicional</h4>
+                      <p className="text-xs text-muted-foreground">
                         Aca va tal vez, no lo se, puede ser que si, puede ser que no, mas info del cliente...
                       </p>
                     </div>
@@ -74,7 +74,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                 <TabsContent value="works">
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <h4 className="font-medium">Obras del cliente</h4>
+                      <h4 className="font-medium text-xs">Obras del cliente</h4>
                       <Button onClick={() => setIsCreatingWork(true)}>
                         <Plus className="h-4 w-4 mr-2" />
                         Crear obra

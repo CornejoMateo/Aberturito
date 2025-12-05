@@ -23,23 +23,31 @@ export async function listWorks(): Promise<{ data: Work[] | null; error: any }> 
 }
 
 export async function getWorkById(id: string): Promise<{ data: Work | null; error: any }> {
-	const supabase = getSupabaseClient();
-	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('*')
+    .eq('id', id)
+    .single();
 
 	// Deberia agregar el getChecklistByWorkId aca para traer los checklists asociados
 	return { data, error };
 }
 
 export async function createWork(
-	work: Omit<Work, 'id' | 'created_at'>
+  work: Omit<Work, 'id' | 'created_at'>
 ): Promise<{ data: Work | null; error: any }> {
-	const supabase = getSupabaseClient();
-	const payload = {
-		...work,
-		created_at: new Date().toISOString(),
-	};
-	const { data, error } = await supabase.from(TABLE).insert(payload).select().single();
-	return { data, error };
+  const supabase = getSupabaseClient();
+  const payload = {
+    ...work,
+    created_at: new Date().toISOString(),
+  };
+  const { data, error } = await supabase
+    .from(TABLE)
+    .insert(payload)
+    .select()
+    .single();
+  return { data, error };
 }
 
 export async function updateWork(

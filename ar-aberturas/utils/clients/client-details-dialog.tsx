@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Client } from '@/lib/clients/clients';
 import { Mail, Phone, MapPin, X, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { WorkForm } from '@/components/works/work-form';
+import { createWork } from '@/lib/works/works';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -14,6 +17,8 @@ interface ClientDetailsDialogProps {
 }
 
 export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientDetailsDialogProps) {
+  const [isCreatingWork, setIsCreatingWork] = useState(false);
+  
   if (!client) return null;
 
   return (
@@ -70,14 +75,37 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <h4 className="font-medium">Obras del cliente</h4>
-                      <Button>
+                      <Button onClick={() => setIsCreatingWork(true)}>
                         <Plus className="h-4 w-4 mr-2" />
                         Crear obra
                       </Button>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Aquí se mostrarán las obras del cliente.
-                    </p>
+                    
+                    {isCreatingWork ? (
+                      <div className="p-4 border rounded-lg bg-card">
+                        <h5 className="font-medium mb-4">Nueva Obra</h5>
+                        <WorkForm
+                          clientId={client.id}
+                          onCancel={() => setIsCreatingWork(false)}
+                          onSubmit={async (workData) => {
+                            try {
+                              await createWork({
+                                ...workData,
+                                client_id: client.id,
+                              });
+                              // Aquí podrías actualizar la lista de obras si es necesario
+                              setIsCreatingWork(false);
+                            } catch (error) {
+                              console.error('Error al crear la obra:', error);
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Aquí se mostrarán las obras del cliente.
+                      </p>
+                    )}
                   </div>
                 </TabsContent>
                 <TabsContent value="budgets">

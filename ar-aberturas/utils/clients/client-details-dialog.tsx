@@ -51,7 +51,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
             <Tabs defaultValue="info" className="w-full">
               <TabsList>
                 <TabsTrigger value="info">Información</TabsTrigger>
-                <TabsTrigger value="works" disabled>Obras</TabsTrigger>
+                <TabsTrigger value="works">Obras</TabsTrigger>
                 <TabsTrigger value="budgets" disabled>Presupuestos</TabsTrigger>
               </TabsList>
               

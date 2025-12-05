@@ -9,7 +9,7 @@ export type Work = {
 	status?: string | null;
 	transfer?: number | null;
 	architect?: string | null;
-    notes?: string | null;
+	notes?: string | null;
 };
 
 const TABLE = 'works';

@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Work } from '@/lib/works/works';
 import { useState } from 'react';
 
@@ -16,7 +17,7 @@ export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
   const [formData, setFormData] = useState<Omit<Work, 'id' | 'created_at' | 'client_id'>>({
     locality: '',
     addres: '',
-    status: '',
+    status: 'Sin empezar',
     transfer: 0,
     architect: '',
   });
@@ -63,18 +64,30 @@ export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
 
         <div className="space-y-2">
           <Label htmlFor="status">Estado</Label>
-          <Input
-            id="status"
+          <Select
             name="status"
-            value={formData.status || ''}
-            onChange={handleChange}
-            placeholder="Ej: En progreso"
+            value={formData.status}
+            onValueChange={(value) => 
+              setFormData(prev => ({
+                ...prev,
+                status: value as 'Sin empezar' | 'En progreso' | 'Finalizado'
+              }))
+            }
             required
-          />
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Seleccionar estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Sin empezar">Sin empezar</SelectItem>
+              <SelectItem value="En progreso">En progreso</SelectItem>
+              <SelectItem value="Finalizado">Finalizado</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="transfer">Transferencia</Label>
+          <Label htmlFor="transfer">Entregado</Label>
           <Input
             id="transfer"
             name="transfer"

@@ -197,6 +197,7 @@ create table public.checklists (
   progress bigint null,
   opening character varying null,
   name character varying null,
+  type_opening character varying null,
   width double precision null,
   height double precision null,
   constraint checklists_pkey primary key (id),

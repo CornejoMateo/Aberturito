@@ -17,6 +17,7 @@ export type Checklist = {
 	height?: number | null;
 	name?: string | null;
 	opening?: string | null;
+    type_opening?: string | null;
 };
 
 const TABLE = 'checklists';
@@ -25,7 +26,7 @@ export async function listChecklists(): Promise<{ data: Checklist[] | null; erro
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('id, created_at, work_id, items, description, progress, width, height, name, opening')
+		.select('id, created_at, work_id, items, description, progress, width, height, name, opening, type_opening')
 		.order('created_at', { ascending: false });
 	return { data, error };
 }

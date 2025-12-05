@@ -14,10 +14,7 @@ export const fetchImages = async (materialType?: string, line?: string, code?: s
 	}
 };
 
-export const fetchImagesAccsIronSupply = async (
-	categoryState?: string,
-	code?: string
-) => {
+export const fetchImagesAccsIronSupply = async (categoryState?: string, code?: string) => {
 	try {
 		const params = new URLSearchParams();
 		params.append('mode', 'accs_iron_supply');

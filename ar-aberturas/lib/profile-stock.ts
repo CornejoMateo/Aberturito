@@ -23,7 +23,8 @@ export async function listStock(): Promise<{ data: ProfileItemStock[] | null; er
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select(`
+		.select(
+			`
 			id,
 			category,
 			code,
@@ -36,7 +37,8 @@ export async function listStock(): Promise<{ data: ProfileItemStock[] | null; er
 			material,
 			created_at,
 			last_update
-		`)
+		`
+		)
 		.order('created_at', { ascending: false });
 	return { data, error };
 }
@@ -52,7 +54,6 @@ export async function getProfileById(
 export async function createProfileStock(
 	item: Partial<ProfileItemStock>
 ): Promise<{ data: ProfileItemStock | null; error: any }> {
-	// Validación runtime de campos obligatorios
 	const requiredFields = [
 		'code',
 		'material',
@@ -112,8 +113,29 @@ export async function updateProfileStock(
 		};
 	}
 	const supabase = getSupabaseClient();
+
+	// if the accessory_code is being changed, check for existing image
+	if (changes.code || changes.line) {
+		const { data: existing, error: searchError } = await supabase
+			.from(TABLE)
+			.select('image_url, image_path')
+			.eq('line', changes.line)
+			.eq('code', changes.code)
+			.not('image_url', 'is', null)
+			.limit(1);
+
+		if (existing && existing.length > 0) {
+			changes.image_url = existing[0].image_url;
+			changes.image_path = existing[0].image_path;
+		} else {
+			changes.image_url = null;
+			changes.image_path = null;
+		}
+	}
+
 	const payload = { ...changes, last_update: new Date().toISOString().split('T')[0] };
 	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();
+
 	return { data, error };
 }
 

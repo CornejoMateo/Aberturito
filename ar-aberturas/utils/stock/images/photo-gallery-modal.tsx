@@ -25,7 +25,7 @@ interface PhotoGalleryModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	materialType?: 'Aluminio' | 'PVC';
-    categoryState?: 'Perfiles' | StockCategory;
+	categoryState?: 'Perfiles' | StockCategory;
 }
 
 export function PhotoGalleryModal({
@@ -137,11 +137,11 @@ export function PhotoGalleryModal({
 			<DialogContent className="max-w-[600px] w-full">
 				<DialogHeader>
 					<DialogTitle>Agregar y buscar fotos</DialogTitle>
-				<DialogDescription>
-					{categoryState == 'Perfiles'
-						? 'Subí imágenes según línea y código.'
-						: 'Subí imágenes según código'}
-				</DialogDescription>
+					<DialogDescription>
+						{categoryState == 'Perfiles'
+							? 'Subí imágenes según línea y código.'
+							: 'Subí imágenes según código'}
+					</DialogDescription>
 				</DialogHeader>
 
 				{categoryState === 'Perfiles' && (
@@ -260,34 +260,34 @@ export function PhotoGalleryModal({
 					</div>
 				)}
 
-			{(categoryState === 'Accesorios' || categoryState === 'Herrajes' || categoryState === 'Insumos') && (
-				<div className="p-6 flex flex-col gap-4">
-					<Input
-						value={nameCode}
-						onChange={(e) => {
-							setNameCode(e.target.value); 
-							setSelectedImage(null);
-							setImages([]);
-							setImagesError(null);
-							setSearched(false);
-						}}
-						placeholder="Código"
-						className="w-full"
-					/>					
-					<div className="pt-4">
-						<h3 className="text-sm font-semibold text-foreground mb-2">Imágenes encontradas</h3>
-						{!nameCode ? (
-							<div className="text-sm text-muted-foreground">
-								Ingresá un código para ver imágenes.
-							</div>
+				{(categoryState === 'Accesorios' ||
+					categoryState === 'Herrajes' ||
+					categoryState === 'Insumos') && (
+					<div className="p-6 flex flex-col gap-4">
+						<Input
+							value={nameCode}
+							onChange={(e) => {
+								setNameCode(e.target.value);
+								setSelectedImage(null);
+								setImages([]);
+								setImagesError(null);
+								setSearched(false);
+							}}
+							placeholder="Código"
+							className="w-full"
+						/>
+						<div className="pt-4">
+							<h3 className="text-sm font-semibold text-foreground mb-2">Imágenes encontradas</h3>
+							{!nameCode ? (
+								<div className="text-sm text-muted-foreground">
+									Ingresá un código para ver imágenes.
+								</div>
 							) : imagesLoading ? (
 								<div className="text-sm text-muted-foreground">Cargando imágenes...</div>
 							) : imagesError ? (
 								<div className="text-sm text-destructive">Error: {imagesError}</div>
 							) : images.length === 0 && searched ? (
-								<div className="text-sm text-muted-foreground">
-									No se encontro el código.
-								</div>
+								<div className="text-sm text-muted-foreground">No se encontro el código.</div>
 							) : (
 								<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
 									{images.map((img) => (

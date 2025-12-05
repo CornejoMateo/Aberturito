@@ -9,6 +9,7 @@ export type Work = {
 	status?: string | null;
 	transfer?: number | null;
 	architect?: string | null;
+    notes?: string | null;
 };
 
 const TABLE = 'works';
@@ -17,7 +18,7 @@ export async function listWorks(): Promise<{ data: Work[] | null; error: any }> 
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('id, created_at, locality, addres, client_id, status, transfer, architect') // Eliminar los campos que no van a ser usados
+		.select('id, created_at, locality, addres, client_id, status, transfer, architect, notes') // Eliminar los campos que no van a ser usados
 		.order('created_at', { ascending: false });
 	return { data, error };
 }

@@ -16,7 +16,7 @@ A modern web application built with Next.js, featuring a responsive UI and robus
 - **Frontend**: Next.js 13+ (App Router)
 - **Styling**: Tailwind CSS with CSS Modules
 - **UI Components**: Radix UI Primitives
-- **Backend**: Supabase (Auth, Database, Storage) Firebase (Auth, Database, Storage)
+- **Backend**: Supabase (Database, Storage)
 - **Media**: Cloudinary
 - **Form Handling**: React Hook Form with Zod validation
 - **Testing**: Jest and React Testing Library
@@ -26,7 +26,6 @@ A modern web application built with Next.js, featuring a responsive UI and robus
 
 - Node.js 18+ and npm/yarn
 - Supabase account and project
-- Firebase account and project
 - Cloudinary account (for media handling)
 
 ## 🚀 Getting Started
@@ -49,15 +48,7 @@ A modern web application built with Next.js, featuring a responsive UI and robus
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
-   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
-   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
-   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
-   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
-   NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
-   CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-   CLOUDINARY_API_KEY=your_cloudinary_api_key
-   CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
    ```
 
 4. **Run the development server**

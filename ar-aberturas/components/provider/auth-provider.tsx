@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserRole } from '@/constants/user-role';
+import { getUser } from '@/lib/users/users';
 
 type SessionUser = {
 	username: string;
@@ -45,19 +46,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	async function signIn(username: string, password: string) {
 		setLoading(true);
 		try {
-			const res = await fetch('/api/login', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ username, password }),
-			});
+			
+			const res = await getUser(username, password);
 
-			if (!res.ok) {
-				const errorData = await res.json();
-				throw new Error(errorData.error || 'Error al iniciar sesión');
+			if (!res.data) {
+				throw new Error(res.error || 'Error desconocido');
 			}
 
-			const data = await res.json();
-			const sessionUser: SessionUser = { username: data.usuario, role: data.role };
+			const sessionUser: SessionUser = { username: res.data.username, role: res.data.role as UserRole };
 			setUser(sessionUser);
 
 			if (typeof window !== 'undefined') {

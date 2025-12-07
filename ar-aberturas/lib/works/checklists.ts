@@ -47,14 +47,13 @@ export async function createChecklist(
 	const supabase = getSupabaseClient();
 	const payload = {
 		...checklist,
-		created_at: new Date().toISOString(),
 		items: checklist.items ? checklist.items.map((item, idx) => ({ ...item, key: idx })) : null,
 	};
 	const { data, error } = await supabase.from(TABLE).insert(payload).select().single();
 	return { data, error };
 }
 
-export async function updateChecklist(
+export async function editChecklist(
 	id: string,
 	changes: Partial<Checklist>
 ): Promise<{ data: Checklist | null; error: any }> {

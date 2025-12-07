@@ -12,8 +12,8 @@ export const aluminioChecklistNames = [
 	'Colocacion hoja',
 	'Colocacion vidrio',
 	'Colocacion herrajes y trabas',
-	'Sellado Marco',
-	'Sellado VIdrio',
+	'Sellado marco',
+	'Sellado vidrio',
 	'Accesorios',
 	'Herrajes',
 ];

@@ -62,14 +62,35 @@ export async function deleteWork(id: string): Promise<{ data: null; error: any }
 }
 
 export async function getWorksByClientId(
-	clientId: string
+  clientId: string
 ): Promise<{ data: Work[] | null; error: any }> {
-	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('id, address, locality, architect, transfer, created_at')
-		.eq('client_id', clientId)
-		.order('created_at', { ascending: false })
-		.limit(3); // Limito a las 3 obras mas recientes
-	return { data, error };
+  try {
+    console.log('Buscando obras para el cliente ID:', clientId);
+    const supabase = getSupabaseClient();
+    
+    // Realizar la consulta directamente
+    const { data, error } = await supabase
+      .from('works')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false });
+
+    console.log('Resultado de la consulta de obras:', { data, error });
+    
+    if (error) {
+      console.error('Error en la consulta de obras:', error);
+      return { data: null, error };
+    }
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error inesperado en getWorksByClientId:', {
+      error,
+      message: error instanceof Error ? error.message : 'Error desconocido'
+    });
+    return { 
+      data: null, 
+      error: error instanceof Error ? error.message : 'Error desconocido' 
+    };
+  }
 }

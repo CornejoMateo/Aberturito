@@ -6,9 +6,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Client } from '@/lib/clients/clients';
 import { Mail, Phone, MapPin, X, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { WorkForm } from '@/components/works/work-form';
-import { createWork } from '@/lib/works/works';
+import { createWork, getWorksByClientId, Work } from '@/lib/works/works';
+import { WorksList } from '@/components/works/works-list';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -19,6 +20,83 @@ interface ClientDetailsDialogProps {
 
 export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientDetailsDialogProps) {
   const [isWorkFormOpen, setIsWorkFormOpen] = useState(false);
+  const [works, setWorks] = useState<Work[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  useEffect(() => {
+    const loadWorks = async () => {
+      if (isOpen && client) {
+        try {
+          console.log('Cargando obras para el cliente ID:', client.id);
+          setIsLoading(true);
+          
+          // Añadir un pequeño retraso para asegurar que el estado anterior se haya limpiado
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          const result = await getWorksByClientId(client.id);
+          console.log('Resultado de getWorksByClientId:', result);
+          
+          if (result.error) {
+            console.error('Error al cargar las obras:', result.error);
+            // Mostrar un mensaje más detallado en la interfaz
+            return;
+          }
+          
+          if (result.data) {
+            console.log('Obras cargadas:', result.data);
+            setWorks(result.data);
+          } else {
+            console.log('No se encontraron obras para este cliente');
+            setWorks([]);
+          }
+        } catch (error) {
+          console.error('Error inesperado al cargar obras:', {
+            error,
+            message: error instanceof Error ? error.message : 'Error desconocido',
+            stack: error instanceof Error ? error.stack : undefined
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        console.log('Limpiando lista de obras');
+        setWorks([]);
+      }
+    };
+    
+    if (isOpen) {
+      loadWorks();
+    }
+  }, [isOpen, client?.id]);
+  
+  const handleWorkCreated = async (workData: Omit<Work, 'id' | 'created_at' | 'client_id'>) => {
+    if (!client) return;
+    
+    try {
+      setIsLoading(true);
+      const { data: newWork, error } = await createWork({
+        ...workData,
+        client_id: client.id
+      });
+      
+      if (error) {
+        console.error('Error al crear la obra:', error);
+        return;
+      }
+      
+      // Recargar la lista completa de obras
+      const { data: updatedWorks } = await getWorksByClientId(client.id);
+      if (updatedWorks) {
+        setWorks(updatedWorks);
+      }
+      
+      setIsWorkFormOpen(false);
+    } catch (error) {
+      console.error('Error inesperado al crear la obra:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   if (!client) return null;
 
@@ -72,15 +150,29 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                     </div>
                   </div>
                 </TabsContent>
-                <TabsContent value="works" className="relative">
+                <TabsContent value="works" className="relative space-y-4">
                   <Button 
                     onClick={() => setIsWorkFormOpen(true)}
-                    className="absolute top-0 right-0"
+                    className="absolute top-0 right-0 z-10"
                     size="sm"
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Crear obra
                   </Button>
+                  
+                  <div className="mt-10">
+                    {isLoading ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        Cargando obras...
+                      </p>
+                    ) : works.length > 0 ? (
+                      <WorksList works={works} />
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No hay obras registradas para este cliente.
+                      </p>
+                    )}
+                  </div>
                 </TabsContent>
                 <TabsContent value="budgets">
                   <p className="text-sm text-muted-foreground">
@@ -98,20 +190,10 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           <DialogHeader>
             <DialogTitle>Nueva Obra</DialogTitle>
           </DialogHeader>
-          <WorkForm
-            clientId={client?.id || ''}
-            onCancel={() => setIsWorkFormOpen(false)}
-            onSubmit={async (workData) => {
-              try {
-                await createWork({
-                  ...workData,
-                  client_id: client?.id || '',
-                });
-                setIsWorkFormOpen(false);
-              } catch (error) {
-                console.error('Error al crear la obra:', error);
-              }
-            }}
+          <WorkForm 
+            clientId={client?.id || ''} 
+            onSubmit={handleWorkCreated} 
+            onCancel={() => setIsWorkFormOpen(false)} 
           />
         </DialogContent>
       </Dialog>

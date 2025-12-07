@@ -150,17 +150,17 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                     </div>
                   </div>
                 </TabsContent>
-                <TabsContent value="works" className="relative space-y-4">
-                  <Button 
-                    onClick={() => setIsWorkFormOpen(true)}
-                    className="absolute top-0 right-0 z-10"
-                    size="sm"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Crear obra
-                  </Button>
-                  
-                  <div className="mt-10">
+                <TabsContent value="works" className="relative space-y-4 pt-2">
+                  <div className="absolute -top-13 right-0">
+                    <Button 
+                      onClick={() => setIsWorkFormOpen(true)}
+                      size="sm"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Crear obra
+                    </Button>
+                  </div>
+                  <div className="mt-2">
                     {isLoading ? (
                       <p className="text-sm text-muted-foreground text-center py-4">
                         Cargando obras...

@@ -9,7 +9,7 @@ export type Work = {
 	status?: string | null;
 	transfer?: number | null;
 	architect?: string | null;
-    notes?: string | null;
+	notes?: string | null;
 };
 
 const TABLE = 'works';
@@ -27,7 +27,6 @@ export async function getWorkById(id: string): Promise<{ data: Work | null; erro
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
 
-	// Deberia agregar el getChecklistByWorkId aca para traer los checklists asociados
 	return { data, error };
 }
 
@@ -37,7 +36,6 @@ export async function createWork(
 	const supabase = getSupabaseClient();
 	const payload = {
 		...work,
-		created_at: new Date().toISOString(),
 	};
 	const { data, error } = await supabase.from(TABLE).insert(payload).select().single();
 	return { data, error };

@@ -46,7 +46,7 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from '@/components/ui/pagination';
-import { useOptimizedRealtimeStock } from '@/hooks/use-optimized-realtime-stock';
+import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { Image } from 'lucide-react';
 import { PhotoGalleryModal } from '@/utils/stock/images/photo-gallery-modal';
 import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
@@ -90,7 +90,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 		error,
 		refresh,
 		invalidateCache
-	} = useOptimizedRealtimeStock<any>(tableName, fetcher, `stock_${category}_${materialType}`);
+	} = useOptimizedRealtime<any>(tableName, fetcher, `realtime_${category}_${materialType}`);
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedCategory, setSelectedCategory] = useState(category);

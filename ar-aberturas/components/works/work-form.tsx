@@ -16,7 +16,7 @@ interface WorkFormProps {
 export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
   const [formData, setFormData] = useState<Omit<Work, 'id' | 'created_at' | 'client_id'>>({
     locality: '',
-    addres: '',
+    address: '',
     status: 'Sin empezar',
     transfer: 0,
     architect: '',
@@ -51,11 +51,11 @@ export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="addres">Dirección</Label>
+          <Label htmlFor="address">Dirección</Label>
           <Input
-            id="addres"
-            name="addres"
-            value={formData.addres || ''}
+            id="address"
+            name="address"
+            value={formData.address || ''}
             onChange={handleChange}
             placeholder="Ej: Av. Colón 1234"
             required

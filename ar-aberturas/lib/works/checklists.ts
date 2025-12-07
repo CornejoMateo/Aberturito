@@ -17,7 +17,7 @@ export type Checklist = {
 	height?: number | null;
 	name?: string | null;
 	opening?: string | null;
-    type_opening?: string | null;
+	type_opening?: string | null;
 };
 
 const TABLE = 'checklists';
@@ -26,7 +26,9 @@ export async function listChecklists(): Promise<{ data: Checklist[] | null; erro
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('id, created_at, work_id, items, description, progress, width, height, name, opening, type_opening')
+		.select(
+			'id, created_at, work_id, items, description, progress, width, height, name, opening, type_opening'
+		)
 		.order('created_at', { ascending: false });
 	return { data, error };
 }
@@ -45,14 +47,13 @@ export async function createChecklist(
 	const supabase = getSupabaseClient();
 	const payload = {
 		...checklist,
-		created_at: new Date().toISOString(),
 		items: checklist.items ? checklist.items.map((item, idx) => ({ ...item, key: idx })) : null,
 	};
 	const { data, error } = await supabase.from(TABLE).insert(payload).select().single();
 	return { data, error };
 }
 
-export async function updateChecklist(
+export async function editChecklist(
 	id: string,
 	changes: Partial<Checklist>
 ): Promise<{ data: Checklist | null; error: any }> {

@@ -1,10 +1,11 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Work } from '@/lib/works/works';
-import { MapPin, Calendar, Building2, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { MapPin, Calendar, Building2, CheckCircle, Clock, XCircle, ListChecks } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
 
 interface WorksListProps {
   works: Work[];
@@ -23,7 +24,7 @@ export function WorksList({ works }: WorksListProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-3xl mx-auto w-full">
       {works.map((work) => (
         <Card key={work.id} className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
@@ -56,9 +57,19 @@ export function WorksList({ works }: WorksListProps) {
                     : 'Sin fecha'}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">Entregado:</span>
-                <span>${work.transfer?.toLocaleString('es-AR') || '0'}</span>
+              <div className="flex flex-wrap items-center justify-between gap-2 w-full">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="font-medium whitespace-nowrap">Entregado:</span>
+                  <span className="truncate">${work.transfer?.toLocaleString('es-AR') || '0'}</span>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 px-2 shrink-0"
+                >
+                  <ListChecks className="h-3.5 w-3.5 mr-1" />
+                  <span className="text-xs whitespace-nowrap">Crear Checklist</span>
+                </Button>
               </div>
             </div>
           </CardContent>

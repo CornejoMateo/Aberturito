@@ -1,13 +1,14 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Work } from '@/lib/works/works';
-import { MapPin, Calendar, Building2, CheckCircle, Clock, XCircle, ListChecks, Trash2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Work, updateWork } from '@/lib/works/works';
+import { MapPin, Calendar, Building2, CheckCircle, Clock, Trash2, ListChecks, DollarSign } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { DeleteWorkDialog } from '@/utils/works/delete-work-dialog';
+import { EditableField } from '@/components/works/editable-field';
 
 interface WorksListProps {
   works: Work[];
@@ -36,6 +37,17 @@ export function WorksList({ works, onDelete }: WorksListProps) {
     }
   };
 
+  const handleUpdateWork = async (workId: string, updates: Partial<Work>) => {
+    try {
+      const { data: updatedWork, error } = await updateWork(workId, updates);
+      if (error) throw error;
+      return updatedWork;
+    } catch (error) {
+      console.error('Error updating work:', error);
+      throw error;
+    }
+  };
+
   return (
     <div className="space-y-4 max-w-3xl mx-auto w-full">
       <DeleteWorkDialog
@@ -49,8 +61,21 @@ export function WorksList({ works, onDelete }: WorksListProps) {
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle className="text-lg">{work.address}</CardTitle>
-                <p className="text-sm text-muted-foreground">{work.locality}</p>
+                <EditableField
+                  value={work.address || ''}
+                  onSave={async (newValue) => {
+                    await handleUpdateWork(work.id, { address: newValue });
+                  }}
+                  label="Dirección"
+                  className="text-lg font-semibold"
+                />
+                <EditableField
+                  value={work.locality || ''}
+                  onSave={async (newValue) => {
+                    await handleUpdateWork(work.id, { locality: newValue });
+                  }}
+                  className="text-sm text-muted-foreground"
+                />
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -77,12 +102,24 @@ export function WorksList({ works, onDelete }: WorksListProps) {
           <CardContent>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-                <span>{work.architect || 'Sin arquitecto'}</span>
+                <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <EditableField
+                  value={work.architect || ''}
+                  onSave={async (newValue) => {
+                    await handleUpdateWork(work.id, { architect: newValue });
+                  }}
+                  label="Arquitecto"
+                />
               </div>
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span>{work.locality || 'Sin localidad'}</span>
+                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <EditableField
+                  value={work.locality || ''}
+                  onSave={async (newValue) => {
+                    await handleUpdateWork(work.id, { locality: newValue });
+                  }}
+                  label="Localidad"
+                />
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -92,18 +129,27 @@ export function WorksList({ works, onDelete }: WorksListProps) {
                     : 'Sin fecha'}
                 </span>
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 w-full">
-                <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-end justify-between w-full -mx-3 px-3 pb-1">
+                <div className="flex items-center gap-0 flex-wrap">
+                  <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <span className="font-medium whitespace-nowrap">Entregado:</span>
-                  <span className="truncate">${work.transfer?.toLocaleString('es-AR') || '0'}</span>
+                  <EditableField
+                    value={work.transfer?.toString() || '0'}
+                    onSave={async (newValue) => {
+                      const numValue = parseFloat(newValue.replace(/[^0-9.]/g, '')) || 0;
+                      await handleUpdateWork(work.id, { transfer: numValue });
+                    }}
+                    className="truncate"
+                    formatDisplay={(value) => `$${parseFloat(value || '0').toLocaleString('es-AR')}`}
+                  />
                 </div>
                 <Button 
                   variant="outline" 
-                  size="sm" 
-                  className="h-8 px-2 shrink-0"
+                  size="sm"
+                  className="h-8 px-2 text-xs -mr-10 -mb-5"
                 >
-                  <ListChecks className="h-3.5 w-3.5 mr-1" />
-                  <span className="text-xs whitespace-nowrap">Crear Checklist</span>
+                  <ListChecks className="h-4 w-4 mr-1.5" />
+                  <span>Checklist</span>
                 </Button>
               </div>
             </div>

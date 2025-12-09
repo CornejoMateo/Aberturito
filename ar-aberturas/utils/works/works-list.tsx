@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Work, updateWork } from '@/lib/works/works';
-import { MapPin, Calendar, Building2, CheckCircle, Clock, Trash2, ListChecks} from 'lucide-react';
+import { MapPin, Calendar, Building2, CheckCircle, Clock, Trash2, ListChecks, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -21,15 +21,22 @@ export function WorksList({ works, onDelete }: WorksListProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Finalizado':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'En progreso':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      default:
-        return <Clock className="h-4 w-4 text-gray-400" />;
-    }
+  const statusOptions = [
+    { value: 'Pendiente', label: 'Pendiente', icon: <Clock className="h-4 w-4 text-gray-400" /> },
+    { value: 'En progreso', label: 'En progreso', icon: <Clock className="h-4 w-4 text-yellow-500" /> },
+    { value: 'Finalizado', label: 'Finalizado', icon: <CheckCircle className="h-4 w-4 text-green-500" /> },
+  ];
+
+  const getStatusIcon = (status: string | null | undefined) => {
+    const statusValue = status || 'Pendiente';
+    const statusInfo = statusOptions.find(opt => opt.value === statusValue) || statusOptions[0];
+    return statusInfo.icon;
+  };
+
+  const getStatusLabel = (status: string | null | undefined) => {
+    const statusValue = status || 'Pendiente';
+    const statusInfo = statusOptions.find(opt => opt.value === statusValue) || statusOptions[0];
+    return statusInfo.label;
   };
 
   const handleDeleteConfirm = async () => {
@@ -95,9 +102,21 @@ export function WorksList({ works, onDelete }: WorksListProps) {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  {getStatusIcon(work.status || '')}
-                  <span>{work.status || 'Sin estado'}</span>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground group">
+                  <select
+                    value={work.status || 'Pendiente'}
+                    onChange={async (e) => {
+                      await handleUpdateWork(work.id, { status: e.target.value });
+                    }}
+                    className="bg-transparent border-none focus:ring-0 focus:ring-offset-0 p-1 pr-6 appearance-none focus:outline-none cursor-pointer hover:bg-muted rounded-md"
+                  >
+                    {statusOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="h-3.5 w-3.5 -ml-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 {onDelete && (
                   <Button 

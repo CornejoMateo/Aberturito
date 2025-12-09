@@ -2,16 +2,17 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Work } from '@/lib/works/works';
-import { MapPin, Calendar, Building2, CheckCircle, Clock, XCircle, ListChecks } from 'lucide-react';
+import { MapPin, Calendar, Building2, CheckCircle, Clock, XCircle, ListChecks, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 
 interface WorksListProps {
   works: Work[];
+  onDelete?: (workId: string) => Promise<void>;
 }
 
-export function WorksList({ works }: WorksListProps) {
+export function WorksList({ works, onDelete }: WorksListProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'Finalizado':
@@ -33,9 +34,26 @@ export function WorksList({ works }: WorksListProps) {
                 <CardTitle className="text-lg">{work.address}</CardTitle>
                 <p className="text-sm text-muted-foreground">{work.locality}</p>
               </div>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                {getStatusIcon(work.status || '')}
-                <span>{work.status || 'Sin estado'}</span>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  {getStatusIcon(work.status || '')}
+                  <span>{work.status || 'Sin estado'}</span>
+                </div>
+                {onDelete && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (window.confirm('¿Estás seguro de que deseas eliminar esta obra?')) {
+                        await onDelete(work.id);
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-2 w-2" />
+                  </Button>
+                )}
               </div>
             </div>
           </CardHeader>

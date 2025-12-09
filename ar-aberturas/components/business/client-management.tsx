@@ -21,10 +21,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Client, listClients, deleteClient } from '@/lib/clients/clients';
 import { ClientsAddDialog } from '@/utils/clients/clients-add-dialog';
 import { ClientDetailsDialog } from '../../utils/clients/client-details-dialog'; 
+import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 
 export function ClientManagement() {
+	// Realtime hook para clientes
+	const {
+		data: clients,
+		loading,
+		error,
+		refresh
+	} = useOptimizedRealtime<Client>(
+		'clients',
+		async () => {
+			const { data } = await listClients();
+			return data ?? [];
+		},
+		'clients_cache'
+	);
+
   // Estados
-  const [clients, setClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -34,27 +49,6 @@ export function ClientManagement() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
-
-	useEffect(() => {
-		async function load() {
-			try {
-				const { data } = await listClients();
-				setClients(data ?? []);
-			} catch (err) {
-				console.error('Error cargando clientes', err);
-			}
-		}
-		load();
-	}, []);
-
-	const handleClientAdded = async () => {
-		try {
-			const { data } = await listClients();
-			setClients(data ?? []);
-		} catch (err) {
-			console.error('Error refrescando clientes', err);
-		}
-	};
 
 	const handleEditClient = (client: Client) => {
 		setSelectedClient(client);
@@ -77,8 +71,6 @@ export function ClientManagement() {
 	const handleUpdateClient = async (updatedClient: Client) => {
 		try {
 			await updateClient(updatedClient.id, updatedClient);
-			const { data } = await listClients();
-			setClients(data ?? []);
 			setIsEditDialogOpen(false);
 			setSelectedClient(null);
 		} catch (err) {
@@ -96,10 +88,6 @@ export function ClientManagement() {
 		try {
 			const { error } = await deleteClient(clientToDelete.id);
 			if (error) throw error;
-
-			// Refresh the clients list
-			const { data } = await listClients();
-			setClients(data ?? []);
 			setClientToDelete(null);
 		} catch (err) {
 			console.error('Error eliminando el cliente:', err);
@@ -166,14 +154,12 @@ export function ClientManagement() {
 				</Button>
 				<ClientsAddDialog 
 					open={isAddDialogOpen} 
-					onOpenChange={setIsAddDialogOpen} 
-					onClientAdded={handleClientAdded} 
+					onOpenChange={setIsAddDialogOpen}
 				/>
 				{selectedClient && (
 					<ClientsAddDialog 
 						open={isEditDialogOpen} 
-						onOpenChange={setIsEditDialogOpen} 
-						onClientAdded={handleClientAdded}
+						onOpenChange={setIsEditDialogOpen}
 						clientToEdit={
 						selectedClient
 							? {

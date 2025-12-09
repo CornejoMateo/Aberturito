@@ -76,7 +76,7 @@ export function EditableField({
   }
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div className={`group flex items-center gap-2 ${className}`}>
       {label && <span className="font-medium whitespace-nowrap">{label}:</span>}
       <span className="truncate">
         {formatDisplay ? formatDisplay(value) : (value || 'Sin especificar')}
@@ -84,8 +84,9 @@ export function EditableField({
       <Button 
         variant="ghost" 
         size="sm" 
-        className="h-4 w-4 p-0"
-        onClick={() => {
+        className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={(e) => {
+          e.stopPropagation();
           setEditedValue(value);
           setIsEditing(true);
         }}

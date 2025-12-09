@@ -2,13 +2,13 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Work, updateWork } from '@/lib/works/works';
-import { MapPin, Calendar, Building2, CheckCircle, Clock, Trash2, ListChecks, DollarSign } from 'lucide-react';
+import { MapPin, Calendar, Building2, CheckCircle, Clock, Trash2, ListChecks} from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { DeleteWorkDialog } from '@/utils/works/delete-work-dialog';
-import { EditableField } from '@/components/works/editable-field';
+import { EditableField } from '@/utils/works/editable-field';
 
 interface WorksListProps {
   works: Work[];
@@ -108,7 +108,6 @@ export function WorksList({ works, onDelete }: WorksListProps) {
                   onSave={async (newValue) => {
                     await handleUpdateWork(work.id, { architect: newValue });
                   }}
-                  label="Arquitecto"
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -118,7 +117,6 @@ export function WorksList({ works, onDelete }: WorksListProps) {
                   onSave={async (newValue) => {
                     await handleUpdateWork(work.id, { locality: newValue });
                   }}
-                  label="Localidad"
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -131,7 +129,6 @@ export function WorksList({ works, onDelete }: WorksListProps) {
               </div>
               <div className="flex items-end justify-between w-full -mx-3 px-3 pb-1">
                 <div className="flex items-center gap-0 flex-wrap">
-                  <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <span className="font-medium whitespace-nowrap">Entregado:</span>
                   <EditableField
                     value={work.transfer?.toString() || '0'}

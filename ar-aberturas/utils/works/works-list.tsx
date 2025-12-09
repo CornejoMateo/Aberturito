@@ -14,13 +14,27 @@ import { EditableField } from '@/utils/works/editable-field';
 interface WorksListProps {
   works: Work[];
   onDelete?: (workId: string) => Promise<void>;
+  onWorkUpdated?: (updatedWork: Work) => void;
 }
 
-export function WorksList({ works, onDelete }: WorksListProps) {
+export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: WorksListProps) {
   const [workToDelete, setWorkToDelete] = useState<{id: string, address: string} | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [works, setWorks] = useState<Work[]>(initialWorks);
   const itemsPerPage = 6;
+  
+  // Update local works when initialWorks changes (e.g., after a refresh)
+  useEffect(() => {
+    setWorks(initialWorks);
+  }, [initialWorks]);
+  
+  // Call onWorkUpdated when works change
+  useEffect(() => {
+    if (works !== initialWorks) {
+      onWorkUpdated?.(works.find(work => work.id === workToDelete?.id) as Work);
+    }
+  }, [works, initialWorks, workToDelete?.id]);
   const statusOptions = [
     { value: 'Pendiente', label: 'Pendiente', icon: <Clock className="h-4 w-4 text-gray-400" /> },
     { value: 'En progreso', label: 'En progreso', icon: <Clock className="h-4 w-4 text-yellow-500" /> },
@@ -49,9 +63,34 @@ export function WorksList({ works, onDelete }: WorksListProps) {
 
   const handleUpdateWork = async (workId: string, updates: Partial<Work>) => {
     try {
+      // Optimistically update the UI
+      setWorks(prevWorks => 
+        prevWorks.map(work => 
+          work.id === workId ? { ...work, ...updates } : work
+        )
+      );
+      
+      // Make the API call
       const { data: updatedWork, error } = await updateWork(workId, updates);
-      if (error) throw error;
-      return updatedWork;
+      
+      if (error) {
+        // Revert the optimistic update if there's an error
+        setWorks(initialWorks);
+        throw error;
+      }
+      
+      // Ensure the UI is in sync with the server
+      const updatedWorkData = { ...updatedWork, ...updates };
+      setWorks(prevWorks => 
+        prevWorks.map(work => 
+          work.id === workId ? updatedWorkData : work
+        )
+      );
+      
+      // Notify parent component about the update
+      onWorkUpdated?.(updatedWorkData);
+      
+      return updatedWorkData;
     } catch (error) {
       console.error('Error updating work:', error);
       throw error;

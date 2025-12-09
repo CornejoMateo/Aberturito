@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Client } from '@/lib/clients/clients';
-import { Mail, Phone, MapPin, X, Plus } from 'lucide-react';
+import { MapPin, X, Plus } from 'lucide-react';
+import { EmailLink } from '@/components/ui/email-link';
+import { WhatsAppLink } from '@/components/ui/whatsapp-link';
 import { useState, useEffect } from 'react';
-import { WorkForm } from '@/components/works/work-form';
+import { WorkForm } from '@/utils/works/work-form';
 import { createWork, getWorksByClientId, Work } from '@/lib/works/works';
-import { WorksList } from '@/components/works/works-list';
+import { WorksList } from '@/utils/works/works-list';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -30,7 +32,8 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           console.log('Cargando obras para el cliente ID:', client.id);
           setIsLoading(true);
           
-          // Añadir un pequeño retraso para asegurar que el estado anterior se haya limpiado
+          // add little delay to ensure previous state is cleared
+          // ahi tenes los comentarios en ingles, te haces el gari bale
           await new Promise(resolve => setTimeout(resolve, 100));
           
           const result = await getWorksByClientId(client.id);
@@ -38,7 +41,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           
           if (result.error) {
             console.error('Error al cargar las obras:', result.error);
-            // Mostrar un mensaje más detallado en la interfaz
+            // show a more detailed message in the interface
             return;
           }
           
@@ -84,7 +87,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
         return;
       }
       
-      // Recargar la lista completa de obras
+      // reload the list of works
       const { data: updatedWorks } = await getWorksByClientId(client.id);
       if (updatedWorks) {
         setWorks(updatedWorks);
@@ -116,13 +119,19 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           <div className="mb-2">
             <h3 className="text-sm text-center font-semibold mb-1">{client.name} {client.last_name}</h3>
             <div className="flex flex-wrap justify-center gap-6">
-              <div className="flex items-center justify-center gap-1 text-xs">
-                <Mail className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                <span className="text-xs ">{client.email}</span>
+              <div className="flex items-center justify-center">
+                <EmailLink email={client.email || ''} className="text-xs hover:underline">
+                  {client.email}
+                </EmailLink>
               </div>
-              <div className="flex items-center justify-center gap-1 text-xs">
-                <Phone className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                <span className="text-xs ">{client.phone_number}</span>
+              <div className="flex items-center justify-center">
+                <WhatsAppLink 
+                  phone={client.phone_number || ''} 
+                  className="text-xs hover:underline"
+                  message={`Hola ${client.name || ''}`}
+                >
+                  {client.phone_number}
+                </WhatsAppLink>
               </div>
               <div className="flex items-center justify-center gap-1 text-xs">
                 <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />

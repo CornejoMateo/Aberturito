@@ -2,10 +2,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Work, updateWork } from '@/lib/works/works';
-import { MapPin, Calendar, Building2, CheckCircle, Clock, Trash2, ListChecks, ChevronDown } from 'lucide-react';
+import { MapPin, Calendar, Building2, CheckCircle, Clock, Trash2, ListChecks, ChevronDown, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState, useMemo, useEffect } from 'react';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { DeleteWorkDialog } from '@/utils/works/delete-work-dialog';
@@ -22,19 +24,43 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [works, setWorks] = useState<Work[]>(initialWorks);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const itemsPerPage = 6;
   
-  // Update local works when initialWorks changes (e.g., after a refresh)
+  // Filter works based on search term and filters
+  const filteredWorks = useMemo(() => {
+    return initialWorks.filter(work => {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = 
+        (work.architect?.toLowerCase().includes(searchLower) || 
+         work.address?.toLowerCase().includes(searchLower) ||
+         work.status?.toLowerCase().includes(searchLower));
+      
+      const matchesStatus = 
+        statusFilter === 'all' || 
+        (statusFilter === 'pendiente' && (!work.status || work.status === 'Pendiente')) ||
+        work.status?.toLowerCase() === statusFilter.toLowerCase();
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [initialWorks, searchTerm, statusFilter]);
+
+  // Update local works when filteredWorks changes
   useEffect(() => {
-    setWorks(initialWorks);
-  }, [initialWorks]);
+    setWorks(filteredWorks);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [filteredWorks]);
   
   // Call onWorkUpdated when works change
   useEffect(() => {
-    if (works !== initialWorks) {
-      onWorkUpdated?.(works.find(work => work.id === workToDelete?.id) as Work);
+    if (works !== initialWorks && workToDelete?.id) {
+      const updatedWork = works.find(work => work.id === workToDelete.id);
+      if (updatedWork) {
+        onWorkUpdated?.(updatedWork);
+      }
     }
-  }, [works, initialWorks, workToDelete?.id]);
+  }, [works, initialWorks, workToDelete?.id, onWorkUpdated]);
   const statusOptions = [
     { value: 'Pendiente', label: 'Pendiente', icon: <Clock className="h-4 w-4 text-gray-400" /> },
     { value: 'En progreso', label: 'En progreso', icon: <Clock className="h-4 w-4 text-yellow-500" /> },
@@ -66,7 +92,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
       // Optimistically update the UI
       setWorks(prevWorks => 
         prevWorks.map(work => 
-          work.id === workId ? { ...work, ...updates } : work
+          work.id === workId ? { ...work, ...updates } as Work : work
         )
       );
       
@@ -80,7 +106,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
       }
       
       // Ensure the UI is in sync with the server
-      const updatedWorkData = { ...updatedWork, ...updates };
+      const updatedWorkData = { ...updatedWork, ...updates } as Work;
       setWorks(prevWorks => 
         prevWorks.map(work => 
           work.id === workId ? updatedWorkData : work
@@ -113,6 +139,31 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
 
   return (
     <div className="space-y-4 max-w-3xl mx-auto w-full">
+      {/* Search and Filter Bar */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Buscar por dirección, arquitecto o estado..."
+            className="pl-9 w-full"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filtrar por estado" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los estados</SelectItem>
+            <SelectItem value="pendiente">Pendiente</SelectItem>
+            <SelectItem value="en progreso">En progreso</SelectItem>
+            <SelectItem value="finalizado">Finalizado</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <DeleteWorkDialog
         isOpen={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}

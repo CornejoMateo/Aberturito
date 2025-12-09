@@ -6,6 +6,8 @@ import { MapPin, Calendar, Building2, CheckCircle, Clock, XCircle, ListChecks, T
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { DeleteWorkDialog } from '@/utils/works/delete-work-dialog';
 
 interface WorksListProps {
   works: Work[];
@@ -13,6 +15,8 @@ interface WorksListProps {
 }
 
 export function WorksList({ works, onDelete }: WorksListProps) {
+  const [workToDelete, setWorkToDelete] = useState<{id: string, address: string} | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'Finalizado':
@@ -24,8 +28,22 @@ export function WorksList({ works, onDelete }: WorksListProps) {
     }
   };
 
+  const handleDeleteConfirm = async () => {
+    if (workToDelete) {
+      await onDelete?.(workToDelete.id);
+      setIsDeleteDialogOpen(false);
+      setWorkToDelete(null);
+    }
+  };
+
   return (
     <div className="space-y-4 max-w-3xl mx-auto w-full">
+      <DeleteWorkDialog
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        workAddress={workToDelete?.address || ''}
+      />
       {works.map((work) => (
         <Card key={work.id} className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
@@ -43,15 +61,14 @@ export function WorksList({ works, onDelete }: WorksListProps) {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                    onClick={async (e) => {
+                    className="h-4 w-4 -mr-5 -mt-11 text-muted-foreground hover:text-destructive p-1"
+                    onClick={(e) => {
                       e.stopPropagation();
-                      if (window.confirm('¿Estás seguro de que deseas eliminar esta obra?')) {
-                        await onDelete(work.id);
-                      }
+                      setWorkToDelete({ id: work.id, address: work.address });
+                      setIsDeleteDialogOpen(true);
                     }}
                   >
-                    <Trash2 className="h-2 w-2" />
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                 )}
               </div>

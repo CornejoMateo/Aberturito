@@ -6,7 +6,8 @@ import { MapPin, Calendar, Building2, CheckCircle, Clock, Trash2, ListChecks} fr
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { DeleteWorkDialog } from '@/utils/works/delete-work-dialog';
 import { EditableField } from '@/utils/works/editable-field';
 
@@ -18,6 +19,8 @@ interface WorksListProps {
 export function WorksList({ works, onDelete }: WorksListProps) {
   const [workToDelete, setWorkToDelete] = useState<{id: string, address: string} | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'Finalizado':
@@ -48,6 +51,20 @@ export function WorksList({ works, onDelete }: WorksListProps) {
     }
   };
 
+  // Calculate pagination
+  const totalPages = Math.ceil(works.length / itemsPerPage);
+  
+  // Get current items
+  const currentItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return works.slice(startIndex, startIndex + itemsPerPage);
+  }, [works, currentPage, itemsPerPage]);
+
+  // Reset to first page when works change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [works.length]);
+
   return (
     <div className="space-y-4 max-w-3xl mx-auto w-full">
       <DeleteWorkDialog
@@ -56,7 +73,7 @@ export function WorksList({ works, onDelete }: WorksListProps) {
         onConfirm={handleDeleteConfirm}
         workAddress={workToDelete?.address || ''}
       />
-      {works.map((work) => (
+      {currentItems.map((work) => (
         <Card key={work.id} className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start">
@@ -153,6 +170,64 @@ export function WorksList({ works, onDelete }: WorksListProps) {
           </CardContent>
         </Card>
       ))}
+      
+      {/* Pagination */}
+      {works.length > itemsPerPage && (
+        <div className="flex items-center justify-between px-2 mt-6">
+          <div className="text-sm text-muted-foreground">
+            Mostrando {Math.min(
+              (currentPage - 1) * itemsPerPage + 1,
+              works.length
+            )}
+            -{Math.min(
+              currentPage * itemsPerPage,
+              works.length
+            )} de {works.length} obras
+          </div>
+          
+          <Pagination className="mx-0 w-auto">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum = i + 1;
+                if (totalPages > 5) {
+                  if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                }
+                return (
+                  <PaginationItem key={pageNum}>
+                    <PaginationLink
+                      isActive={currentPage === pageNum}
+                      className="cursor-pointer"
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 }

@@ -202,7 +202,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Descripción (Opcional)</FormLabel>
+                  <FormLabel>Descripción</FormLabel>
                   <FormControl>
                     <Input placeholder="Detalles adicionales del evento" {...field} />
                   </FormControl>

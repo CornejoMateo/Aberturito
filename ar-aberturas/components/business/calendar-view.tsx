@@ -161,14 +161,19 @@ export function CalendarView() {
 
               // Actualizar el estado local con el nuevo evento
               if (newEvent) {
+                // Formatear la fecha al formato dd-MM-yyyy
+                const [year, month, day] = (newEvent.date || '').split('-');
+                const formattedDate = newEvent.date ? `${day}-${month}-${year}` : new Date().toISOString().split('T')[0];
+                
                 const formattedEvent: Event = {
                   id: newEvent.id,
-                  title: newEvent.title || '',
+                  title: newEvent.title || 'Sin título',
                   type: (newEvent.type as 'entrega' | 'instalacion' | 'medicion') || 'entrega',
-                  date: newEvent.date || '',
-                  client: newEvent.client || '',
-                  location: newEvent.location || '',
-                  status: (newEvent.status as 'programado' | 'confirmado' | 'completado') || 'programado'
+                  date: formattedDate,
+                  client: newEvent.client || 'Sin cliente',
+                  location: newEvent.location || 'Sin ubicación',
+                  status: (newEvent.status as 'programado' | 'confirmado' | 'completado') || 'programado',
+                  description: newEvent.description || ''
                 };
 
                 setEvents(prev => [...prev, formattedEvent]);

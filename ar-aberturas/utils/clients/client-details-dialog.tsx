@@ -10,7 +10,7 @@ import { EmailLink } from '@/components/ui/email-link';
 import { WhatsAppLink } from '@/components/ui/whatsapp-link';
 import { useState, useEffect } from 'react';
 import { WorkForm } from '@/utils/works/work-form';
-import { createWork, getWorksByClientId, Work } from '@/lib/works/works';
+import { createWork, getWorksByClientId, Work, deleteWork } from '@/lib/works/works';
 import { WorksList } from '@/utils/works/works-list';
 
 interface ClientDetailsDialogProps {
@@ -24,6 +24,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
   const [isWorkFormOpen, setIsWorkFormOpen] = useState(false);
   const [works, setWorks] = useState<Work[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   useEffect(() => {
     const loadWorks = async () => {
@@ -72,6 +73,30 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
     }
   }, [isOpen, client?.id]);
   
+  const handleWorkDelete = async (workId: string) => {
+    if (!client) return;
+    
+    try {
+      setIsDeleting(true);
+      const { error } = await deleteWork(workId);
+      
+      if (error) {
+        console.error('Error al eliminar la obra:', error);
+        return;
+      }
+      
+      // Refresh the works list
+      const { data: updatedWorks } = await getWorksByClientId(client.id);
+      if (updatedWorks) {
+        setWorks(updatedWorks);
+      }
+    } catch (error) {
+      console.error('Error inesperado al eliminar la obra:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleWorkCreated = async (workData: Omit<Work, 'id' | 'created_at' | 'client_id'>) => {
     if (!client) return;
     
@@ -175,7 +200,10 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                         Cargando obras...
                       </p>
                     ) : works.length > 0 ? (
-                      <WorksList works={works} />
+                      <WorksList 
+                works={works} 
+                onDelete={handleWorkDelete} 
+              />
                     ) : (
                       <p className="text-sm text-muted-foreground text-center py-4">
                         No hay obras registradas para este cliente.

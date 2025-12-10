@@ -18,15 +18,15 @@ import * as z from 'zod';
 import { useToast } from '@/components/ui/use-toast';
 
 const eventFormSchema = z.object({
-  title: z.string().optional().nullable(),
+  title: z.string().default(''),
   type: z.enum(['entrega', 'instalacion', 'medicion'], {
     required_error: 'Debes seleccionar un tipo de evento',
   }),
   date: z.date({
     required_error: 'La fecha es requerida',
   }),
-  client: z.string().optional().nullable(),
-  location: z.string().optional().nullable(),
+  client: z.string().default(''),
+  location: z.string().default(''),
 }).refine(data => !isBefore(startOfDay(data.date), startOfDay(new Date())), {
   message: 'No se pueden crear eventos en fechas pasadas',
   path: ['date']
@@ -35,7 +35,7 @@ const eventFormSchema = z.object({
 type EventFormValues = z.infer<typeof eventFormSchema>;
 
 interface EventFormModalProps {
-  onSave: (data: { title: string; type: string; date: string; client: string; location: string }) => void;
+  onSave: (data: EventFormValues) => void;
   children: React.ReactNode;
 }
 
@@ -67,7 +67,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
     onSave({
       ...data,
       date: format(data.date, 'dd-MM-yyyy'),
-    });
+    } as any);
     setIsOpen(false);
     form.reset();
     

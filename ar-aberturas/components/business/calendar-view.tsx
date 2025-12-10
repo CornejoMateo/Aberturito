@@ -15,7 +15,7 @@ import { statusConfigCalendar } from '@/constants/status-config';
 type Event = {
 	id: string;
 	title: string;
-	type: 'entrega' | 'instalacion' | 'medicion';
+	type: 'entrega' | 'instalacion' | 'medicion' | 'otros';
 	date: string;
 	client: string;
 	location: string;
@@ -424,6 +424,10 @@ export function CalendarView() {
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-chart-3" />
             <span className="text-sm text-muted-foreground">Mediciones</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full bg-gray-400" />
+            <span className="text-sm text-muted-foreground">Otros</span>
           </div>
         </div>
       </Card>

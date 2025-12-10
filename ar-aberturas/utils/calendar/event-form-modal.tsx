@@ -19,7 +19,7 @@ import { useToast } from '@/components/ui/use-toast';
 
 const eventFormSchema = z.object({
   title: z.string().default(''),
-  type: z.enum(['entrega', 'instalacion', 'medicion'], {
+  type: z.enum(['entrega', 'instalacion', 'medicion', 'otros'], {
     required_error: 'Debes seleccionar un tipo de evento',
   }),
   date: z.date({
@@ -121,6 +121,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
                       <SelectItem value="entrega">Entrega</SelectItem>
                       <SelectItem value="instalacion">Instalación</SelectItem>
                       <SelectItem value="medicion">Medición</SelectItem>
+                      <SelectItem value="otros">Otros</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

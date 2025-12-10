@@ -301,46 +301,55 @@ export function CalendarView() {
 
 							return (
 								<div
-									key={event.id}
-									className="p-3 rounded-lg bg-secondary border border-border space-y-2"
-								>
-																		<div className="flex items-start justify-between gap-2">
-																				<div className="flex items-center gap-2 min-w-0">
-																						<div className={`p-1.5 rounded ${typeInfo.color.split(' ')[0]}/10 flex-shrink-0`}>
-																								<TypeIcon className={`h-3.5 w-3.5 ${typeInfo.color.split(' ')[1]}`} />
-																						</div>
-																						<div className="min-w-0">
-																								<p className="text-sm font-medium text-foreground truncate">
-																										{event.title}
-																								</p>
-																								<p className="text-xs text-muted-foreground truncate">{event.client}</p>
-																						</div>
-																				</div>
-																				<div className="flex items-center gap-2 flex-shrink-0">
-																					<Badge variant="outline" className={`text-xs ${statusInfo.color} whitespace-nowrap`}>
-																						{statusInfo.label}
-																					</Badge>
-																					<Button variant="ghost" size="icon" onClick={() => handleDeleteEvent(event.id)} aria-label="Eliminar evento">
-																						<Trash2 className="h-4 w-4" />
-																					</Button>
-																				</div>
-																		</div>
-									<div className="space-y-1 text-xs text-muted-foreground">
-										<div className="flex items-center gap-1.5">
-											<CalendarIcon className="h-3 w-3" />
-											<span>{event.date}</span>
+								key={event.id}
+								className="p-3 rounded-lg bg-secondary border border-border space-y-2"
+							>
+								<div className="flex items-start justify-between gap-2">
+									<div className="flex items-start gap-2 min-w-0">
+										<div className={`p-1.5 rounded ${typeInfo.color.split(' ')[0]}/10 mt-0.5 flex-shrink-0`}>
+											<TypeIcon className={`h-3.5 w-3.5 ${typeInfo.color.split(' ')[1]}`} />
 										</div>
-										<div className="flex items-center gap-1.5">
-											<MapPin className="h-3 w-3" />
-											<span className="truncate">{event.location}</span>
+										<div className="min-w-0">
+											<h4 className="text-sm font-medium text-foreground break-words">
+												{event.title}
+											</h4>
+											{event.client && (
+												<p className="text-xs text-muted-foreground break-words">
+													{event.client}
+												</p>
+											)}
 										</div>
-										{event.installer && (
-											<div className="flex items-center gap-1.5">
-												<User className="h-3 w-3" />
-												<span>{event.installer}</span>
-											</div>
-										)}
 									</div>
+									<div className="flex items-start flex-shrink-0">
+										<Button 
+											variant="ghost" 
+											size="icon" 
+											onClick={() => handleDeleteEvent(event.id)} 
+											className="h-6 w-6 -mr-2"
+											aria-label="Eliminar evento"
+										>
+											<Trash2 className="h-3.5 w-3.5" />
+										</Button>
+									</div>
+								</div>
+								<div className="space-y-1 text-xs text-muted-foreground">
+									<div className="flex items-center gap-1.5">
+										<CalendarIcon className="h-3.5 w-3.5 flex-shrink-0" />
+										<span>{event.date}</span>
+									</div>
+									{event.location && (
+										<div className="flex items-start gap-1.5">
+											<MapPin className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+											<span className="break-words">{event.location}</span>
+										</div>
+									)}
+									{event.installer && (
+										<div className="flex items-center gap-1.5">
+											<User className="h-3.5 w-3.5 flex-shrink-0" />
+											<span className="break-words">{event.installer}</span>
+										</div>
+									)}
+								</div>
 								</div>
 							);
 						})}

@@ -5,8 +5,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EventFormModal } from '../../utils/calendar/event-form-modal';
-import { createEvent, listEvents } from '@/lib/calendar/events';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock as ClockIcon, MapPin, User, Package, Wrench, Loader2 } from 'lucide-react';
+import { createEvent, listEvents, deleteEvent } from '@/lib/calendar/events';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock as ClockIcon, MapPin, User, Package, Wrench, Loader2, Trash2 } from 'lucide-react';
 import { monthNames, dayNames } from '@/constants/date';
 import { typeConfig } from '@/constants/type-config';
 import { statusConfigCalendar } from '@/constants/status-config';
@@ -88,6 +88,26 @@ export function CalendarView() {
 		}, {} as Record<string, Event[]>);
 		
 		return eventsByType;
+	};
+
+	const handleDeleteEvent = async (id: string) => {
+		const confirmed = confirm('¿Eliminar este evento? Esta acción no se puede deshacer.');
+		if (!confirmed) return;
+
+		try {
+			const { data, error } = await deleteEvent(id);
+			if (error) {
+				console.error('Error al eliminar el evento:', error);
+				alert('No se pudo eliminar el evento');
+				return;
+			}
+
+			setEvents((prev) => prev.filter((e) => e.id !== id));
+			alert('Evento eliminado');
+		} catch (err) {
+			console.error('Error inesperado al eliminar evento:', err);
+			alert('Error inesperado al eliminar el evento');
+		}
 	};
 
 	const upcomingEvents = events.filter((event) => {
@@ -284,25 +304,27 @@ export function CalendarView() {
 									key={event.id}
 									className="p-3 rounded-lg bg-secondary border border-border space-y-2"
 								>
-									<div className="flex items-start justify-between gap-2">
-										<div className="flex items-center gap-2">
-											<div className={`p-1.5 rounded ${typeInfo.color.split(' ')[0]}/10`}>
-												<TypeIcon className={`h-3.5 w-3.5 ${typeInfo.color.split(' ')[1]}`} />
-											</div>
-											<div className="min-w-0">
-												<p className="text-sm font-medium text-foreground truncate">
-													{event.title}
-												</p>
-												<p className="text-xs text-muted-foreground">{event.client}</p>
-											</div>
-										</div>
-										<Badge
-											variant="outline"
-											className={`text-xs ${statusInfo.color} flex-shrink-0`}
-										>
-											{statusInfo.label}
-										</Badge>
-									</div>
+																		<div className="flex items-start justify-between gap-2">
+																				<div className="flex items-center gap-2 min-w-0">
+																						<div className={`p-1.5 rounded ${typeInfo.color.split(' ')[0]}/10 flex-shrink-0`}>
+																								<TypeIcon className={`h-3.5 w-3.5 ${typeInfo.color.split(' ')[1]}`} />
+																						</div>
+																						<div className="min-w-0">
+																								<p className="text-sm font-medium text-foreground truncate">
+																										{event.title}
+																								</p>
+																								<p className="text-xs text-muted-foreground truncate">{event.client}</p>
+																						</div>
+																				</div>
+																				<div className="flex items-center gap-2 flex-shrink-0">
+																					<Badge variant="outline" className={`text-xs ${statusInfo.color} whitespace-nowrap`}>
+																						{statusInfo.label}
+																					</Badge>
+																					<Button variant="ghost" size="icon" onClick={() => handleDeleteEvent(event.id)} aria-label="Eliminar evento">
+																						<Trash2 className="h-4 w-4" />
+																					</Button>
+																				</div>
+																		</div>
 									<div className="space-y-1 text-xs text-muted-foreground">
 										<div className="flex items-center gap-1.5">
 											<CalendarIcon className="h-3 w-3" />

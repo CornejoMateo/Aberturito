@@ -1,21 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EventFormModal } from '../../utils/calendar/event-form-modal';
-import { createEvent } from '@/lib/calendar/events';
-import {
-  Calendar as CalendarIcon,
-  ChevronLeft,
-  ChevronRight,
-  Clock as ClockIcon,
-  MapPin,
-  User,
-  Package,
-  Wrench,
-} from 'lucide-react';
+import { createEvent, listEvents } from '@/lib/calendar/events';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock as ClockIcon, MapPin, User, Package, Wrench, Loader2 } from 'lucide-react';
 import { monthNames, dayNames } from '@/constants/date';
 import { typeConfig } from '@/constants/type-config';
 import { statusConfigCalendar } from '@/constants/status-config';
@@ -35,19 +26,76 @@ type Event = {
 export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 2, 11)); // March 11, 2025
   const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Cargar eventos al montar el componente
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const result = await listEvents();
+        
+        if (result.error) {
+          console.error('Error al cargar los eventos:', result.error);
+          setEvents([]);
+          return;
+        }
+        
+        if (result.data) {
+          const formattedEvents = result.data.map(event => ({
+            id: event.id,
+            title: event.title || 'Sin título',
+            type: (event.type as 'entrega' | 'instalacion' | 'medicion') || 'entrega',
+            date: event.date || new Date().toISOString().split('T')[0],
+            client: event.client || 'Sin cliente',
+            location: event.location || 'Sin ubicación',
+            status: (event.status as 'programado' | 'confirmado' | 'completado') || 'programado',
+            installer: undefined
+          }));
+          setEvents(formattedEvents);
+        } else {
+          setEvents([]);
+        }
+      } catch (error) {
+        console.error('Error inesperado al cargar los eventos:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadEvents();
+  }, []);
 
 	const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
 	const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
 
 	const getEventsForDate = (day: number) => {
 		const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-		return events.filter((event) => event.date === dateStr);
+		const dayEvents = events.filter((event) => event.date === dateStr);
+		
+		// Agrupar eventos por tipo
+		const eventsByType = dayEvents.reduce((acc, event) => {
+			if (!acc[event.type]) {
+				acc[event.type] = [];
+			}
+			acc[event.type].push(event);
+			return acc;
+		}, {} as Record<string, Event[]>);
+		
+		return eventsByType;
 	};
 
 	const upcomingEvents = events.filter((event) => {
 		const eventDate = new Date(event.date);
 		return eventDate >= new Date(2025, 2, 11);
 	});
+
+	if (isLoading) {
+		return (
+			<div className="flex items-center justify-center h-64">
+				<Loader2 className="h-8 w-8 animate-spin text-primary" />
+			</div>
+		);
+	}
 
 	return (
 		<div className="space-y-6">
@@ -178,20 +226,33 @@ export function CalendarView() {
 									>
 										<div className="flex flex-col h-full">
 											<span
-												className={`text-sm font-medium ${isToday ? 'text-primary' : dayEvents.length > 0 ? 'text-foreground' : 'text-muted-foreground'}`}
+												className={`text-sm font-medium ${isToday ? 'text-primary' : Object.keys(dayEvents).length > 0 ? 'text-foreground' : 'text-muted-foreground'}`}
 											>
 												{day}
 											</span>
-											{dayEvents.length > 0 && (
+											{Object.keys(dayEvents).length > 0 && (
 												<div className="flex-1 flex items-center justify-center mt-1">
-													<div className="flex gap-1">
-														{dayEvents.slice(0, 3).map((event, i) => {
-															const typeInfo = typeConfig[event.type];
+													<div className="flex flex-wrap gap-1 justify-center">
+														{Object.entries(dayEvents).map(([type, typeEvents]) => {
+															const typeInfo = typeConfig[type as 'entrega' | 'instalacion' | 'medicion'];
+															// Mostrar hasta 3 eventos por tipo
+															const dotsToShow = Math.min(typeEvents.length, 3);
+															
 															return (
-																<div
-																	key={i}
-																	className={`h-1.5 w-1.5 rounded-full ${typeInfo.color.split(' ')[0]}`}
-																/>
+																<div key={type} className="flex flex-col items-center">
+																	<div className="flex gap-0.5">
+																		{Array.from({ length: dotsToShow }).map((_, i) => (
+																			<div
+																				key={i}
+																				className={`h-2 w-2 rounded-full ${typeInfo.color.split(' ')[0]}`}
+																				title={`${typeEvents.length} ${typeInfo.label.toLowerCase()}${typeEvents.length > 1 ? 's' : ''}`}
+																			/>
+																		))}
+																	</div>
+																	{typeEvents.length > 3 && (
+																		<span className="text-[8px] text-muted-foreground">+{typeEvents.length - 3}</span>
+																	)}
+																</div>
 															);
 														})}
 													</div>

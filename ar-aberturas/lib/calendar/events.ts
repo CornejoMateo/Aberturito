@@ -22,31 +22,45 @@ const TABLE = 'events';
 // It's a method that shouldn't be used, but I'm adding it just in case.
 export async function listEvents(): Promise<{ data: Event[] | null; error: any }> {
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select(`
-      id, 
-      created_at, 
-      date_id, 
-      type, 
-      title,
-      description, 
-      client,
-      location,
-      status,
-      time,
-      work_id,
-      dates (date)
-    `)
-    .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select(`
+        id, 
+        type,
+        title,
+        description,
+        client,
+        location,
+        status,
+        work_id,
+        date_id,
+        dates (
+          date
+        )
+      `)
+      .order('created_at', { ascending: true });
 
-  // Mapear los datos para incluir la fecha directamente en el evento
-  const events = data?.map(event => ({
-    ...event,
-    date: event.dates?.[0]?.date
-  })) || null;
+    if (error) {
+      console.error('Error al cargar eventos:', error);
+      return { data: null, error };
+    }
 
-  return { data: events, error };
+    // Mapear los datos para incluir la fecha directamente en el objeto
+    const events = data?.map(event => ({
+      ...event,
+      date: event.dates?.[0]?.date || new Date().toISOString().split('T')[0]
+    })) || [];
+
+    return { data: events, error: null };
+
+  } catch (error) {
+    console.error('Error inesperado al listar eventos:', error);
+    return { 
+      data: null, 
+      error: error instanceof Error ? error : new Error('Error desconocido al listar eventos')
+    };
+  }
 }
 
 export async function getEventById(id: string): Promise<{ data: Event | null; error: any }> {

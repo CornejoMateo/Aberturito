@@ -177,7 +177,6 @@ export function CalendarView() {
                 };
 
                 setEvents(prev => [...prev, formattedEvent]);
-                alert('Evento creado correctamente');
                 return true;
               }
 

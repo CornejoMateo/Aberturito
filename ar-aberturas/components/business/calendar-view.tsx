@@ -157,15 +157,19 @@ export function CalendarView() {
         <EventFormModal
           onSave={async (eventData) => {
             try {
+              // Convertir la fecha de DD-MM-YYYY a YYYY-MM-DD para la base de datos
+              const [day, month, year] = (eventData.date as string).split('-').map(Number);
+              const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+              
               // Crear el evento en la base de datos
               const { data: newEvent, error } = await createEvent({
                 title: eventData.title,
                 type: eventData.type,
-                description: eventData.description || eventData.title, // Usar la descripción si existe, si no, el título
+                description: eventData.description || eventData.title,
                 client: eventData.client,
                 location: eventData.location,
                 status: 'programado',
-                date: eventData.date as unknown as string,
+                date: formattedDate,
               });
 
               if (error) {

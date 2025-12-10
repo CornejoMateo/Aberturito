@@ -1,193 +1,211 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { format, isBefore, startOfDay } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { useToast } from '@/components/ui/use-toast';
 
-type EventType = 'entrega' | 'instalacion' | 'medicion' | '';
+const eventFormSchema = z.object({
+  title: z.string().optional().nullable(),
+  type: z.enum(['entrega', 'instalacion', 'medicion'], {
+    required_error: 'Debes seleccionar un tipo de evento',
+  }),
+  date: z.date({
+    required_error: 'La fecha es requerida',
+  }),
+  client: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+}).refine(data => !isBefore(startOfDay(data.date), startOfDay(new Date())), {
+  message: 'No se pueden crear eventos en fechas pasadas',
+  path: ['date']
+});
 
-interface EventFormData {
-  title: string;
-  type: EventType;
-  date: Date | undefined;
-  client: string;
-  location: string;
-}
+type EventFormValues = z.infer<typeof eventFormSchema>;
 
 interface EventFormModalProps {
-  onSave: (eventData: Omit<EventFormData, 'date'> & { date: string }) => void;
+  onSave: (data: { title: string; type: string; date: string; client: string; location: string }) => void;
   children: React.ReactNode;
 }
 
 export function EventFormModal({ onSave, children }: EventFormModalProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [formData, setFormData] = useState<EventFormData>({
-    title: '',
-    type: '',
-    date: undefined,
-    client: '',
-    location: '',
-  });
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.date) return;
-    
-    onSave({
-      ...formData,
-      date: format(formData.date, 'yyyy-MM-dd')
-    });
-    
-    // Reset form and close modal
-    setFormData({
+  const { toast } = useToast();
+  
+  const form = useForm<EventFormValues>({
+    resolver: zodResolver(eventFormSchema),
+    defaultValues: {
       title: '',
-      type: '',
-      date: undefined,
+      type: 'entrega',
       client: '',
       location: '',
+    },
+  });
+
+  const onSubmit = (data: EventFormValues) => {
+    // Validación adicional por si acaso
+    if (isBefore(startOfDay(data.date), startOfDay(new Date()))) {
+      toast({
+        title: 'Error',
+        description: 'No se pueden crear eventos en fechas pasadas',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    onSave({
+      ...data,
+      date: format(data.date, 'dd-MM-yyyy'),
     });
     setIsOpen(false);
+    form.reset();
+    
+    toast({
+      title: 'Evento creado',
+      description: 'El evento se ha creado correctamente',
+    });
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Nuevo Evento</DialogTitle>
+          <DialogTitle>Nuevo evento</DialogTitle>
+          <DialogDescription>
+            Completa los detalles del nuevo evento. Haz clic en guardar cuando hayas terminado.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Título</Label>
-            <Input
-              id="title"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
               name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              placeholder="Ej: Entrega de ventanas"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Título</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Título del evento" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="type">Tipo</Label>
-            <Select 
-              value={formData.type} 
-              onValueChange={(value: EventType) => 
-                setFormData(prev => ({ ...prev, type: value }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="entrega">Entrega</SelectItem>
-                <SelectItem value="instalacion">Instalación</SelectItem>
-                <SelectItem value="medicion">Medición</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Fecha</Label>
-            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.date ? (
-                    format(formData.date, "PPP", { locale: es })
-                  ) : (
-                    <span>Seleccionar fecha</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={formData.date}
-                  onSelect={(date) => {
-                    setFormData(prev => ({ ...prev, date: date || undefined }));
-                    setIsCalendarOpen(false);
-                  }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="client">Cliente</Label>
-            <Input
-              id="client"
+
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de evento</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un tipo de evento" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="entrega">Entrega</SelectItem>
+                      <SelectItem value="instalacion">Instalación</SelectItem>
+                      <SelectItem value="medicion">Medición</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Fecha del evento</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-full pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground'
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, 'PPP', { locale: es })
+                          ) : (
+                            <span>Selecciona una fecha</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) => isBefore(date, startOfDay(new Date()))}
+                        initialFocus
+                        locale={es}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="client"
-              value={formData.client}
-              onChange={handleInputChange}
-              placeholder="Nombre del cliente"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cliente</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nombre del cliente" {...field} />
+                    </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="location">Ubicación</Label>
-            <Input
-              id="location"
+
+            <FormField
+              control={form.control}
               name="location"
-              value={formData.location}
-              onChange={handleInputChange}
-              placeholder="Dirección de la ubicación"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ubicación</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Dirección de la ubicación" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          
-          <div className="flex justify-end gap-2 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => setIsOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={!formData.date}
-            >
-              Guardar
-            </Button>
-          </div>
-        </form>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => {
+                form.reset();
+                setIsOpen(false);
+              }}>
+                Cancelar
+              </Button>
+              <Button type="submit">Guardar</Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

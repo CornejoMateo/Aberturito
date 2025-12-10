@@ -25,71 +25,16 @@ type Event = {
 	title: string;
 	type: 'entrega' | 'instalacion' | 'medicion';
 	date: string;
-	time: string;
 	client: string;
 	location: string;
 	installer?: string;
 	status: 'programado' | 'confirmado' | 'completado';
 };
 
-const eventsData: Event[] = [
-  {
-    id: '1',
-		title: 'Entrega de ventanas',
-		type: 'entrega',
-		date: '2025-03-11',
-		time: '10:00',
-		client: 'Juan Pérez',
-		location: 'Av. Colón 1234',
-		status: 'confirmado',
-	},
-	{
-		id: '2',
-		title: 'Instalación de puerta',
-		type: 'instalacion',
-		date: '2025-03-12',
-		time: '09:00',
-		client: 'María González',
-		location: 'Calle San Martín 567',
-		installer: 'Roberto Silva',
-		status: 'programado',
-	},
-	{
-		id: '3',
-		title: 'Medición en obra',
-		type: 'medicion',
-		date: '2025-03-13',
-		time: '14:00',
-		client: 'Carlos López',
-		location: 'Av. Libertador 890',
-		status: 'programado',
-	},
-	{
-		id: '4',
-		title: 'Instalación ventanas',
-		type: 'instalacion',
-		date: '2025-03-14',
-		time: '08:30',
-		client: 'Laura Martínez',
-		location: 'Río Ceballos',
-		installer: 'Carlos Gómez',
-		status: 'confirmado',
-	},
-	{
-		id: '5',
-		title: 'Entrega de materiales',
-		type: 'entrega',
-		date: '2025-03-15',
-		time: '11:00',
-		client: 'Roberto Fernández',
-		location: 'Alta Gracia',
-		status: 'programado',
-	},
-];
 
 export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 2, 11)); // March 11, 2025
-  const [events, setEvents] = useState<Event[]>(eventsData);
+  const [events, setEvents] = useState<Event[]>([]);
 
 	const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
 	const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -117,33 +62,44 @@ export function CalendarView() {
 				<EventFormModal 
           onSave={async (eventData) => {
             try {
-              // Aquí iría la lógica para guardar el evento en la base de datos
-              // Por ahora, lo agregamos al estado local
-              const newEvent: Event = {
-                id: Date.now().toString(),
+              // Crear el evento en la base de datos
+              const { data: newEvent, error } = await createEvent({
                 title: eventData.title,
-                type: eventData.type as 'entrega' | 'instalacion' | 'medicion',
-                date: eventData.date,
+                type: eventData.type,
+                description: eventData.title, // Usamos el título como descripción por defecto
                 client: eventData.client,
                 location: eventData.location,
                 status: 'programado',
-              };
+                date: eventData.date,
+              });
+
+              if (error) {
+                console.error('Error al crear el evento:', error);
+                alert(`Error al crear el evento: ${error.message}`);
+                return false;
+              }
+
+              // Actualizar el estado local con el nuevo evento
+              if (newEvent) {
+                const formattedEvent: Event = {
+                  id: newEvent.id,
+                  title: newEvent.title || '',
+                  type: (newEvent.type as 'entrega' | 'instalacion' | 'medicion') || 'entrega',
+                  date: newEvent.date || '',
+                  client: newEvent.client || '',
+                  location: newEvent.location || '',
+                  status: (newEvent.status as 'programado' | 'confirmado' | 'completado') || 'programado'
+                };
+                
+                setEvents(prev => [...prev, formattedEvent]);
+                alert('Evento creado correctamente');
+                return true;
+              }
               
-              setEvents(prev => [...prev, newEvent]);
-              alert('Evento creado correctamente');
-              
-              // Aquí podrías llamar a tu API para guardar el evento
-              // await createEvent({
-              //   date: eventData.date,
-              //   type: eventData.type,
-              //   description: eventData.title,
-              //   // Agregar más campos según sea necesario
-              // });
-              
-              return true;
+              return false;
             } catch (error) {
-              console.error('Error al crear el evento:', error);
-              alert('Error al crear el evento');
+              console.error('Error inesperado al crear el evento:', error);
+              alert('Error inesperado al crear el evento');
               return false;
             }
           }}

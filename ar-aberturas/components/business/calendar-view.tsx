@@ -41,16 +41,22 @@ export function CalendarView() {
         }
         
         if (result.data) {
-          const formattedEvents = result.data.map(event => ({
-            id: event.id,
-            title: event.title || 'Sin título',
-            type: (event.type as 'entrega' | 'instalacion' | 'medicion') || 'entrega',
-            date: event.date || new Date().toISOString().split('T')[0],
-            client: event.client || 'Sin cliente',
-            location: event.location || 'Sin ubicación',
-            status: (event.status as 'programado' | 'confirmado' | 'completado') || 'programado',
-            installer: undefined
-          }));
+          const formattedEvents = result.data.map(event => {
+            // Convertir la fecha de yyyy-MM-dd a dd-MM-yyyy
+            const [year, month, day] = event.date.split('-');
+            const formattedDate = event.date ? `${day}-${month}-${year}` : new Date().toISOString().split('T')[0];
+            
+            return {
+              id: event.id,
+              title: event.title || 'Sin título',
+              type: (event.type as 'entrega' | 'instalacion' | 'medicion') || 'entrega',
+              date: formattedDate,
+              client: event.client || 'Sin cliente',
+              location: event.location || 'Sin ubicación',
+              status: (event.status as 'programado' | 'confirmado' | 'completado') || 'programado',
+              installer: undefined
+            };
+          });
           setEvents(formattedEvents);
         } else {
           setEvents([]);

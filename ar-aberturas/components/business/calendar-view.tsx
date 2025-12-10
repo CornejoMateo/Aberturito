@@ -43,7 +43,7 @@ export function CalendarView() {
         if (result.data) {
           const formattedEvents = result.data.map(event => {
             // Convertir la fecha de yyyy-MM-dd a dd-MM-yyyy
-            const [year, month, day] = event.date.split('-');
+            const [year, month, day] = (event.date || '').split('-');
             const formattedDate = event.date ? `${day}-${month}-${year}` : new Date().toISOString().split('T')[0];
             
             return {
@@ -113,7 +113,7 @@ export function CalendarView() {
 						Entregas, instalaciones y eventos programados
 					</p>
 				</div>
-				<EventFormModal 
+        <EventFormModal 
           onSave={async (eventData) => {
             try {
               // Crear el evento en la base de datos
@@ -124,10 +124,8 @@ export function CalendarView() {
                 client: eventData.client,
                 location: eventData.location,
                 status: 'programado',
-                date: eventData.date,
-              });
-
-              if (error) {
+                date: eventData.date as unknown as string,
+              });              if (error) {
                 console.error('Error al crear el evento:', error);
                 alert(`Error al crear el evento: ${error.message}`);
                 return false;
@@ -225,7 +223,7 @@ export function CalendarView() {
 										className={`aspect-square p-2 rounded-lg border transition-colors ${
 											isToday
 												? 'border-primary bg-primary/5'
-												: dayEvents.length > 0
+												: Object.keys(dayEvents).length > 0
 													? 'border-border bg-secondary hover:bg-secondary/80'
 													: 'border-border hover:bg-secondary/50'
 										}`}

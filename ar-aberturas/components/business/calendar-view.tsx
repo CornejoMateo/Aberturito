@@ -4,15 +4,17 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { EventFormModal } from '../../utils/calendar/event-form-modal';
+import { createEvent } from '@/lib/calendar/events';
 import {
-	Calendar,
-	ChevronLeft,
-	ChevronRight,
-	Clock,
-	MapPin,
-	User,
-	Package,
-	Wrench,
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  Clock as ClockIcon,
+  MapPin,
+  User,
+  Package,
+  Wrench,
 } from 'lucide-react';
 import { monthNames, dayNames } from '@/constants/date';
 import { typeConfig } from '@/constants/type-config';
@@ -30,9 +32,9 @@ type Event = {
 	status: 'programado' | 'confirmado' | 'completado';
 };
 
-const events: Event[] = [
-	{
-		id: '1',
+const eventsData: Event[] = [
+  {
+    id: '1',
 		title: 'Entrega de ventanas',
 		type: 'entrega',
 		date: '2025-03-11',
@@ -86,7 +88,8 @@ const events: Event[] = [
 ];
 
 export function CalendarView() {
-	const [currentDate, setCurrentDate] = useState(new Date(2025, 2, 11)); // March 11, 2025
+  const [currentDate, setCurrentDate] = useState(new Date(2025, 2, 11)); // March 11, 2025
+  const [events, setEvents] = useState<Event[]>(eventsData);
 
 	const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
 	const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -111,10 +114,45 @@ export function CalendarView() {
 						Entregas, instalaciones y eventos programados
 					</p>
 				</div>
-				<Button className="gap-2">
-					<Calendar className="h-4 w-4" />
-					Nuevo evento
-				</Button>
+				<EventFormModal 
+          onSave={async (eventData) => {
+            try {
+              // Aquí iría la lógica para guardar el evento en la base de datos
+              // Por ahora, lo agregamos al estado local
+              const newEvent: Event = {
+                id: Date.now().toString(),
+                title: eventData.title,
+                type: eventData.type as 'entrega' | 'instalacion' | 'medicion',
+                date: eventData.date,
+                client: eventData.client,
+                location: eventData.location,
+                status: 'programado',
+              };
+              
+              setEvents(prev => [...prev, newEvent]);
+              alert('Evento creado correctamente');
+              
+              // Aquí podrías llamar a tu API para guardar el evento
+              // await createEvent({
+              //   date: eventData.date,
+              //   type: eventData.type,
+              //   description: eventData.title,
+              //   // Agregar más campos según sea necesario
+              // });
+              
+              return true;
+            } catch (error) {
+              console.error('Error al crear el evento:', error);
+              alert('Error al crear el evento');
+              return false;
+            }
+          }}
+        >
+          <Button className="gap-2">
+            <CalendarIcon className="h-4 w-4" />
+            Nuevo evento
+          </Button>
+        </EventFormModal>
 			</div>
 
 			<div className="grid gap-6 lg:grid-cols-3">
@@ -246,12 +284,8 @@ export function CalendarView() {
 									</div>
 									<div className="space-y-1 text-xs text-muted-foreground">
 										<div className="flex items-center gap-1.5">
-											<Calendar className="h-3 w-3" />
+											<CalendarIcon className="h-3 w-3" />
 											<span>{event.date}</span>
-										</div>
-										<div className="flex items-center gap-1.5">
-											<Clock className="h-3 w-3" />
-											<span>{event.time} hs</span>
 										</div>
 										<div className="flex items-center gap-1.5">
 											<MapPin className="h-3 w-3" />

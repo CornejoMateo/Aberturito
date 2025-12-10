@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EventFormModal } from '../../utils/calendar/event-form-modal';
+import { EventDetailsModal } from '../../utils/calendar/event-details-modal';
 import { createEvent, listEvents, deleteEvent } from '@/lib/calendar/events';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock as ClockIcon, MapPin, User, Package, Wrench, Loader2, Trash2 } from 'lucide-react';
 import { monthNames, dayNames } from '@/constants/date';
@@ -27,6 +28,8 @@ export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 2, 11)); // March 11, 2025
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   
   // Cargar eventos al montar el componente
   useEffect(() => {
@@ -54,7 +57,8 @@ export function CalendarView() {
               client: event.client || 'Sin cliente',
               location: event.location || 'Sin ubicación',
               status: (event.status as 'programado' | 'confirmado' | 'completado') || 'programado',
-              installer: undefined
+              installer: undefined,
+              description: event.description || '' // Asegurarse de incluir la descripción
             };
           });
           setEvents(formattedEvents);
@@ -71,81 +75,85 @@ export function CalendarView() {
     loadEvents();
   }, []);
 
-	const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-	const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
 
-	const getEventsForDate = (day: number) => {
-		const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-		const dayEvents = events.filter((event) => event.date === dateStr);
-		
-		// Agrupar eventos por tipo
-		const eventsByType = dayEvents.reduce((acc, event) => {
-			if (!acc[event.type]) {
-				acc[event.type] = [];
-			}
-			acc[event.type].push(event);
-			return acc;
-		}, {} as Record<string, Event[]>);
-		
-		return eventsByType;
-	};
+  const getEventsForDate = (day: number) => {
+    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dayEvents = events.filter((event) => event.date === dateStr);
 
-	const handleDeleteEvent = async (id: string) => {
-		const confirmed = confirm('¿Eliminar este evento? Esta acción no se puede deshacer.');
-		if (!confirmed) return;
+    // Agrupar eventos por tipo
+    const eventsByType = dayEvents.reduce((acc, event) => {
+      if (!acc[event.type]) {
+        acc[event.type] = [];
+      }
+      acc[event.type].push(event);
+      return acc;
+    }, {} as Record<string, Event[]>);
 
-		try {
-			const { data, error } = await deleteEvent(id);
-			if (error) {
-				console.error('Error al eliminar el evento:', error);
-				alert('No se pudo eliminar el evento');
-				return;
-			}
+    return eventsByType;
+  };
 
-			setEvents((prev) => prev.filter((e) => e.id !== id));
-			alert('Evento eliminado');
-		} catch (err) {
-			console.error('Error inesperado al eliminar evento:', err);
-			alert('Error inesperado al eliminar el evento');
-		}
-	};
+  const handleDeleteEvent = async (eventId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Evitar que el clic se propague al contenedor
+    if (confirm('¿Estás seguro de que deseas eliminar este evento?')) {
+      const { error } = await deleteEvent(eventId);
+      if (!error) {
+        setEvents(events.filter(event => event.id !== eventId));
+        // Cerrar el modal de detalles si está abierto
+        if (selectedEvent?.id === eventId) {
+          setIsDetailsModalOpen(false);
+          setSelectedEvent(null);
+        }
+      } else {
+        console.error('Error al eliminar el evento:', error);
+      }
+    }
+  };
 
-	const upcomingEvents = events.filter((event) => {
-		const eventDate = new Date(event.date);
-		return eventDate >= new Date(2025, 2, 11);
-	});
+  const handleEventClick = (event: Event) => {
+    setSelectedEvent(event);
+    setIsDetailsModalOpen(true);
+  };
 
-	if (isLoading) {
-		return (
-			<div className="flex items-center justify-center h-64">
-				<Loader2 className="h-8 w-8 animate-spin text-primary" />
-			</div>
-		);
-	}
+  const upcomingEvents = events.filter((event) => {
+    const eventDate = new Date(event.date);
+    return eventDate >= new Date(2025, 2, 11);
+  });
 
-	return (
-		<div className="space-y-6">
-			{/* Header */}
-			<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-				<div>
-					<h2 className="text-2xl font-bold text-foreground text-balance">Calendario</h2>
-					<p className="text-muted-foreground mt-1">
-						Entregas, instalaciones y eventos programados
-					</p>
-				</div>
-        <EventFormModal 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground text-balance">Calendario</h2>
+          <p className="text-muted-foreground mt-1">
+            Entregas, instalaciones y eventos programados
+          </p>
+        </div>
+        <EventFormModal
           onSave={async (eventData) => {
             try {
               // Crear el evento en la base de datos
               const { data: newEvent, error } = await createEvent({
                 title: eventData.title,
                 type: eventData.type,
-                description: eventData.title, // Usamos el título como descripción por defecto
+                description: eventData.description || eventData.title, // Usar la descripción si existe, si no, el título
                 client: eventData.client,
                 location: eventData.location,
                 status: 'programado',
                 date: eventData.date as unknown as string,
-              });              if (error) {
+              });
+
+              if (error) {
                 console.error('Error al crear el evento:', error);
                 alert(`Error al crear el evento: ${error.message}`);
                 return false;
@@ -162,12 +170,12 @@ export function CalendarView() {
                   location: newEvent.location || '',
                   status: (newEvent.status as 'programado' | 'confirmado' | 'completado') || 'programado'
                 };
-                
+
                 setEvents(prev => [...prev, formattedEvent]);
                 alert('Evento creado correctamente');
                 return true;
               }
-              
+
               return false;
             } catch (error) {
               console.error('Error inesperado al crear el evento:', error);
@@ -181,199 +189,215 @@ export function CalendarView() {
             Nuevo evento
           </Button>
         </EventFormModal>
-			</div>
+      </div>
 
-			<div className="grid gap-6 lg:grid-cols-3">
-				{/* Calendar */}
-				<Card className="p-6 bg-card border-border lg:col-span-2">
-					<div className="space-y-4">
-						{/* Calendar header */}
-						<div className="flex items-center justify-between">
-							<h3 className="text-lg font-semibold text-foreground">
-								{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-							</h3>
-							<div className="flex gap-2">
-								<Button
-									variant="outline"
-									size="icon"
-									onClick={() =>
-										setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))
-									}
-								>
-									<ChevronLeft className="h-4 w-4" />
-								</Button>
-								<Button
-									variant="outline"
-									size="icon"
-									onClick={() =>
-										setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))
-									}
-								>
-									<ChevronRight className="h-4 w-4" />
-								</Button>
-							</div>
-						</div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Calendar */}
+        <Card className="p-6 bg-card border-border lg:col-span-2">
+          <div className="space-y-4">
+            {/* Calendar header */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-foreground">
+                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+              </h3>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() =>
+                    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))
+                  }
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() =>
+                    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))
+                  }
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
 
-						{/* Calendar grid */}
-						<div className="grid grid-cols-7 gap-2">
-							{/* Day names */}
-							{dayNames.map((day) => (
-								<div
-									key={day}
-									className="text-center text-xs font-medium text-muted-foreground py-2"
-								>
-									{day}
-								</div>
-							))}
+            {/* Calendar grid */}
+            <div className="grid grid-cols-7 gap-2">
+              {/* Day names */}
+              {dayNames.map((day) => (
+                <div
+                  key={day}
+                  className="text-center text-xs font-medium text-muted-foreground py-2"
+                >
+                  {day}
+                </div>
+              ))}
 
-							{/* Empty cells for days before month starts */}
-							{Array.from({ length: firstDayOfMonth }).map((_, index) => (
-								<div key={`empty-${index}`} className="aspect-square" />
-							))}
+              {/* Empty cells for days before month starts */}
+              {Array.from({ length: firstDayOfMonth }).map((_, index) => (
+                <div key={`empty-${index}`} className="aspect-square" />
+              ))}
 
-							{/* Calendar days */}
-							{Array.from({ length: daysInMonth }).map((_, index) => {
-								const day = index + 1;
-								const dayEvents = getEventsForDate(day);
-								const isToday = day === 11; // Demo: March 11 is today
+              {/* Calendar days */}
+              {Array.from({ length: daysInMonth }).map((_, index) => {
+                const day = index + 1;
+                const dayEvents = getEventsForDate(day);
+                const isToday = day === 11; // Demo: March 11 is today
 
-								return (
-									<div
-										key={day}
-										className={`aspect-square p-2 rounded-lg border transition-colors ${
-											isToday
-												? 'border-primary bg-primary/5'
-												: Object.keys(dayEvents).length > 0
-													? 'border-border bg-secondary hover:bg-secondary/80'
-													: 'border-border hover:bg-secondary/50'
-										}`}
-									>
-										<div className="flex flex-col h-full">
-											<span
-												className={`text-sm font-medium ${isToday ? 'text-primary' : Object.keys(dayEvents).length > 0 ? 'text-foreground' : 'text-muted-foreground'}`}
-											>
-												{day}
-											</span>
-											{Object.keys(dayEvents).length > 0 && (
-												<div className="flex-1 flex items-center justify-center mt-1">
-													<div className="flex flex-wrap gap-1 justify-center">
-														{Object.entries(dayEvents).map(([type, typeEvents]) => {
-															const typeInfo = typeConfig[type as 'entrega' | 'instalacion' | 'medicion'];
-															// Mostrar hasta 3 eventos por tipo
-															const dotsToShow = Math.min(typeEvents.length, 3);
-															
-															return (
-																<div key={type} className="flex flex-col items-center">
-																	<div className="flex gap-0.5">
-																		{Array.from({ length: dotsToShow }).map((_, i) => (
-																			<div
-																				key={i}
-																				className={`h-2 w-2 rounded-full ${typeInfo.color.split(' ')[0]}`}
-																				title={`${typeEvents.length} ${typeInfo.label.toLowerCase()}${typeEvents.length > 1 ? 's' : ''}`}
-																			/>
-																		))}
-																	</div>
-																	{typeEvents.length > 3 && (
-																		<span className="text-[8px] text-muted-foreground">+{typeEvents.length - 3}</span>
-																	)}
-																</div>
-															);
-														})}
-													</div>
-												</div>
-											)}
-										</div>
-									</div>
-								);
-							})}
-						</div>
-					</div>
-				</Card>
+                return (
+                  <div
+                    key={day}
+                    className={`aspect-square p-2 rounded-lg border transition-colors ${
+                      isToday
+                        ? 'border-primary bg-primary/5'
+                        : Object.keys(dayEvents).length > 0
+                          ? 'border-border bg-secondary hover:bg-secondary/80'
+                          : 'border-border hover:bg-secondary/50'
+                    }`}
+                  >
+                    <div className="flex flex-col h-full">
+                      <span
+                        className={`text-sm font-medium ${isToday ? 'text-primary' : Object.keys(dayEvents).length > 0 ? 'text-foreground' : 'text-muted-foreground'}`}
+                      >
+                        {day}
+                      </span>
+                      {Object.keys(dayEvents).length > 0 && (
+                        <div className="flex-1 flex items-center justify-center mt-1">
+                          <div className="flex flex-wrap gap-1 justify-center">
+                            {Object.entries(dayEvents).map(([type, typeEvents]) => {
+                              const typeInfo = typeConfig[type as 'entrega' | 'instalacion' | 'medicion'];
+                              // Mostrar hasta 3 eventos por tipo
+                              const dotsToShow = Math.min(typeEvents.length, 3);
 
-				{/* Upcoming events */}
-				<Card className="p-6 bg-card border-border">
-					<h3 className="text-lg font-semibold text-foreground mb-4">Próximos eventos</h3>
-					<div className="space-y-3">
-						{upcomingEvents.slice(0, 5).map((event) => {
-							const typeInfo = typeConfig[event.type];
-							const statusInfo = statusConfigCalendar[event.status];
-							const TypeIcon = typeInfo.icon;
+                              return (
+                                <div key={type} className="flex flex-col items-center">
+                                  <div className="flex gap-0.5">
+                                    {Array.from({ length: dotsToShow }).map((_, i) => (
+                                      <div
+                                        key={i}
+                                        className={`h-2 w-2 rounded-full ${typeInfo.color.split(' ')[0]}`}
+                                        title={`${typeEvents.length} ${typeInfo.label.toLowerCase()}${typeEvents.length > 1 ? 's' : ''}`}
+                                      />
+                                    ))}
+                                  </div>
+                                  {typeEvents.length > 3 && (
+                                    <span className="text-[8px] text-muted-foreground">+{typeEvents.length - 3}</span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </Card>
 
-							return (
-								<div
-								key={event.id}
-								className="p-3 rounded-lg bg-secondary border border-border space-y-2"
-							>
-								<div className="flex items-start justify-between gap-2">
-									<div className="flex items-start gap-2 min-w-0">
-										<div className={`p-1.5 rounded ${typeInfo.color.split(' ')[0]}/10 mt-0.5 flex-shrink-0`}>
-											<TypeIcon className={`h-3.5 w-3.5 ${typeInfo.color.split(' ')[1]}`} />
-										</div>
-										<div className="min-w-0">
-											<h4 className="text-sm font-medium text-foreground break-words">
-												{event.title}
-											</h4>
-											{event.client && (
-												<p className="text-xs text-muted-foreground break-words">
-													{event.client}
-												</p>
-											)}
-										</div>
-									</div>
-									<div className="flex items-start flex-shrink-0">
-										<Button 
-											variant="ghost" 
-											size="icon" 
-											onClick={() => handleDeleteEvent(event.id)} 
-											className="h-6 w-6 -mr-2"
-											aria-label="Eliminar evento"
-										>
-											<Trash2 className="h-3.5 w-3.5" />
-										</Button>
-									</div>
-								</div>
-								<div className="space-y-1 text-xs text-muted-foreground">
-									<div className="flex items-center gap-1.5">
-										<CalendarIcon className="h-3.5 w-3.5 flex-shrink-0" />
-										<span>{event.date}</span>
-									</div>
-									{event.location && (
-										<div className="flex items-start gap-1.5">
-											<MapPin className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-											<span className="break-words">{event.location}</span>
-										</div>
-									)}
-									{event.installer && (
-										<div className="flex items-center gap-1.5">
-											<User className="h-3.5 w-3.5 flex-shrink-0" />
-											<span className="break-words">{event.installer}</span>
-										</div>
-									)}
-								</div>
-								</div>
-							);
-						})}
-					</div>
-				</Card>
-			</div>
+        {/* Upcoming events */}
+        <Card className="p-6 bg-card border-border">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Próximos eventos</h3>
+          <div className="space-y-3">
+            {upcomingEvents.slice(0, 5).map((event) => {
+              const typeInfo = typeConfig[event.type];
+              const statusInfo = statusConfigCalendar[event.status];
+              const TypeIcon = typeInfo.icon;
 
-			{/* Legend */}
-			<Card className="p-4 bg-card border-border">
-				<div className="flex flex-wrap gap-4">
-					<div className="flex items-center gap-2">
-						<div className="h-3 w-3 rounded-full bg-chart-1" />
-						<span className="text-sm text-muted-foreground">Entregas</span>
-					</div>
-					<div className="flex items-center gap-2">
-						<div className="h-3 w-3 rounded-full bg-chart-2" />
-						<span className="text-sm text-muted-foreground">Instalaciones</span>
-					</div>
-					<div className="flex items-center gap-2">
-						<div className="h-3 w-3 rounded-full bg-chart-3" />
-						<span className="text-sm text-muted-foreground">Mediciones</span>
-					</div>
-				</div>
-			</Card>
-		</div>
-	);
+              return (
+                <div
+                  key={event.id}
+                  className="p-3 rounded-lg bg-secondary border border-border space-y-2 cursor-pointer hover:bg-secondary/80 transition-colors"
+                  onClick={() => handleEventClick(event)}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2 min-w-0">
+                      <div className={`p-1.5 rounded ${typeInfo.color.split(' ')[0]}/10 mt-0.5 flex-shrink-0`}>
+                        <TypeIcon className={`h-3.5 w-3.5 ${typeInfo.color.split(' ')[1]}`} />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-medium text-foreground break-words">
+                          {event.title}
+                        </h4>
+                        {event.client && (
+                          <p className="text-xs text-muted-foreground break-words">
+                            {event.client}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-start flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => handleDeleteEvent(event.id, e)}
+                        className="h-6 w-6 -mr-2"
+                        aria-label="Eliminar evento"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <CalendarIcon className="h-3.5 w-3.5 flex-shrink-0" />
+                      <span>{event.date}</span>
+                    </div>
+                    {event.location && (
+                      <div className="flex items-start gap-1.5">
+                        <MapPin className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                        <span className="break-words line-clamp-1">{event.location}</span>
+                      </div>
+                    )}
+                    {event.installer && (
+                      <div className="flex items-center gap-1.5">
+                        <User className="h-3.5 w-3.5 flex-shrink-0" />
+                        <span className="break-words line-clamp-1">{event.installer}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      </div>
+
+      {/* Legend */}
+      <Card className="p-4 bg-card border-border">
+        <div className="flex flex-wrap gap-4">
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full bg-chart-1" />
+            <span className="text-sm text-muted-foreground">Entregas</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full bg-chart-2" />
+            <span className="text-sm text-muted-foreground">Instalaciones</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full bg-chart-3" />
+            <span className="text-sm text-muted-foreground">Mediciones</span>
+          </div>
+        </div>
+      </Card>
+
+      {/* Modal de detalles del evento */}
+      {selectedEvent && (
+        <EventDetailsModal
+          isOpen={isDetailsModalOpen}
+          onClose={() => {
+            setIsDetailsModalOpen(false);
+            setSelectedEvent(null);
+          }}
+          event={{
+            ...selectedEvent,
+            description: selectedEvent.description || '',
+          }}
+        />
+      )}
+    </div>
+  );
 }

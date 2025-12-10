@@ -27,6 +27,7 @@ const eventFormSchema = z.object({
   }),
   client: z.string().default(''),
   location: z.string().default(''),
+  description: z.string().default('').optional(),
 }).refine(data => !isBefore(startOfDay(data.date), startOfDay(new Date())), {
   message: 'No se pueden crear eventos en fechas pasadas',
   path: ['date']
@@ -50,6 +51,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
       type: 'entrega',
       client: '',
       location: '',
+      description: '', // Asegurar que description siempre tenga un valor
     },
   });
 
@@ -189,6 +191,20 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
                   <FormLabel>Ubicación</FormLabel>
                   <FormControl>
                     <Input placeholder="Dirección de la ubicación" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descripción (Opcional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Detalles adicionales del evento" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

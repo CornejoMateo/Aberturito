@@ -11,18 +11,7 @@ import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock as ClockIcon
 import { monthNames, dayNames } from '@/constants/date';
 import { typeConfig } from '@/constants/type-config';
 import { statusConfigCalendar } from '@/constants/status-config';
-
-type Event = {
-	id: string;
-	title: string;
-	type: 'entrega' | 'instalacion' | 'medicion' | 'otros';
-	date: string;
-	client: string;
-	location: string;
-	installer?: string;
-	status: 'programado' | 'confirmado' | 'completado';
-};
-
+import { Event } from '@/lib/calendar/events';
 
 export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -32,7 +21,6 @@ export function CalendarView() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   
-  // Cargar eventos al montar el componente
   useEffect(() => {
     const loadEvents = async () => {
       try {
@@ -52,14 +40,12 @@ export function CalendarView() {
             
             return {
               id: event.id,
-              title: event.title || 'Sin título',
-              type: (event.type as 'entrega' | 'instalacion' | 'medicion') || 'entrega',
               date: formattedDate,
+              type: (event.type as 'entrega' | 'instalacion' | 'medicion') || 'entrega',
+              title: event.title || 'Sin título',
+              description: event.description || '',
               client: event.client || 'Sin cliente',
-              location: event.location || 'Sin ubicación',
-              status: (event.status as 'programado' | 'confirmado' | 'completado') || 'programado',
-              installer: undefined,
-              description: event.description || '' // Asegurarse de incluir la descripción
+              location: event.location || 'Sin ubicación'
             };
           });
           setEvents(formattedEvents);
@@ -86,18 +72,17 @@ export function CalendarView() {
   const getEventsForDate = (day: number) => {
     const dateStr = formatDateString(currentDate.getFullYear(), currentDate.getMonth(), day);
     const dayEvents = events.filter((event) => {
-      // Convertir la fecha del evento al mismo formato para comparar
-      const [eventDay, eventMonth, eventYear] = event.date.split('-');
+      const [eventDay, eventMonth, eventYear] = event.date?.split('-') ?? [];
       const formattedEventDate = `${eventDay.padStart(2, '0')}-${eventMonth.padStart(2, '0')}-${eventYear}`;
       return formattedEventDate === dateStr;
     });
 
     // Agrupar eventos por tipo
     const eventsByType = dayEvents.reduce((acc, event) => {
-      if (!acc[event.type]) {
+      if (event.type && !acc[event.type]) {
         acc[event.type] = [];
       }
-      acc[event.type].push(event);
+      if (event.type) acc[event.type].push(event);
       return acc;
     }, {} as Record<string, Event[]>);
 
@@ -128,7 +113,7 @@ export function CalendarView() {
 
   const filteredEvents = selectedDate
     ? events.filter(event => {
-        const [eventDay, eventMonth, eventYear] = event.date.split('-');
+        const [eventDay, eventMonth, eventYear] = event.date?.split('-') ?? [];
         const formattedEventDate = `${eventDay.padStart(2, '0')}-${eventMonth.padStart(2, '0')}-${eventYear}`;
         return formattedEventDate === selectedDate;
       })
@@ -157,18 +142,22 @@ export function CalendarView() {
         <EventFormModal
           onSave={async (eventData) => {
             try {
-              // Convertir la fecha de DD-MM-YYYY a YYYY-MM-DD para la base de datos
-              const [day, month, year] = (eventData.date as string).split('-').map(Number);
+              const dateStr = typeof eventData.date === 'string'
+                ? eventData.date
+                : eventData.date instanceof Date
+                  ? `${eventData.date.getDate()}-${eventData.date.getMonth() + 1}-${eventData.date.getFullYear()}`
+                  : '';
+
+              const [day, month, year] = dateStr.split('-').map(Number);              
               const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
               
               // Crear el evento en la base de datos
               const { data: newEvent, error } = await createEvent({
-                title: eventData.title,
+                title: eventData.title || 'Sin título',
                 type: eventData.type,
                 description: eventData.description || eventData.title,
                 client: eventData.client,
                 location: eventData.location,
-                status: 'programado',
                 date: formattedDate,
               });
 
@@ -191,7 +180,6 @@ export function CalendarView() {
                   date: formattedDate,
                   client: newEvent.client || 'Sin cliente',
                   location: newEvent.location || 'Sin ubicación',
-                  status: (newEvent.status as 'programado' | 'confirmado' | 'completado') || 'programado',
                   description: newEvent.description || ''
                 };
 
@@ -231,7 +219,7 @@ export function CalendarView() {
                     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))
                   }
                 >
-                  <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="outline"
@@ -277,7 +265,7 @@ export function CalendarView() {
                     }}
                     className={`aspect-square p-2 rounded-lg border transition-colors cursor-pointer ${
                       isToday
-                        ? 'border-primary bg-primary/5'
+                        ? 'border-green-300 bg-green-300/10'
                         : selectedDate === formatDateString(currentDate.getFullYear(), currentDate.getMonth(), day)
                           ? 'border-primary bg-primary/10'
                           : Object.keys(dayEvents).length > 0
@@ -287,7 +275,7 @@ export function CalendarView() {
                   >
                     <div className="flex flex-col h-full">
                       <span
-                        className={`text-sm font-medium ${isToday ? 'text-primary' : Object.keys(dayEvents).length > 0 ? 'text-foreground' : 'text-muted-foreground'}`}
+                        className={`text-sm font-medium ${isToday ? 'text-green-600' : Object.keys(dayEvents).length > 0 ? 'text-foreground' : 'text-muted-foreground'}`}
                       >
                         {day}
                       </span>
@@ -343,8 +331,8 @@ export function CalendarView() {
           <div className="space-y-3">
             {filteredEvents.length > 0 ? (
               filteredEvents.map((event) => {
-                const typeInfo = typeConfig[event.type];
-                const TypeIcon = typeInfo.icon;
+              const typeInfo = typeConfig[(event.type ?? 'entrega') as keyof typeof typeConfig];                
+              const TypeIcon = typeInfo.icon;
 
                 return (
                   <div
@@ -389,12 +377,6 @@ export function CalendarView() {
                         <div className="flex items-start gap-1.5">
                           <MapPin className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
                           <span className="break-words line-clamp-1">{event.location}</span>
-                        </div>
-                      )}
-                      {event.installer && (
-                        <div className="flex items-center gap-1.5">
-                          <User className="h-3.5 w-3.5 flex-shrink-0" />
-                          <span className="break-words line-clamp-1">{event.installer}</span>
                         </div>
                       )}
                     </div>
@@ -446,7 +428,12 @@ export function CalendarView() {
           }}
           event={{
             ...selectedEvent,
-            description: selectedEvent.description || '',
+            title: selectedEvent?.title ?? 'Sin título',
+            type: (selectedEvent?.type as 'entrega' | 'instalacion' | 'medicion') ?? 'entrega',
+            date: selectedEvent?.date ?? '',
+            client: selectedEvent?.client ?? '',
+            location: selectedEvent?.location ?? '',
+            description: selectedEvent?.description ?? '',
           }}
         />
       )}

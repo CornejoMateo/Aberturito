@@ -6,14 +6,12 @@ export type Event = {
   id: string;
   created_at?: string;
   date_id?: string | null;
-  date?: string | null;
+  date: string;
   type?: string | null;
   title?: string | null;
   description?: string | null;
   client?: string | null;
   location?: string | null;
-  status?: 'programado' | 'confirmado' | 'completado';
-  time?: string | null;
   work_id?: number | null;
 };
 
@@ -25,20 +23,7 @@ export async function listEvents(): Promise<{ data: Event[] | null; error: any }
   try {
     const { data, error } = await supabase
       .from(TABLE)
-      .select(`
-        id, 
-        type,
-        title,
-        description,
-        client,
-        location,
-        status,
-        work_id,
-        date_id,
-        dates (
-          date
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: true });
 
     if (error) {
@@ -46,13 +31,7 @@ export async function listEvents(): Promise<{ data: Event[] | null; error: any }
       return { data: null, error };
     }
 
-    // Mapear los datos para incluir la fecha directamente en el objeto
-    const events = data?.map(event => ({
-      ...event,
-      date: event.dates?.[0]?.date || new Date().toISOString().split('T')[0]
-    })) || [];
-
-    return { data: events, error: null };
+    return { data , error: null };
 
   } catch (error) {
     console.error('Error inesperado al listar eventos:', error);
@@ -103,10 +82,9 @@ export async function createEvent(
       description: event.description,
       client: event.client,
       location: event.location,
-      status: event.status || 'programado',
-      time: event.time,
       work_id: event.work_id,
       date_id: dateId,
+      date: event.date,
       created_at: new Date().toISOString(),
     };
 
@@ -176,6 +154,9 @@ export async function updateEvent(
 export async function deleteEvent(id: string): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { error } = await supabase.from(TABLE).delete().eq('id', id);
+
+
+
 	return { data: null, error };
 }
 

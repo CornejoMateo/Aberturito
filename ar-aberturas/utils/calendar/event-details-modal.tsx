@@ -11,13 +11,12 @@ interface EventDetailsModalProps {
   onClose: () => void;
   event: {
     id: string;
-    title: string;
+    title: string | null | undefined;
     type: 'entrega' | 'instalacion' | 'medicion';
     date: string;
-    client?: string;
-    location?: string;
-    installer?: string;
-    description?: string;
+    client?: string | null | undefined;
+    location?: string | null | undefined;
+    description?: string | null | undefined;
   };
 }
 
@@ -63,16 +62,6 @@ export function EventDetailsModal({ isOpen, onClose, event }: EventDetailsModalP
                 <div>
                   <p className="text-sm text-muted-foreground">Ubicación</p>
                   <p className="text-sm">{event.location}</p>
-                </div>
-              </div>
-            )}
-
-            {event.installer && (
-              <div className="flex items-start gap-3">
-                <User className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Instalador</p>
-                  <p className="text-sm">{event.installer}</p>
                 </div>
               </div>
             )}

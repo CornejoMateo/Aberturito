@@ -1,51 +1,35 @@
-import { useState, useEffect } from 'react';
-import { listEvents } from '@/lib/calendar/events';
-import { Event } from '@/lib/calendar/events';
+import { listEvents, Event } from '@/lib/calendar/events';
+import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 
 export function useLoadEvents() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    data: rawEvents,
+    loading: isLoading,
+    error,
+    refresh
+  } = useOptimizedRealtime<Event>(
+    'calendar_events',
+    async () => {
+      const { data } = await listEvents();
+      return data ?? [];
+    },
+    'calendar_events_cache'
+  );
 
-  useEffect(() => {
-    const loadEvents = async () => {
-      try {
-        const result = await listEvents();
-        
-        if (result.error) {
-          console.error('Error al cargar los eventos:', result.error);
-          setEvents([]);
-          return;
-        }
-        
-        if (result.data) {
-          const formattedEvents = result.data.map(event => {
-            // Convertir la fecha de yyyy-MM-dd a dd-MM-yyyy
-            const [year, month, day] = (event.date || '').split('-');
-            const formattedDate = event.date ? `${day}-${month}-${year}` : new Date().toISOString().split('T')[0];
-            
-            return {
-              id: event.id,
-              date: formattedDate,
-              type: (event.type as 'entrega' | 'instalacion' | 'medicion') || 'otros',
-              title: event.title || 'Sin título',
-              description: event.description || '',
-              client: event.client || 'Sin cliente',
-              location: event.location || 'Sin ubicación',
-            };
-          });
-          setEvents(formattedEvents);
-        } else {
-          setEvents([]);
-        }
-      } catch (error) {
-        console.error('Error inesperado al cargar los eventos:', error);
-      } finally {
-        setIsLoading(false);
-      }
+  const events = rawEvents.map(event => {
+    const [year, month, day] = (event.date || '').split('-');
+    const formattedDate = event.date ? `${day}-${month}-${year}` : new Date().toISOString().split('T')[0];
+    
+    return {
+      id: event.id,
+      date: formattedDate,
+      type: (event.type as 'entrega' | 'instalacion' | 'medicion') || 'otros',
+      title: event.title || 'Sin título',
+      description: event.description || '',
+      client: event.client || 'Sin cliente',
+      location: event.location || 'Sin ubicación',
     };
+  });
 
-    loadEvents();
-  }, []);
-
-  return { events, isLoading, setEvents };
+  return { events, isLoading, refresh };
 }

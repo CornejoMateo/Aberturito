@@ -11,9 +11,11 @@ import { monthNames, dayNames } from '@/constants/date';
 import { typeConfig } from '@/constants/type-config';
 import { Event } from '@/lib/calendar/events';
 import { useLoadEvents } from '@/hooks/use-load-events';
+import { useToast } from '@/components/ui/use-toast';
 
 export function CalendarView() {
-  const { events, isLoading, setEvents } = useLoadEvents();
+  const { toast } = useToast();
+  const { events, isLoading, refresh } = useLoadEvents();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -56,7 +58,11 @@ export function CalendarView() {
     if (confirm('¿Estás seguro de que deseas eliminar este evento?')) {
       const { error } = await deleteEvent(eventId);
       if (!error) {
-        setEvents(events.filter(event => event.id !== eventId));
+        toast({
+          title: 'Evento eliminado',
+          description: 'El evento ha sido eliminado correctamente.',
+        });
+        await refresh();
         if (selectedEvent?.id === eventId) {
           setIsDetailsModalOpen(false);
           setSelectedEvent(null);
@@ -98,13 +104,13 @@ export function CalendarView() {
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
         .slice(0, 5);
 
-  if (isLoading) {
+/*   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
-  }
+  } */
 
   return (
     <div className="space-y-6">
@@ -145,23 +151,9 @@ export function CalendarView() {
                 return false;
               }
 
-              // Actualizar el estado local con el nuevo evento
+              // Refrescar los eventos desde la base de datos
               if (newEvent) {
-                // Formatear la fecha al formato dd-MM-yyyy
-                const [year, month, day] = (newEvent.date || '').split('-');
-                const formattedDate = newEvent.date ? `${day}-${month}-${year}` : new Date().toISOString().split('T')[0];
-
-                const formattedEvent: Event = {
-                  id: newEvent.id,
-                  title: newEvent.title || 'Sin título',
-                  type: (newEvent.type as 'entrega' | 'instalacion' | 'medicion') || 'entrega',
-                  date: formattedDate,
-                  client: newEvent.client || 'Sin cliente',
-                  location: newEvent.location || 'Sin ubicación',
-                  description: newEvent.description || ''
-                };
-
-                setEvents(prev => [...prev, formattedEvent]);
+                await refresh();
                 return true;
               }
 

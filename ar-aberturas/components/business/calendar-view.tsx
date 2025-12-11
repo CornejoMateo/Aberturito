@@ -1,67 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EventFormModal } from '../../utils/calendar/event-form-modal';
 import { EventDetailsModal } from '../../utils/calendar/event-details-modal';
-import { createEvent, listEvents, deleteEvent } from '@/lib/calendar/events';
+import { createEvent, deleteEvent } from '@/lib/calendar/events';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock as ClockIcon, MapPin, User, Package, Wrench, Loader2, Trash2 } from 'lucide-react';
 import { monthNames, dayNames } from '@/constants/date';
 import { typeConfig } from '@/constants/type-config';
 import { Event } from '@/lib/calendar/events';
-import { is } from 'date-fns/locale';
+import { useLoadEvents } from '@/hooks/use-load-events';
 
 export function CalendarView() {
+  const { events, isLoading, setEvents } = useLoadEvents();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<'todos' | 'instalacion' | 'entrega' | 'medicion'>('todos');
   const [searchTerm, setSearchTerm] = useState('');
-  
-  useEffect(() => {
-    const loadEvents = async () => {
-      try {
-        const result = await listEvents();
-        
-        if (result.error) {
-          console.error('Error al cargar los eventos:', result.error);
-          setEvents([]);
-          return;
-        }
-        
-        if (result.data) {
-          const formattedEvents = result.data.map(event => {
-            // Convertir la fecha de yyyy-MM-dd a dd-MM-yyyy
-            const [year, month, day] = (event.date || '').split('-');
-            const formattedDate = event.date ? `${day}-${month}-${year}` : new Date().toISOString().split('T')[0];
-            
-            return {
-              id: event.id,
-              date: formattedDate,
-              type: (event.type as 'entrega' | 'instalacion' | 'medicion') || 'otros',
-              title: event.title || 'Sin título',
-              description: event.description || '',
-              client: event.client || 'Sin cliente',
-              location: event.location || 'Sin ubicación',
-            };
-          });
-          setEvents(formattedEvents);
-        } else {
-          setEvents([]);
-        }
-      } catch (error) {
-        console.error('Error inesperado al cargar los eventos:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadEvents();
-  }, []);
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -94,12 +52,11 @@ export function CalendarView() {
   };
 
   const handleDeleteEvent = async (eventId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Evitar que el clic se propague al contenedor
+    e.stopPropagation(); 
     if (confirm('¿Estás seguro de que deseas eliminar este evento?')) {
       const { error } = await deleteEvent(eventId);
       if (!error) {
         setEvents(events.filter(event => event.id !== eventId));
-        // Cerrar el modal de detalles si está abierto
         if (selectedEvent?.id === eventId) {
           setIsDetailsModalOpen(false);
           setSelectedEvent(null);

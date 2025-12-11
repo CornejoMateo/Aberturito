@@ -3,14 +3,12 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { EventFormModal } from '../../utils/calendar/event-form-modal';
 import { EventDetailsModal } from '../../utils/calendar/event-details-modal';
 import { createEvent, listEvents, deleteEvent } from '@/lib/calendar/events';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock as ClockIcon, MapPin, User, Package, Wrench, Loader2, Trash2 } from 'lucide-react';
 import { monthNames, dayNames } from '@/constants/date';
 import { typeConfig } from '@/constants/type-config';
-import { statusConfigCalendar } from '@/constants/status-config';
 import { Event } from '@/lib/calendar/events';
 
 export function CalendarView() {

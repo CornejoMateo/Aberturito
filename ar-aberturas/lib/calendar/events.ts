@@ -1,18 +1,15 @@
 // Helper para crear evento y asociar date_id correctamente
 import { getSupabaseClient } from '../supabase-client';
-import { createDate } from '../calendar/dates';
 
 export type Event = {
   id: string;
   created_at?: string;
-  date_id?: string | null;
   date: string;
   type?: string | null;
   title?: string | null;
   description?: string | null;
   client?: string | null;
   location?: string | null;
-  work_id?: number | null;
 };
 
 const TABLE = 'events';
@@ -54,26 +51,6 @@ export async function createEvent(
   const supabase = getSupabaseClient();
 
   try {
-    // 1. Verificar si la fecha ya existe en la tabla dates
-    const { data: dateData, error: dateError } = await supabase
-      .from('dates')
-      .select('id')
-      .eq('date', event.date)
-      .single();
-
-    let dateId: string;
-
-    if (dateData?.id) {
-      dateId = dateData.id;
-    } else {
-      // 2. Si la fecha no existe, crearla
-      const { data: newDateData, error: newDateError } = await createDate({ date: event.date! });
-      if (newDateError) {
-        console.error('Error al crear la fecha:', newDateError);
-        return { data: null, error: newDateError };
-      }
-      dateId = newDateData!.id;
-    }
 
     // 3. Preparar el payload para el evento
     const payload: any = {
@@ -82,13 +59,10 @@ export async function createEvent(
       description: event.description,
       client: event.client,
       location: event.location,
-      work_id: event.work_id,
-      date_id: dateId,
       date: event.date,
       created_at: new Date().toISOString(),
     };
 
-    // 4. Insertar el evento
     const { data, error } = await supabase
       .from(TABLE)
       .insert(payload)
@@ -100,13 +74,9 @@ export async function createEvent(
       return { data: null, error };
     }
 
-    // 5. Obtener el evento recién creado con los datos relacionados
     const { data: createdEvent, error: fetchError } = await supabase
       .from(TABLE)
-      .select(`
-        *,
-        dates (date)
-      `)
+      .select('*')
       .eq('id', data.id)
       .single();
 
@@ -115,7 +85,6 @@ export async function createEvent(
       return { data: null, error: fetchError };
     }
 
-    // 6. Formatear la respuesta
     const formattedEvent: Event = {
       ...createdEvent,
       date: createdEvent.dates?.date
@@ -126,20 +95,6 @@ export async function createEvent(
     console.error('Error inesperado al crear el evento:', error);
     return { data: null, error };
   }
-}
-
-export async function createEventForWork(
-	workId: string,
-	event: Omit<Event, 'id' | 'created_at' | 'work_id'>
-): Promise<{ data: Event | null; error: any }> {
-	const supabase = getSupabaseClient();
-	const payload = {
-		...event,
-		work_id: workId,
-		created_at: new Date().toISOString(),
-	};
-	const { data, error } = await supabase.from(TABLE).insert(payload).select().single();
-	return { data, error };
 }
 
 export async function updateEvent(
@@ -158,30 +113,6 @@ export async function deleteEvent(id: string): Promise<{ data: null; error: any 
 
 
 	return { data: null, error };
-}
-
-export async function getEventsByDateId(
-	dateId: string
-): Promise<{ data: Event[] | null; error: any }> {
-	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('*')
-		.eq('date_id', dateId)
-		.order('created_at', { ascending: false });
-	return { data, error };
-}
-
-export async function getEventsByWorkId(
-	workId: string
-): Promise<{ data: Event[] | null; error: any }> {
-	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('*')
-		.eq('work_id', workId)
-		.order('created_at', { ascending: false });
-	return { data, error };
 }
 
 export async function getEventsByType(type: string): Promise<{ data: Event[] | null; error: any }> {

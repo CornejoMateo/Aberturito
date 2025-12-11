@@ -19,6 +19,7 @@ export function CalendarView() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<'todos' | 'instalacion' | 'entrega' | 'medicion'>('todos');
   
   useEffect(() => {
     const loadEvents = async () => {
@@ -40,11 +41,11 @@ export function CalendarView() {
             return {
               id: event.id,
               date: formattedDate,
-              type: (event.type as 'entrega' | 'instalacion' | 'medicion') || 'entrega',
+              type: (event.type as 'entrega' | 'instalacion' | 'medicion') || 'otros',
               title: event.title || 'Sin título',
               description: event.description || '',
               client: event.client || 'Sin cliente',
-              location: event.location || 'Sin ubicación'
+              location: event.location || 'Sin ubicación',
             };
           });
           setEvents(formattedEvents);
@@ -70,11 +71,15 @@ export function CalendarView() {
 
   const getEventsForDate = (day: number) => {
     const dateStr = formatDateString(currentDate.getFullYear(), currentDate.getMonth(), day);
-    const dayEvents = events.filter((event) => {
+    let dayEvents = events.filter((event) => {
       const [eventDay, eventMonth, eventYear] = event.date?.split('-') ?? [];
       const formattedEventDate = `${eventDay.padStart(2, '0')}-${eventMonth.padStart(2, '0')}-${eventYear}`;
       return formattedEventDate === dateStr;
     });
+
+    if (activeFilter !== 'todos') {
+      dayEvents = dayEvents.filter(event => event.type === activeFilter);
+    }
 
     const eventsByType = dayEvents.reduce((acc, event) => {
       if (event.type && !acc[event.type]) {
@@ -113,9 +118,12 @@ export function CalendarView() {
     ? events.filter(event => {
         const [eventDay, eventMonth, eventYear] = event.date?.split('-') ?? [];
         const formattedEventDate = `${eventDay.padStart(2, '0')}-${eventMonth.padStart(2, '0')}-${eventYear}`;
-        return formattedEventDate === selectedDate;
+        const matchesDate = formattedEventDate === selectedDate;
+        const matchesFilter = activeFilter === 'todos' || event.type === activeFilter;
+        return matchesDate && matchesFilter;
       })
     : events
+        .filter(event => activeFilter === 'todos' || event.type === activeFilter)
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
         .slice(0, 5);
 
@@ -137,6 +145,7 @@ export function CalendarView() {
             Entregas, instalaciones y eventos programados
           </p>
         </div>
+
         <EventFormModal
           onSave={async (eventData) => {
             try {
@@ -204,6 +213,37 @@ export function CalendarView() {
         {/* Calendar */}
         <Card className="p-6 bg-card border-border lg:col-span-2">
           <div className="space-y-4">
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                variant={activeFilter === 'todos' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveFilter('todos')}
+              >
+                Todos
+              </Button>
+              <Button
+                variant={activeFilter === 'instalacion' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveFilter('instalacion')}
+              >
+                Instalación
+              </Button>
+              <Button
+                variant={activeFilter === 'entrega' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveFilter('entrega')}
+              >
+                Entrega
+              </Button>
+              <Button
+                variant={activeFilter === 'medicion' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveFilter('medicion')}
+              >
+                Medición
+              </Button>
+            </div>
+
             {/* Calendar header */}
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-foreground">

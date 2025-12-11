@@ -114,13 +114,3 @@ export async function deleteEvent(id: string): Promise<{ data: null; error: any 
 
 	return { data: null, error };
 }
-
-export async function getEventsByType(type: string): Promise<{ data: Event[] | null; error: any }> {
-	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('*')
-		.eq('type', type)
-		.order('created_at', { ascending: false });
-	return { data, error };
-}

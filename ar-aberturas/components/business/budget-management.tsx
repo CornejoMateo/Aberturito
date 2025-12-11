@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { statusConfigBudget as statusConfig } from '@/constants/status-config';
 
 type Budget = {
 	id: string;
@@ -263,8 +262,6 @@ export function BudgetManagement() {
 						</thead>
 						<tbody className="divide-y divide-border">
 							{filteredBudgets.map((budget) => {
-								const statusInfo = statusConfig[budget.status];
-								const StatusIcon = statusInfo.icon;
 
 								return (
 									<tr key={budget.id} className="hover:bg-secondary/50 transition-colors">
@@ -283,15 +280,6 @@ export function BudgetManagement() {
 											<p className="text-sm font-semibold text-foreground">
 												${budget.amount.toLocaleString('es-AR')}
 											</p>
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap">
-											<Badge
-												variant="outline"
-												className={`gap-1 ${statusInfo.color} bg-opacity-10`}
-											>
-												<StatusIcon className="h-3 w-3" />
-												{statusInfo.label}
-											</Badge>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<p className="text-sm text-muted-foreground">{budget.date}</p>

@@ -20,6 +20,7 @@ export function CalendarView() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<'todos' | 'instalacion' | 'entrega' | 'medicion'>('todos');
+  const [searchTerm, setSearchTerm] = useState('');
   
   useEffect(() => {
     const loadEvents = async () => {
@@ -120,10 +121,23 @@ export function CalendarView() {
         const formattedEventDate = `${eventDay.padStart(2, '0')}-${eventMonth.padStart(2, '0')}-${eventYear}`;
         const matchesDate = formattedEventDate === selectedDate;
         const matchesFilter = activeFilter === 'todos' || event.type === activeFilter;
-        return matchesDate && matchesFilter;
+        const matchesSearch = searchTerm === '' || 
+          event.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          event.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          event.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          event.type?.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesDate && matchesFilter && matchesSearch;
       })
     : events
-        .filter(event => activeFilter === 'todos' || event.type === activeFilter)
+        .filter(event => {
+          const matchesFilter = activeFilter === 'todos' || event.type === activeFilter;
+          const matchesSearch = searchTerm === '' || 
+            event.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            event.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            event.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            event.type?.toLowerCase().includes(searchTerm.toLowerCase());
+          return matchesFilter && matchesSearch;
+        })
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
         .slice(0, 5);
 
@@ -322,7 +336,6 @@ export function CalendarView() {
                           <div className="flex flex-wrap gap-1">
                             {Object.entries(dayEvents).map(([type, typeEvents]) => {
                               const typeInfo = typeConfig[type as 'entrega' | 'instalacion' | 'medicion'];
-                              // Mostrar hasta 3 eventos por tipo
                               const dotsToShow = Math.min(typeEvents.length, 3);
 
                               return (
@@ -366,6 +379,18 @@ export function CalendarView() {
               </Button>
             )}
           </div>
+          {/* Search Bar */}
+          <Card className="p-2 bg-card border-border">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Buscar eventos por cliente, ubicación, tipo, etc..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-1 px-3 py-2 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+            </div>
+          </Card>
           <div className="space-y-3">
             {filteredEvents.length > 0 ? (
               filteredEvents.map((event) => {
@@ -456,7 +481,7 @@ export function CalendarView() {
         </div>
       </Card>
 
-      {/* Modal de detalles del evento */}
+      {/* Event details */}
       {selectedEvent && (
         <EventDetailsModal
           isOpen={isDetailsModalOpen}
@@ -467,7 +492,7 @@ export function CalendarView() {
           event={{
             ...selectedEvent,
             title: selectedEvent?.title ?? 'Sin título',
-            type: (selectedEvent?.type as 'entrega' | 'instalacion' | 'medicion') ?? 'entrega',
+            type: (selectedEvent?.type as 'entrega' | 'instalacion' | 'medicion') ?? 'otros',
             date: selectedEvent?.date ?? '',
             client: selectedEvent?.client ?? '',
             location: selectedEvent?.location ?? '',

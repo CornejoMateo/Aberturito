@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Work, updateWork } from '@/lib/works/works';
 import { MapPin, Calendar, Building2, CheckCircle, Clock, Trash2, ListChecks, ChevronDown, Search } from 'lucide-react';
+import { ChecklistModal } from '@/components/business/checklist-modal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -266,14 +267,23 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                     formatDisplay={(value) => `$${parseFloat(value || '0').toLocaleString('es-AR')}`}
                   />
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="h-8 px-2 text-xs -mr-10 -mb-5"
+                <ChecklistModal 
+                  workId={work.id}
+                  workType="pvc"
+                  onSave={(checklists) => {
+                    console.log('Checklists guardadas para la obra', work.id, ':', checklists);
+                    // Aquí puedes guardar las checklists en tu estado o base de datos
+                  }}
                 >
-                  <ListChecks className="h-4 w-4 mr-1.5" />
-                  <span>Checklist</span>
-                </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="h-8 px-2 text-xs -mr-10 -mb-5"
+                  >
+                    <ListChecks className="h-4 w-4 mr-1.5" />
+                    <span>Checklist</span>
+                  </Button>
+                </ChecklistModal>
               </div>
             </div>
           </CardContent>

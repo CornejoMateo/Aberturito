@@ -10,6 +10,7 @@ import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock as ClockIcon
 import { monthNames, dayNames } from '@/constants/date';
 import { typeConfig } from '@/constants/type-config';
 import { Event } from '@/lib/calendar/events';
+import { is } from 'date-fns/locale';
 
 export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -75,7 +76,6 @@ export function CalendarView() {
       return formattedEventDate === dateStr;
     });
 
-    // Agrupar eventos por tipo
     const eventsByType = dayEvents.reduce((acc, event) => {
       if (event.type && !acc[event.type]) {
         acc[event.type] = [];
@@ -252,7 +252,7 @@ export function CalendarView() {
               {Array.from({ length: daysInMonth }).map((_, index) => {
                 const day = index + 1;
                 const dayEvents = getEventsForDate(day);
-                const isToday = day === 11; // Demo: March 11 is today
+                const isToday = new Date().toDateString() === new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString();
 
                 return (
                   <div

@@ -105,7 +105,8 @@ export function CalendarView() {
 					event.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 					event.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 					event.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-					event.type?.toLowerCase().includes(searchTerm.toLowerCase());
+					event.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+					event.address?.toLowerCase().includes(searchTerm.toLowerCase());
 				return matchesDate && matchesFilter && matchesSearch;
 			})
 		: events
@@ -116,7 +117,8 @@ export function CalendarView() {
 						event.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 						event.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 						event.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-						event.type?.toLowerCase().includes(searchTerm.toLowerCase());
+						event.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+						event.address?.toLowerCase().includes(searchTerm.toLowerCase());
 					return matchesFilter && matchesSearch;
 				})
 				.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -154,13 +156,13 @@ export function CalendarView() {
 							const [day, month, year] = dateStr.split('-').map(Number);
 							const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
 
-							// Crear el evento en la base de datos
 							const { data: newEvent, error } = await createEvent({
 								title: eventData.title || 'Sin título',
 								type: eventData.type,
 								description: eventData.description,
 								client: eventData.client,
 								location: eventData.location,
+								address: eventData.address,
 								date: formattedDate,
 							});
 
@@ -423,6 +425,12 @@ export function CalendarView() {
 													<span className="break-words line-clamp-1">{event.location}</span>
 												</div>
 											)}
+											{event.address && (
+												<div className="flex items-start gap-1.5">
+													<Package className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+													<span className="break-words line-clamp-1">{event.address}</span>
+												</div>
+											)}
 										</div>
 									</div>
 								);
@@ -475,6 +483,7 @@ export function CalendarView() {
 						date: selectedEvent?.date ?? '',
 						client: selectedEvent?.client ?? '',
 						location: selectedEvent?.location ?? '',
+						address: selectedEvent?.address ?? '',
 						description: selectedEvent?.description ?? '',
 					}}
 				/>

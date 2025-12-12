@@ -54,15 +54,14 @@ export async function createEvent(
 
   try {
 
-    // 3. Preparar el payload para el evento
     const payload: any = {
       title: event.title,
       type: event.type,
       description: event.description,
       client: event.client,
       location: event.location,
-      address: event.address,
       date: event.date,
+      address: event.address,
       created_at: new Date().toISOString(),
     };
 

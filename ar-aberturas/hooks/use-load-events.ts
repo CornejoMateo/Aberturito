@@ -30,6 +30,7 @@ export function useLoadEvents() {
 			description: event.description || '',
 			client: event.client || 'Sin cliente',
 			location: event.location || 'Sin ubicación',
+			address: event.address || 'Sin dirección',
 		};
 	});
 

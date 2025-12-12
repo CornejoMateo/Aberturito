@@ -98,7 +98,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent className="sm:max-w-[425px]">
+			<DialogContent className="sm:max-w-[600px]">
 				<DialogHeader>
 					<DialogTitle>Nuevo evento</DialogTitle>
 					<DialogDescription>
@@ -106,7 +106,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 					</DialogDescription>
 				</DialogHeader>
 
-				<form onSubmit={handleSubmit} className="space-y-4">
+				<form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
 					<div className="grid gap-2">
 						<Label htmlFor="title">Título</Label>
 						<Input 
@@ -123,7 +123,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 							value={formData.type}
 							onValueChange={(value) => setFormData((prev) => ({ ...prev, type: value }))}
 						>
-							<SelectTrigger>
+    						<SelectTrigger className="w-full">
 								<SelectValue placeholder="Selecciona un tipo de evento" />
 							</SelectTrigger>
 							<SelectContent>
@@ -200,7 +200,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 						/>
 					</div>
 
-					<div className="grid gap-2">
+					<div className="grid gap-2 col-span-2">
 						<Label htmlFor="description">Descripción</Label>
 						<Input 
 							id="description" 
@@ -210,7 +210,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 						/>
 					</div>
 
-					<DialogFooter>
+					<DialogFooter className='col-span-2'>
 						<Button
 							type="button"
 							variant="outline"

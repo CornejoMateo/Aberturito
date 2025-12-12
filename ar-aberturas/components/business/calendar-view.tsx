@@ -17,12 +17,15 @@ import {
 	Wrench,
 	Loader2,
 	Trash2,
+	AlertCircle,
 } from 'lucide-react';
 import { monthNames, dayNames } from '@/constants/date';
 import { typeConfig } from '@/constants/type-config';
 import { Event } from '@/lib/calendar/events';
 import { useLoadEvents } from '@/hooks/use-load-events';
 import { useToast } from '@/components/ui/use-toast';
+import { isBefore, startOfDay, parse } from 'date-fns';
+import { is } from 'date-fns/locale';
 
 export function CalendarView() {
 	const { toast } = useToast();
@@ -92,6 +95,21 @@ export function CalendarView() {
 	const handleEventClick = (event: Event) => {
 		setSelectedEvent(event);
 		setIsDetailsModalOpen(true);
+	};
+
+	const isEventOverdue = (event: Event) => {
+		try {
+			// Parse the date from DD-MM-YYYY format
+			const [day, month, year] = event.date?.split('-').map(Number) ?? [];
+			if (!day || !month || !year) return false;
+			
+			const eventDate = new Date(year, month - 1, day);
+			const today = startOfDay(new Date());
+			
+			return isBefore(startOfDay(eventDate), today) && (!event.status || event.status === 'Pendiente');
+		} catch {
+			return false;
+		}
 	};
 
 	const filteredEvents = selectedDate
@@ -316,6 +334,8 @@ export function CalendarView() {
 															const typeInfo = typeConfig[safeType];
 
 															const dotsToShow = Math.min(typeEvents.length, 3);
+															
+															const hasOverdueEvents = typeEvents.some(event => isEventOverdue(event));
 
 															return (
 																<div
@@ -324,7 +344,7 @@ export function CalendarView() {
 																	title={`${typeEvents.length} ${typeInfo.label.toLowerCase()}${typeEvents.length > 1 ? 's' : ''}`}
 																>
 																	<div
-																		className={`h-2 w-2 rounded-full ${typeInfo.color.split(' ')[0]}`}
+																		className={`h-2 w-2 rounded-full ${hasOverdueEvents ? 'bg-red-500' : typeInfo.color.split(' ')[0]}`}
 																	/>
 																	{typeEvents.length > 1 && (
 																		<span className="text-[10px] text-muted-foreground">
@@ -377,11 +397,16 @@ export function CalendarView() {
 							filteredEvents.map((event) => {
 								const typeInfo = typeConfig[(event.type ?? 'produccionOK') as keyof typeof typeConfig];
 								const TypeIcon = typeInfo.icon;
+								const isOverdue = isEventOverdue(event);
 
 								return (
 									<div
 										key={event.id}
-										className="p-3 rounded-lg bg-secondary border border-border space-y-2 cursor-pointer hover:bg-secondary/80 transition-colors"
+										className={`p-3 rounded-lg border space-y-2 cursor-pointer transition-colors ${
+											isOverdue 
+												? 'border-red-500 bg-red-500/10 hover:bg-red-500/20' 
+												: 'border-border bg-secondary hover:bg-secondary/80'
+										}`}
 										onClick={() => handleEventClick(event)}
 									>
 										<div className="flex items-start justify-between gap-2">
@@ -389,12 +414,21 @@ export function CalendarView() {
 												<div
 													className={`p-1.5 rounded ${typeInfo.color.split(' ')[0]}/10 mt-0.5 flex-shrink-0`}
 												>
-													<TypeIcon className={`h-3.5 w-3.5 ${typeInfo.color.split(' ')[1]}`} />
+												<div
+													className={`h-2 w-2 rounded-full ${isOverdue ? 'bg-red-500' : typeInfo.color.split(' ')[0]}`}
+												/>
 												</div>
-												<div className="min-w-0">
-													<h4 className="text-sm font-medium text-foreground break-words">
-														{event.title}
-													</h4>
+												<div className="min-w-0 flex-1">
+													<div className="flex items-center gap-2">
+														<h4 className="text-sm font-medium text-foreground break-words">
+															{event.title}
+														</h4>
+														{isOverdue && (
+															<div className="flex items-center gap-1 flex-shrink-0">
+																<div className="h-2 w-2 rounded-full bg-red-500" title="Evento atrasado" />
+															</div>
+														)}
+													</div>
 													{event.client && (
 														<p className="text-xs text-muted-foreground break-words">
 															{event.client}
@@ -464,6 +498,10 @@ export function CalendarView() {
 					<div className="flex items-center gap-2">
 						<div className="h-3 w-3 rounded-full bg-gray-400" />
 						<span className="text-sm text-muted-foreground">Otros</span>
+					</div>
+					<div className="flex items-center gap-2">
+						<div className="h-3 w-3 rounded-full bg-red-500" />
+						<span className="text-sm text-muted-foreground">Vencidos</span>
 					</div>
 				</div>
 			</Card>

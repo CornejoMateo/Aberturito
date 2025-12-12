@@ -486,6 +486,7 @@ export function CalendarView() {
 						address: selectedEvent?.address ?? '',
 						description: selectedEvent?.description ?? '',
 					}}
+					onEventUpdated={refresh}
 				/>
 			)}
 		</div>

@@ -1,5 +1,6 @@
 import { listEvents, Event } from '@/lib/calendar/events';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
+import { status } from '@/constants/stock-constants';
 
 export function useLoadEvents() {
 	const {
@@ -31,6 +32,7 @@ export function useLoadEvents() {
 			client: event.client || 'Sin cliente',
 			location: event.location || 'Sin ubicación',
 			address: event.address || 'Sin dirección',
+			status: event.status,
 		};
 	});
 

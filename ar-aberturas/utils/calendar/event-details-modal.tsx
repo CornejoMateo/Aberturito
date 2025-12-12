@@ -2,30 +2,77 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, MapPin, User, FileText } from 'lucide-react';
+import { CalendarIcon, MapPin, User, FileText, CheckCircle, Clock, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { typeConfig } from '@/constants/type-config';
-import { Event } from '@/lib/calendar/events';
+import { typeConfig, statusOptions } from '@/constants/type-config';
+import { Event, updateEvent } from '@/lib/calendar/events';
+import { useState, useEffect } from 'react';
+import { useToast } from '@/components/ui/use-toast';
 
 interface EventDetailsModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	event: Event;
+	onEventUpdated?: () => void;
 }
 
-export function EventDetailsModal({ isOpen, onClose, event }: EventDetailsModalProps) {
+export function EventDetailsModal({ isOpen, onClose, event, onEventUpdated }: EventDetailsModalProps) {
 	const typeInfo = typeConfig[(event.type ?? 'otros') as keyof typeof typeConfig];	
 	const TypeIcon = typeInfo.icon;
+	const { toast } = useToast();
+	const [currentStatus, setCurrentStatus] = useState(event.status || 'Pendiente');
+
+	const handleStatusChange = async (newStatus: string) => {
+		try {
+			setCurrentStatus(newStatus);
+			const { error } = await updateEvent(event.id, { status: newStatus });
+			
+			if (error) {
+				throw error;
+			}
+			
+			onEventUpdated?.();
+			
+			toast({
+				title: 'Estado actualizado',
+				description: `El evento ha sido marcado como ${newStatus}`,
+			});
+		} catch (error) {
+			console.error('Error al actualizar el estado:', error);
+			setCurrentStatus(event.status || 'Pendiente');
+			toast({
+				title: 'Error',
+				description: 'No se pudo actualizar el estado del evento',
+				variant: 'destructive',
+			});
+		}
+	};
 
 	return (
 		<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<div className="flex items-center gap-2">
-						<div className={`p-2 rounded ${typeInfo.color.split(' ')[0]}/10`}>
-							<TypeIcon className={`h-5 w-5 ${typeInfo.color.split(' ')[1]}`} />
+					<div className="flex items-center justify-between">
+						<div className="flex items-center gap-2">
+							<div className={`p-2 rounded ${typeInfo.color.split(' ')[0]}/10`}>
+								<TypeIcon className={`h-5 w-5 ${typeInfo.color.split(' ')[1]}`} />
+							</div>
+							<DialogTitle className="text-xl">{event.title}</DialogTitle>
 						</div>
-						<DialogTitle className="text-xl">{event.title}</DialogTitle>
+						<div className="flex items-center gap-1 text-sm text-muted-foreground group">
+							<select
+								value={currentStatus || ''}
+								onChange={(e) => handleStatusChange(e.target.value)}
+								className="bg-transparent border-none focus:ring-0 focus:ring-offset-0 p-1 pr-6 appearance-none focus:outline-none cursor-pointer hover:bg-muted rounded-md"
+							>
+								{statusOptions.map((option) => (
+									<option key={option.value} value={option.value}>
+										{option.label}
+									</option>
+								))}
+							</select>
+							<ChevronDown className="h-3.5 w-3.5 -ml-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+						</div>
 					</div>
 				</DialogHeader>
 

@@ -32,7 +32,7 @@ export function CalendarView() {
 	const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 	const [selectedDate, setSelectedDate] = useState<string | null>(null);
 	const [activeFilter, setActiveFilter] = useState<
-		'todos' | 'instalacion' | 'entrega' | 'medicion'
+		'todos' | 'colocacion' | 'produccionOK' | 'medicion'
 	>('todos');
 	const [searchTerm, setSearchTerm] = useState('');
 
@@ -137,7 +137,7 @@ export function CalendarView() {
 				<div>
 					<h2 className="text-2xl font-bold text-foreground text-balance">Calendario</h2>
 					<p className="text-muted-foreground mt-1">
-						Entregas, instalaciones y eventos programados
+						Colocaciones, mediciones y más.
 					</p>
 				</div>
 
@@ -158,7 +158,7 @@ export function CalendarView() {
 							const { data: newEvent, error } = await createEvent({
 								title: eventData.title || 'Sin título',
 								type: eventData.type,
-								description: eventData.description || eventData.title,
+								description: eventData.description,
 								client: eventData.client,
 								location: eventData.location,
 								date: formattedDate,
@@ -170,7 +170,6 @@ export function CalendarView() {
 								return false;
 							}
 
-							// Refrescar los eventos desde la base de datos
 							if (newEvent) {
 								await refresh();
 								return true;
@@ -204,18 +203,18 @@ export function CalendarView() {
 								Todos
 							</Button>
 							<Button
-								variant={activeFilter === 'instalacion' ? 'default' : 'outline'}
+								variant={activeFilter === 'colocacion' ? 'default' : 'outline'}
 								size="sm"
-								onClick={() => setActiveFilter('instalacion')}
+								onClick={() => setActiveFilter('colocacion')}
 							>
-								Instalación
+								Colocación
 							</Button>
 							<Button
-								variant={activeFilter === 'entrega' ? 'default' : 'outline'}
+								variant={activeFilter === 'produccionOK' ? 'default' : 'outline'}
 								size="sm"
-								onClick={() => setActiveFilter('entrega')}
+								onClick={() => setActiveFilter('produccionOK')}
 							>
-								Entrega
+								Producción OK
 							</Button>
 							<Button
 								variant={activeFilter === 'medicion' ? 'default' : 'outline'}
@@ -310,8 +309,10 @@ export function CalendarView() {
 												<div className="flex-1 flex items-center justify-center mt-1">
 													<div className="flex flex-wrap gap-1">
 														{Object.entries(dayEvents).map(([type, typeEvents]) => {
-															const typeInfo =
-																typeConfig[type as 'entrega' | 'instalacion' | 'medicion'];
+
+															const safeType = (type && typeConfig[type as keyof typeof typeConfig]) ? (type as keyof typeof typeConfig) : 'otros';
+															const typeInfo = typeConfig[safeType];
+
 															const dotsToShow = Math.min(typeEvents.length, 3);
 
 															return (
@@ -372,7 +373,7 @@ export function CalendarView() {
 					<div className="space-y-3">
 						{filteredEvents.length > 0 ? (
 							filteredEvents.map((event) => {
-								const typeInfo = typeConfig[(event.type ?? 'entrega') as keyof typeof typeConfig];
+								const typeInfo = typeConfig[(event.type ?? 'produccionOK') as keyof typeof typeConfig];
 								const TypeIcon = typeInfo.icon;
 
 								return (
@@ -442,11 +443,11 @@ export function CalendarView() {
 				<div className="flex flex-wrap gap-4">
 					<div className="flex items-center gap-2">
 						<div className="h-3 w-3 rounded-full bg-chart-1" />
-						<p className="text-sm text-muted-foreground">Entregas</p>
+						<p className="text-sm text-muted-foreground">Producción OK</p>
 					</div>
 					<div className="flex items-center gap-2">
 						<div className="h-3 w-3 rounded-full bg-chart-2" />
-						<span className="text-sm text-muted-foreground">Instalaciones</span>
+						<span className="text-sm text-muted-foreground">Colocaciones</span>
 					</div>
 					<div className="flex items-center gap-2">
 						<div className="h-3 w-3 rounded-full bg-chart-3" />
@@ -470,7 +471,7 @@ export function CalendarView() {
 					event={{
 						...selectedEvent,
 						title: selectedEvent?.title ?? 'Sin título',
-						type: (selectedEvent?.type as 'entrega' | 'instalacion' | 'medicion') ?? 'otros',
+						type: (selectedEvent?.type as 'produccionOK' | 'colocacion' | 'medicion') ?? 'otros',
 						date: selectedEvent?.date ?? '',
 						client: selectedEvent?.client ?? '',
 						location: selectedEvent?.location ?? '',

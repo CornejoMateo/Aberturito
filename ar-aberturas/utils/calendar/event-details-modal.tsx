@@ -5,23 +5,16 @@ import { Button } from '@/components/ui/button';
 import { CalendarIcon, MapPin, User, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { typeConfig } from '@/constants/type-config';
+import { Event } from '@/lib/calendar/events';
 
 interface EventDetailsModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	event: {
-		id: string;
-		title: string | null | undefined;
-		type: 'entrega' | 'instalacion' | 'medicion';
-		date: string;
-		client?: string | null | undefined;
-		location?: string | null | undefined;
-		description?: string | null | undefined;
-	};
+	event: Event;
 }
 
 export function EventDetailsModal({ isOpen, onClose, event }: EventDetailsModalProps) {
-	const typeInfo = typeConfig[event.type];
+	const typeInfo = typeConfig[(event.type ?? 'otros') as keyof typeof typeConfig];	
 	const TypeIcon = typeInfo.icon;
 
 	return (

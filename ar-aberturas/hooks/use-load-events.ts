@@ -25,7 +25,7 @@ export function useLoadEvents() {
 		return {
 			id: event.id,
 			date: formattedDate,
-			type: (event.type as 'entrega' | 'instalacion' | 'medicion') || 'otros',
+			type: (event.type as 'produccionOK' | 'colocacion' | 'medicion') || 'otros',
 			title: event.title || 'Sin título',
 			description: event.description || '',
 			client: event.client || 'Sin cliente',

@@ -1,4 +1,5 @@
 // Helper para crear evento y asociar date_id correctamente
+import { add } from 'date-fns';
 import { getSupabaseClient } from '../supabase-client';
 
 export type Event = {
@@ -10,6 +11,7 @@ export type Event = {
   description?: string | null;
   client?: string | null;
   location?: string | null;
+  address?: string | null;
 };
 
 const TABLE = 'events';
@@ -59,6 +61,7 @@ export async function createEvent(
       description: event.description,
       client: event.client,
       location: event.location,
+      address: event.address,
       date: event.date,
       created_at: new Date().toISOString(),
     };

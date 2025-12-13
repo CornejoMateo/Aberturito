@@ -133,6 +133,9 @@ export function EventDetailsModal({ isOpen, onClose, event, onEventUpdated }: Ev
 					>
 						{typeInfo.label}
 					</Badge>
+					{event.is_overdue && (
+						<span className="text-xs font-semibold text-red-600 mx-2">Evento vencido</span>
+					)}
 					<Button variant="outline" onClick={onClose}>
 						Cerrar
 					</Button>

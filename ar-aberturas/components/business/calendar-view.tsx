@@ -12,19 +12,14 @@ import {
 	ChevronRight,
 	Clock as ClockIcon,
 	MapPin,
-	User,
 	Package,
-	Wrench,
-	Loader2,
 	Trash2,
-	AlertCircle,
 } from 'lucide-react';
 import { monthNames, dayNames } from '@/constants/date';
 import { typeConfig } from '@/constants/type-config';
 import { Event } from '@/lib/calendar/events';
 import { useLoadEvents } from '@/hooks/use-load-events';
 import { useToast } from '@/components/ui/use-toast';
-import { isBefore, startOfDay, parse } from 'date-fns';
 import { is } from 'date-fns/locale';
 
 export function CalendarView() {
@@ -95,21 +90,6 @@ export function CalendarView() {
 	const handleEventClick = (event: Event) => {
 		setSelectedEvent(event);
 		setIsDetailsModalOpen(true);
-	};
-
-	const isEventOverdue = (event: Event) => {
-		try {
-			// Parse the date from DD-MM-YYYY format
-			const [day, month, year] = event.date?.split('-').map(Number) ?? [];
-			if (!day || !month || !year) return false;
-			
-			const eventDate = new Date(year, month - 1, day);
-			const today = startOfDay(new Date());
-			
-			return isBefore(startOfDay(eventDate), today) && (!event.status || event.status === 'Pendiente');
-		} catch {
-			return false;
-		}
 	};
 
 	const filteredEvents = selectedDate
@@ -334,8 +314,7 @@ export function CalendarView() {
 															const typeInfo = typeConfig[safeType];
 
 															const dotsToShow = Math.min(typeEvents.length, 3);
-															
-															const hasOverdueEvents = typeEvents.some(event => isEventOverdue(event));
+															const hasOverdue = typeEvents.some(ev => ev.is_overdue);
 
 															return (
 																<div
@@ -344,7 +323,7 @@ export function CalendarView() {
 																	title={`${typeEvents.length} ${typeInfo.label.toLowerCase()}${typeEvents.length > 1 ? 's' : ''}`}
 																>
 																	<div
-																		className={`h-2 w-2 rounded-full ${hasOverdueEvents ? 'bg-red-500' : typeInfo.color.split(' ')[0]}`}
+																		className={`h-2 w-2 rounded-full ${hasOverdue ? 'bg-red-500' : typeInfo.color.split(' ')[0]}`}
 																	/>
 																	{typeEvents.length > 1 && (
 																		<span className="text-[10px] text-muted-foreground">
@@ -397,7 +376,7 @@ export function CalendarView() {
 							filteredEvents.map((event) => {
 								const typeInfo = typeConfig[(event.type ?? 'produccionOK') as keyof typeof typeConfig];
 								const TypeIcon = typeInfo.icon;
-								const isOverdue = isEventOverdue(event);
+								const isOverdue = event.is_overdue || false;
 
 								return (
 									<div

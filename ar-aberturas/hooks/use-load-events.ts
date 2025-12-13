@@ -1,6 +1,5 @@
 import { listEvents, Event } from '@/lib/calendar/events';
-import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
-import { status } from '@/constants/stock-constants';
+import { useRealtimeEvents } from '@/hooks/use-realtime-events';
 
 export function useLoadEvents() {
 	const {
@@ -8,13 +7,13 @@ export function useLoadEvents() {
 		loading: isLoading,
 		error,
 		refresh,
-	} = useOptimizedRealtime<Event>(
-		'calendar_events',
+	} = useRealtimeEvents<Event>(
+		'events',
 		async () => {
 			const { data } = await listEvents();
 			return data ?? [];
 		},
-		'calendar_events_cache'
+		'events_cache'
 	);
 
 	const events = rawEvents.map((event) => {
@@ -33,6 +32,7 @@ export function useLoadEvents() {
 			location: event.location || 'Sin ubicación',
 			address: event.address || 'Sin dirección',
 			status: event.status,
+			is_overdue: event.is_overdue || false,
 		};
 	});
 

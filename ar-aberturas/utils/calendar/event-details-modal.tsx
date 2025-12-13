@@ -54,9 +54,6 @@ export function EventDetailsModal({ isOpen, onClose, event, onEventUpdated }: Ev
 				<DialogHeader>
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-2">
-							<div className={`p-2 rounded ${typeInfo.color.split(' ')[0]}/10`}>
-								<TypeIcon className={`h-5 w-5 ${typeInfo.color.split(' ')[1]}`} />
-							</div>
 							<DialogTitle className="text-xl">{event.title}</DialogTitle>
 						</div>
 						<div className="flex items-center gap-1 text-sm text-muted-foreground group">
@@ -128,7 +125,14 @@ export function EventDetailsModal({ isOpen, onClose, event, onEventUpdated }: Ev
 					</div>
 				</div>
 
-				<div className="flex justify-end gap-2 pt-4">
+
+				<div className="flex items-center justify-between gap-2 mb-4">
+					<Badge
+						className="px-2 py-1 text-sm flex items-center gap-1"
+						style={{ backgroundColor: typeInfo.backgroundColor }}
+					>
+						{typeInfo.label}
+					</Badge>
 					<Button variant="outline" onClick={onClose}>
 						Cerrar
 					</Button>

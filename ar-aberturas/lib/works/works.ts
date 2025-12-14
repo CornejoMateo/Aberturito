@@ -7,8 +7,8 @@ export type Work = {
 	address?: string | null;
 	client_id?: string | null;
 	status?: string | null;
-	transfer?: number | null;
 	architect?: string | null;
+  notes?: string | null;
 };
 
 const TABLE = 'works';
@@ -17,7 +17,7 @@ export async function listWorks(): Promise<{ data: Work[] | null; error: any }> 
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('id, created_at, locality, address, client_id, status, transfer, architect, notes') // Eliminar los campos que no van a ser usados
+		.select('id, created_at, locality, address, client_id, status, architect, notes') // Eliminar los campos que no van a ser usados
 		.order('created_at', { ascending: false });
 	return { data, error };
 }
@@ -74,8 +74,6 @@ export async function getWorksByClientId(
       .select('*')
       .eq('client_id', clientId)
       .order('created_at', { ascending: false });
-
-    console.log('Resultado de la consulta de obras:', { data, error });
     
     if (error) {
       console.error('Error en la consulta de obras:', error);

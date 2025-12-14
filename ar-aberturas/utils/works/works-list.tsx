@@ -216,7 +216,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                     className="h-4 w-4 -mr-5 -mt-11 text-muted-foreground hover:text-destructive p-1"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setWorkToDelete({ id: work.id, address: work.address });
+                      setWorkToDelete({ id: work.id, address: work.address || ''});
                       setIsDeleteDialogOpen(true);
                     }}
                   >
@@ -255,18 +255,6 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                 </span>
               </div>
               <div className="flex items-end justify-between w-full -mx-3 px-3 pb-1">
-                <div className="flex items-center gap-0 flex-wrap">
-                  <span className="font-medium whitespace-nowrap">Entregado:</span>
-                  <EditableField
-                    value={work.transfer?.toString() || '0'}
-                    onSave={async (newValue) => {
-                      const numValue = parseFloat(newValue.replace(/[^0-9.]/g, '')) || 0;
-                      await handleUpdateWork(work.id, { transfer: numValue });
-                    }}
-                    className="truncate"
-                    formatDisplay={(value) => `$${parseFloat(value || '0').toLocaleString('es-AR')}`}
-                  />
-                </div>
                 <ChecklistModal 
                   workId={work.id}
                   workType="pvc"

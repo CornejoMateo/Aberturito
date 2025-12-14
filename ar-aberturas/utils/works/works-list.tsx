@@ -257,7 +257,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
               <div className="flex items-end justify-between w-full -mx-3 px-3 pb-1">
                 <ChecklistModal 
                   workId={work.id}
-                  workType="pvc"
+                  opening_type="pvc"
                   onSave={(checklists) => {
                     console.log('Checklists guardadas para la obra', work.id, ':', checklists);
                     // Aquí puedes guardar las checklists en tu estado o base de datos

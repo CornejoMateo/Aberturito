@@ -152,6 +152,7 @@ create table public.clients (
   locality character varying null,
   address character varying null,
   email character varying null,
+  notes character varying[] null,
   constraint clients_pkey primary key (id)
 ) TABLESPACE pg_default;
 
@@ -162,10 +163,9 @@ create table public.works (
   address character varying null,
   client_id bigint null,
   status character varying null,
-  transfer double precision null,
   architect character varying null,
-  notes character varying null,
-  constraint works_pkey primary key (id),
+  notes character varying[] null,
+  balance_id bigint null,  constraint works_pkey primary key (id),
   constraint works_client_id_fkey foreign KEY (client_id) references clients (id) on update CASCADE
 ) TABLESPACE pg_default;
 

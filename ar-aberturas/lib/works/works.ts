@@ -8,7 +8,7 @@ export type Work = {
 	client_id?: string | null;
 	status?: string | null;
 	architect?: string | null;
-  notes?: string | null;
+  notes?: string[] | null;
 };
 
 const TABLE = 'works';

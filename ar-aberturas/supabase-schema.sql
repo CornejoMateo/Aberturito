@@ -218,11 +218,13 @@ create table public.balances (
   created_at timestamp with time zone not null default now(),
   date date null,
   budget double precision null,
-  debits double precision null,
-  credits double precision null,
+  debits numeric null,
+  credits numeric null,
   type_balance character varying null,
-  amount double precision null,
-  contract_date_usd double precision null,
+  amount numeric null,
+  contract_date_usd numeric null,
+  client_id bigint null,
   notes character varying[] null,
-  constraint balances_pkey primary key (id)
+  constraint balances_pkey primary key (id),
+  constraint balances_client_id_fkey foreign KEY (client_id) references clients (id) on update CASCADE on delete CASCADE
 ) TABLESPACE pg_default;

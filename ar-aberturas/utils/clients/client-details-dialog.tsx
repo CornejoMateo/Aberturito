@@ -12,7 +12,7 @@ import { useState, useEffect } from 'react';
 import { WorkForm } from '@/utils/works/work-form';
 import { createWork, getWorksByClientId, Work, deleteWork } from '@/lib/works/works';
 import { WorksList } from '@/utils/works/works-list';
-import { ClientNotes } from '@/components/notes/client-notes';
+import { ClientNotes } from '@/utils/notes/client-notes';
 import { updateClient } from '@/lib/clients/clients';
 
 interface ClientDetailsDialogProps {

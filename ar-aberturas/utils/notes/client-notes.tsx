@@ -6,7 +6,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Loader2, Send, Edit, Trash2, Check, X } from 'lucide-react';
+import { Loader2, Send, Edit, Trash2, Check, X, AlertTriangle } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { updateClient } from '@/lib/clients/clients';
 import { Client } from '@/lib/clients/clients';
 
@@ -21,6 +29,8 @@ export function ClientNotes({ client, onNotesUpdate }: ClientNotesProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingContent, setEditingContent] = useState('');
+  const [noteToDelete, setNoteToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Update local state when client prop changes
   useEffect(() => {
@@ -90,14 +100,25 @@ export function ClientNotes({ client, onNotesUpdate }: ClientNotesProps) {
   };
 
   const handleDeleteNote = async (index: number) => {
-    if (!confirm('¿Estás seguro de que deseas eliminar esta nota?')) return;
+    setNoteToDelete(index);
+  };
+
+  const confirmDeleteNote = async () => {
+    if (noteToDelete === null) return;
     
+    const index = noteToDelete;
     const updatedNotes = notes.filter((_, i) => i !== index);
     setNotes(updatedNotes);
+    setNoteToDelete(null);
     
-    const success = await saveNotes(updatedNotes);
-    if (!success) {
-      setNotes(notes);
+    try {
+      setIsDeleting(true);
+      const success = await saveNotes(updatedNotes);
+      if (!success) {
+        setNotes(notes);
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -114,6 +135,37 @@ export function ClientNotes({ client, onNotesUpdate }: ClientNotesProps) {
 
   return (
     <div className="space-y-4 h-full flex flex-col">
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={noteToDelete !== null} onOpenChange={(open) => !open && setNoteToDelete(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Eliminar nota
+            </DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar esta nota? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setNoteToDelete(null)}
+              disabled={isDeleting}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmDeleteNote}
+              disabled={isDeleting}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {isDeleting ? 'Eliminando...' : 'Eliminar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="flex-1 overflow-y-auto space-y-4 pr-2">
         {notes.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">

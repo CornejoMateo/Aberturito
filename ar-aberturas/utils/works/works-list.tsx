@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Work, updateWork } from '@/lib/works/works';
 import { MapPin, Calendar, Building2, CheckCircle, Clock, Trash2, ListChecks, ChevronDown, Search } from 'lucide-react';
+import { ChecklistModal } from '@/components/business/checklist-modal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -215,7 +216,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                     className="h-4 w-4 -mr-5 -mt-11 text-muted-foreground hover:text-destructive p-1"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setWorkToDelete({ id: work.id, address: work.address || '' });
+                      setWorkToDelete({ id: work.id, address: work.address || ''});
                       setIsDeleteDialogOpen(true);
                     }}
                   >
@@ -254,26 +255,23 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                 </span>
               </div>
               <div className="flex items-end justify-between w-full -mx-3 px-3 pb-1">
-                <div className="flex items-center gap-0 flex-wrap">
-                  <span className="font-medium whitespace-nowrap">Entregado:</span>
-                  <EditableField
-                    value={work.transfer?.toString() || '0'}
-                    onSave={async (newValue) => {
-                      const numValue = parseFloat(newValue.replace(/[^0-9.]/g, '')) || 0;
-                      await handleUpdateWork(work.id, { transfer: numValue });
-                    }}
-                    className="truncate"
-                    formatDisplay={(value) => `$${parseFloat(value || '0').toLocaleString('es-AR')}`}
-                  />
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="h-8 px-2 text-xs -mr-10 -mb-5"
+                <ChecklistModal 
+                  workId={work.id}
+                  opening_type="pvc"
+                  onSave={(checklists) => {
+                    console.log('Checklists guardadas para la obra', work.id, ':', checklists);
+                    // Aquí puedes guardar las checklists en tu estado o base de datos
+                  }}
                 >
-                  <ListChecks className="h-4 w-4 mr-1.5" />
-                  <span>Checklist</span>
-                </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="h-8 px-2 text-xs -mr-10 -mb-5"
+                  >
+                    <ListChecks className="h-4 w-4 mr-1.5" />
+                    <span>Checklist</span>
+                  </Button>
+                </ChecklistModal>
               </div>
             </div>
           </CardContent>

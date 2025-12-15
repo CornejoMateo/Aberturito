@@ -215,7 +215,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                     className="h-4 w-4 -mr-5 -mt-11 text-muted-foreground hover:text-destructive p-1"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setWorkToDelete({ id: work.id, address: work.address });
+                      setWorkToDelete({ id: work.id, address: work.address || '' });
                       setIsDeleteDialogOpen(true);
                     }}
                   >

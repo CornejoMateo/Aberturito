@@ -1,4 +1,3 @@
-// Helper para crear evento y asociar date_id correctamente
 import { getSupabaseClient } from '../supabase-client';
 
 export type Event = {
@@ -10,6 +9,9 @@ export type Event = {
   description?: string | null;
   client?: string | null;
   location?: string | null;
+  address?: string | null;
+  status?: string | null;
+  is_overdue?: boolean;
 };
 
 const TABLE = 'events';
@@ -52,7 +54,6 @@ export async function createEvent(
 
   try {
 
-    // 3. Preparar el payload para el evento
     const payload: any = {
       title: event.title,
       type: event.type,
@@ -60,6 +61,9 @@ export async function createEvent(
       client: event.client,
       location: event.location,
       date: event.date,
+      address: event.address,
+      status: 'Pendiente',
+      is_overdue: false,
       created_at: new Date().toISOString(),
     };
 
@@ -98,12 +102,20 @@ export async function createEvent(
 }
 
 export async function updateEvent(
-	id: string,
-	changes: Partial<Event>
+  id: string,
+  changes: Partial<Event>
 ): Promise<{ data: Event | null; error: any }> {
-	const supabase = getSupabaseClient();
-	const { data, error } = await supabase.from(TABLE).update(changes).eq('id', id).select().single();
-	return { data, error };
+  const supabase = getSupabaseClient();
+
+  let updatePayload = { ...changes };
+  if (Object.prototype.hasOwnProperty.call(changes, 'status')) {
+    if (changes.status && changes.status !== 'Pendiente') {
+      updatePayload.is_overdue = false;
+    }
+  }
+
+  const { data, error } = await supabase.from(TABLE).update(updatePayload).eq('id', id).select().single();
+  return { data, error };
 }
 
 export async function deleteEvent(id: string): Promise<{ data: null; error: any }> {
@@ -113,14 +125,4 @@ export async function deleteEvent(id: string): Promise<{ data: null; error: any 
 
 
 	return { data: null, error };
-}
-
-export async function getEventsByType(type: string): Promise<{ data: Event[] | null; error: any }> {
-	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('*')
-		.eq('type', type)
-		.order('created_at', { ascending: false });
-	return { data, error };
 }

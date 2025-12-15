@@ -8,21 +8,22 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2, X } from 'lucide-react';
-import { pvcChecklistItems, aluminioChecklistNames } from '@/lib/works/checklists.seed';
+import { pvcChecklistItems, aluminioChecklistNames } from '@/lib/works/checklists.constants';
 
 type ChecklistModalProps = {
   workId: string;
-  workType: 'pvc' | 'aluminio';
+  opening_type: 'pvc' | 'aluminio';
   onSave: (checklists: Array<{ items: Array<{ name: string; completed: boolean }> }>) => void;
+  children?: React.ReactNode; 
 };
 
-export function ChecklistModal({ workId, workType, onSave }: ChecklistModalProps) {
+export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [windowCount, setWindowCount] = useState(1);
   const [checklists, setChecklists] = useState<Array<{ items: Array<{ name: string; completed: boolean }> }>>([]);
 
-  const checklistItems = workType === 'pvc' ? pvcChecklistItems : aluminioChecklistNames;
+  const checklistItems = opening_type === 'pvc' ? pvcChecklistItems : aluminioChecklistNames;
 
   const handleWindowCountSubmit = (e: React.FormEvent) => {
     e.preventDefault();

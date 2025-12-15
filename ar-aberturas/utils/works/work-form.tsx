@@ -18,7 +18,6 @@ export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
     locality: '',
     address: '',
     status: 'Sin empezar',
-    transfer: 0,
     architect: '',
   });
 
@@ -31,7 +30,7 @@ export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'transfer' ? parseFloat(value) || 0 : value,
+      [name]: value,
     }));
   };
 
@@ -84,20 +83,6 @@ export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
               <SelectItem value="Finalizado">Finalizado</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="transfer">Entregado</Label>
-          <Input
-            id="transfer"
-            name="transfer"
-            type="number"
-            value={formData.transfer || ''}
-            onChange={handleChange}
-            placeholder="0.00"
-            step="0.01"
-            min="0"
-          />
         </div>
 
         <div className="space-y-2">

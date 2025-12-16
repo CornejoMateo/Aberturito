@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EventFormModal } from '../../utils/calendar/event-form-modal';
@@ -33,8 +33,8 @@ export function CalendarView() {
 		'todos' | 'colocacion' | 'produccionOK' | 'medicion'
 	>('todos');
 	  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const eventsPerPage = 5;
+  const maxVisibleEvents = 5; // Mostrar solo 5 eventos a la vez
+  const [showAllEvents, setShowAllEvents] = useState(false);
 
 	const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
 	const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -123,10 +123,8 @@ export function CalendarView() {
 				})
 				.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-	const indexOfLastEvent = currentPage * eventsPerPage;
-	const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
-	const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
-	const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+	// Mostrar todos los eventos o solo los primeros 5
+const currentEvents = showAllEvents ? filteredEvents : filteredEvents.slice(0, maxVisibleEvents);
 
 	return (
 		<div className="space-y-6">
@@ -170,7 +168,7 @@ export function CalendarView() {
 
 							if (newEvent) {
 								await refresh();
-								setCurrentPage(1); // Reset to first page when adding a new event
+								setShowAllEvents(false); // Reset para mostrar solo los primeros 5 eventos
 								return true;
 							}
 
@@ -373,9 +371,10 @@ export function CalendarView() {
 							/>
 						</div>
 					</Card>
-					<div className="space-y-3">
+					<div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
 						{currentEvents.length > 0 ? (
-							currentEvents.map((event) => {
+						<>
+						{currentEvents.map((event) => {
 								const typeInfo = typeConfig[(event.type ?? 'produccionOK') as keyof typeof typeConfig];
 								const TypeIcon = typeInfo.icon;
 								const isOverdue = event.is_overdue || false;
@@ -449,8 +448,19 @@ export function CalendarView() {
 										</div>
 									</div>
 								);
-							})
-						) : (
+							})}
+						{filteredEvents.length > maxVisibleEvents && (
+							<Button
+								variant="outline"
+								size="sm"
+								className="w-full mt-2"
+								onClick={() => setShowAllEvents(!showAllEvents)}
+							>
+								{showAllEvents ? 'Mostrar menos' : `Mostrar más (${filteredEvents.length - maxVisibleEvents})`}
+							</Button>
+						)}
+					</>
+				) : (
 							<p className="text-sm text-muted-foreground">
 								{selectedDate
 									? 'No hay eventos programados para esta fecha'
@@ -458,37 +468,6 @@ export function CalendarView() {
 							</p>
 						)}
 
-						{/* Pagination Controls */}
-						{filteredEvents.length > eventsPerPage && (
-							<div className="flex justify-center mt-4 space-x-1">
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-									disabled={currentPage === 1}
-								>
-									Anterior
-								</Button>
-								{Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-									<Button
-										key={pageNum}
-										variant={pageNum === currentPage ? "default" : "outline"}
-										size="sm"
-										onClick={() => setCurrentPage(pageNum)}
-									>
-										{pageNum}
-									</Button>
-								))}
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-									disabled={currentPage === totalPages}
-								>
-									Siguiente
-								</Button>
-							</div>
-						)}
 					</div>
 				</Card>
 			</div>

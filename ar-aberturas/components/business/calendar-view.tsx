@@ -32,7 +32,9 @@ export function CalendarView() {
 	const [activeFilter, setActiveFilter] = useState<
 		'todos' | 'colocacion' | 'produccionOK' | 'medicion'
 	>('todos');
-	const [searchTerm, setSearchTerm] = useState('');
+	  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const eventsPerPage = 5;
 
 	const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
 	const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -119,16 +121,12 @@ export function CalendarView() {
 						event.address?.toLowerCase().includes(searchTerm.toLowerCase());
 					return matchesFilter && matchesSearch;
 				})
-				.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-				.slice(0, 5);
+				.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-	/*   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  } */
+	const indexOfLastEvent = currentPage * eventsPerPage;
+	const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
+	const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
+	const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
 
 	return (
 		<div className="space-y-6">
@@ -172,6 +170,7 @@ export function CalendarView() {
 
 							if (newEvent) {
 								await refresh();
+								setCurrentPage(1); // Reset to first page when adding a new event
 								return true;
 							}
 
@@ -352,7 +351,10 @@ export function CalendarView() {
 							<Button
 								variant="ghost"
 								size="sm"
-								onClick={() => setSelectedDate(null)}
+								onClick={() => {
+									setSelectedDate(null);
+									setCurrentPage(1); // Reset to first page when clearing date filter
+								}}
 								className="text-sm text-muted-foreground"
 							>
 								Mostrar todos los eventos
@@ -372,8 +374,8 @@ export function CalendarView() {
 						</div>
 					</Card>
 					<div className="space-y-3">
-						{filteredEvents.length > 0 ? (
-							filteredEvents.map((event) => {
+						{currentEvents.length > 0 ? (
+							currentEvents.map((event) => {
 								const typeInfo = typeConfig[(event.type ?? 'produccionOK') as keyof typeof typeConfig];
 								const TypeIcon = typeInfo.icon;
 								const isOverdue = event.is_overdue || false;
@@ -454,6 +456,38 @@ export function CalendarView() {
 									? 'No hay eventos programados para esta fecha'
 									: 'No hay eventos próximos'}
 							</p>
+						)}
+
+						{/* Pagination Controls */}
+						{filteredEvents.length > eventsPerPage && (
+							<div className="flex justify-center mt-4 space-x-1">
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+									disabled={currentPage === 1}
+								>
+									Anterior
+								</Button>
+								{Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+									<Button
+										key={pageNum}
+										variant={pageNum === currentPage ? "default" : "outline"}
+										size="sm"
+										onClick={() => setCurrentPage(pageNum)}
+									>
+										{pageNum}
+									</Button>
+								))}
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+									disabled={currentPage === totalPages}
+								>
+									Siguiente
+								</Button>
+							</div>
 						)}
 					</div>
 				</Card>

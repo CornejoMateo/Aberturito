@@ -12,9 +12,7 @@ export function DashboardHome() {
 		const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
 
 		if (scrollTop + clientHeight >= scrollHeight - 20) {
-			setDisplayedCount((prev) =>
-				Math.min(prev + 5, overdueEvents.length)
-			);
+			setDisplayedCount((prev) => Math.min(prev + 5, overdueEvents.length));
 		}
 	};
 
@@ -27,9 +25,7 @@ export function DashboardHome() {
 				<h2 className="text-2xl font-bold text-foreground text-balance">
 					Bienvenido al Sistema de Gestión
 				</h2>
-				<p className="text-muted-foreground mt-1">
-					Resumen de actividades y alertas
-				</p>
+				<p className="text-muted-foreground mt-1">Resumen de actividades y alertas</p>
 			</div>
 
 			<div className="grid gap-4 lg:grid-cols-3">
@@ -41,14 +37,9 @@ export function DashboardHome() {
 						</span>
 					</div>
 
-					<div
-						className="space-y-3 max-h-[500px] overflow-y-auto"
-						onScroll={handleScroll}
-					>
+					<div className="space-y-3 max-h-[500px] overflow-y-auto" onScroll={handleScroll}>
 						{isLoading ? (
-							<p className="text-sm text-muted-foreground">
-								Cargando eventos...
-							</p>
+							<p className="text-sm text-muted-foreground">Cargando eventos...</p>
 						) : overdueEvents.length > 0 ? (
 							visibleEvents.map((event) => (
 								<div
@@ -59,32 +50,24 @@ export function DashboardHome() {
 
 									<div className="flex-1 space-y-1 min-w-0">
 										<div className="flex items-center justify-between gap-2">
-											<p className="text-sm font-medium truncate">
-												{event.title}
-											</p>
+											<p className="text-sm font-medium truncate">{event.title}</p>
 											<span className="text-xs rounded-md bg-background px-2 py-0.5 text-muted-foreground border">
 												{event.type}
 											</span>
 										</div>
 
-										<p className="text-sm text-muted-foreground truncate">
-											{event.client}
-										</p>
+										<p className="text-sm text-muted-foreground truncate">{event.client}</p>
 
 										<p className="text-xs text-muted-foreground truncate">
 											{event.location} · {event.address}
 										</p>
 
-										<p className="text-xs text-red-600 pt-1">
-											Venció el {event.date}
-										</p>
+										<p className="text-xs text-red-600 pt-1">Venció el {event.date}</p>
 									</div>
 								</div>
 							))
 						) : (
-							<p className="text-sm text-muted-foreground">
-								No hay eventos vencidos
-							</p>
+							<p className="text-sm text-muted-foreground">No hay eventos vencidos</p>
 						)}
 					</div>
 				</Card>

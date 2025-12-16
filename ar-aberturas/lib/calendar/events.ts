@@ -126,3 +126,18 @@ export async function deleteEvent(id: string): Promise<{ data: null; error: any 
 
 	return { data: null, error };
 }
+
+export async function deleteLastYearEvents(): Promise<{ data: null; error: any }> {
+	const supabase = getSupabaseClient();
+	
+	const date = new Date();
+	const year = date.getFullYear();
+
+	const { error } = await supabase
+		.from(TABLE)
+		.delete()
+		.eq('status', 'Finalizado')
+		.lt('date', `${year}-01-01`);
+
+	return { data: null, error };
+}

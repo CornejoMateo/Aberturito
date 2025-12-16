@@ -21,6 +21,8 @@ import { Event } from '@/lib/calendar/events';
 import { useLoadEvents } from '@/hooks/use-load-events';
 import { useToast } from '@/components/ui/use-toast';
 import { is } from 'date-fns/locale';
+import { deleteLastYearEvents } from '@/lib/calendar/events';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 export function CalendarView() {
 	const { toast } = useToast();
@@ -33,7 +35,7 @@ export function CalendarView() {
 		'todos' | 'colocacion' | 'produccionOK' | 'medicion'
 	>('todos');
 	const [searchTerm, setSearchTerm] = useState('');
-	const maxVisibleEvents = 5; // Mostrar solo 5 eventos a la vez
+	const maxVisibleEvents = 5; // Show only 5 events by default
 	const [showAllEvents, setShowAllEvents] = useState(false);
 
 	const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
@@ -125,6 +127,29 @@ export function CalendarView() {
 
 	const currentEvents = showAllEvents ? filteredEvents : filteredEvents.slice(0, maxVisibleEvents);
 
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [isDeleting, setIsDeleting] = useState(false);
+
+	const handleDeleteLastYearEvents = async () => {
+		setIsDeleting(true);
+		const { error } = await deleteLastYearEvents();
+		setIsDeleting(false);
+		setIsDeleteDialogOpen(false);
+		if (!error) {
+			toast({
+				title: 'Eventos eliminados',
+				description: 'Se eliminaron los eventos del año pasado.',
+			});
+			await refresh();
+		} else {
+			toast({
+				title: 'Error',
+				description: 'No se pudieron eliminar los eventos.',
+				variant: 'destructive',
+			});
+		}
+	};
+
 	return (
 		<div className="space-y-6">
 			{/* Header */}
@@ -165,7 +190,7 @@ export function CalendarView() {
 
 							if (newEvent) {
 								await refresh();
-								setShowAllEvents(false); // Reset para mostrar solo los primeros 5 eventos
+								setShowAllEvents(false);
 								return true;
 							}
 
@@ -501,6 +526,32 @@ export function CalendarView() {
 					</div>
 				</div>
 			</Card>
+
+			<div className="flex justify-center my-4">
+				<Button
+					variant="destructive"
+					className="w-full max-w-xs"
+					onClick={() => setIsDeleteDialogOpen(true)}
+				>
+					Eliminar eventos del año pasado
+				</Button>
+				<Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>¿Eliminar eventos del año pasado?</DialogTitle>
+						</DialogHeader>
+						<p className="py-2">Esta acción eliminará todos los eventos (finalizados) anteriores al 1 de enero del presente año. ¿Estás seguro?</p>
+						<DialogFooter>
+							<Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
+								Cancelar
+							</Button>
+							<Button variant="destructive" onClick={handleDeleteLastYearEvents} disabled={isDeleting}>
+								Eliminar
+							</Button>
+						</DialogFooter>
+					</DialogContent>
+				</Dialog>
+			</div>
 
 			{/* Event details */}
 			{selectedEvent && (

@@ -12,6 +12,8 @@ import { useState, useEffect } from 'react';
 import { WorkForm } from '@/utils/works/work-form';
 import { createWork, getWorksByClientId, Work, deleteWork } from '@/lib/works/works';
 import { WorksList } from '@/utils/works/works-list';
+import { ClientNotes } from '@/utils/notes/client-notes';
+import { updateClient } from '@/lib/clients/clients';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -25,6 +27,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
   const [works, setWorks] = useState<Work[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [clientData, setClientData] = useState<Client | null>(null);
   
   useEffect(() => {
     const loadWorks = async () => {
@@ -126,7 +129,27 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
     }
   };
   
-  if (!client) return null;
+  // Update local client data when client prop changes
+  useEffect(() => {
+    if (client) {
+      setClientData(client);
+    }
+  }, [client]);
+
+  const handleNotesUpdate = async (updatedNotes: string[]) => {
+    if (!client) return;
+    
+    try {
+      const { data: updatedClient } = await updateClient(client.id, { notes: updatedNotes });
+      if (updatedClient) {
+        setClientData(prev => prev ? { ...prev, notes: updatedNotes } : null);
+      }
+    } catch (error) {
+      console.error('Error updating notes:', error);
+    }
+  };
+
+  if (!clientData) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -142,25 +165,25 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
 
         <div className="flex-1 overflow-y-auto p-2 sm:p-3 pt-0">
           <div className="mb-2">
-            <h3 className="text-sm text-center font-semibold mb-1">{client.name} {client.last_name}</h3>
+            <h3 className="text-sm text-center font-semibold mb-1">{clientData.name} {clientData.last_name}</h3>
             <div className="flex flex-wrap justify-center gap-6">
               <div className="flex items-center justify-center">
-                <EmailLink email={client.email || ''} className="text-xs hover:underline">
-                  {client.email}
+                <EmailLink email={clientData.email || ''} className="text-xs hover:underline">
+                  {clientData.email}
                 </EmailLink>
               </div>
               <div className="flex items-center justify-center">
                 <WhatsAppLink 
-                  phone={client.phone_number || ''} 
+                  phone={clientData.phone_number || ''} 
                   className="text-xs hover:underline"
-                  message={`Hola ${client.name || ''}`}
+                  message={`Hola ${clientData.name || ''}`}
                 >
-                  {client.phone_number}
+                  {clientData.phone_number}
                 </WhatsAppLink>
               </div>
               <div className="flex items-center justify-center gap-1 text-xs">
                 <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                <span className="text-xs">{client.locality}</span>
+                <span className="text-xs">{clientData.locality}</span>
               </div>
             </div>
           </div>
@@ -172,7 +195,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                 <TabsTrigger value="works">Obras</TabsTrigger>
                 <TabsTrigger value="budgets" disabled>Presupuestos</TabsTrigger>
                 <TabsTrigger value="balances" disabled>Saldos</TabsTrigger>
-                <TabsTrigger value="notes" disabled>Notas</TabsTrigger>
+                <TabsTrigger value="notes">Notas</TabsTrigger>
               </TabsList>
               
               <div className="mt-2">
@@ -218,6 +241,12 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                     Aquí se mostrarán los presupuestos del cliente.
                   </p>
                 </TabsContent>
+                <TabsContent value="notes" className="h-[calc(100%-2.5rem)]">
+              <ClientNotes 
+                client={clientData} 
+                onNotesUpdate={handleNotesUpdate} 
+              />
+            </TabsContent>
               </div>
             </Tabs>
           </div>

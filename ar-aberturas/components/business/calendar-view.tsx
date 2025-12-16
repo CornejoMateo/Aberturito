@@ -351,7 +351,7 @@ const currentEvents = showAllEvents ? filteredEvents : filteredEvents.slice(0, m
 								size="sm"
 								onClick={() => {
 									setSelectedDate(null);
-									setCurrentPage(1); // Reset to first page when clearing date filter
+									setShowAllEvents(false); // Reset to show only first 5 events when clearing date filter
 								}}
 								className="text-sm text-muted-foreground"
 							>

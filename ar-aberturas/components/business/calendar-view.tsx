@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EventFormModal } from '../../utils/calendar/event-form-modal';
@@ -32,7 +32,9 @@ export function CalendarView() {
 	const [activeFilter, setActiveFilter] = useState<
 		'todos' | 'colocacion' | 'produccionOK' | 'medicion'
 	>('todos');
-	const [searchTerm, setSearchTerm] = useState('');
+	  const [searchTerm, setSearchTerm] = useState('');
+  const maxVisibleEvents = 5; // Mostrar solo 5 eventos a la vez
+  const [showAllEvents, setShowAllEvents] = useState(false);
 
 	const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
 	const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -119,16 +121,10 @@ export function CalendarView() {
 						event.address?.toLowerCase().includes(searchTerm.toLowerCase());
 					return matchesFilter && matchesSearch;
 				})
-				.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-				.slice(0, 5);
+				.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-	/*   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  } */
+	// Mostrar todos los eventos o solo los primeros 5
+const currentEvents = showAllEvents ? filteredEvents : filteredEvents.slice(0, maxVisibleEvents);
 
 	return (
 		<div className="space-y-6">
@@ -172,6 +168,7 @@ export function CalendarView() {
 
 							if (newEvent) {
 								await refresh();
+								setShowAllEvents(false); // Reset para mostrar solo los primeros 5 eventos
 								return true;
 							}
 
@@ -352,7 +349,10 @@ export function CalendarView() {
 							<Button
 								variant="ghost"
 								size="sm"
-								onClick={() => setSelectedDate(null)}
+								onClick={() => {
+									setSelectedDate(null);
+									setShowAllEvents(false); // Reset to show only first 5 events when clearing date filter
+								}}
 								className="text-sm text-muted-foreground"
 							>
 								Mostrar todos los eventos
@@ -371,9 +371,10 @@ export function CalendarView() {
 							/>
 						</div>
 					</Card>
-					<div className="space-y-3">
-						{filteredEvents.length > 0 ? (
-							filteredEvents.map((event) => {
+					<div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+						{currentEvents.length > 0 ? (
+						<>
+						{currentEvents.map((event) => {
 								const typeInfo = typeConfig[(event.type ?? 'produccionOK') as keyof typeof typeConfig];
 								const TypeIcon = typeInfo.icon;
 								const isOverdue = event.is_overdue || false;
@@ -447,14 +448,26 @@ export function CalendarView() {
 										</div>
 									</div>
 								);
-							})
-						) : (
+							})}
+						{filteredEvents.length > maxVisibleEvents && (
+							<Button
+								variant="outline"
+								size="sm"
+								className="w-full mt-2"
+								onClick={() => setShowAllEvents(!showAllEvents)}
+							>
+								{showAllEvents ? 'Mostrar menos' : `Mostrar más (${filteredEvents.length - maxVisibleEvents})`}
+							</Button>
+						)}
+					</>
+				) : (
 							<p className="text-sm text-muted-foreground">
 								{selectedDate
 									? 'No hay eventos programados para esta fecha'
 									: 'No hay eventos próximos'}
 							</p>
 						)}
+
 					</div>
 				</Card>
 			</div>

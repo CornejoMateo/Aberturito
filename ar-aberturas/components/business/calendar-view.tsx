@@ -538,7 +538,7 @@ export function CalendarView() {
 				<Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
 					<DialogContent>
 						<DialogHeader>
-							<DialogTitle>¿Eliminar eventos del año pasado?</DialogTitle>
+							<DialogTitle>¿Eliminar eventos de años anteriores?</DialogTitle>
 						</DialogHeader>
 						<p className="py-2">Esta acción eliminará todos los eventos (finalizados) anteriores al 1 de enero del presente año. ¿Estás seguro?</p>
 						<DialogFooter>

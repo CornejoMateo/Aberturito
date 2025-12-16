@@ -4,12 +4,12 @@ export type Work = {
 	id: string;
 	created_at?: string;
 	locality?: string | null;
-	addres?: string | null;
+	address?: string | null;
 	client_id?: string | null;
 	status?: string | null;
-	transfer?: number | null;
 	architect?: string | null;
-	notes?: string | null;
+  notes?: string[] | null;
+  balance_id?: string | null;
 };
 
 const TABLE = 'works';
@@ -18,7 +18,7 @@ export async function listWorks(): Promise<{ data: Work[] | null; error: any }> 
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('id, created_at, locality, addres, client_id, status, transfer, architect, notes') // Eliminar los campos que no van a ser usados
+		.select('id, created_at, locality, address, client_id, status, architect, notes') // Eliminar los campos que no van a ser usados
 		.order('created_at', { ascending: false });
 	return { data, error };
 }
@@ -63,14 +63,33 @@ export async function deleteWork(id: string): Promise<{ data: null; error: any }
 }
 
 export async function getWorksByClientId(
-	clientId: string
+  clientId: string
 ): Promise<{ data: Work[] | null; error: any }> {
-	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('id, addres, locality, architect, transfer, created_at')
-		.eq('client_id', clientId)
-		.order('created_at', { ascending: false })
-		.limit(3); // Limito a las 3 obras mas recientes
-	return { data, error };
+  try {
+    console.log('Buscando obras para el cliente ID:', clientId);
+    const supabase = getSupabaseClient();
+    
+    // Realizar la consulta directamente
+    const { data, error } = await supabase
+      .from('works')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error en la consulta de obras:', error);
+      return { data: null, error };
+    }
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error inesperado en getWorksByClientId:', {
+      error,
+      message: error instanceof Error ? error.message : 'Error desconocido'
+    });
+    return { 
+      data: null, 
+      error: error instanceof Error ? error.message : 'Error desconocido' 
+    };
+  }
 }

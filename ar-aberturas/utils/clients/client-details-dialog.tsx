@@ -3,11 +3,17 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Client } from '@/lib/clients/clients';
-import { Mail, Phone, MapPin, X, Plus } from 'lucide-react';
-import { useState } from 'react';
-import { WorkForm } from '@/components/works/work-form';
-import { createWork } from '@/lib/works/works';
+import { MapPin, X, Plus } from 'lucide-react';
+import { EmailLink } from '@/components/ui/email-link';
+import { WhatsAppLink } from '@/components/ui/whatsapp-link';
+import { useState, useEffect } from 'react';
+import { WorkForm } from '@/utils/works/work-form';
+import { createWork, getWorksByClientId, Work, deleteWork } from '@/lib/works/works';
+import { WorksList } from '@/utils/works/works-list';
+import { ClientNotes } from '@/utils/notes/client-notes';
+import { updateClient } from '@/lib/clients/clients';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -18,8 +24,132 @@ interface ClientDetailsDialogProps {
 
 export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientDetailsDialogProps) {
   const [isWorkFormOpen, setIsWorkFormOpen] = useState(false);
+  const [works, setWorks] = useState<Work[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [clientData, setClientData] = useState<Client | null>(null);
   
-  if (!client) return null;
+  useEffect(() => {
+    const loadWorks = async () => {
+      if (isOpen && client) {
+        try {
+          console.log('Cargando obras para el cliente ID:', client.id);
+          setIsLoading(true);
+          
+          // add little delay to ensure previous state is cleared
+          // ahi tenes los comentarios en ingles, te haces el gari bale
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          const result = await getWorksByClientId(client.id);
+          console.log('Resultado de getWorksByClientId:', result);
+          
+          if (result.error) {
+            console.error('Error al cargar las obras:', result.error);
+            // show a more detailed message in the interface
+            return;
+          }
+          
+          if (result.data) {
+            console.log('Obras cargadas:', result.data);
+            setWorks(result.data);
+          } else {
+            console.log('No se encontraron obras para este cliente');
+            setWorks([]);
+          }
+        } catch (error) {
+          console.error('Error inesperado al cargar obras:', {
+            error,
+            message: error instanceof Error ? error.message : 'Error desconocido',
+            stack: error instanceof Error ? error.stack : undefined
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        console.log('Limpiando lista de obras');
+        setWorks([]);
+      }
+    };
+    
+    if (isOpen) {
+      loadWorks();
+    }
+  }, [isOpen, client?.id]);
+  
+  const handleWorkDelete = async (workId: string) => {
+    if (!client) return;
+    
+    try {
+      setIsDeleting(true);
+      const { error } = await deleteWork(workId);
+      
+      if (error) {
+        console.error('Error al eliminar la obra:', error);
+        return;
+      }
+      
+      // Refresh the works list
+      const { data: updatedWorks } = await getWorksByClientId(client.id);
+      if (updatedWorks) {
+        setWorks(updatedWorks);
+      }
+    } catch (error) {
+      console.error('Error inesperado al eliminar la obra:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleWorkCreated = async (workData: Omit<Work, 'id' | 'created_at' | 'client_id'>) => {
+    if (!client) return;
+    
+    try {
+      setIsLoading(true);
+      const { data: newWork, error } = await createWork({
+        ...workData,
+        client_id: client.id
+      });
+      
+      if (error) {
+        console.error('Error al crear la obra:', error);
+        return;
+      }
+      
+      // reload the list of works
+      const { data: updatedWorks } = await getWorksByClientId(client.id);
+      if (updatedWorks) {
+        setWorks(updatedWorks);
+      }
+      
+      setIsWorkFormOpen(false);
+    } catch (error) {
+      console.error('Error inesperado al crear la obra:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Update local client data when client prop changes
+  useEffect(() => {
+    if (client) {
+      setClientData(client);
+    }
+  }, [client]);
+
+  const handleNotesUpdate = async (updatedNotes: string[]) => {
+    if (!client) return;
+    
+    try {
+      const { data: updatedClient } = await updateClient(client.id, { notes: updatedNotes });
+      if (updatedClient) {
+        setClientData(prev => prev ? { ...prev, notes: updatedNotes } : null);
+      }
+    } catch (error) {
+      console.error('Error updating notes:', error);
+    }
+  };
+
+  if (!clientData) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -35,19 +165,25 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
 
         <div className="flex-1 overflow-y-auto p-2 sm:p-3 pt-0">
           <div className="mb-2">
-            <h3 className="text-sm text-center font-semibold mb-1">{client.name} {client.last_name}</h3>
+            <h3 className="text-sm text-center font-semibold mb-1">{clientData.name} {clientData.last_name}</h3>
             <div className="flex flex-wrap justify-center gap-6">
-              <div className="flex items-center justify-center gap-1 text-xs">
-                <Mail className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                <span className="text-xs ">{client.email}</span>
+              <div className="flex items-center justify-center">
+                <EmailLink email={clientData.email || ''} className="text-xs hover:underline">
+                  {clientData.email}
+                </EmailLink>
               </div>
-              <div className="flex items-center justify-center gap-1 text-xs">
-                <Phone className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                <span className="text-xs ">{client.phone_number}</span>
+              <div className="flex items-center justify-center">
+                <WhatsAppLink 
+                  phone={clientData.phone_number || ''} 
+                  className="text-xs hover:underline"
+                  message={`Hola ${clientData.name || ''}`}
+                >
+                  {clientData.phone_number}
+                </WhatsAppLink>
               </div>
               <div className="flex items-center justify-center gap-1 text-xs">
                 <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                <span className="text-xs">{client.locality}</span>
+                <span className="text-xs">{clientData.locality}</span>
               </div>
             </div>
           </div>
@@ -58,6 +194,8 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                 <TabsTrigger value="info">Información</TabsTrigger>
                 <TabsTrigger value="works">Obras</TabsTrigger>
                 <TabsTrigger value="budgets" disabled>Presupuestos</TabsTrigger>
+                <TabsTrigger value="balances" disabled>Saldos</TabsTrigger>
+                <TabsTrigger value="notes">Notas</TabsTrigger>
               </TabsList>
               
               <div className="mt-2">
@@ -71,21 +209,44 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                     </div>
                   </div>
                 </TabsContent>
-                <TabsContent value="works" className="relative">
-                  <Button 
-                    onClick={() => setIsWorkFormOpen(true)}
-                    className="absolute top-0 right-0"
-                    size="sm"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Crear obra
-                  </Button>
+                <TabsContent value="works" className="relative space-y-4 pt-2">
+                  <div className="absolute -top-13 right-0">
+                    <Button 
+                      onClick={() => setIsWorkFormOpen(true)}
+                      size="sm"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Crear obra
+                    </Button>
+                  </div>
+                  <div className="mt-2">
+                    {isLoading ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        Cargando obras...
+                      </p>
+                    ) : works.length > 0 ? (
+                      <WorksList 
+                works={works} 
+                onDelete={handleWorkDelete} 
+              />
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No hay obras registradas para este cliente.
+                      </p>
+                    )}
+                  </div>
                 </TabsContent>
                 <TabsContent value="budgets">
                   <p className="text-sm text-muted-foreground">
                     Aquí se mostrarán los presupuestos del cliente.
                   </p>
                 </TabsContent>
+                <TabsContent value="notes" className="h-[calc(100%-2.5rem)]">
+              <ClientNotes 
+                client={clientData} 
+                onNotesUpdate={handleNotesUpdate} 
+              />
+            </TabsContent>
               </div>
             </Tabs>
           </div>
@@ -97,20 +258,10 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           <DialogHeader>
             <DialogTitle>Nueva Obra</DialogTitle>
           </DialogHeader>
-          <WorkForm
-            clientId={client?.id || ''}
-            onCancel={() => setIsWorkFormOpen(false)}
-            onSubmit={async (workData) => {
-              try {
-                await createWork({
-                  ...workData,
-                  client_id: client?.id || '',
-                });
-                setIsWorkFormOpen(false);
-              } catch (error) {
-                console.error('Error al crear la obra:', error);
-              }
-            }}
+          <WorkForm 
+            clientId={client?.id || ''} 
+            onSubmit={handleWorkCreated} 
+            onCancel={() => setIsWorkFormOpen(false)} 
           />
         </DialogContent>
       </Dialog>

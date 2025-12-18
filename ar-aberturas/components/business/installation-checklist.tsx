@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -43,6 +45,7 @@ type Installation = {
   tasks: Task[];
   notes: string[];
   progress: number;
+  clientLastName: string;
 };
 
 type StatusFilter = 'todos' | 'pendiente' | 'en_progreso' | 'completada';
@@ -86,6 +89,7 @@ export function InstallationChecklist() {
   const [installations, setInstallations] = useState<Installation[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedInstallation, setExpandedInstallation] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('todos');
 
   useEffect(() => {
@@ -154,6 +158,7 @@ export function InstallationChecklist() {
             return {
               id: work.id,
               clientName: clientName || 'Cliente no especificado',
+              clientLastName: work.client_last_name || '',
               address: work.address || 'Dirección no especificada',
               locality: work.locality || null,
               date: work.created_at ? format(new Date(work.created_at), 'dd-MM-yyyy', { locale: es }) : 'Fecha no especificada',
@@ -224,9 +229,18 @@ export function InstallationChecklist() {
   const inProgressCount = installations.filter((i) => i.status === 'en_progreso').length;
   const completedCount = installations.filter((i) => i.status === 'completada').length;
 
-  const filteredInstallations = statusFilter === 'todos'
-    ? installations
-    : installations.filter(installation => installation.status === statusFilter);
+  const filteredInstallations = installations.filter(installation => {
+    // Apply status filter
+    const matchesStatus = statusFilter === 'todos' || installation.status === statusFilter;
+    
+    // Apply search query filter
+    const matchesSearch = searchQuery === '' || 
+      (installation.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       installation.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       installation.clientLastName?.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    return matchesStatus && matchesSearch;
+  });
 
   const statusConfig = {
     pendiente: { label: 'Pendiente', icon: Clock, color: 'text-chart-3 bg-chart-3/10' },
@@ -247,10 +261,24 @@ export function InstallationChecklist() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Checklist de obras</h2>
-          <p className="text-muted-foreground mt-1">Seguimiento de instalaciones y tareas</p>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Checklist de obras</h2>
+            <p className="text-muted-foreground mt-1">Seguimiento de instalaciones y tareas</p>
+          </div>
+        </div>
+        
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Buscar por dirección, nombre o apellido del cliente..."
+            className="w-full pl-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
       </div>
 

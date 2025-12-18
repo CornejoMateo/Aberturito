@@ -13,7 +13,13 @@ import { pvcChecklistItems, aluminioChecklistNames } from '@/lib/works/checklist
 type ChecklistModalProps = {
   workId: string;
   opening_type: 'pvc' | 'aluminio';
-  onSave: (checklists: Array<{ items: Array<{ name: string; completed: boolean }> }>) => void;
+  onSave: (checklists: Array<{ 
+    name?: string | null;
+    description?: string | null;
+    width?: number | null;
+    height?: number | null;
+    items: Array<{ name: string; completed: boolean }> 
+  }>) => void;
   children?: React.ReactNode; 
 };
 
@@ -21,7 +27,13 @@ export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalP
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [windowCount, setWindowCount] = useState(1);
-  const [checklists, setChecklists] = useState<Array<{ items: Array<{ name: string; completed: boolean }> }>>([]);
+  const [checklists, setChecklists] = useState<Array<{
+    name?: string | null;
+    description?: string | null;
+    width?: number | null;
+    height?: number | null;
+    items: Array<{ name: string; completed: boolean }> 
+  }>>([]);
 
   const checklistItems = opening_type === 'pvc' ? pvcChecklistItems : aluminioChecklistNames;
 
@@ -29,6 +41,10 @@ export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalP
     e.preventDefault();
     // Inicializar las checklists con el número de ventanas
     const newChecklists = Array.from({ length: windowCount }, () => ({
+      name: null,
+      description: null,
+      width: null,
+      height: null,
       items: checklistItems.map(item => ({
         name: item,
         completed: false,
@@ -51,6 +67,15 @@ export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalP
     setStep(1);
     setWindowCount(1);
     setChecklists([]);
+  };
+
+  const updateChecklistField = (index: number, field: string, value: any) => {
+    const updatedChecklists = [...checklists];
+    updatedChecklists[index] = {
+      ...updatedChecklists[index],
+      [field]: value === '' ? null : value
+    };
+    setChecklists(updatedChecklists);
   };
 
   return (
@@ -94,7 +119,45 @@ export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalP
               {checklists.map((checklist, windowIndex) => (
                 <Card key={windowIndex}>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">Ventana {windowIndex + 1}</CardTitle>
+                    <CardTitle className="text-lg">
+                      <Input
+                        placeholder="Identificador (opcional)"
+                        value={checklist.name || ''}
+                        onChange={(e) => updateChecklistField(windowIndex, 'name', e.target.value)}
+                        className="text-lg font-semibold border-0 shadow-none focus-visible:ring-1"
+                      />
+                    </CardTitle>
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                      <div>
+                        <Label htmlFor={`width-${windowIndex}`}>Ancho (cm)</Label>
+                        <Input
+                          id={`width-${windowIndex}`}
+                          type="number"
+                          placeholder="Ancho"
+                          value={checklist.width || ''}
+                          onChange={(e) => updateChecklistField(windowIndex, 'width', parseFloat(e.target.value) || null)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`height-${windowIndex}`}>Alto (cm)</Label>
+                        <Input
+                          id={`height-${windowIndex}`}
+                          type="number"
+                          placeholder="Alto"
+                          value={checklist.height || ''}
+                          onChange={(e) => updateChecklistField(windowIndex, 'height', parseFloat(e.target.value) || null)}
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <Label htmlFor={`description-${windowIndex}`}>Descripción</Label>
+                      <Input
+                        id={`description-${windowIndex}`}
+                        placeholder="Descripción (opcional)"
+                        value={checklist.description || ''}
+                        onChange={(e) => updateChecklistField(windowIndex, 'description', e.target.value)}
+                      />
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {checklist.items.map((item, itemIndex) => (

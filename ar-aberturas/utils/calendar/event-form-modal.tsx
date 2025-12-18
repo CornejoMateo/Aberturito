@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
 	Dialog,
 	DialogContent,
@@ -36,7 +36,17 @@ interface EventFormModalProps {
 export function EventFormModal({ onSave, children }: EventFormModalProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+	const [isMobile, setIsMobile] = useState(false);
 	const { toast } = useToast();
+
+	useEffect(() => {
+		const checkMobile = () => {
+			setIsMobile(window.innerWidth < 768);
+		};
+		checkMobile();
+		window.addEventListener('resize', checkMobile);
+		return () => window.removeEventListener('resize', checkMobile);
+	}, []);
 	const [formData, setFormData] = useState({
 		title: '',
 		type: 'produccionOK',
@@ -142,14 +152,15 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 								<Button
 									variant="outline"
 									className={cn(
-										'w-full pl-3 text-left font-normal',
+										isMobile ? 'w-37' : 'w-full',
+										'text-left font-normal',
 										!formData.date && 'text-muted-foreground'
 									)}
 								>
 									{formData.date ? (
 										format(formData.date, 'PPP', { locale: es })
 									) : (
-										<span>Selecciona una fecha</span>
+										<span>Seleccionar fecha</span>
 									)}
 									<CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
 								</Button>
@@ -169,7 +180,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 							</PopoverContent>
 						</Popover>
 					</div>
-
+					
 					<div className="grid gap-2">
 						<Label htmlFor="client">Cliente</Label>
 						<Input 

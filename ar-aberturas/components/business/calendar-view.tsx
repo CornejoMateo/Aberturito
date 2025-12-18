@@ -21,6 +21,8 @@ import { Event } from '@/lib/calendar/events';
 import { useLoadEvents } from '@/hooks/use-load-events';
 import { useToast } from '@/components/ui/use-toast';
 import { is } from 'date-fns/locale';
+import { deleteLastYearEvents } from '@/lib/calendar/events';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 export function CalendarView() {
 	const { toast } = useToast();
@@ -32,9 +34,9 @@ export function CalendarView() {
 	const [activeFilter, setActiveFilter] = useState<
 		'todos' | 'colocacion' | 'produccionOK' | 'medicion'
 	>('todos');
-	  const [searchTerm, setSearchTerm] = useState('');
-  const maxVisibleEvents = 5; // Mostrar solo 5 eventos a la vez
-  const [showAllEvents, setShowAllEvents] = useState(false);
+	const [searchTerm, setSearchTerm] = useState('');
+	const maxVisibleEvents = 5; // Show only 5 events by default
+	const [showAllEvents, setShowAllEvents] = useState(false);
 
 	const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
 	const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -123,8 +125,30 @@ export function CalendarView() {
 				})
 				.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-	// Mostrar todos los eventos o solo los primeros 5
-const currentEvents = showAllEvents ? filteredEvents : filteredEvents.slice(0, maxVisibleEvents);
+	const currentEvents = showAllEvents ? filteredEvents : filteredEvents.slice(0, maxVisibleEvents);
+
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [isDeleting, setIsDeleting] = useState(false);
+
+	const handleDeleteLastYearEvents = async () => {
+		setIsDeleting(true);
+		const { error } = await deleteLastYearEvents();
+		setIsDeleting(false);
+		setIsDeleteDialogOpen(false);
+		if (!error) {
+			toast({
+				title: 'Eventos eliminados',
+				description: 'Se eliminaron los eventos del año pasado.',
+			});
+			await refresh();
+		} else {
+			toast({
+				title: 'Error',
+				description: 'No se pudieron eliminar los eventos.',
+				variant: 'destructive',
+			});
+		}
+	};
 
 	return (
 		<div className="space-y-6">
@@ -132,9 +156,7 @@ const currentEvents = showAllEvents ? filteredEvents : filteredEvents.slice(0, m
 			<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 				<div>
 					<h2 className="text-2xl font-bold text-foreground text-balance">Calendario</h2>
-					<p className="text-muted-foreground mt-1">
-						Colocaciones, mediciones y más.
-					</p>
+					<p className="text-muted-foreground mt-1">Colocaciones, mediciones y más.</p>
 				</div>
 
 				<EventFormModal
@@ -168,7 +190,7 @@ const currentEvents = showAllEvents ? filteredEvents : filteredEvents.slice(0, m
 
 							if (newEvent) {
 								await refresh();
-								setShowAllEvents(false); // Reset para mostrar solo los primeros 5 eventos
+								setShowAllEvents(false);
 								return true;
 							}
 
@@ -306,12 +328,14 @@ const currentEvents = showAllEvents ? filteredEvents : filteredEvents.slice(0, m
 												<div className="flex-1 flex items-center justify-center mt-1">
 													<div className="flex flex-wrap gap-1">
 														{Object.entries(dayEvents).map(([type, typeEvents]) => {
-
-															const safeType = (type && typeConfig[type as keyof typeof typeConfig]) ? (type as keyof typeof typeConfig) : 'otros';
+															const safeType =
+																type && typeConfig[type as keyof typeof typeConfig]
+																	? (type as keyof typeof typeConfig)
+																	: 'otros';
 															const typeInfo = typeConfig[safeType];
 
 															const dotsToShow = Math.min(typeEvents.length, 3);
-															const hasOverdue = typeEvents.some(ev => ev.is_overdue);
+															const hasOverdue = typeEvents.some((ev) => ev.is_overdue);
 
 															return (
 																<div
@@ -373,101 +397,106 @@ const currentEvents = showAllEvents ? filteredEvents : filteredEvents.slice(0, m
 					</Card>
 					<div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
 						{currentEvents.length > 0 ? (
-						<>
-						{currentEvents.map((event) => {
-								const typeInfo = typeConfig[(event.type ?? 'produccionOK') as keyof typeof typeConfig];
-								const TypeIcon = typeInfo.icon;
-								const isOverdue = event.is_overdue || false;
+							<>
+								{currentEvents.map((event) => {
+									const typeInfo =
+										typeConfig[(event.type ?? 'produccionOK') as keyof typeof typeConfig];
+									const TypeIcon = typeInfo.icon;
+									const isOverdue = event.is_overdue || false;
 
-								return (
-									<div
-										key={event.id}
-										className={`p-3 rounded-lg border space-y-2 cursor-pointer transition-colors ${
-											isOverdue 
-												? 'border-red-500 bg-red-500/10 hover:bg-red-500/20' 
-												: 'border-border bg-secondary hover:bg-secondary/80'
-										}`}
-										onClick={() => handleEventClick(event)}
-									>
-										<div className="flex items-start justify-between gap-2">
-											<div className="flex items-start gap-2 min-w-0">
-												<div
-													className={`p-1.5 rounded ${typeInfo.color.split(' ')[0]}/10 mt-0.5 flex-shrink-0`}
-												>
-												<div
-													className={`h-2 w-2 rounded-full ${isOverdue ? 'bg-red-500' : typeInfo.color.split(' ')[0]}`}
-												/>
-												</div>
-												<div className="min-w-0 flex-1">
-													<div className="flex items-center gap-2">
-														<h4 className="text-sm font-medium text-foreground break-words">
-															{event.title}
-														</h4>
-														{isOverdue && (
-															<div className="flex items-center gap-1 flex-shrink-0">
-																<div className="h-2 w-2 rounded-full bg-red-500" title="Evento atrasado" />
-															</div>
+									return (
+										<div
+											key={event.id}
+											className={`p-3 rounded-lg border space-y-2 cursor-pointer transition-colors ${
+												isOverdue
+													? 'border-red-500 bg-red-500/10 hover:bg-red-500/20'
+													: 'border-border bg-secondary hover:bg-secondary/80'
+											}`}
+											onClick={() => handleEventClick(event)}
+										>
+											<div className="flex items-start justify-between gap-2">
+												<div className="flex items-start gap-2 min-w-0">
+													<div
+														className={`p-1.5 rounded ${typeInfo.color.split(' ')[0]}/10 mt-0.5 flex-shrink-0`}
+													>
+														<div
+															className={`h-2 w-2 rounded-full ${isOverdue ? 'bg-red-500' : typeInfo.color.split(' ')[0]}`}
+														/>
+													</div>
+													<div className="min-w-0 flex-1">
+														<div className="flex items-center gap-2">
+															<h4 className="text-sm font-medium text-foreground break-words">
+																{event.title}
+															</h4>
+															{isOverdue && (
+																<div className="flex items-center gap-1 flex-shrink-0">
+																	<div
+																		className="h-2 w-2 rounded-full bg-red-500"
+																		title="Evento atrasado"
+																	/>
+																</div>
+															)}
+														</div>
+														{event.client && (
+															<p className="text-xs text-muted-foreground break-words">
+																{event.client}
+															</p>
 														)}
 													</div>
-													{event.client && (
-														<p className="text-xs text-muted-foreground break-words">
-															{event.client}
-														</p>
-													)}
+												</div>
+												<div className="flex items-start flex-shrink-0">
+													<Button
+														variant="ghost"
+														size="icon"
+														onClick={(e) => handleDeleteEvent(event.id, e)}
+														className="h-6 w-6 -mr-2"
+														aria-label="Eliminar evento"
+													>
+														<Trash2 className="h-3.5 w-3.5" />
+													</Button>
 												</div>
 											</div>
-											<div className="flex items-start flex-shrink-0">
-												<Button
-													variant="ghost"
-													size="icon"
-													onClick={(e) => handleDeleteEvent(event.id, e)}
-													className="h-6 w-6 -mr-2"
-													aria-label="Eliminar evento"
-												>
-													<Trash2 className="h-3.5 w-3.5" />
-												</Button>
+											<div className="space-y-1 text-xs text-muted-foreground">
+												<div className="flex items-center gap-1.5">
+													<CalendarIcon className="h-3.5 w-3.5 flex-shrink-0" />
+													<span>{event.date}</span>
+												</div>
+												{event.location && (
+													<div className="flex items-start gap-1.5">
+														<MapPin className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+														<span className="break-words line-clamp-1">{event.location}</span>
+													</div>
+												)}
+												{event.address && (
+													<div className="flex items-start gap-1.5">
+														<Package className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+														<span className="break-words line-clamp-1">{event.address}</span>
+													</div>
+												)}
 											</div>
 										</div>
-										<div className="space-y-1 text-xs text-muted-foreground">
-											<div className="flex items-center gap-1.5">
-												<CalendarIcon className="h-3.5 w-3.5 flex-shrink-0" />
-												<span>{event.date}</span>
-											</div>
-											{event.location && (
-												<div className="flex items-start gap-1.5">
-													<MapPin className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-													<span className="break-words line-clamp-1">{event.location}</span>
-												</div>
-											)}
-											{event.address && (
-												<div className="flex items-start gap-1.5">
-													<Package className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-													<span className="break-words line-clamp-1">{event.address}</span>
-												</div>
-											)}
-										</div>
-									</div>
-								);
-							})}
-						{filteredEvents.length > maxVisibleEvents && (
-							<Button
-								variant="outline"
-								size="sm"
-								className="w-full mt-2"
-								onClick={() => setShowAllEvents(!showAllEvents)}
-							>
-								{showAllEvents ? 'Mostrar menos' : `Mostrar más (${filteredEvents.length - maxVisibleEvents})`}
-							</Button>
-						)}
-					</>
-				) : (
+									);
+								})}
+								{filteredEvents.length > maxVisibleEvents && (
+									<Button
+										variant="outline"
+										size="sm"
+										className="w-full mt-2"
+										onClick={() => setShowAllEvents(!showAllEvents)}
+									>
+										{showAllEvents
+											? 'Mostrar menos'
+											: `Mostrar más (${filteredEvents.length - maxVisibleEvents})`}
+									</Button>
+								)}
+							</>
+						) : (
 							<p className="text-sm text-muted-foreground">
 								{selectedDate
 									? 'No hay eventos programados para esta fecha'
 									: 'No hay eventos próximos'}
 							</p>
 						)}
-
 					</div>
 				</Card>
 			</div>
@@ -497,6 +526,32 @@ const currentEvents = showAllEvents ? filteredEvents : filteredEvents.slice(0, m
 					</div>
 				</div>
 			</Card>
+
+			<div className="flex justify-center my-4">
+				<Button
+					variant="destructive"
+					className="w-full max-w-xs"
+					onClick={() => setIsDeleteDialogOpen(true)}
+				>
+					Eliminar eventos del año pasado
+				</Button>
+				<Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>¿Eliminar eventos de años anteriores?</DialogTitle>
+						</DialogHeader>
+						<p className="py-2">Esta acción eliminará todos los eventos (finalizados) anteriores al 1 de enero del presente año. ¿Estás seguro?</p>
+						<DialogFooter>
+							<Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
+								Cancelar
+							</Button>
+							<Button variant="destructive" onClick={handleDeleteLastYearEvents} disabled={isDeleting}>
+								Eliminar
+							</Button>
+						</DialogFooter>
+					</DialogContent>
+				</Dialog>
+			</div>
 
 			{/* Event details */}
 			{selectedEvent && (

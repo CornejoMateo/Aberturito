@@ -184,7 +184,11 @@ export function CalendarView() {
 
 							if (error) {
 								console.error('Error al crear el evento:', error);
-								alert(`Error al crear el evento: ${error.message}`);
+								toast({
+									title: 'Error',
+									description: 'No se pudo crear el evento.',
+									variant: 'destructive',
+								});
 								return false;
 							}
 
@@ -197,7 +201,11 @@ export function CalendarView() {
 							return false;
 						} catch (error) {
 							console.error('Error inesperado al crear el evento:', error);
-							alert('Error inesperado al crear el evento');
+							toast({
+								title: 'Error',
+								description: 'No se pudo crear el evento.',
+								variant: 'destructive',
+							});
 							return false;
 						}
 					}}

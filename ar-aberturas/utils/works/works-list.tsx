@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Work, updateWork } from '@/lib/works/works';
+import { getChecklistsByWorkId, createChecklist, deleteChecklist } from '@/lib/works/checklists';
 import { MapPin, Calendar, Building2, CheckCircle, Clock, Trash2, ListChecks, ChevronDown, Search } from 'lucide-react';
 import { ChecklistModal } from '@/components/business/checklist-modal';
 import { format } from 'date-fns';
@@ -258,9 +259,51 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                 <ChecklistModal 
                   workId={work.id}
                   opening_type="pvc"
-                  onSave={(checklists) => {
-                    console.log('Checklists guardadas para la obra', work.id, ':', checklists);
-                    // Aquí puedes guardar las checklists en tu estado o base de datos
+                  onSave={async (checklists) => {
+                    try {
+                      // Primero eliminamos checklists existentes para esta obra
+                      const { data: existingChecklists, error: fetchError } = await getChecklistsByWorkId(work.id);
+                      
+                      if (fetchError) throw fetchError;
+                      
+                      // Eliminar checklists existentes
+                      if (existingChecklists && existingChecklists.length > 0) {
+                        const deletePromises = existingChecklists.map(checklist => 
+                          deleteChecklist(checklist.id)
+                        );
+                        await Promise.all(deletePromises);
+                      }
+                      
+                      // Crear nuevas checklists
+                      const createPromises = checklists.map((checklist, index) => {
+                        return createChecklist({
+                          work_id: work.id,
+                          name: `Ventana ${index + 1}`,
+                          items: checklist.items.map(item => ({
+                            name: item.name,
+                            done: item.completed,
+                            key: 0 // Se actualizará automáticamente
+                          })),
+                          progress: 0,
+                        });
+                      });
+                      
+                      await Promise.all(createPromises);
+                      
+                      // Actualizar el estado local si es necesario
+                      if (onWorkUpdated) {
+                        const updatedWork = {
+                          ...work,
+                          has_checklist: true,
+                          updated_at: new Date().toISOString()
+                        };
+                        onWorkUpdated(updatedWork);
+                      }
+                      
+                      console.log('Checklists guardadas exitosamente');
+                    } catch (error) {
+                      console.error('Error al guardar las checklists:', error);
+                    }
                   }}
                 >
                   <Button 

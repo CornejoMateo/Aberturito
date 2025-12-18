@@ -149,15 +149,7 @@ export function InstallationChecklist() {
           <p className="text-muted-foreground mt-1">Seguimiento de instalaciones y tareas</p>
         </div>
         <div className="flex gap-2">
-          <ChecklistModal 
-            workId="OBR-001" 
-            workType="pvc" 
-            onSave={handleSaveChecklists} 
-          />
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Nueva obra
-          </Button>
+          {/* Buttons removed for installer view */}
         </div>
       </div>
 

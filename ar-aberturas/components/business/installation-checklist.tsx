@@ -29,10 +29,13 @@ type Task = {
   completed: boolean;
 };
 
+import { AddressLink } from '@/components/ui/address-link';
+
 type Installation = {
   id: string;
   clientName: string;
   address: string;
+  locality?: string | null;
   date: string;
   status: 'pendiente' | 'en_progreso' | 'completada';
   tasks: Task[];
@@ -112,6 +115,7 @@ export function InstallationChecklist() {
               id: work.id,
               clientName: clientName || 'Cliente no especificado',
               address: work.address || 'Dirección no especificada',
+              locality: work.locality || null,
               date: work.created_at ? format(new Date(work.created_at), 'dd-MM-yyyy', { locale: es }) : 'Fecha no especificada',
               status,
               tasks,
@@ -274,9 +278,12 @@ export function InstallationChecklist() {
                       </div>
 
                       <div className="grid gap-2 md:grid-cols-3 text-sm">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <MapPin className="h-4 w-4 flex-shrink-0" />
-                          <span className="truncate">{installation.address}</span>
+                        <div className="flex items-center text-muted-foreground">
+                          <AddressLink 
+                            address={installation.address} 
+                            locality={installation.locality}
+                            className="text-sm"
+                          />
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Calendar className="h-4 w-4 flex-shrink-0" />

@@ -155,7 +155,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[60vw] h-[90vh] sm:h-[85vh] flex flex-col p-0 sm:p-1"  showCloseButton={false}>
         <DialogHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex m-3 justify-between items-center">
             <DialogTitle>Detalles del cliente</DialogTitle>
             <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
               <X className="h-4 w-4" />

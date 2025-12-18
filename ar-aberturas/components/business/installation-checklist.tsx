@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,11 +14,14 @@ import {
   Clock,
   ChevronDown,
   ChevronUp,
-  Plus,
+  Loader2,
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChecklistModal } from './checklist-modal';
+import { listWorks } from '@/lib/works/works';
+import { getChecklistsByWorkId } from '@/lib/works/checklists';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 type Task = {
   id: string;
@@ -35,84 +38,117 @@ type Installation = {
   installer: string;
   tasks: Task[];
   notes: string[];
+  progress: number;
 };
 
-const initialInstallations: Installation[] = [
-  {
-    id: 'OBR-001',
-    clientName: 'Juan Pérez',
-    address: 'Av. Colón 1234, Córdoba',
-    date: '2025-03-11',
-    status: 'en_progreso',
-    installer: 'Carlos Gómez',
-    tasks: [
-      { id: '1', name: 'Verificar medidas en sitio', completed: true },
-      { id: '2', name: 'Preparar superficie de instalación', completed: true },
-      { id: '3', name: 'Colocar marco de ventana', completed: true },
-      { id: '4', name: 'Instalar vidrio', completed: false },
-      { id: '5', name: 'Sellar con silicona', completed: false },
-      { id: '6', name: 'Ajustar herrajes', completed: false },
-      { id: '7', name: 'Limpieza final', completed: false },
-      { id: '8', name: 'Verificación con cliente', completed: false },
-    ],
-    notes: [
-      'Falta silicona transparente - traer mañana',
-      'Cliente solicita instalación antes de las 14hs',
-    ],
-  },
-  {
-    id: 'OBR-002',
-    clientName: 'María González',
-    address: 'Calle San Martín 567, Villa Carlos Paz',
-    date: '2025-03-12',
-    status: 'pendiente',
-    installer: 'Roberto Silva',
-    tasks: [
-      { id: '1', name: 'Verificar medidas en sitio', completed: false },
-      { id: '2', name: 'Preparar superficie de instalación', completed: false },
-      { id: '3', name: 'Colocar marco de puerta', completed: false },
-      { id: '4', name: 'Instalar puerta', completed: false },
-      { id: '5', name: 'Ajustar bisagras', completed: false },
-      { id: '6', name: 'Instalar manija y cerradura', completed: false },
-      { id: '7', name: 'Sellar perímetro', completed: false },
-      { id: '8', name: 'Limpieza y verificación', completed: false },
-    ],
-    notes: ['Primera instalación - verificar todo el material'],
-  },
-  {
-    id: 'OBR-003',
-    clientName: 'Roberto Fernández',
-    address: 'Av. Libertador 890, Alta Gracia',
-    date: '2025-03-08',
-    status: 'completada',
-    installer: 'Carlos Gómez',
-    tasks: [
-      { id: '1', name: 'Verificar medidas en sitio', completed: true },
-      { id: '2', name: 'Preparar superficie de instalación', completed: true },
-      { id: '3', name: 'Colocar marcos', completed: true },
-      { id: '4', name: 'Instalar ventanas', completed: true },
-      { id: '5', name: 'Sellar con silicona', completed: true },
-      { id: '6', name: 'Ajustar herrajes', completed: true },
-      { id: '7', name: 'Limpieza final', completed: true },
-      { id: '8', name: 'Verificación con cliente', completed: true },
-    ],
-    notes: ['Instalación completada sin inconvenientes', 'Cliente muy satisfecho'],
-  },
-];
-
 export function InstallationChecklist() {
-  const [installations, setInstallations] = useState<Installation[]>(initialInstallations);
-  const [expandedId, setExpandedId] = useState<string | null>('OBR-001');
+  const [installations, setInstallations] = useState<Installation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedInstallation, setExpandedInstallation] = useState<string | null>('OBR-001');
 
-  const toggleTask = (installationId: string, taskId: string) => {
-    setInstallations((prev) =>
-      prev.map((installation) => {
+  useEffect(() => {
+    const fetchWorks = async () => {
+      try {
+        setLoading(true);
+        const { data: works, error } = await listWorks();
+        
+        if (error) throw error;
+        if (!works) {
+          setInstallations([]);
+          return;
+        }
+
+        // Obtener checklists para cada obra
+        const worksWithChecklists = await Promise.all(
+          works.map(async (work) => {
+            const { data: checklists } = await getChecklistsByWorkId(work.id);
+            
+            // Calcular progreso basado en las checklists
+            let progress = 0;
+            let tasks: Task[] = [];
+            
+            if (checklists && checklists.length > 0) {
+              // Aplanar todas las tareas de todas las checklists
+              tasks = checklists.flatMap((checklist, index) => 
+                (checklist.items || []).map((item, itemIndex) => ({
+                  id: `${checklist.id}-${itemIndex}`,
+                  name: item.name || `Tarea ${itemIndex + 1}`,
+                  completed: item.done || false
+                }))
+              );
+              
+              // Calcular progreso
+              const totalTasks = tasks.length;
+              const completedTasks = tasks.filter(task => task.completed).length;
+              progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            }
+            
+            // Determinar estado basado en el progreso
+            let status: 'pendiente' | 'en_progreso' | 'completada' = 'pendiente';
+            if (progress === 100) {
+              status = 'completada';
+            } else if (progress > 0) {
+              status = 'en_progreso';
+            }
+            
+            return {
+              id: work.id,
+              clientName: work.client_id ? `Cliente ${work.client_id}` : 'Cliente no especificado',
+              address: work.address || 'Dirección no especificada',
+              date: work.created_at ? format(new Date(work.created_at), 'yyyy-MM-dd', { locale: es }) : 'Fecha no especificada',
+              status,
+              installer: 'Instalador no asignado', // Por ahora lo dejamos fijo
+              tasks,
+              notes: work.notes || [],
+              progress
+            };
+          })
+        );
+        
+        setInstallations(worksWithChecklists);
+      } catch (error) {
+        console.error('Error al cargar las obras:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchWorks();
+  }, []);
+
+  const toggleTask = async (installationId: string, taskId: string) => {
+    // En una implementación real, aquí deberías hacer una llamada a la API
+    // para actualizar el estado de la tarea en la base de datos
+    console.log(`Tarea ${taskId} de la obra ${installationId} actualizada`);
+    
+    // Actualización optimista del estado local
+    setInstallations(prevInstallations =>
+      prevInstallations.map(installation => {
         if (installation.id === installationId) {
+          const updatedTasks = installation.tasks.map(task =>
+            task.id === taskId ? { ...task, completed: !task.completed } : task
+          );
+          
+          // Actualizar progreso
+          const totalTasks = updatedTasks.length;
+          const completedTasks = updatedTasks.filter(task => task.completed).length;
+          const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+          
+          // Actualizar estado basado en el progreso
+          let status = installation.status;
+          if (progress === 100) {
+            status = 'completada';
+          } else if (progress > 0) {
+            status = 'en_progreso';
+          } else {
+            status = 'pendiente';
+          }
+          
           return {
             ...installation,
-            tasks: installation.tasks.map((task) =>
-              task.id === taskId ? { ...task, completed: !task.completed } : task
-            ),
+            tasks: updatedTasks,
+            status,
+            progress
           };
         }
         return installation;
@@ -196,13 +232,13 @@ export function InstallationChecklist() {
           const progress = getProgress(installation.tasks);
           const statusInfo = statusConfig[installation.status];
           const StatusIcon = statusInfo.icon;
-          const isExpanded = expandedId === installation.id;
+          const isExpanded = expandedInstallation === installation.id;
 
           return (
             <Card key={installation.id} className="bg-card border-border overflow-hidden">
               <Collapsible
                 open={isExpanded}
-                onOpenChange={() => setExpandedId(isExpanded ? null : installation.id)}
+                onOpenChange={() => setExpandedInstallation(isExpanded ? null : installation.id)}
               >
                 <div className="p-6">
                   <div className="flex items-start justify-between gap-4">
@@ -243,11 +279,11 @@ export function InstallationChecklist() {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">Progreso</span>
-                          <span className="font-semibold text-foreground">
-                            {Math.round(progress)}%
-                          </span>
+                          <div className="text-sm text-muted-foreground">
+                            Progreso: {installation.progress}%
+                          </div>
                         </div>
-                        <Progress value={progress} className="h-2" />
+                        <Progress value={installation.progress} className="h-2" />
                       </div>
                     </div>
 
@@ -296,6 +332,10 @@ export function InstallationChecklist() {
                           </div>
                         ))}
                       </div>
+                      <Progress
+                        value={installation.progress}
+                        className="h-2 mt-1"
+                      />
                     </div>
 
                     {/* Notes */}

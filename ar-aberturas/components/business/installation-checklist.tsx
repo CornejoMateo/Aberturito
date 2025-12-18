@@ -15,7 +15,9 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
+  List,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { listWorks } from '@/lib/works/works';
@@ -43,10 +45,48 @@ type Installation = {
   progress: number;
 };
 
+type StatusFilter = 'todos' | 'pendiente' | 'en_progreso' | 'completada';
+
+function StatusCard({
+  label,
+  count,
+  icon: Icon,
+  active,
+  onClick,
+  className = '',
+  activeClassName = '',
+}: {
+  label: string;
+  count: number;
+  icon: any;
+  active: boolean;
+  onClick: () => void;
+  className?: string;
+  activeClassName?: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'flex flex-col items-center gap-2 rounded-lg border p-4 text-center transition-colors hover:bg-muted/50',
+        'cursor-pointer w-full',
+        active ? 'border-foreground/20 bg-muted/30' : 'border-border',
+        className,
+        active && activeClassName
+      )}
+    >
+      <Icon className="h-6 w-6" />
+      <span className="text-sm font-medium">{label}</span>
+      <span className="text-2xl font-bold">{count}</span>
+    </button>
+  );
+}
+
 export function InstallationChecklist() {
   const [installations, setInstallations] = useState<Installation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedInstallation, setExpandedInstallation] = useState<string | null>('OBR-001');
+  const [expandedInstallation, setExpandedInstallation] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('todos');
 
   useEffect(() => {
     const fetchWorks = async () => {
@@ -184,10 +224,19 @@ export function InstallationChecklist() {
   const inProgressCount = installations.filter((i) => i.status === 'en_progreso').length;
   const completedCount = installations.filter((i) => i.status === 'completada').length;
 
+  const filteredInstallations = statusFilter === 'todos'
+    ? installations
+    : installations.filter(installation => installation.status === statusFilter);
+
   const statusConfig = {
     pendiente: { label: 'Pendiente', icon: Clock, color: 'text-chart-3 bg-chart-3/10' },
     en_progreso: { label: 'En progreso', icon: AlertCircle, color: 'text-chart-1 bg-chart-1/10' },
     completada: { label: 'Completada', icon: CheckCircle2, color: 'text-accent bg-accent/10' },
+  };
+
+  const handleStatusFilter = (status: StatusFilter) => {
+    setStatusFilter(status);
+    setExpandedInstallation(null); // Collapse any expanded installation when changing filters
   };
 
   const handleSaveChecklists = (checklists: any) => {
@@ -206,8 +255,31 @@ export function InstallationChecklist() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="p-6 bg-card border-border">
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card 
+          className={cn(
+            "p-6 bg-card border-border cursor-pointer transition-all hover:shadow-md",
+            statusFilter === 'todos' ? 'ring-2 ring-primary' : ''
+          )}
+          onClick={() => handleStatusFilter('todos')}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Todas</p>
+              <p className="text-2xl font-bold text-foreground mt-2">{installations.length}</p>
+            </div>
+            <div className="rounded-lg bg-secondary p-3 text-foreground/80">
+              <List className="h-6 w-6" />
+            </div>
+          </div>
+        </Card>
+        <Card 
+          className={cn(
+            "p-6 bg-card border-border cursor-pointer transition-all hover:shadow-md",
+            statusFilter === 'pendiente' ? 'ring-2 ring-chart-3' : ''
+          )}
+          onClick={() => handleStatusFilter('pendiente')}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Pendientes</p>
@@ -218,7 +290,13 @@ export function InstallationChecklist() {
             </div>
           </div>
         </Card>
-        <Card className="p-6 bg-card border-border">
+        <Card 
+          className={cn(
+            "p-6 bg-card border-border cursor-pointer transition-all hover:shadow-md",
+            statusFilter === 'en_progreso' ? 'ring-2 ring-chart-1' : ''
+          )}
+          onClick={() => handleStatusFilter('en_progreso')}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">En progreso</p>
@@ -229,7 +307,13 @@ export function InstallationChecklist() {
             </div>
           </div>
         </Card>
-        <Card className="p-6 bg-card border-border">
+        <Card 
+          className={cn(
+            "p-6 bg-card border-border cursor-pointer transition-all hover:shadow-md",
+            statusFilter === 'completada' ? 'ring-2 ring-accent' : ''
+          )}
+          onClick={() => handleStatusFilter('completada')}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Completadas</p>
@@ -244,7 +328,7 @@ export function InstallationChecklist() {
 
       {/* Installations list */}
       <div className="space-y-4">
-        {installations.map((installation) => {
+        {filteredInstallations.map((installation) => {
           const progress = getProgress(installation.tasks);
           const statusInfo = statusConfig[installation.status];
           const StatusIcon = statusInfo.icon;

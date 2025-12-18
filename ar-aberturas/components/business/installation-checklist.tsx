@@ -35,7 +35,6 @@ type Installation = {
   address: string;
   date: string;
   status: 'pendiente' | 'en_progreso' | 'completada';
-  installer: string;
   tasks: Task[];
   notes: string[];
   progress: number;
@@ -52,8 +51,12 @@ export function InstallationChecklist() {
         setLoading(true);
         const { data: works, error } = await listWorks();
         
-        if (error) throw error;
-        if (!works) {
+        if (error) {
+          console.error('Error al obtener las obras:', error);
+          throw error;
+        }
+        
+        if (!works || works.length === 0) {
           setInstallations([]);
           return;
         }
@@ -91,13 +94,26 @@ export function InstallationChecklist() {
               status = 'en_progreso';
             }
             
+            // Construir el nombre completo del cliente
+            const clientName = [work.client_name, work.client_last_name]
+              .filter(Boolean)
+              .join(' ')
+              .trim();
+              
+            console.log('Procesando obra:', {
+              workId: work.id,
+              clientId: work.client_id,
+              clientName,
+              client_name: work.client_name,
+              client_last_name: work.client_last_name
+            });
+            
             return {
               id: work.id,
-              clientName: work.client_id ? `Cliente ${work.client_id}` : 'Cliente no especificado',
+              clientName: clientName || 'Cliente no especificado',
               address: work.address || 'Dirección no especificada',
-              date: work.created_at ? format(new Date(work.created_at), 'yyyy-MM-dd', { locale: es }) : 'Fecha no especificada',
+              date: work.created_at ? format(new Date(work.created_at), 'dd-MM-yyyy', { locale: es }) : 'Fecha no especificada',
               status,
-              installer: 'Instalador no asignado', // Por ahora lo dejamos fijo
               tasks,
               notes: work.notes || [],
               progress
@@ -117,8 +133,7 @@ export function InstallationChecklist() {
   }, []);
 
   const toggleTask = async (installationId: string, taskId: string) => {
-    // En una implementación real, aquí deberías hacer una llamada a la API
-    // para actualizar el estado de la tarea en la base de datos
+
     console.log(`Tarea ${taskId} de la obra ${installationId} actualizada`);
     
     // Actualización optimista del estado local
@@ -173,7 +188,7 @@ export function InstallationChecklist() {
 
   const handleSaveChecklists = (checklists: any) => {
     console.log('Checklists guardadas:', checklists);
-    // Aquí puedes guardar las checklists en tu estado o base de datos
+   
   };
 
   return (
@@ -183,9 +198,6 @@ export function InstallationChecklist() {
         <div>
           <h2 className="text-2xl font-bold text-foreground">Checklist de obras</h2>
           <p className="text-muted-foreground mt-1">Seguimiento de instalaciones y tareas</p>
-        </div>
-        <div className="flex gap-2">
-          {/* Buttons removed for installer view */}
         </div>
       </div>
 
@@ -269,10 +281,6 @@ export function InstallationChecklist() {
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Calendar className="h-4 w-4 flex-shrink-0" />
                           <span>{installation.date}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <ClipboardCheck className="h-4 w-4 flex-shrink-0" />
-                          <span>{installation.installer}</span>
                         </div>
                       </div>
 

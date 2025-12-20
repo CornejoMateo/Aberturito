@@ -14,6 +14,9 @@ import { createWork, getWorksByClientId, Work, deleteWork } from '@/lib/works/wo
 import { WorksList } from '@/utils/works/works-list';
 import { ClientNotes } from '@/utils/notes/client-notes';
 import { updateClient } from '@/lib/clients/clients';
+import { ClientBalances } from '@/utils/balances/client-balances';
+import { BalanceForm } from '@/utils/balances/balance-form';
+import { createBalance } from '@/lib/works/balances';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -24,6 +27,7 @@ interface ClientDetailsDialogProps {
 
 export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientDetailsDialogProps) {
   const [isWorkFormOpen, setIsWorkFormOpen] = useState(false);
+  const [isBalanceFormOpen, setIsBalanceFormOpen] = useState(false);
   const [works, setWorks] = useState<Work[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -128,6 +132,25 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
       setIsLoading(false);
     }
   };
+
+  const handleBalanceCreated = async (balanceData: any) => {    
+    try {
+      setIsLoading(true);
+      const { data, error } = await createBalance(balanceData);
+      
+      if (error) {
+        console.error('Error al crear balance:', error);
+        return;
+      }
+      
+      console.log('Balance creado exitosamente:', data);
+      setIsBalanceFormOpen(false);
+    } catch (error) {
+      console.error('Error inesperado al crear balance:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   // Update local client data when client prop changes
   useEffect(() => {
@@ -194,7 +217,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                 <TabsTrigger value="info">Información</TabsTrigger>
                 <TabsTrigger value="works">Obras</TabsTrigger>
                 <TabsTrigger value="budgets" disabled>Presupuestos</TabsTrigger>
-                <TabsTrigger value="balances" disabled>Saldos</TabsTrigger>
+                <TabsTrigger value="balances">Saldos</TabsTrigger>
                 <TabsTrigger value="notes">Notas</TabsTrigger>
               </TabsList>
               
@@ -226,9 +249,9 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                       </p>
                     ) : works.length > 0 ? (
                       <WorksList 
-                works={works} 
-                onDelete={handleWorkDelete} 
-              />
+                        works={works} 
+                        onDelete={handleWorkDelete} 
+                      />
                     ) : (
                       <p className="text-sm text-muted-foreground text-center py-4">
                         No hay obras registradas para este cliente.
@@ -242,11 +265,26 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                   </p>
                 </TabsContent>
                 <TabsContent value="notes" className="h-[calc(100%-2.5rem)]">
-              <ClientNotes 
-                client={clientData} 
-                onNotesUpdate={handleNotesUpdate} 
-              />
-            </TabsContent>
+                  <ClientNotes 
+                    client={clientData} 
+                    onNotesUpdate={handleNotesUpdate} 
+                  />
+                </TabsContent>
+                <TabsContent value="balances" className="relative space-y-4 pt-2">
+                  <div className="absolute -top-13 right-0">
+                    <Button 
+                      onClick={() => setIsBalanceFormOpen(true)}
+                      size="sm"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Crear saldo
+                    </Button>
+                  </div>
+                  <ClientBalances 
+                    clientId={clientData.id}
+                    works={works}
+                  />
+                </TabsContent>
               </div>
             </Tabs>
           </div>
@@ -265,6 +303,21 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           />
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isBalanceFormOpen} onOpenChange={setIsBalanceFormOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nuevo Saldo</DialogTitle>
+          </DialogHeader>
+          <BalanceForm
+            clientId={parseInt(client?.id || '0')}
+            works={works}
+            onSubmit={handleBalanceCreated}
+            onCancel={() => setIsBalanceFormOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
     </Dialog>
   );
 }

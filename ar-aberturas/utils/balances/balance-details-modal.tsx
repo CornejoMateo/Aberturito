@@ -26,6 +26,7 @@ import { Work } from '@/lib/works/works';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/components/ui/use-toast';
 
 interface BalanceDetailsModalProps {
 	balance: Balance | null;
@@ -45,6 +46,7 @@ export function BalanceDetailsModal({
 	const [transactions, setTransactions] = useState<BalanceTransaction[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isAddingTransaction, setIsAddingTransaction] = useState(false);
+	const { toast } = useToast();
 
 	// Form state
 	const [transactionDate, setTransactionDate] = useState<Date>(new Date());
@@ -87,9 +89,18 @@ export function BalanceDetailsModal({
 			});
 
 			if (error) {
-				console.error('Error al crear transacción:', error);
+				toast({
+					variant: 'destructive',
+					title: 'Error al crear transacción',
+					description: 'Hubo un problema al crear la transacción. Intente nuevamente.',
+				});
 				return;
 			}
+
+			toast({
+				title: 'Transacción creada',
+				description: 'La transacción se ha creado exitosamente.',
+			});
 
 			// Reset form
 			setTransactionDate(new Date());

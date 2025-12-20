@@ -17,6 +17,7 @@ import { updateClient } from '@/lib/clients/clients';
 import { ClientBalances } from '@/utils/balances/client-balances';
 import { BalanceForm } from '@/utils/balances/balance-form';
 import { createBalance } from '@/lib/works/balances';
+import { toast } from '@/components/ui/use-toast';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -88,10 +89,19 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
       const { error } = await deleteWork(workId);
       
       if (error) {
-        console.error('Error al eliminar la obra:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error al eliminar la obra',
+          description: 'Hubo un problema al eliminar la obra. Intente nuevamente.',
+        });
         return;
       }
       
+      toast({
+        title: 'Obra eliminada',
+        description: 'La obra se ha eliminado exitosamente.',
+      });
+
       // Refresh the works list
       const { data: updatedWorks } = await getWorksByClientId(client.id);
       if (updatedWorks) {
@@ -115,10 +125,18 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
       });
       
       if (error) {
-        console.error('Error al crear la obra:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error al crear la obra',
+          description: 'Hubo un problema al crear la obra. Intente nuevamente.',
+        });
         return;
       }
       
+      toast({
+        title: 'Obra creada',
+        description: 'La obra se ha creado exitosamente.',
+      });
       // reload the list of works
       const { data: updatedWorks } = await getWorksByClientId(client.id);
       if (updatedWorks) {
@@ -139,14 +157,21 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
       const { data, error } = await createBalance(balanceData);
       
       if (error) {
-        console.error('Error al crear balance:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error al crear balance',
+          description: 'Hubo un problema al crear el balance. Intente nuevamente.',
+        });
         return;
       }
       
-      console.log('Balance creado exitosamente:', data);
+      toast({
+        title: 'Saldo creado',
+        description: 'El Saldo se ha creado exitosamente.',
+      });
       setIsBalanceFormOpen(false);
     } catch (error) {
-      console.error('Error inesperado al crear balance:', error);
+      console.error('Error inesperado al crear Saldo:', error);
     } finally {
       setIsLoading(false);
     }

@@ -33,6 +33,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [clientData, setClientData] = useState<Client | null>(null);
+  const [balancesKey, setBalancesKey] = useState(0);
   
   useEffect(() => {
     const loadWorks = async () => {
@@ -170,6 +171,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
         description: 'El Saldo se ha creado exitosamente.',
       });
       setIsBalanceFormOpen(false);
+      setBalancesKey(prev => prev + 1);
     } catch (error) {
       console.error('Error inesperado al crear Saldo:', error);
     } finally {
@@ -306,6 +308,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                     </Button>
                   </div>
                   <ClientBalances 
+                    key={balancesKey}
                     clientId={clientData.id}
                     works={works}
                   />
@@ -332,7 +335,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
       <Dialog open={isBalanceFormOpen} onOpenChange={setIsBalanceFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nuevo Saldo</DialogTitle>
+            <DialogTitle>Nuevo saldo</DialogTitle>
           </DialogHeader>
           <BalanceForm
             clientId={parseInt(client?.id || '0')}

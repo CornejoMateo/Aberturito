@@ -1,7 +1,7 @@
 import { getSupabaseClient } from '../supabase-client';
 
 export type Balance = {
-	id: number;
+	id: string;
 	created_at: string;
 	start_date?: string;
 	budget?: number | null;
@@ -22,7 +22,7 @@ export async function listBalances(): Promise<{ data: Balance[] | null; error: a
 	return { data, error };
 }
 
-export async function getBalanceById(id: number): Promise<{ data: Balance | null; error: any }> {
+export async function getBalanceById(id: string): Promise<{ data: Balance | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)

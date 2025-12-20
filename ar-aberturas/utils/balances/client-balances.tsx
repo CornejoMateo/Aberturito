@@ -14,10 +14,9 @@ import {
 	PaginationPrevious,
 } from '@/components/ui/pagination';
 import { Plus, DollarSign, Search } from 'lucide-react';
-import { Balance, createBalance, getBalancesByClientId } from '@/lib/works/balances';
+import { Balance, getBalancesByClientId } from '@/lib/works/balances';
 import { getTotalByBalanceId } from '@/lib/works/balance_transactions';
 import { Work } from '@/lib/works/works';
-import { BalanceForm } from './balance-form';
 import { BalanceDetailsModal } from './balance-details-modal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -35,18 +34,12 @@ interface BalanceWithTotals extends Balance {
 export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 	const [balances, setBalances] = useState<BalanceWithTotals[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
-	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedBalance, setSelectedBalance] = useState<BalanceWithTotals | null>(null);
 	const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+	const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
 	const itemsPerPage = 2;
-
-	useEffect(() => {
-		if (clientId) {
-			loadBalances();
-		}
-	}, [clientId]);
 
 	const loadBalances = async () => {
 		try {
@@ -54,7 +47,7 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 			const { data, error } = await getBalancesByClientId(parseInt(clientId));
 
 			if (error) {
-				console.error('Error al cargar balances:', error);
+				console.error('Error al cargar saldos:', error);
 				return;
 			}
 
@@ -77,26 +70,26 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 				setBalances([]);
 			}
 		} catch (error) {
-			console.error('Error inesperado al cargar balances:', error);
+			console.error('Error inesperado al cargar saldos:', error);
 		} finally {
 			setIsLoading(false);
 		}
 	};
 
-	const handleBalanceCreated = async (balanceData: Omit<Balance, 'id' | 'created_at'>) => {
-		try {
-			const { data, error } = await createBalance(balanceData);
-
-			if (error) {
-				console.error('Error al crear balance:', error);
-				return;
-			}
-
-			await loadBalances();
-			setIsFormOpen(false);
-		} catch (error) {
-			console.error('Error inesperado al crear balance:', error);
+	useEffect(() => {
+		if (clientId) {
+			loadBalances();
 		}
+	}, [clientId]);
+
+	useEffect(() => {
+		if (lastUpdate && clientId) {
+			loadBalances();
+		}
+	}, [lastUpdate]);
+
+	const handleBalanceUpdate = () => {
+		setLastUpdate(Date.now());
 	};
 
 	const formatCurrency = (amount: number | null | undefined) => {
@@ -313,20 +306,6 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 				</div>
 			)}
 
-			<Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-				<DialogContent className="max-w-2xl">
-					<DialogHeader>
-						<DialogTitle>Nuevo Saldo</DialogTitle>
-					</DialogHeader>
-					<BalanceForm
-						clientId={parseInt(clientId)}
-						works={works}
-						onSubmit={handleBalanceCreated}
-						onCancel={() => setIsFormOpen(false)}
-					/>
-				</DialogContent>
-			</Dialog>
-
 			<BalanceDetailsModal
 				balance={selectedBalance}
 				work={
@@ -336,7 +315,7 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 				}
 				isOpen={isDetailsModalOpen}
 				onOpenChange={setIsDetailsModalOpen}
-				onTransactionCreated={loadBalances}
+				onTransactionCreated={handleBalanceUpdate}
 			/>
 		</div>
 	);

@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChecklistCompletionModal } from '@/components/business/checklist-completion-modal';
 import { listWorks } from '@/lib/works/works';
 import { getChecklistsByWorkId } from '@/lib/works/checklists';
 import { format } from 'date-fns';
@@ -88,7 +88,6 @@ function StatusCard({
 export function InstallationChecklist() {
   const [installations, setInstallations] = useState<Installation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedInstallation, setExpandedInstallation] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('todos');
 
@@ -181,45 +180,6 @@ export function InstallationChecklist() {
     fetchWorks();
   }, []);
 
-  const toggleTask = async (installationId: string, taskId: string) => {
-
-    console.log(`Tarea ${taskId} de la obra ${installationId} actualizada`);
-    
-    // Actualización optimista del estado local
-    setInstallations(prevInstallations =>
-      prevInstallations.map(installation => {
-        if (installation.id === installationId) {
-          const updatedTasks = installation.tasks.map(task =>
-            task.id === taskId ? { ...task, completed: !task.completed } : task
-          );
-          
-          // Actualizar progreso
-          const totalTasks = updatedTasks.length;
-          const completedTasks = updatedTasks.filter(task => task.completed).length;
-          const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-          
-          // Actualizar estado basado en el progreso
-          let status = installation.status;
-          if (progress === 100) {
-            status = 'completada';
-          } else if (progress > 0) {
-            status = 'en_progreso';
-          } else {
-            status = 'pendiente';
-          }
-          
-          return {
-            ...installation,
-            tasks: updatedTasks,
-            status,
-            progress
-          };
-        }
-        return installation;
-      })
-    );
-  };
-
   const getProgress = (tasks: Task[]) => {
     const completed = tasks.filter((t) => t.completed).length;
     return (completed / tasks.length) * 100;
@@ -250,7 +210,6 @@ export function InstallationChecklist() {
 
   const handleStatusFilter = (status: StatusFilter) => {
     setStatusFilter(status);
-    setExpandedInstallation(null); // Collapse any expanded installation when changing filters
   };
 
   const handleSaveChecklists = (checklists: any) => {
@@ -360,133 +319,65 @@ export function InstallationChecklist() {
           const progress = getProgress(installation.tasks);
           const statusInfo = statusConfig[installation.status];
           const StatusIcon = statusInfo.icon;
-          const isExpanded = expandedInstallation === installation.id;
 
           return (
-            <Card key={installation.id} className="bg-card border-border overflow-hidden">
-              <Collapsible
-                open={isExpanded}
-                onOpenChange={() => setExpandedInstallation(isExpanded ? null : installation.id)}
-              >
-                <div className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0 space-y-3">
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
-                          <ClipboardCheck className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="text-lg font-semibold text-foreground">
-                              {installation.id}
-                            </h3>
-                            <Badge variant="outline" className={`gap-1 ${statusInfo.color}`}>
-                              <StatusIcon className="h-3 w-3" />
-                              {statusInfo.label}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-foreground mt-1">{installation.clientName}</p>
-                        </div>
+            <Card key={installation.id} className="bg-card border-border">
+              <div className="p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
+                        <ClipboardCheck className="h-5 w-5 text-primary" />
                       </div>
-
-                      <div className="grid gap-2 md:grid-cols-3 text-sm">
-                        <div className="flex items-center text-muted-foreground">
-                          <AddressLink 
-                            address={installation.address} 
-                            locality={installation.locality}
-                            className="text-sm"
-                          />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-lg font-semibold text-foreground">
+                            {installation.id}
+                          </h3>
+                          <Badge variant="outline" className={`gap-1 ${statusInfo.color}`}>
+                            <StatusIcon className="h-3 w-3" />
+                            {statusInfo.label}
+                          </Badge>
                         </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Calendar className="h-4 w-4 flex-shrink-0" />
-                          <span>{installation.date}</span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Progreso</span>
-                          <div className="text-sm text-muted-foreground">
-                            Progreso: {installation.progress}%
-                          </div>
-                        </div>
-                        <Progress value={installation.progress} className="h-2" />
+                        <p className="text-sm text-foreground mt-1">{installation.clientName}</p>
                       </div>
                     </div>
 
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="icon" className="flex-shrink-0">
-                        {isExpanded ? (
-                          <ChevronUp className="h-5 w-5" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5" />
-                        )}
+                    <div className="grid gap-2 md:grid-cols-3 text-sm">
+                      <div className="flex items-center text-muted-foreground">
+                        <AddressLink 
+                          address={installation.address} 
+                          locality={installation.locality}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Calendar className="h-4 w-4 flex-shrink-0" />
+                        <span>{installation.date}</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Progreso</span>
+                        <div className="text-sm text-muted-foreground">
+                          Progreso: {installation.progress}%
+                        </div>
+                      </div>
+                      <Progress value={installation.progress} className="h-2" />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <ChecklistCompletionModal workId={installation.id}>
+                      <Button variant="outline" size="sm">
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        Ver Checklist
                       </Button>
-                    </CollapsibleTrigger>
+                    </ChecklistCompletionModal>
                   </div>
                 </div>
-
-                <CollapsibleContent>
-                  <div className="border-t border-border p-6 space-y-6 bg-secondary/30">
-                    {/* Tasks checklist */}
-                    <div>
-                      <h4 className="text-sm font-semibold text-foreground mb-3">Tareas</h4>
-                      <div className="space-y-2">
-                        {installation.tasks.map((task) => (
-                          <div
-                            key={task.id}
-                            className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-primary/50 transition-colors"
-                          >
-                            <Checkbox
-                              id={`${installation.id}-${task.id}`}
-                              checked={task.completed}
-                              onCheckedChange={() => toggleTask(installation.id, task.id)}
-                              className="flex-shrink-0"
-                            />
-                            <label
-                              htmlFor={`${installation.id}-${task.id}`}
-                              className={`flex-1 text-sm cursor-pointer ${
-                                task.completed
-                                  ? 'line-through text-muted-foreground'
-                                  : 'text-foreground'
-                              }`}
-                            >
-                              {task.name}
-                            </label>
-                            {task.completed && (
-                              <CheckCircle2 className="h-4 w-4 text-accent flex-shrink-0" />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      <Progress
-                        value={installation.progress}
-                        className="h-2 mt-1"
-                      />
-                    </div>
-
-                    {/* Notes */}
-                    {installation.notes.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-semibold text-foreground mb-3">
-                          Notas y pendientes
-                        </h4>
-                        <div className="space-y-2">
-                          {installation.notes.map((note, index) => (
-                            <div
-                              key={index}
-                              className="flex gap-2 p-3 rounded-lg bg-card border border-border"
-                            >
-                              <AlertCircle className="h-4 w-4 text-chart-3 flex-shrink-0 mt-0.5" />
-                              <p className="text-sm text-muted-foreground">{note}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+              </div>
             </Card>
           );
         })}

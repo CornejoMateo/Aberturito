@@ -261,12 +261,12 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                   opening_type="pvc"
                   onSave={async (checklists) => {
                     try {
-                      // Primero eliminamos checklists existentes para esta obra
+                      // First delete existing checklists for this work
                       const { data: existingChecklists, error: fetchError } = await getChecklistsByWorkId(work.id);
                       
                       if (fetchError) throw fetchError;
                       
-                      // Eliminar checklists existentes
+                      // Delete existing checklists
                       if (existingChecklists && existingChecklists.length > 0) {
                         const deletePromises = existingChecklists.map(checklist => 
                           deleteChecklist(checklist.id)
@@ -274,7 +274,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                         await Promise.all(deletePromises);
                       }
                       
-                      // Crear nuevas checklists
+                      // Create new checklists
                       const createPromises = checklists.map((checklist, index) => {
                         return createChecklist({
                           work_id: work.id,
@@ -290,7 +290,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                       
                       await Promise.all(createPromises);
                       
-                      // Actualizar el estado local si es necesario
+                      // Update local state if needed
                       if (onWorkUpdated) {
                         const updatedWork = {
                           ...work,

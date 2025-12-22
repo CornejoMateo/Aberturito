@@ -18,6 +18,7 @@ export type Checklist = {
 	name?: string | null;
 	opening?: string | null;
 	type_opening?: string | null;
+	notes?: string | null;
 };
 
 const TABLE = 'checklists';

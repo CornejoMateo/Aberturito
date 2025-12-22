@@ -225,6 +225,7 @@ create table public.checklists (
   type_opening character varying null,
   width double precision null,
   height double precision null,
+  notes text null,
   constraint checklists_pkey primary key (id),
   constraint checklists_work_id_fkey foreign KEY (work_id) references works (id) on update CASCADE
 ) TABLESPACE pg_default;

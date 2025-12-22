@@ -13,6 +13,7 @@ import { pvcChecklistItems, aluminioChecklistNames } from '@/lib/works/checklist
 type ChecklistModalProps = {
   workId: string;
   opening_type: 'pvc' | 'aluminio';
+  existingChecklists?: boolean
   onSave: (checklists: Array<{ 
     name?: string | null;
     description?: string | null;
@@ -23,7 +24,7 @@ type ChecklistModalProps = {
   children?: React.ReactNode; 
 };
 
-export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalProps) {
+export function ChecklistModal({ workId, opening_type, existingChecklists, onSave }: ChecklistModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [windowCount, setWindowCount] = useState(1);
@@ -104,28 +105,27 @@ export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalP
       <DialogTrigger asChild>
         <Button variant="outline" onClick={() => setIsOpen(true)}>
           <CheckCircle2 className="mr-2 h-4 w-4" />
-          Checklist
+            <span>{existingChecklists ? 'Agregar más checklists' : 'Crear checklists'}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle>
-            {step === 1 ? 'Cantidad de Ventanas' : 'Configurar Checklists'}
+            {step === 1 ? 'Cantidad de Aberturas' : 'Configurar Checklists'}
           </DialogTitle>
         </DialogHeader>
 
         {step === 1 ? (
           <form onSubmit={handleWindowCountSubmit} className="space-y-8 max-w-md mx-auto">
             <div className="space-y-4">
-              <Label htmlFor="windowCount" className="text-lg font-medium">¿Cuántas ventanas vas a instalar?</Label>
+              <Label htmlFor="windowCount" className="text-lg font-medium">{!existingChecklists ? '¿Cuántas aberturas vas a instalar?' : '¿Cuántas aberturas desea agregar?'}</Label>
               <Input
                 id="windowCount"
                 type="number"
                 min="1"
-                value={windowCount}
+                value={windowCount || ''}
                 onChange={(e) => setWindowCount(Number(e.target.value))}
                 className="w-32 h-12 text-center text-lg"
-                placeholder="1"
               />
             </div>
             <div className="flex justify-center space-x-4 pt-6">
@@ -145,13 +145,24 @@ export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalP
                   <CardHeader className="pb-6 space-y-4">
                     <div className="text-center">
                       <h3 className="text-xl font-semibold text-muted-foreground mb-2">
-                        Ventana {windowIndex + 1}
+                        Abertura {windowIndex + 1}
                       </h3>
                       <Input
-                        placeholder="Identificador (opcional)"
+                        placeholder="Identificador"
                         value={checklist.name || ''}
                         onChange={(e) => updateChecklistField(windowIndex, 'name', e.target.value)}
                         className="text-center border-0 shadow-none focus-visible:ring-1 bg-muted/30"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`description-${windowIndex}`} className="text-sm">Descripción</Label>
+                      <Input
+                        id={`description-${windowIndex}`}
+                        placeholder="Descripción (opcional)"
+                        value={checklist.description || ''}
+                        onChange={(e) => updateChecklistField(windowIndex, 'description', e.target.value)}
+                        className="h-10"
                       />
                     </div>
                     
@@ -179,17 +190,7 @@ export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalP
                         />
                       </div>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor={`description-${windowIndex}`} className="text-sm">Descripción</Label>
-                      <Input
-                        id={`description-${windowIndex}`}
-                        placeholder="Descripción (opcional)"
-                        value={checklist.description || ''}
-                        onChange={(e) => updateChecklistField(windowIndex, 'description', e.target.value)}
-                        className="h-10"
-                      />
-                    </div>
+            
                   </CardHeader>
                   
                   <CardContent className="space-y-6">
@@ -260,7 +261,7 @@ export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalP
                 Atrás
               </Button>
               <Button onClick={handleSave} className="px-8">
-                Crear Checklists
+                Crear Checklists para Aberturas
               </Button>
             </div>
           </div>

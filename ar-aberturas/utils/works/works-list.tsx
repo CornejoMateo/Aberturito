@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Work, updateWork } from '@/lib/works/works';
 import { getChecklistsByWorkId, createChecklist, deleteChecklist } from '@/lib/works/checklists';
 import { MapPin, Calendar, Building2, CheckCircle, Clock, Trash2, ListChecks, ChevronDown, Search, CheckSquare } from 'lucide-react';
-import { ChecklistModal } from '@/components/business/checklist-modal';
+import { ChecklistModal } from '@/utils/checklists/checklist-modal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -313,30 +313,29 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                 <ChecklistModal 
                   workId={work.id}
                   opening_type="pvc"
+                  existingChecklists={workChecklists[work.id] ? true : false}
                   onSave={async (checklists) => {
                     try {
-                      // First delete existing checklists for this work
+                      // Get existing checklists to calculate the next index
                       const { data: existingChecklists, error: fetchError } = await getChecklistsByWorkId(work.id);
                       
                       if (fetchError) throw fetchError;
                       
-                      // Delete existing checklists
-                      if (existingChecklists && existingChecklists.length > 0) {
-                        const deletePromises = existingChecklists.map(checklist => 
-                          deleteChecklist(checklist.id)
-                        );
-                        await Promise.all(deletePromises);
-                      }
+                      const existingCount = existingChecklists?.length || 0;
                       
-                      // Create new checklists
+                      // Create new checklists (add to existing ones)
                       const createPromises = checklists.map((checklist, index) => {
                         return createChecklist({
                           work_id: work.id,
-                          name: `Ventana ${index + 1}`,
+                          name: checklist.name || `Abertura ${existingCount + index + 1}`,
+                          description: checklist.description || '',
+                          width: checklist.width || null,
+                          height: checklist.height || null,
+                          type_opening: 'pvc', // assuming PVC for now,
                           items: checklist.items.map(item => ({
                             name: item.name,
                             done: item.completed,
-                            key: 0 // Se actualizará automáticamente
+                            key: 0
                           })),
                           progress: 0,
                         });
@@ -347,7 +346,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                       // Update checklist status
                       setWorkChecklists(prev => ({
                         ...prev,
-                        [work.id]: checklists.length > 0
+                        [work.id]: true
                       }));
                       
                       // Update local state if needed
@@ -366,14 +365,6 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                     }
                   }}
                 >
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="h-8 px-2 text-xs -mr-10 -mb-5"
-                  >
-                    <ListChecks className="h-4 w-4 mr-1.5" />
-                    <span>Checklist</span>
-                  </Button>
                 </ChecklistModal>
               </div>
             </div>

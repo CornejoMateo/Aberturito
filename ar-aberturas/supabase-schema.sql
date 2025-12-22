@@ -220,7 +220,6 @@ create table public.checklists (
   items jsonb null,
   description character varying null,
   progress bigint null,
-  opening character varying null,
   name character varying null,
   type_opening character varying null,
   width double precision null,

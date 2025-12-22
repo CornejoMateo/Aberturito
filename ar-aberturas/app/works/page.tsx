@@ -1,10 +1,10 @@
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
-import { InstallationChecklist } from '@/components/business/installation-checklist';
+import { WorksOpenings } from '@/components/business/works-progress';
 
 export default function WorksPage() {
 	return (
 		<DashboardLayout>
-			<InstallationChecklist />
+			<WorksOpenings />
 		</DashboardLayout>
 	);
 }

@@ -124,13 +124,13 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
         {children || (
           <Button variant="outline">
             <CheckCircle2 className="mr-2 h-4 w-4" />
-            Completar Checklist
+            Completar Checklists
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle>Completar Checklist</DialogTitle>
+          <DialogTitle>Completar Checklists</DialogTitle>
         </DialogHeader>
 
         {loading ? (
@@ -153,7 +153,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
                   <CardHeader className="pb-6 space-y-4">
                     <div className="text-center">
                       <h3 className="text-xl font-semibold text-muted-foreground mb-2">
-                        {checklist.name || `Ventana ${index + 1}`}
+                        {checklist.name || `Abertura ${index + 1}`}
                       </h3>
                       
                       {/* Display fixed fields as read-only */}

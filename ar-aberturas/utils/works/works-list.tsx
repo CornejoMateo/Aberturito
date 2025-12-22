@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Work, updateWork } from '@/lib/works/works';
 import { getChecklistsByWorkId, createChecklist, deleteChecklist } from '@/lib/works/checklists';
-import { MapPin, Calendar, Building2, CheckCircle, Clock, Trash2, ListChecks, ChevronDown, Search } from 'lucide-react';
+import { MapPin, Calendar, Building2, CheckCircle, Clock, Trash2, ListChecks, ChevronDown, Search, CheckSquare } from 'lucide-react';
 import { ChecklistModal } from '@/components/business/checklist-modal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -28,6 +28,8 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
   const [works, setWorks] = useState<Work[]>(initialWorks);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [workChecklists, setWorkChecklists] = useState<Record<string, boolean>>({});
+  const [loadingChecklists, setLoadingChecklists] = useState<Record<string, boolean>>({});
   const itemsPerPage = 6;
   
   // Filter works based on search term and filters
@@ -139,6 +141,45 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
     setCurrentPage(1);
   }, [works.length]);
 
+  // Check if works have checklists
+  useEffect(() => {
+    const checkWorkChecklists = async () => {
+      const newWorkChecklists: Record<string, boolean> = {};
+      const newLoadingChecklists: Record<string, boolean> = {};
+      
+      // Initialize loading state
+      works.forEach(work => {
+        newLoadingChecklists[work.id] = true;
+      });
+      setLoadingChecklists(newLoadingChecklists);
+      
+      // Check each work for checklists
+      const checklistPromises = works.map(async (work) => {
+        try {
+          const { data: checklists, error } = await getChecklistsByWorkId(work.id);
+          if (error) {
+            console.error('Error checking checklists for work:', work.id, error);
+            newWorkChecklists[work.id] = false;
+          } else {
+            newWorkChecklists[work.id] = !!(checklists && checklists.length > 0);
+          }
+        } catch (error) {
+          console.error('Error checking checklists for work:', work.id, error);
+          newWorkChecklists[work.id] = false;
+        } finally {
+          setLoadingChecklists(prev => ({ ...prev, [work.id]: false }));
+        }
+      });
+      
+      await Promise.all(checklistPromises);
+      setWorkChecklists(newWorkChecklists);
+    };
+    
+    if (works.length > 0) {
+      checkWorkChecklists();
+    }
+  }, [works]);
+
   return (
     <div className="space-y-4 max-w-3xl mx-auto w-full">
       {/* Search and Filter Bar */}
@@ -209,6 +250,19 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                     ))}
                   </select>
                   <ChevronDown className="h-3.5 w-3.5 -ml-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <div className="flex items-center gap-1">
+                  {loadingChecklists[work.id] ? (
+                    <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground animate-spin" />
+                  ) : workChecklists[work.id] ? (
+                    <div className="flex items-center gap-1 text-green-600" title="Checklist creada">
+                      <CheckSquare className="h-4 w-4" />
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 text-gray-400" title="Sin checklist">
+                      <CheckSquare className="h-4 w-4" />
+                    </div>
+                  )}
                 </div>
                 {onDelete && (
                   <Button 
@@ -289,6 +343,12 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                       });
                       
                       await Promise.all(createPromises);
+                      
+                      // Update checklist status
+                      setWorkChecklists(prev => ({
+                        ...prev,
+                        [work.id]: checklists.length > 0
+                      }));
                       
                       // Update local state if needed
                       if (onWorkUpdated) {

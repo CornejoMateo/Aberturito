@@ -107,7 +107,7 @@ export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalP
           Checklist
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle>
             {step === 1 ? 'Cantidad de Ventanas' : 'Configurar Checklists'}
@@ -115,121 +115,139 @@ export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalP
         </DialogHeader>
 
         {step === 1 ? (
-          <form onSubmit={handleWindowCountSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="windowCount">Número de ventanas a instalar:</Label>
+          <form onSubmit={handleWindowCountSubmit} className="space-y-8 max-w-md mx-auto">
+            <div className="space-y-4">
+              <Label htmlFor="windowCount" className="text-lg font-medium">¿Cuántas ventanas vas a instalar?</Label>
               <Input
                 id="windowCount"
                 type="number"
                 min="1"
                 value={windowCount}
                 onChange={(e) => setWindowCount(Number(e.target.value))}
-                className="w-32"
+                className="w-32 h-12 text-center text-lg"
+                placeholder="1"
               />
             </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+            <div className="flex justify-center space-x-4 pt-6">
+              <Button type="button" variant="outline" onClick={() => setIsOpen(false)} className="px-8">
                 Cancelar
               </Button>
-              <Button type="submit">Siguiente</Button>
+              <Button type="submit" className="px-8">
+                Configurar Checklists
+              </Button>
             </div>
           </form>
         ) : (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-8">
+            <div className="space-y-8">
               {checklists.map((checklist, windowIndex) => (
-                <Card key={windowIndex}>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">
+                <Card key={windowIndex} className="border-2 shadow-sm">
+                  <CardHeader className="pb-6 space-y-4">
+                    <div className="text-center">
+                      <h3 className="text-xl font-semibold text-muted-foreground mb-2">
+                        Ventana {windowIndex + 1}
+                      </h3>
                       <Input
                         placeholder="Identificador (opcional)"
                         value={checklist.name || ''}
                         onChange={(e) => updateChecklistField(windowIndex, 'name', e.target.value)}
-                        className="text-lg font-semibold border-0 shadow-none focus-visible:ring-1"
+                        className="text-center border-0 shadow-none focus-visible:ring-1 bg-muted/30"
                       />
-                    </CardTitle>
-                    <div className="grid grid-cols-2 gap-4 mt-2">
-                      <div>
-                        <Label htmlFor={`width-${windowIndex}`}>Ancho (cm)</Label>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor={`width-${windowIndex}`} className="text-sm">Ancho (cm)</Label>
                         <Input
                           id={`width-${windowIndex}`}
                           type="number"
                           placeholder="Ancho"
                           value={checklist.width || ''}
                           onChange={(e) => updateChecklistField(windowIndex, 'width', parseFloat(e.target.value) || null)}
+                          className="h-10"
                         />
                       </div>
-                      <div>
-                        <Label htmlFor={`height-${windowIndex}`}>Alto (cm)</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor={`height-${windowIndex}`} className="text-sm">Alto (cm)</Label>
                         <Input
                           id={`height-${windowIndex}`}
                           type="number"
                           placeholder="Alto"
                           value={checklist.height || ''}
                           onChange={(e) => updateChecklistField(windowIndex, 'height', parseFloat(e.target.value) || null)}
+                          className="h-10"
                         />
                       </div>
                     </div>
-                    <div className="mt-2">
-                      <Label htmlFor={`description-${windowIndex}`}>Descripción</Label>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`description-${windowIndex}`} className="text-sm">Descripción</Label>
                       <Input
                         id={`description-${windowIndex}`}
                         placeholder="Descripción (opcional)"
                         value={checklist.description || ''}
                         onChange={(e) => updateChecklistField(windowIndex, 'description', e.target.value)}
+                        className="h-10"
                       />
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    
-                    {checklist.items.map((item, itemIndex) => (
-                      <div key={itemIndex} className="flex items-center justify-between p-2 border rounded-md">
-                        <span className="text-sm">{item.name}</span>
+                  
+                  <CardContent className="space-y-6">
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-center text-muted-foreground">Items de Checklist</h4>
+                      
+                      <div className="space-y-3 max-h-48 overflow-y-auto">
+                        {checklist.items.map((item, itemIndex) => (
+                          <div key={itemIndex} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
+                            <span className="text-sm font-medium">{item.name}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeChecklistItem(windowIndex, itemIndex)}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="flex items-center gap-3 p-3 border-2 border-dashed border-muted rounded-lg">
+                        <Input
+                          placeholder="Agregar nuevo item..."
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const target = e.target as HTMLInputElement;
+                              addChecklistItem(windowIndex, target.value);
+                              target.value = '';
+                            }
+                          }}
+                          className="flex-1 border-0 bg-transparent focus-visible:ring-0 text-sm"
+                        />
                         <Button
                           type="button"
-                          variant="ghost"
+                          onClick={(e) => {
+                            const input = e.currentTarget.parentElement?.querySelector('input');
+                            if (input) {
+                              addChecklistItem(windowIndex, input.value);
+                              input.value = '';
+                            }
+                          }}
                           size="sm"
-                          onClick={() => removeChecklistItem(windowIndex, itemIndex)}
-                          className="text-destructive hover:text-destructive h-6 w-6 p-0"
+                          className="h-8 w-8 p-0 shrink-0"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Plus className="h-4 w-4" />
                         </Button>
                       </div>
-                    ))}
-                    
-                    <div className="flex items-center gap-2 pt-2">
-                      <Input
-                        placeholder="Nuevo item..."
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const target = e.target as HTMLInputElement;
-                            addChecklistItem(windowIndex, target.value);
-                            target.value = '';
-                          }
-                        }}
-                        className="flex-1 text-sm"
-                      />
-                      <Button
-                        type="button"
-                        onClick={(e) => {
-                          const input = e.currentTarget.parentElement?.querySelector('input');
-                          if (input) {
-                            addChecklistItem(windowIndex, input.value);
-                            input.value = '';
-                          }
-                        }}
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
-            <div className="flex justify-end space-x-2 pt-4">
+            
+            <div className="flex justify-center space-x-4 pt-8 border-t">
               <Button
                 type="button"
                 variant="outline"
@@ -237,10 +255,11 @@ export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalP
                   setStep(1);
                   setChecklists([]);
                 }}
+                className="px-8"
               >
                 Atrás
               </Button>
-              <Button onClick={handleSave}>
+              <Button onClick={handleSave} className="px-8">
                 Crear Checklists
               </Button>
             </div>

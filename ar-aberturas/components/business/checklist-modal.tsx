@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, X } from 'lucide-react';
+import { CheckCircle2, X, Plus, Trash2 } from 'lucide-react';
 import { pvcChecklistItems, aluminioChecklistNames } from '@/lib/works/checklists.constants';
 
 type ChecklistModalProps = {
@@ -35,23 +35,44 @@ export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalP
     items: Array<{ name: string; completed: boolean }> 
   }>>([]);
 
-  const checklistItems = opening_type === 'pvc' ? pvcChecklistItems : aluminioChecklistNames;
+  const defaultChecklistItems = opening_type === 'pvc' ? pvcChecklistItems : aluminioChecklistNames;
 
-  const handleWindowCountSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Inicializar las checklists con el número de ventanas
-    const newChecklists = Array.from({ length: windowCount }, () => ({
+  // Initialize checklists with default items when window count changes
+  const initializeChecklists = (count: number) => {
+    const newChecklists = Array.from({ length: count }, () => ({
       name: null,
       description: null,
       width: null,
       height: null,
-      items: checklistItems.map(item => ({
+      items: defaultChecklistItems.map(item => ({
         name: item,
         completed: false,
       })),
     }));
     setChecklists(newChecklists);
+  };
+
+  const handleWindowCountSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    initializeChecklists(windowCount);
     setStep(2);
+  };
+
+  const addChecklistItem = (windowIndex: number, itemText: string) => {
+    if (itemText.trim()) {
+      const updatedChecklists = [...checklists];
+      updatedChecklists[windowIndex].items.push({
+        name: itemText.trim(),
+        completed: false
+      });
+      setChecklists(updatedChecklists);
+    }
+  };
+
+  const removeChecklistItem = (windowIndex: number, itemIndex: number) => {
+    const updatedChecklists = [...checklists];
+    updatedChecklists[windowIndex].items = updatedChecklists[windowIndex].items.filter((_, i) => i !== itemIndex);
+    setChecklists(updatedChecklists);
   };
 
   const toggleChecklistItem = (windowIndex: number, itemIndex: number) => {
@@ -89,7 +110,7 @@ export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalP
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {step === 1 ? 'Cantidad de Ventanas' : 'Checklist de Instalación'}
+            {step === 1 ? 'Cantidad de Ventanas' : 'Configurar Checklists'}
           </DialogTitle>
         </DialogHeader>
 
@@ -160,21 +181,50 @@ export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalP
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
+                    
                     {checklist.items.map((item, itemIndex) => (
-                      <div key={itemIndex} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`window-${windowIndex}-item-${itemIndex}`}
-                          checked={item.completed}
-                          onCheckedChange={() => toggleChecklistItem(windowIndex, itemIndex)}
-                        />
-                        <label
-                          htmlFor={`window-${windowIndex}-item-${itemIndex}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      <div key={itemIndex} className="flex items-center justify-between p-2 border rounded-md">
+                        <span className="text-sm">{item.name}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeChecklistItem(windowIndex, itemIndex)}
+                          className="text-destructive hover:text-destructive h-6 w-6 p-0"
                         >
-                          {item.name}
-                        </label>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </div>
                     ))}
+                    
+                    <div className="flex items-center gap-2 pt-2">
+                      <Input
+                        placeholder="Nuevo item..."
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const target = e.target as HTMLInputElement;
+                            addChecklistItem(windowIndex, target.value);
+                            target.value = '';
+                          }
+                        }}
+                        className="flex-1 text-sm"
+                      />
+                      <Button
+                        type="button"
+                        onClick={(e) => {
+                          const input = e.currentTarget.parentElement?.querySelector('input');
+                          if (input) {
+                            addChecklistItem(windowIndex, input.value);
+                            input.value = '';
+                          }
+                        }}
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -191,7 +241,7 @@ export function ChecklistModal({ workId, opening_type, onSave }: ChecklistModalP
                 Atrás
               </Button>
               <Button onClick={handleSave}>
-                Guardar Checklists
+                Crear Checklists
               </Button>
             </div>
           </div>

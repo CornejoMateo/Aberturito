@@ -24,7 +24,6 @@ import { ClientDetailsDialog } from '../../utils/clients/client-details-dialog';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 
 export function ClientManagement() {
-	// Realtime hook para clientes
 	const {
 		data: clients,
 		loading,

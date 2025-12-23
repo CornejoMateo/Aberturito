@@ -65,6 +65,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
       }
     }
   }, [works, initialWorks, workToDelete?.id, onWorkUpdated]);
+  
   const statusOptions = [
     { value: 'Pendiente', label: 'Pendiente', icon: <Clock className="h-4 w-4 text-gray-400" /> },
     { value: 'En progreso', label: 'En progreso', icon: <Clock className="h-4 w-4 text-yellow-500" /> },

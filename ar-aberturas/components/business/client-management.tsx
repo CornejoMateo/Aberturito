@@ -1,11 +1,29 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import {Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious} from '@/components/ui/pagination';
+import {
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious,
+} from '@/components/ui/pagination';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Users, Plus, Search, MapPin, Phone, Mail, Eye, Edit, Trash2, AlertTriangle } from 'lucide-react';
+import {
+	Users,
+	Plus,
+	Search,
+	MapPin,
+	Phone,
+	Mail,
+	Eye,
+	Edit,
+	Trash2,
+	AlertTriangle,
+} from 'lucide-react';
 import { updateClient } from '@/lib/clients/clients';
 import {
 	Dialog,
@@ -20,7 +38,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Client, listClients, deleteClient } from '@/lib/clients/clients';
 import { ClientsAddDialog } from '@/utils/clients/clients-add-dialog';
-import { ClientDetailsDialog } from '../../utils/clients/client-details-dialog'; 
+import { ClientDetailsDialog } from '../../utils/clients/client-details-dialog';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 
 export function ClientManagement() {
@@ -28,7 +46,7 @@ export function ClientManagement() {
 		data: clients,
 		loading,
 		error,
-		refresh
+		refresh,
 	} = useOptimizedRealtime<Client>(
 		'clients',
 		async () => {
@@ -38,16 +56,15 @@ export function ClientManagement() {
 		'clients_cache'
 	);
 
-  // Estados
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
-  const [viewingClient, setViewingClient] = useState<Client | null>(null);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+	const [searchTerm, setSearchTerm] = useState('');
+	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+	const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+	const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+	const [viewingClient, setViewingClient] = useState<Client | null>(null);
+	const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 6;
 
 	const handleEditClient = (client: Client) => {
 		setSelectedClient(client);
@@ -99,7 +116,6 @@ export function ClientManagement() {
 			client.locality?.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
-	// Lógica de paginación
 	const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
 
 	const currentItems = useMemo(() => {
@@ -107,14 +123,9 @@ export function ClientManagement() {
 		return filteredClients.slice(startIndex, startIndex + itemsPerPage);
 	}, [filteredClients, currentPage, itemsPerPage]);
 
-	// Resetear a la primera página cuando se realiza una búsqueda
 	useEffect(() => {
 		setCurrentPage(1);
 	}, [searchTerm]);
-
-	// Hacer en handle preguntando por el nombre y el apellido antes de guardar, NADA MÁS
-	// Sacar tabs porque no usamos
-	// Agregar paginación si hay mas de 10 clientes (o otra forma para evitar renderizaciones)
 
 	return (
 		<div className="space-y-6">
@@ -127,7 +138,8 @@ export function ClientManagement() {
 							Eliminar cliente
 						</DialogTitle>
 						<DialogDescription>
-							¿Estás seguro de que deseas eliminar a {clientToDelete?.name} {clientToDelete?.last_name}? Esta acción no se puede deshacer.
+							¿Estás seguro de que deseas eliminar a {clientToDelete?.name}{' '}
+							{clientToDelete?.last_name}? Esta acción no se puede deshacer.
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
@@ -151,25 +163,22 @@ export function ClientManagement() {
 					<Plus className="h-4 w-4" />
 					Nuevo cliente
 				</Button>
-				<ClientsAddDialog 
-					open={isAddDialogOpen} 
-					onOpenChange={setIsAddDialogOpen}
-				/>
+				<ClientsAddDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} />
 				{selectedClient && (
-					<ClientsAddDialog 
-						open={isEditDialogOpen} 
+					<ClientsAddDialog
+						open={isEditDialogOpen}
 						onOpenChange={setIsEditDialogOpen}
 						clientToEdit={
-						selectedClient
-							? {
-								id: selectedClient.id ?? '',
-								name: selectedClient.name ?? '',
-								last_name: selectedClient.last_name ?? '',
-								email: selectedClient.email ?? '',
-								phone_number: selectedClient.phone_number ?? '',
-								locality: selectedClient.locality ?? '',
-							}
-							: undefined
+							selectedClient
+								? {
+										id: selectedClient.id ?? '',
+										name: selectedClient.name ?? '',
+										last_name: selectedClient.last_name ?? '',
+										email: selectedClient.email ?? '',
+										phone_number: selectedClient.phone_number ?? '',
+										locality: selectedClient.locality ?? '',
+									}
+								: undefined
 						}
 						onUpdateClient={handleUpdateClient}
 					/>
@@ -232,7 +241,7 @@ export function ClientManagement() {
 												</h3>
 											</div>
 										</div>
-										<button 
+										<button
 											onClick={() => handleDeleteClick(client)}
 											className="text-muted-foreground hover:text-destructive transition-colors p-0.1 -mt-13 -mr-3"
 											title="Eliminar cliente"
@@ -257,18 +266,18 @@ export function ClientManagement() {
 									</div>
 
 									<div className="flex gap-2 pt-2">
-										<Button 
-											variant="outline" 
-											size="sm" 
+										<Button
+											variant="outline"
+											size="sm"
 											className="flex-1 gap-2 bg-transparent"
 											onClick={() => handleViewClient(client)}
 										>
 											<Eye className="h-4 w-4" />
 											Ver
 										</Button>
-										<Button 
-											variant="outline" 
-											size="sm" 
+										<Button
+											variant="outline"
+											size="sm"
 											className="flex-1 gap-2 bg-transparent"
 											onClick={() => handleEditClient(client)}
 										>
@@ -285,25 +294,19 @@ export function ClientManagement() {
 					{filteredClients.length > itemsPerPage && (
 						<div className="flex items-center justify-between px-2 mt-6">
 							<div className="text-sm text-muted-foreground">
-								Mostrando{' '}
-								{Math.min(
-									(currentPage - 1) * itemsPerPage + 1,
-									filteredClients.length
-								)}
-								-
-								{Math.min(
-									currentPage * itemsPerPage,
-									filteredClients.length
-								)}{' '}
-								de {filteredClients.length} clientes
+								Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, filteredClients.length)}-
+								{Math.min(currentPage * itemsPerPage, filteredClients.length)} de{' '}
+								{filteredClients.length} clientes
 							</div>
 
 							<Pagination className="mx-0 w-auto">
 								<PaginationContent>
 									<PaginationItem>
 										<PaginationPrevious
-											onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-											className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+											onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+											className={
+												currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+											}
 										/>
 									</PaginationItem>
 
@@ -333,8 +336,12 @@ export function ClientManagement() {
 
 									<PaginationItem>
 										<PaginationNext
-											onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-											className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+											onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+											className={
+												currentPage === totalPages
+													? 'pointer-events-none opacity-50'
+													: 'cursor-pointer'
+											}
 										/>
 									</PaginationItem>
 								</PaginationContent>
@@ -344,7 +351,7 @@ export function ClientManagement() {
 				</TabsContent>
 			</Tabs>
 
-			<ClientDetailsDialog 
+			<ClientDetailsDialog
 				client={viewingClient}
 				isOpen={isViewDialogOpen}
 				onClose={() => setIsViewDialogOpen(false)}

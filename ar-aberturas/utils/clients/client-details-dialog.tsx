@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { Client } from '@/lib/clients/clients';
 import { MapPin, X, Plus } from 'lucide-react';
 import { EmailLink } from '@/components/ui/email-link';
@@ -33,6 +33,9 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [clientData, setClientData] = useState<Client | null>(null);
+  const [cover, setCover] = useState('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSavingCover, setIsSavingCover] = useState(false);
   const [balancesKey, setBalancesKey] = useState(0);
   
   useEffect(() => {
@@ -183,6 +186,8 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
   useEffect(() => {
     if (client) {
       setClientData(client);
+      setCover(client.cover || '');
+      setHasUnsavedChanges(false);
     }
   }, [client]);
 
@@ -196,6 +201,26 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
       }
     } catch (error) {
       console.error('Error updating notes:', error);
+    }
+  };
+
+  const handleCoverChange = (value: string) => {
+    setCover(value);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSaveCover = async () => {
+    if (!client) return;
+    
+    try {
+      setIsSavingCover(true);
+      await updateClient(client.id, { cover });
+      setClientData(prev => prev ? { ...prev, cover } : null);
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error('Error updating cover:', error);
+    } finally {
+      setIsSavingCover(false);
     }
   };
 
@@ -252,10 +277,22 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                 <TabsContent value="info">
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-medium text-xs">Información adicional</h4>
-                      <p className="text-xs text-muted-foreground">
-                        Aca va tal vez, no lo se, puede ser que si, puede ser que no, mas info del cliente...
-                      </p>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-xs">Información adicional</h4>
+                        <Button
+                          size="sm"
+                          onClick={handleSaveCover}
+                          disabled={!hasUnsavedChanges || isSavingCover}
+                        >
+                          {isSavingCover ? 'Guardando...' : 'Guardar'}
+                        </Button>
+                      </div>
+                      <Textarea
+                        value={cover}
+                        onChange={(e) => handleCoverChange(e.target.value)}
+                        placeholder="Escribe aquí..."
+                        className="min-h-[200px] bg-background"
+                      />
                     </div>
                   </div>
                 </TabsContent>

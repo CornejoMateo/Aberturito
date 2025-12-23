@@ -9,6 +9,7 @@ export type Client = {
 	locality?: string | null;
     email?: string | null;
     notes?: string[] | null;
+    cover?: string | null;
 };
 
 const TABLE = 'clients';

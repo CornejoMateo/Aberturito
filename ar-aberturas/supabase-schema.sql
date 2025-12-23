@@ -150,9 +150,9 @@ create table public.clients (
   last_name character varying not null,
   phone_number character varying null,
   locality character varying null,
-  address character varying null,
   email character varying null,
-  notes character varying[] null,
+  notes text[] null,
+  cover text null,
   constraint clients_pkey primary key (id)
 ) TABLESPACE pg_default;
 

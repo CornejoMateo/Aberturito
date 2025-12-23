@@ -367,7 +367,7 @@ export function WorksOpenings() {
                     <ChecklistCompletionModal workId={installation.id}>
                       <Button variant="outline" size="sm">
                         <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Ver progreso de la obra
+                        Ver checklists
                       </Button>
                     </ChecklistCompletionModal>
                   </div>

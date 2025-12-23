@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
-import { ChecklistCompletionModal } from '@/components/business/checklist-completion-modal';
+import { ChecklistCompletionModal } from '@/utils/checklists/checklist-completion-modal';
 import { listWorks } from '@/lib/works/works';
 import { getChecklistsByWorkId } from '@/lib/works/checklists';
 import { format } from 'date-fns';
@@ -85,7 +85,7 @@ function StatusCard({
   );
 }
 
-export function InstallationChecklist() {
+export function WorksOpenings() {
   const [installations, setInstallations] = useState<Installation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -107,17 +107,15 @@ export function InstallationChecklist() {
           return;
         }
 
-        // Obtener checklists para cada obra
+        // get checklists for each work and calculate progress
         const worksWithChecklists = await Promise.all(
           works.map(async (work) => {
             const { data: checklists } = await getChecklistsByWorkId(work.id);
             
-            // Calcular progreso basado en las checklists
             let progress = 0;
             let tasks: Task[] = [];
             
             if (checklists && checklists.length > 0) {
-              // Aplanar todas las tareas de todas las checklists
               tasks = checklists.flatMap((checklist, index) => 
                 (checklist.items || []).map((item, itemIndex) => ({
                   id: `${checklist.id}-${itemIndex}`,
@@ -126,13 +124,11 @@ export function InstallationChecklist() {
                 }))
               );
               
-              // Calcular progreso
               const totalTasks = tasks.length;
               const completedTasks = tasks.filter(task => task.completed).length;
               progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
             }
             
-            // Determinar estado basado en el progreso
             let status: 'pendiente' | 'en_progreso' | 'completada' = 'pendiente';
             if (progress === 100) {
               status = 'completada';
@@ -140,7 +136,6 @@ export function InstallationChecklist() {
               status = 'en_progreso';
             }
             
-            // Construir el nombre completo del cliente
             const clientName = [work.client_name, work.client_last_name]
               .filter(Boolean)
               .join(' ')
@@ -223,7 +218,7 @@ export function InstallationChecklist() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Checklist de obras</h2>
+            <h2 className="text-2xl font-bold text-foreground">Checklists de obras</h2>
             <p className="text-muted-foreground mt-1">Seguimiento de instalaciones y tareas</p>
           </div>
         </div>
@@ -372,7 +367,7 @@ export function InstallationChecklist() {
                     <ChecklistCompletionModal workId={installation.id}>
                       <Button variant="outline" size="sm">
                         <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Ver Checklist
+                        Ver checklists
                       </Button>
                     </ChecklistCompletionModal>
                   </div>

@@ -116,7 +116,7 @@ export function ChecklistModal({ workId, existingChecklists, onSave }: Checklist
 
 		if (field === 'type_opening') {
 			const defaultItems =
-				value === 'pvc' ? pvcChecklistItems : value === 'aluminio' ? aluminioChecklistNames : [];
+				value === 'PVC' ? pvcChecklistItems : value === 'Aluminio' ? aluminioChecklistNames : [];
 
 			updatedChecklists[index].items = defaultItems.map((itemName) => ({
 				name: itemName,
@@ -220,8 +220,8 @@ export function ChecklistModal({ workId, existingChecklists, onSave }: Checklist
 														<SelectValue placeholder="Seleccionar tipo" />
 													</SelectTrigger>
 													<SelectContent>
-														<SelectItem value="pvc">PVC</SelectItem>
-														<SelectItem value="aluminio">Aluminio</SelectItem>
+														<SelectItem value="PVC">PVC</SelectItem>
+														<SelectItem value="Aluminio">Aluminio</SelectItem>
 													</SelectContent>
 												</Select>
 											</div>

@@ -154,7 +154,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 						{/* Progress Overview */}
 						<div className="text-center space-y-2">
 							<div className="text-2xl font-bold text-primary">{Math.round(totalProgress)}%</div>
-							<div className="text-sm text-muted-foreground">Progreso general de la obra</div>
+							<div className="text-sm text-muted-foreground">Completar checklists</div>
 						</div>
 
 						{/* Checklists */}

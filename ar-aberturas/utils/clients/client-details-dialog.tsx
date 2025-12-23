@@ -14,6 +14,10 @@ import { createWork, getWorksByClientId, Work, deleteWork } from '@/lib/works/wo
 import { WorksList } from '@/utils/works/works-list';
 import { ClientNotes } from '@/utils/notes/client-notes';
 import { updateClient } from '@/lib/clients/clients';
+import { ClientBalances } from '@/utils/balances/client-balances';
+import { BalanceForm } from '@/utils/balances/balance-form';
+import { createBalance } from '@/lib/works/balances';
+import { toast } from '@/components/ui/use-toast';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -24,6 +28,7 @@ interface ClientDetailsDialogProps {
 
 export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientDetailsDialogProps) {
   const [isWorkFormOpen, setIsWorkFormOpen] = useState(false);
+  const [isBalanceFormOpen, setIsBalanceFormOpen] = useState(false);
   const [works, setWorks] = useState<Work[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -31,6 +36,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
   const [cover, setCover] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSavingCover, setIsSavingCover] = useState(false);
+  const [balancesKey, setBalancesKey] = useState(0);
   
   useEffect(() => {
     const loadWorks = async () => {
@@ -87,10 +93,19 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
       const { error } = await deleteWork(workId);
       
       if (error) {
-        console.error('Error al eliminar la obra:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error al eliminar la obra',
+          description: 'Hubo un problema al eliminar la obra. Intente nuevamente.',
+        });
         return;
       }
       
+      toast({
+        title: 'Obra eliminada',
+        description: 'La obra se ha eliminado exitosamente.',
+      });
+
       // Refresh the works list
       const { data: updatedWorks } = await getWorksByClientId(client.id);
       if (updatedWorks) {
@@ -114,10 +129,18 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
       });
       
       if (error) {
-        console.error('Error al crear la obra:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error al crear la obra',
+          description: 'Hubo un problema al crear la obra. Intente nuevamente.',
+        });
         return;
       }
       
+      toast({
+        title: 'Obra creada',
+        description: 'La obra se ha creado exitosamente.',
+      });
       // reload the list of works
       const { data: updatedWorks } = await getWorksByClientId(client.id);
       if (updatedWorks) {
@@ -127,6 +150,33 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
       setIsWorkFormOpen(false);
     } catch (error) {
       console.error('Error inesperado al crear la obra:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBalanceCreated = async (balanceData: any) => {    
+    try {
+      setIsLoading(true);
+      const { data, error } = await createBalance(balanceData);
+      
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error al crear balance',
+          description: 'Hubo un problema al crear el balance. Intente nuevamente.',
+        });
+        return;
+      }
+      
+      toast({
+        title: 'Saldo creado',
+        description: 'El Saldo se ha creado exitosamente.',
+      });
+      setIsBalanceFormOpen(false);
+      setBalancesKey(prev => prev + 1);
+    } catch (error) {
+      console.error('Error inesperado al crear Saldo:', error);
     } finally {
       setIsLoading(false);
     }
@@ -219,7 +269,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                 <TabsTrigger value="info">Información</TabsTrigger>
                 <TabsTrigger value="works">Obras</TabsTrigger>
                 <TabsTrigger value="budgets" disabled>Presupuestos</TabsTrigger>
-                <TabsTrigger value="balances" disabled>Saldos</TabsTrigger>
+                <TabsTrigger value="balances">Saldos</TabsTrigger>
                 <TabsTrigger value="notes">Notas</TabsTrigger>
               </TabsList>
               
@@ -279,11 +329,27 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                   </p>
                 </TabsContent>
                 <TabsContent value="notes" className="h-[calc(100%-2.5rem)]">
-              <ClientNotes 
-                client={clientData} 
-                onNotesUpdate={handleNotesUpdate} 
-              />
-            </TabsContent>
+                  <ClientNotes 
+                    client={clientData} 
+                    onNotesUpdate={handleNotesUpdate} 
+                  />
+                </TabsContent>
+                <TabsContent value="balances" className="relative space-y-4 pt-2">
+                  <div className="absolute -top-13 right-0">
+                    <Button 
+                      onClick={() => setIsBalanceFormOpen(true)}
+                      size="sm"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Crear saldo
+                    </Button>
+                  </div>
+                  <ClientBalances 
+                    key={balancesKey}
+                    clientId={clientData.id}
+                    works={works}
+                  />
+                </TabsContent>
               </div>
             </Tabs>
           </div>
@@ -302,6 +368,21 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           />
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isBalanceFormOpen} onOpenChange={setIsBalanceFormOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nuevo saldo</DialogTitle>
+          </DialogHeader>
+          <BalanceForm
+            clientId={parseInt(client?.id || '0')}
+            works={works}
+            onSubmit={handleBalanceCreated}
+            onCancel={() => setIsBalanceFormOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
     </Dialog>
   );
 }

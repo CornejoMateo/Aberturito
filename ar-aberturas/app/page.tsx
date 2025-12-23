@@ -6,20 +6,18 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { DashboardHome } from '@/components/layout/dashboard-home';
 import { StockManagement } from '@/components/business/stock-management';
 import { useAuth } from '@/components/provider/auth-provider';
-import { InstallationChecklist } from '@/components/business/installation-checklist';
+import { WorksOpenings } from '@/components/business/works-progress';
 
 export default function HomePage() {
 	const { user, loading } = useAuth();
 	const router = useRouter();
 
-	// Redirigir al login si no hay usuario autenticado
 	useEffect(() => {
 		if (!loading && !user) {
 			router.push('/login');
 		}
 	}, [user, loading, router]);
 
-	// Mostrar loading mientras se verifica la autenticación
 	if (loading) {
 		return (
 			<div className="min-h-screen flex items-center justify-center bg-gray-900">
@@ -28,12 +26,10 @@ export default function HomePage() {
 		);
 	}
 
-	// Si no hay usuario, no renderizar nada (se redirigirá)
 	if (!user) {
 		return null;
 	}
 
-	// Mostrar dashboard según el rol del usuario
 	switch (user.role) {
 		case 'Admin':
 			return (
@@ -62,7 +58,7 @@ export default function HomePage() {
 		case 'Colocador':
 			return (
 				<DashboardLayout>
-					<InstallationChecklist />
+					<WorksOpenings />
 				</DashboardLayout>
 			);
 		default:

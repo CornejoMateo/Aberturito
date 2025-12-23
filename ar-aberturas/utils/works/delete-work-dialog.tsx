@@ -45,7 +45,7 @@ export function DeleteWorkDialog({
             Eliminar obra
           </DialogTitle>
           <DialogDescription>
-            ¿Estás seguro de que deseas eliminar la obra en {workAddress}? Esta acción no se puede deshacer.
+            ¿Estás seguro de que deseas eliminar la obra en {workAddress}? Esta acción no se puede deshacer, además se eliminara su saldo correspondiente.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

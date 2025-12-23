@@ -312,7 +312,6 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
               <div className="flex items-end justify-between w-full -mx-3 px-3 pb-1">
                 <ChecklistModal 
                   workId={work.id}
-                  opening_type="pvc"
                   existingChecklists={workChecklists[work.id] ? true : false}
                   onSave={async (checklists) => {
                     try {
@@ -331,7 +330,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                           description: checklist.description || '',
                           width: checklist.width || null,
                           height: checklist.height || null,
-                          type_opening: 'pvc', // assuming PVC for now,
+                          type_opening: checklist.type_opening,
                           items: checklist.items.map(item => ({
                             name: item.name,
                             done: item.completed,

@@ -27,6 +27,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface BalanceDetailsModalProps {
 	balance: Balance | null;
@@ -51,6 +52,8 @@ export function BalanceDetailsModal({
 	// Form state
 	const [transactionDate, setTransactionDate] = useState<Date>(new Date());
 	const [transactionAmount, setTransactionAmount] = useState('');
+	const [paymentMethod, setPaymentMethod] = useState('');
+	const [notes, setNotes] = useState('');
 
 	useEffect(() => {
 		if (balance && isOpen) {
@@ -86,6 +89,8 @@ export function BalanceDetailsModal({
 				balance_id: balance.id,
 				date: format(transactionDate, 'yyyy-MM-dd'),
 				amount: parseFloat(transactionAmount),
+				payment_method: paymentMethod || null,
+				notes: notes || null,
 			});
 
 			if (error) {
@@ -105,6 +110,8 @@ export function BalanceDetailsModal({
 			// Reset form
 			setTransactionDate(new Date());
 			setTransactionAmount('');
+			setPaymentMethod('');
+			setNotes('');
 			setIsAddingTransaction(false);
 
 			// Reload transactions
@@ -246,7 +253,34 @@ export function BalanceDetailsModal({
 										/>
 									</div>
 								</div>
+							<div className="grid grid-cols-2 gap-4">
 
+								<div className="space-y-2">
+									<Label htmlFor="notes">Observaciones</Label>
+									<Input
+										id="notes"
+										type="text"
+										placeholder="Observaciones (opcional)"
+										value={notes}
+										onChange={(e) => setNotes(e.target.value)}
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="payment-method">Método de pago</Label>
+									<Select value={paymentMethod} onValueChange={setPaymentMethod}>
+										<SelectTrigger id="payment-method">
+											<SelectValue placeholder="Seleccionar método" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="Efectivo">Efectivo</SelectItem>
+											<SelectItem value="Transferencia">Transferencia</SelectItem>
+											<SelectItem value="Debito">Débito</SelectItem>
+											<SelectItem value="Credito">Crédito</SelectItem>
+											<SelectItem value="QR">QR</SelectItem>
+										</SelectContent>
+									</Select>
+								</div>
+							</div>
 								<div className="flex gap-1 justify-end">
 									<Button
 										variant="outline"
@@ -255,6 +289,8 @@ export function BalanceDetailsModal({
 											setIsAddingTransaction(false);
 											setTransactionDate(new Date());
 											setTransactionAmount('');
+											setPaymentMethod('');
+											setNotes('');
 										}}
 									>
 										Cancelar
@@ -282,19 +318,21 @@ export function BalanceDetailsModal({
 								<TableHeader>
 									<TableRow>
 										<TableHead>Fecha</TableHead>
-										<TableHead className="text-right">Monto</TableHead>
+										<TableHead className="text-center">Método de pago</TableHead>
+										<TableHead className="text-center">Observaciones</TableHead>
+										<TableHead className="text-center">Monto</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
 									{isLoading ? (
 										<TableRow>
-											<TableCell colSpan={2} className="text-center text-muted-foreground">
+											<TableCell colSpan={4} className="text-center text-muted-foreground">
 												Cargando transacciones...
 											</TableCell>
 										</TableRow>
 									) : transactions.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={2} className="text-center text-muted-foreground">
+											<TableCell colSpan={4} className="text-center text-muted-foreground">
 												No hay transacciones registradas
 											</TableCell>
 										</TableRow>
@@ -302,7 +340,13 @@ export function BalanceDetailsModal({
 										transactions.map((transaction) => (
 											<TableRow key={transaction.id}>
 												<TableCell>{formatDate(transaction.date)}</TableCell>
-												<TableCell className="text-right font-medium">
+												<TableCell className="text-center font-sm">
+													{transaction.payment_method}
+												</TableCell>
+												<TableCell className="text-center font-sm">
+													{transaction.notes}
+												</TableCell>
+												<TableCell className="text-center font-sm">
 													{formatCurrency(transaction.amount)}
 												</TableCell>
 											</TableRow>

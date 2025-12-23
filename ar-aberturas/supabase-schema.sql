@@ -259,6 +259,8 @@ create table public.balance_transactions (
   date date null,
   amount numeric null,
   usd numeric null,
+  notes text null,
+  payment_method character varying null,
   constraint balance_transactions_pkey primary key (id),
   constraint balance_transactions_balance_id_fkey foreign KEY (balance_id) references balances (id) on update CASCADE on delete CASCADE
 ) TABLESPACE pg_default;

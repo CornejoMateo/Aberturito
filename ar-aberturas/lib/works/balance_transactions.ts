@@ -3,10 +3,12 @@ import { getSupabaseClient } from '../supabase-client';
 export type BalanceTransaction = {
 	id: string;
 	created_at: string;
-	balance_id?: number | null;
+	balance_id?: string | null;
 	date?: string | null;
 	amount?: number | null;
 	usd?: number | null;
+	payment_method?: string | null;
+	notes?: string | null;
 };
 
 const TABLE = 'balance_transactions';
@@ -55,7 +57,7 @@ export async function createTransaction(
 }
 
 export async function updateTransaction(
-	id: number,
+	id: string,
 	changes: Partial<Omit<BalanceTransaction, 'id' | 'created_at'>>
 ): Promise<{ data: BalanceTransaction | null; error: any }> {
 	const supabase = getSupabaseClient();

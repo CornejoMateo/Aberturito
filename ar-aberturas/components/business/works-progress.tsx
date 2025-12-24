@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   ClipboardCheck,
   MapPin,
@@ -14,9 +13,6 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
-  ChevronDown,
-  ChevronUp,
-  Loader2,
   List,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -26,67 +22,20 @@ import { listWorks } from '@/lib/works/works';
 import { getChecklistsByWorkId } from '@/lib/works/checklists';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-
-type Task = {
-  id: string;
-  name: string;
-  completed: boolean;
-};
-
 import { AddressLink } from '@/components/ui/address-link';
+import type { Work } from '@/lib/works/works';
+import type { ChecklistItem } from '@/lib/works/checklists';
+import { statusConfig } from '@/constants/status-config';
+import type { StatusFilter } from '@/constants/status-config';
 
-type Installation = {
-  id: string;
-  clientName: string;
-  address: string;
-  locality?: string | null;
-  date: string;
+type WorkWithProgress = Work & {
   status: 'pendiente' | 'en_progreso' | 'completada';
-  tasks: Task[];
-  notes: string[];
+  tasks: ChecklistItem[];
   progress: number;
-  clientLastName: string;
 };
-
-type StatusFilter = 'todos' | 'pendiente' | 'en_progreso' | 'completada';
-
-function StatusCard({
-  label,
-  count,
-  icon: Icon,
-  active,
-  onClick,
-  className = '',
-  activeClassName = '',
-}: {
-  label: string;
-  count: number;
-  icon: any;
-  active: boolean;
-  onClick: () => void;
-  className?: string;
-  activeClassName?: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'flex flex-col items-center gap-2 rounded-lg border p-4 text-center transition-colors hover:bg-muted/50',
-        'cursor-pointer w-full',
-        active ? 'border-foreground/20 bg-muted/30' : 'border-border',
-        className,
-        active && activeClassName
-      )}
-    >
-      <Icon className="h-6 w-6" />
-      <span className="text-sm font-medium">{label}</span>
-      <span className="text-2xl font-bold">{count}</span>
-    </button>
-  );
-}
 
 export function WorksOpenings() {
-  const [installations, setInstallations] = useState<Installation[]>([]);
+  const [installations, setInstallations] = useState<WorkWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('todos');
@@ -113,19 +62,13 @@ export function WorksOpenings() {
             const { data: checklists } = await getChecklistsByWorkId(work.id);
             
             let progress = 0;
-            let tasks: Task[] = [];
+            let tasks: ChecklistItem[] = [];
             
             if (checklists && checklists.length > 0) {
-              tasks = checklists.flatMap((checklist, index) => 
-                (checklist.items || []).map((item, itemIndex) => ({
-                  id: `${checklist.id}-${itemIndex}`,
-                  name: item.name || `Tarea ${itemIndex + 1}`,
-                  completed: item.done || false
-                }))
-              );
+              tasks = checklists.flatMap(checklist => checklist.items || []);
               
               const totalTasks = tasks.length;
-              const completedTasks = tasks.filter(task => task.completed).length;
+              const completedTasks = tasks.filter(task => task.done).length;
               progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
             }
             
@@ -136,29 +79,10 @@ export function WorksOpenings() {
               status = 'en_progreso';
             }
             
-            const clientName = [work.client_name, work.client_last_name]
-              .filter(Boolean)
-              .join(' ')
-              .trim();
-              
-            console.log('Procesando obra:', {
-              workId: work.id,
-              clientId: work.client_id,
-              clientName,
-              client_name: work.client_name,
-              client_last_name: work.client_last_name
-            });
-            
             return {
-              id: work.id,
-              clientName: clientName || 'Cliente no especificado',
-              clientLastName: work.client_last_name || '',
-              address: work.address || 'Dirección no especificada',
-              locality: work.locality || null,
-              date: work.created_at ? format(new Date(work.created_at), 'dd-MM-yyyy', { locale: es }) : 'Fecha no especificada',
+              ...work,
               status,
               tasks,
-              notes: work.notes || [],
               progress
             };
           })
@@ -175,8 +99,8 @@ export function WorksOpenings() {
     fetchWorks();
   }, []);
 
-  const getProgress = (tasks: Task[]) => {
-    const completed = tasks.filter((t) => t.completed).length;
+  const getProgress = (tasks: ChecklistItem[]) => {
+    const completed = tasks.filter((t) => t.done).length;
     return (completed / tasks.length) * 100;
   };
 
@@ -191,17 +115,11 @@ export function WorksOpenings() {
     // Apply search query filter
     const matchesSearch = searchQuery === '' || 
       (installation.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-       installation.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-       installation.clientLastName?.toLowerCase().includes(searchQuery.toLowerCase()));
+       installation.client_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       installation.client_last_name?.toLowerCase().includes(searchQuery.toLowerCase()));
     
     return matchesStatus && matchesSearch;
   });
-
-  const statusConfig = {
-    pendiente: { label: 'Pendiente', icon: Clock, color: 'text-chart-3 bg-chart-3/10' },
-    en_progreso: { label: 'En progreso', icon: AlertCircle, color: 'text-chart-1 bg-chart-1/10' },
-    completada: { label: 'Completada', icon: CheckCircle2, color: 'text-accent bg-accent/10' },
-  };
 
   const handleStatusFilter = (status: StatusFilter) => {
     setStatusFilter(status);
@@ -334,21 +252,23 @@ export function WorksOpenings() {
                             {statusInfo.label}
                           </Badge>
                         </div>
-                        <p className="text-sm text-foreground mt-1">{installation.clientName}</p>
+                        <p className="text-sm text-foreground mt-1">
+                          {[installation.client_name, installation.client_last_name].filter(Boolean).join(' ') || 'Cliente no especificado'}
+                        </p>
                       </div>
                     </div>
 
                     <div className="grid gap-2 md:grid-cols-3 text-sm">
                       <div className="flex items-center text-muted-foreground">
                         <AddressLink 
-                          address={installation.address} 
+                          address={installation.address || 'Dirección no especificada'} 
                           locality={installation.locality}
                           className="text-sm"
                         />
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Calendar className="h-4 w-4 flex-shrink-0" />
-                        <span>{installation.date}</span>
+                        <span>{installation.created_at ? format(new Date(installation.created_at), 'dd-MM-yyyy', { locale: es }) : 'Fecha no especificada'}</span>
                       </div>
                     </div>
 

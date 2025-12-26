@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   Clock,
   List,
+  StickyNote,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
@@ -32,6 +33,7 @@ type WorkWithProgress = Work & {
   status: 'pendiente' | 'en_progreso' | 'completada';
   tasks: ChecklistItem[];
   progress: number;
+  hasNotes: boolean;
 };
 
 export function WorksOpenings() {
@@ -63,9 +65,11 @@ export function WorksOpenings() {
             
             let progress = 0;
             let tasks: ChecklistItem[] = [];
+            let hasNotes = false;
             
             if (checklists && checklists.length > 0) {
               tasks = checklists.flatMap(checklist => checklist.items || []);
+              hasNotes = checklists.some((checklist) => (checklist.notes || '').trim().length > 0);
               
               const totalTasks = tasks.length;
               const completedTasks = tasks.filter(task => task.done).length;
@@ -83,7 +87,8 @@ export function WorksOpenings() {
               ...work,
               status,
               tasks,
-              progress
+              progress,
+              hasNotes,
             };
           })
         );
@@ -290,6 +295,17 @@ export function WorksOpenings() {
                         Ver checklists
                       </Button>
                     </ChecklistCompletionModal>
+
+					{installation.hasNotes && (
+						<Badge
+							variant="secondary"
+							className="gap-1 justify-center"
+							title="Hay notas/recordatorios cargados"
+						>
+							<StickyNote className="h-3.5 w-3.5" />
+							Notas
+						</Badge>
+					)}
                   </div>
                 </div>
               </div>

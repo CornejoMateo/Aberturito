@@ -136,6 +136,36 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 		}
 	};
 
+	const setAllChecklistItems = async (checklistId: string, done: boolean) => {
+		const previousChecklists = checklists;
+
+		// Update local state optimistically
+		const updatedChecklists = checklists.map((checklist) => {
+			if (checklist.id !== checklistId) return checklist;
+			const items = (checklist.items || []).map((item) => ({ ...item, done }));
+			return { ...checklist, items };
+		});
+		setChecklists(updatedChecklists);
+
+		// Persist
+		try {
+			setSaving(true);
+			const targetChecklist = updatedChecklists.find((c) => c.id === checklistId);
+			if (targetChecklist) {
+				const { error } = await editChecklist(checklistId, { items: targetChecklist.items });
+				if (error) {
+					console.error('Error saving checklist bulk update:', error);
+					setChecklists(previousChecklists);
+				}
+			}
+		} catch (error) {
+			console.error('Error saving checklist bulk update:', error);
+			setChecklists(previousChecklists);
+		} finally {
+			setSaving(false);
+		}
+	};
+
 	const updateChecklistNotes = (checklistId: string, notes: string) => {
 		// Update local state
 		setChecklists((prev) =>
@@ -285,9 +315,29 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 
 									<CardContent className="pt-0 pb-6">
 										<div className="space-y-3">
-											<h4 className="font-medium text-sm text-muted-foreground">
-												Items de Checklist
-											</h4>
+											<div className="flex items-center justify-between gap-2">
+												<h4 className="font-medium text-sm text-muted-foreground">Items de Checklist</h4>
+												<div className="flex items-center gap-2">
+													<Button
+														type="button"
+														variant="outline"
+														size="sm"
+														onClick={() => setAllChecklistItems(checklist.id, true)}
+														disabled={saving || (checklist.items || []).length === 0}
+													>
+														Marcar todo
+													</Button>
+													<Button
+														type="button"
+														variant="outline"
+														size="sm"
+														onClick={() => setAllChecklistItems(checklist.id, false)}
+														disabled={saving || (checklist.items || []).length === 0}
+													>
+														Desmarcar todo
+													</Button>
+												</div>
+											</div>
 
 											<div className="space-y-2 max-h-80 overflow-y-auto pr-1">
 												{(checklist.items || []).map((item, itemIndex) => (

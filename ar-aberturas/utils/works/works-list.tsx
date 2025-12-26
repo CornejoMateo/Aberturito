@@ -318,30 +318,29 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                     try {
                       // Get existing checklists to calculate the next index
                       const { data: existingChecklists, error: fetchError } = await getChecklistsByWorkId(work.id);
-                      
-                      if (fetchError) throw fetchError;
-                      
-                      const existingCount = existingChecklists?.length || 0;
-                      
-                      // Create new checklists (add to existing ones)
-                      const createPromises = checklists.map((checklist, index) => {
-                        return createChecklist({
-                          work_id: work.id,
-                          name: checklist.name || `Abertura ${existingCount + index + 1}`,
-                          description: checklist.description || '',
-                          width: checklist.width || null,
-                          height: checklist.height || null,
-                          type_opening: checklist.type_opening,
-                          items: checklist.items.map(item => ({
-                            name: item.name,
-                            done: item.completed,
-                            key: 0
-                          })),
-                          progress: 0,
-                        });
-                      });
-                      
-                      await Promise.all(createPromises);
+
+						  if (fetchError) throw fetchError;
+						  const existingCount = existingChecklists?.length || 0;
+
+						  // Create new checklists (add to existing ones)
+						  const createPromises = checklists.map((checklist, index) => {
+							return createChecklist({
+								work_id: work.id,
+								name: checklist.name || `Abertura ${existingCount + index + 1}`,
+								description: checklist.description || '',
+								width: checklist.width || null,
+								height: checklist.height || null,
+								type_opening: checklist.type_opening,
+								notes: '',
+								items: checklist.items.map(item => ({
+									name: item.name,
+									done: item.completed,
+									key: 0
+								})),
+								progress: 0,
+							});
+						  });
+						  await Promise.all(createPromises);
                       
                       // Update checklist status
                       setWorkChecklists(prev => ({

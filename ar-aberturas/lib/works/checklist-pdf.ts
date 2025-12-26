@@ -3,116 +3,119 @@ import html2canvas from 'html2canvas';
 import { Checklist, ChecklistItem } from './checklists';
 
 export async function generateChecklistPDF(checklists: Checklist[], clientName?: string): Promise<void> {
-	const pdf = new jsPDF();
+	const pdf = new jsPDF('p', 'mm', 'a4');
 	const pageWidth = pdf.internal.pageSize.getWidth();
 	const pageHeight = pdf.internal.pageSize.getHeight();
-	const margin = 20;
+	const margin = 10;
+	const gutter = 6;
+	const footerReserve = 14;
+	const columnWidth = (pageWidth - (2 * margin) - gutter) / 2;
 	let yPosition = margin;
 
-	// Helper function to add a new page if needed
-	const checkPageBreak = (requiredHeight: number) => {
-		if (yPosition + requiredHeight > pageHeight - margin) {
-			pdf.addPage();
-			yPosition = margin;
-		}
-	};
-
-	// Helper function to add text with word wrap
-	const addText = (text: string, fontSize: number = 12, fontStyle: string = 'normal') => {
+	const addTextAt = (
+		text: string,
+		x: number,
+		y: number,
+		maxWidth: number,
+		fontSize: number = 12,
+		fontStyle: string = 'normal'
+	) => {
 		pdf.setFontSize(fontSize);
 		pdf.setFont('helvetica', fontStyle);
-		const lines = pdf.splitTextToSize(text, pageWidth - 2 * margin);
+		const lines = pdf.splitTextToSize(text, maxWidth);
 		const lineHeight = fontSize * 0.35;
-		
-		checkPageBreak(lines.length * lineHeight);
-		
-		lines.forEach((line: string) => {
-			pdf.text(line, margin, yPosition);
-			yPosition += lineHeight;
+		lines.forEach((line: string, idx: number) => {
+			pdf.text(line, x, y + (idx * lineHeight));
 		});
-		
 		return lines.length * lineHeight;
 	};
 
-	// Title
+	const estimateChecklistHeight = (checklist: Checklist) => {
+		const rowHeight = 7;
+		const itemsCount = checklist.items?.length ?? 0;
+		const headerHeight = rowHeight;
+		const tableRowsHeight = itemsCount * rowHeight;
+		const observationsHeight = 10 + (10 * 0.35) + 8;
+		return headerHeight + tableRowsHeight + observationsHeight;
+	};
+
+	const renderChecklistAt = (
+		checklist: Checklist,
+		checklistIndex: number,
+		xLeft: number,
+		yTop: number,
+		width: number
+	) => {
+		const startY = yTop;
+		const tableLeft = xLeft;
+		const tableWidth = width;
+		const cellPadding = 2;
+		const rowHeight = 7;
+
+		const col1Width = tableWidth * 0.52;
+		const col2Width = tableWidth * 0.24;
+		const col3Width = tableWidth - col1Width - col2Width;
+
+		pdf.setFontSize(9);
+		pdf.setFont('helvetica', 'bold');
+
+		pdf.rect(tableLeft, startY, col1Width, rowHeight);
+		const identifierType = `${checklist.name || `PV${checklistIndex + 1}`} - ${checklist.type_opening || ''}`;
+		const identifierText = pdf.splitTextToSize(identifierType, col1Width - (2 * cellPadding));
+		pdf.text(identifierText[0] || '', tableLeft + cellPadding, startY + rowHeight / 2 + 1);
+
+		pdf.rect(tableLeft + col1Width, startY, col2Width, rowHeight);
+		const descriptionText = pdf.splitTextToSize(checklist.description || 'Sin descripción', col2Width - (2 * cellPadding));
+		pdf.text(descriptionText[0] || '', tableLeft + col1Width + cellPadding, startY + rowHeight / 2 + 1);
+
+		pdf.rect(tableLeft + col1Width + col2Width, startY, col3Width, rowHeight);
+		pdf.text(`${checklist.width || '0'} X ${checklist.height || '0'}`, tableLeft + col1Width + col2Width + cellPadding, startY + rowHeight / 2 + 1);
+
+		pdf.setFont('helvetica', 'normal');
+		pdf.setFontSize(8.5);
+
+		const items = checklist.items || [];
+		items.forEach((item: ChecklistItem, itemIndex: number) => {
+			const currentY = startY + ((itemIndex + 1) * rowHeight);
+			pdf.rect(tableLeft, currentY, col1Width, rowHeight);
+			const itemText = pdf.splitTextToSize(item.name, col1Width - (2 * cellPadding));
+			pdf.text(itemText[0] || '', tableLeft + cellPadding, currentY + rowHeight / 2 + 1);
+			pdf.rect(tableLeft + col1Width, currentY, col2Width, rowHeight);
+			pdf.rect(tableLeft + col1Width + col2Width, currentY, col3Width, rowHeight);
+		});
+
+		const afterTableY = startY + ((items.length + 1) * rowHeight);
+		const obsY = afterTableY + 8;
+		addTextAt('OBSERVACIONES:', tableLeft, obsY, tableWidth, 9, 'bold');
+		return (obsY + (9 * 0.35) + 8) - startY;
+	};
+
 	const title = clientName ? `CHECKLISTS - ${clientName.toUpperCase()}` : 'CHECKLISTS';
-	addText(title, 16, 'normal');
-	yPosition += 10;
+	const titleHeight = addTextAt(title, margin, yPosition, pageWidth - (2 * margin), 14, 'normal');
+	yPosition += titleHeight + 6;
 
-	// Process each checklist
-	for (let i = 0; i < checklists.length; i++) {
-		const checklist = checklists[i];
-		
-		// Add spacing between checklists
-		if (i > 0) {
-			yPosition += 10;
+	for (let i = 0; i < checklists.length; i += 2) {
+		const left = checklists[i];
+		const right = i + 1 < checklists.length ? checklists[i + 1] : undefined;
+
+		const leftHeight = estimateChecklistHeight(left);
+		const rightHeight = right ? estimateChecklistHeight(right) : 0;
+		const rowHeight = Math.max(leftHeight, rightHeight);
+
+		if (yPosition + rowHeight > pageHeight - margin - footerReserve) {
+			pdf.addPage();
+			yPosition = margin;
 		}
-		
-		// Checklist items as table format
-		if (checklist.items) {
-			checkPageBreak(30);
 
-			const startY = yPosition;
-			const tableLeft = margin;
-			const tableWidth = pageWidth - 2 * margin;
-			const cellPadding = 3;
-			const rowHeight = 8;
+		const leftX = margin;
+		const rightX = margin + columnWidth + gutter;
 
-			// Column widths
-			const col1Width = tableWidth * 0.27;  // Identifier - Type opening
-			const col2Width = tableWidth * 0.22; // Description
-			const col3Width = tableWidth * 0.16;  // Dimensions
-
-			pdf.setFontSize(10);
-			pdf.setFont('helvetica', 'bold');
-
-			// Header row with checklist info
-			pdf.rect(tableLeft, startY, col1Width, rowHeight);
-			const identifierType = `${checklist.name || `PV${i + 1}`} - ${checklist.type_opening || ''}`;
-			pdf.text(identifierType, tableLeft + cellPadding, startY + rowHeight / 2 + 1);
-
-			pdf.rect(tableLeft + col1Width, startY, col2Width, rowHeight);
-			pdf.text(checklist.description || 'Sin descripción', tableLeft + col1Width + cellPadding, startY + rowHeight / 2 + 1);
-
-			pdf.rect(tableLeft + col1Width + col2Width, startY, col3Width, rowHeight);
-			pdf.text(`${checklist.width || '0'} X ${checklist.height || '0'}`, tableLeft + col1Width + col2Width + cellPadding, startY + rowHeight / 2 + 1);
-
-			yPosition += rowHeight;
-
-			pdf.setFont('helvetica', 'normal');
-
-			// Draw table rows for each item
-			checklist.items.forEach((item: ChecklistItem, itemIndex: number) => {
-				checkPageBreak(rowHeight + 5);
-
-				const currentY = startY + ((itemIndex + 1) * rowHeight);
-
-				// Row with 3 columns
-				pdf.rect(tableLeft, currentY, col1Width, rowHeight);
-				pdf.setFontSize(9);
-				pdf.text(item.name, tableLeft + cellPadding, currentY + rowHeight / 2 + 1);
-
-				// Empty columns for marking
-				pdf.rect(tableLeft + col1Width, currentY, col2Width, rowHeight);
-				pdf.rect(tableLeft + col1Width + col2Width, currentY, col3Width, rowHeight);
-
-				yPosition += rowHeight;
-			});
-
-			// Add "OBSERVACIONES:" section
-			yPosition += 10;
-			checkPageBreak(20);
-			addText('OBSERVACIONES:', 10, 'bold');
-			yPosition += 8;
+		renderChecklistAt(left, i, leftX, yPosition, columnWidth);
+		if (right) {
+			renderChecklistAt(right, i + 1, rightX, yPosition, columnWidth);
 		}
-		
-		// Add separator line between checklists (except for the last one)
-		if (i < checklists.length - 1) {
-			checkPageBreak(10);
-			pdf.setDrawColor(200, 200, 200);
-			pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-			yPosition += 10;
-		}
+
+		yPosition += rowHeight + 6;
 	}
 
 	// Footer on each page

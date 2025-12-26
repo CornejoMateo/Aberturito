@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/components/provider/auth-provider';
-import { FaUser, FaLock } from 'react-icons/fa';
+import { Lock, User } from 'lucide-react';
 import Image from 'next/image';
 
 export default function LoginPage() {
@@ -66,7 +66,7 @@ export default function LoginPage() {
 					<div className="space-y-1">
 						<div className="relative">
 							<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-								<FaUser className="text-gray-400" />
+								<User className="text-gray-400" size={18} />
 							</div>
 							<Input
 								value={usuario}
@@ -81,7 +81,7 @@ export default function LoginPage() {
 					<div className="space-y-1">
 						<div className="relative">
 							<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-								<FaLock className="text-gray-400" />
+								<Lock className="text-gray-400" size={18} />
 							</div>
 							<Input
 								value={contraseña}

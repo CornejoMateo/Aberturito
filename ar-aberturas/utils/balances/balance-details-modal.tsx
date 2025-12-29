@@ -2,6 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,19 +25,26 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table';
-import { Plus, Calendar as CalendarIcon, DollarSign } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, DollarSign, Trash2 } from 'lucide-react';
 import { Balance } from '@/lib/works/balances';
 import {
 	BalanceTransaction,
 	getTransactionsByBalanceId,
 	createTransaction,
+	deleteTransaction,
 } from '@/lib/works/balance_transactions';
 import { Work } from '@/lib/works/works';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 
 interface BalanceDetailsModalProps {
 	balance: Balance | null;
@@ -47,6 +64,8 @@ export function BalanceDetailsModal({
 	const [transactions, setTransactions] = useState<BalanceTransaction[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isAddingTransaction, setIsAddingTransaction] = useState(false);
+	const [transactionToDelete, setTransactionToDelete] = useState<BalanceTransaction | null>(null);
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const { toast } = useToast();
 
 	// Form state
@@ -119,6 +138,37 @@ export function BalanceDetailsModal({
 			onTransactionCreated?.();
 		} catch (error) {
 			console.error('Error inesperado al crear transacción:', error);
+		}
+	};
+
+	const handleDeleteTransaction = async () => {
+		if (!transactionToDelete) return;
+
+		try {
+			const { error } = await deleteTransaction(transactionToDelete.id);
+
+			if (error) {
+				toast({
+					variant: 'destructive',
+					title: 'Error al eliminar transacción',
+					description: 'Hubo un problema al eliminar la transacción. Intente nuevamente.',
+				});
+				return;
+			}
+
+			toast({
+				title: 'Transacción eliminada',
+				description: 'La transacción se ha eliminado exitosamente.',
+			});
+
+			// Reload transactions
+			await loadTransactions();
+			onTransactionCreated?.();
+		} catch (error) {
+			console.error('Error inesperado al eliminar transacción:', error);
+		} finally {
+			setIsDeleteDialogOpen(false);
+			setTransactionToDelete(null);
 		}
 	};
 
@@ -253,34 +303,33 @@ export function BalanceDetailsModal({
 										/>
 									</div>
 								</div>
-							<div className="grid grid-cols-2 gap-4">
-
-								<div className="space-y-2">
-									<Label htmlFor="notes">Observaciones</Label>
-									<Input
-										id="notes"
-										type="text"
-										placeholder="Observaciones (opcional)"
-										value={notes}
-										onChange={(e) => setNotes(e.target.value)}
-									/>
+								<div className="grid grid-cols-2 gap-4">
+									<div className="space-y-2">
+										<Label htmlFor="notes">Observaciones</Label>
+										<Input
+											id="notes"
+											type="text"
+											placeholder="Observaciones (opcional)"
+											value={notes}
+											onChange={(e) => setNotes(e.target.value)}
+										/>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="payment-method">Método de pago</Label>
+										<Select value={paymentMethod} onValueChange={setPaymentMethod}>
+											<SelectTrigger id="payment-method">
+												<SelectValue placeholder="Seleccionar método" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="Efectivo">Efectivo</SelectItem>
+												<SelectItem value="Transferencia">Transferencia</SelectItem>
+												<SelectItem value="Debito">Débito</SelectItem>
+												<SelectItem value="Credito">Crédito</SelectItem>
+												<SelectItem value="QR">QR</SelectItem>
+											</SelectContent>
+										</Select>
+									</div>
 								</div>
-								<div className="space-y-2">
-									<Label htmlFor="payment-method">Método de pago</Label>
-									<Select value={paymentMethod} onValueChange={setPaymentMethod}>
-										<SelectTrigger id="payment-method">
-											<SelectValue placeholder="Seleccionar método" />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="Efectivo">Efectivo</SelectItem>
-											<SelectItem value="Transferencia">Transferencia</SelectItem>
-											<SelectItem value="Debito">Débito</SelectItem>
-											<SelectItem value="Credito">Crédito</SelectItem>
-											<SelectItem value="QR">QR</SelectItem>
-										</SelectContent>
-									</Select>
-								</div>
-							</div>
 								<div className="flex gap-1 justify-end">
 									<Button
 										variant="outline"
@@ -319,20 +368,21 @@ export function BalanceDetailsModal({
 									<TableRow>
 										<TableHead>Fecha</TableHead>
 										<TableHead className="text-center">Método de pago</TableHead>
-										<TableHead className="text-center">Observaciones</TableHead>
+										<TableHead className="text-center w-[200px]">Observaciones</TableHead>
 										<TableHead className="text-center">Monto</TableHead>
+										<TableHead className="text-center w-[50px]">Acción</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
 									{isLoading ? (
 										<TableRow>
-											<TableCell colSpan={4} className="text-center text-muted-foreground">
+											<TableCell colSpan={5} className="text-center text-muted-foreground">
 												Cargando transacciones...
 											</TableCell>
 										</TableRow>
 									) : transactions.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={4} className="text-center text-muted-foreground">
+											<TableCell colSpan={5} className="text-center text-muted-foreground">
 												No hay transacciones registradas
 											</TableCell>
 										</TableRow>
@@ -343,11 +393,24 @@ export function BalanceDetailsModal({
 												<TableCell className="text-center font-sm">
 													{transaction.payment_method}
 												</TableCell>
-												<TableCell className="text-center font-sm">
+												<TableCell className="text-center font-sm w-[200px] whitespace-normal break-words">
 													{transaction.notes}
 												</TableCell>
 												<TableCell className="text-center font-sm">
 													{formatCurrency(transaction.amount)}
+												</TableCell>
+												<TableCell className="text-center">
+													<Button
+														variant="ghost"
+														size="icon"
+														className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+														onClick={() => {
+															setTransactionToDelete(transaction);
+															setIsDeleteDialogOpen(true);
+														}}
+													>
+														<Trash2 className="h-4 w-4" />
+													</Button>
 												</TableCell>
 											</TableRow>
 										))
@@ -358,6 +421,34 @@ export function BalanceDetailsModal({
 					</div>
 				)}
 			</DialogContent>
+
+			<AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>¿Eliminar transacción?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Esta acción no se puede deshacer. Se eliminará permanentemente la transacción
+							{transactionToDelete && (
+								<>
+									{' '}
+									de {formatCurrency(transactionToDelete.amount)} del{' '}
+									{formatDate(transactionToDelete.date)}
+								</>
+							)}
+							.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancelar</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={handleDeleteTransaction}
+							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+						>
+							Eliminar
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</Dialog>
 	);
 }

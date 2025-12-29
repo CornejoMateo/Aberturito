@@ -4,6 +4,16 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import {
 	Pagination,
@@ -13,8 +23,8 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from '@/components/ui/pagination';
-import { Plus, DollarSign, Search } from 'lucide-react';
-import { Balance, getBalancesByClientId } from '@/lib/works/balances';
+import { Plus, DollarSign, Search, Trash2 } from 'lucide-react';
+import { Balance, getBalancesByClientId, deleteBalance } from '@/lib/works/balances';
 import { getTotalByBalanceId } from '@/lib/works/balance_transactions';
 import { Work } from '@/lib/works/works';
 import { BalanceDetailsModal } from './balance-details-modal';
@@ -38,6 +48,8 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedBalance, setSelectedBalance] = useState<BalanceWithTotals | null>(null);
 	const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+	const [balanceToDelete, setBalanceToDelete] = useState<BalanceWithTotals | null>(null);
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
 	const itemsPerPage = 2;
 
@@ -90,6 +102,27 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 
 	const handleBalanceUpdate = () => {
 		setLastUpdate(Date.now());
+	};
+
+	const handleDeleteBalance = async () => {
+		if (!balanceToDelete) return;
+
+		try {
+			const { error } = await deleteBalance(parseInt(balanceToDelete.id));
+
+			if (error) {
+				console.error('Error al eliminar saldo:', error);
+				return;
+			}
+
+			// Refresh the list
+			handleBalanceUpdate();
+		} catch (error) {
+			console.error('Error inesperado al eliminar saldo:', error);
+		} finally {
+			setIsDeleteDialogOpen(false);
+			setBalanceToDelete(null);
+		}
 	};
 
 	const formatCurrency = (amount: number | null | undefined) => {
@@ -163,12 +196,24 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 					{currentItems.map((balance) => (
 						<Card
 							key={balance.id}
-							className="hover:shadow-md transition-shadow cursor-pointer"
+							className="hover:shadow-md transition-shadow cursor-pointer relative"
 							onClick={() => {
 								setSelectedBalance(balance);
 								setIsDetailsModalOpen(true);
 							}}
 						>
+							<Button
+								variant="ghost"
+								size="icon"
+								className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 z-10"
+								onClick={(e) => {
+									e.stopPropagation();
+									setBalanceToDelete(balance);
+									setIsDeleteDialogOpen(true);
+								}}
+							>
+								<Trash2 className="h-4 w-4" />
+							</Button>
 							<CardContent className="">
 								<div className="flex items-center justify-between gap-4">
 									<div className="flex-1 min-w-0">
@@ -317,6 +362,30 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 				onOpenChange={setIsDetailsModalOpen}
 				onTransactionCreated={handleBalanceUpdate}
 			/>
+
+			<AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>¿Eliminar saldo?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Esta acción no se puede deshacer. Se eliminará permanentemente el saldo
+							{balanceToDelete && (() => {
+								const work = works.find((w) => Number(w.id) === Number(balanceToDelete.work_id));
+								return work ? ` de la obra en ${work.locality}` : '';
+							})()} y todas sus transacciones asociadas.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancelar</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={handleDeleteBalance}
+							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+						>
+							Eliminar
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }

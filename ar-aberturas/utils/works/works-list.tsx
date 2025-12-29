@@ -337,7 +337,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
 									done: item.completed,
 									key: 0
 								})),
-								progress: 0,
+								progress: checklist.items.length > 0 ? 0 : 100,
 							});
 						  });
 						  await Promise.all(createPromises);

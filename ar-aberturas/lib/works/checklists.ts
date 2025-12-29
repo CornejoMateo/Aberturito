@@ -27,7 +27,7 @@ export async function listChecklists(): Promise<{ data: Checklist[] | null; erro
 	const { data, error } = await supabase
 		.from(TABLE)
 		.select(
-			'id, created_at, work_id, items, description, progress, width, height, name, type_opening'
+			'id, created_at, work_id, items, description, progress, width, height, name, type_opening, notes'
 		)
 		.order('created_at', { ascending: false });
 	return { data, error };

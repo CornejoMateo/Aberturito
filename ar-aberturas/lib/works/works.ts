@@ -65,9 +65,17 @@ export async function getWorkById(id: string): Promise<{ data: Work | null; erro
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(`
+      *,
+      clients:client_id (name, last_name)
+    `)
     .eq('id', id)
     .single();
+
+  if (data && data.clients) {
+    data.client_name = data.clients.name;
+    data.client_last_name = data.clients.last_name;
+  }
 
 	return { data, error };
 }

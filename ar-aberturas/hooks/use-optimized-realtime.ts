@@ -10,7 +10,7 @@ interface CacheEntry<T> {
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 const DEBOUNCE_DELAY = 300; // 300ms para agrupar actualizaciones
 
-export function useOptimizedRealtimeStock<T extends { id: string }>(
+export function useOptimizedRealtime<T extends { id: string }>(
 	table: string, 
 	fetchFromDb: () => Promise<T[]>,
 	cacheKey?: string
@@ -20,8 +20,8 @@ export function useOptimizedRealtimeStock<T extends { id: string }>(
 	const [error, setError] = useState<string | null>(null);
 	const supabase = getSupabaseClient();
 	
-	const cacheKeyFinal = cacheKey || `stock_${table}`;
-	const debounceTimerRef = useRef<NodeJS.Timeout>();
+	const cacheKeyFinal = cacheKey || `realtime_${table}`;
+	const debounceTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 	const versionRef = useRef(0);
 
 	// Obtener datos del cache local

@@ -1,10 +1,10 @@
 import { Card } from '@/components/ui/card';
 import { Package, PackagePlus, AlertTriangle } from 'lucide-react';
-import type { ProfileItemStock } from '@/lib/profile-stock';
-import type { AccessoryItemStock } from '@/lib/accesorie-stock';
-import type { IronworkItemStock } from '@/lib/ironwork-stock';
-import type { SupplyItemStock } from '@/lib/supplies-stock';
-import type { StockCategory } from '@/lib/stock-config';
+import type { ProfileItemStock } from '@/lib/stock/profile-stock';
+import type { AccessoryItemStock } from '@/lib/stock/accesorie-stock';
+import type { IronworkItemStock } from '@/lib/stock/ironwork-stock';
+import type { SupplyItemStock } from '@/lib/stock/supplies-stock';
+import type { StockCategory } from '@/lib/stock/stock-config';
 
 interface StockStatsProps {
 	categoryState: 'Perfiles' | StockCategory;

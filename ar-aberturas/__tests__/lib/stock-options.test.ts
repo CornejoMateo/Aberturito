@@ -6,7 +6,7 @@ import {
 	type ColorOption,
 	type CodeOption,
 	type SiteOption,
-} from '../../lib/stock-options';
+} from '../../lib/stock/stock-options';
 import { getSupabaseClient } from '@/lib/supabase-client';
 
 // Mock de Supabase

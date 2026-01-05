@@ -5,7 +5,7 @@ import {
   updateSupplyStock,
   deleteSupplyStock,
   type SupplyItemStock,
-} from '../../lib/supplies-stock';
+} from '../../lib/stock/supplies-stock';
 import { getSupabaseClient } from '../../lib/supabase-client';
 
 const mockSupply: SupplyItemStock = {

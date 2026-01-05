@@ -1,4 +1,4 @@
-import { getSupabaseClient } from './supabase-client';
+import { getSupabaseClient } from '../supabase-client';
 
 export type LineOption = {
 	id: number;
@@ -67,9 +67,12 @@ export async function deleteOption(
 	material_type?: string
 ): Promise<{ success: boolean; error?: any; data?: any }> {
 	try {
-		const res = await fetch(`/api/options/delete?table=${table}&id=${id}&material_type=${material_type}`, {
-			method: 'DELETE',
-		});
+		const res = await fetch(
+			`/api/options/delete?table=${table}&id=${id}&material_type=${material_type}`,
+			{
+				method: 'DELETE',
+			}
+		);
 		const data = await res.json();
 		return {
 			success: data.success ?? true,

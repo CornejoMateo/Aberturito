@@ -60,12 +60,15 @@ export async function updatePrices(
 
 		for (const chunk of codeChunks) {
 			// Query which codes exist in each table in a single request per table
-			const [{ data: accData, error: accErr }, { data: ironData, error: ironErr }, {data: supplyData, error, supplyErr}] =
-				await Promise.all([
-					supabase.from('accesories_category').select('accessory_code').in('accessory_code', chunk),
-					supabase.from('ironworks_category').select('ironwork_code').in('ironwork_code', chunk),
-					supabase.from('supplies_category').select('supply_code').in('supply_code', chunk),
-				] as any);
+			const [
+				{ data: accData, error: accErr },
+				{ data: ironData, error: ironErr },
+				{ data: supplyData, error, supplyErr },
+			] = await Promise.all([
+				supabase.from('accesories_category').select('accessory_code').in('accessory_code', chunk),
+				supabase.from('ironworks_category').select('ironwork_code').in('ironwork_code', chunk),
+				supabase.from('supplies_category').select('supply_code').in('supply_code', chunk),
+			] as any);
 
 			if (accErr) {
 				console.error('Error fetching accessories chunk:', accErr);

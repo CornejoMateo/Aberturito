@@ -5,7 +5,7 @@ import {
 	updateProfileStock,
 	deleteProfileStock,
 	type ProfileItemStock,
-} from '../../lib/profile-stock';
+} from '../../lib/stock/profile-stock';
 import { getSupabaseClient } from '../../lib/supabase-client';
 
 // Mock de los datos de prueba

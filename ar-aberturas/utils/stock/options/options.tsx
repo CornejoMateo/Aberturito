@@ -24,14 +24,14 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { OptionDialog } from './option-add';
 import { toast } from '@/components/ui/use-toast';
 
-import { deleteOption } from '@/lib/stock-options';
+import { deleteOption } from '@/lib/stock/stock-options';
 import {
 	listOptions,
 	type LineOption,
 	CodeOption,
 	ColorOption,
 	SiteOption,
-} from '@/lib/stock-options';
+} from '@/lib/stock/stock-options';
 import { useOptions } from '@/hooks/use-options';
 
 interface OptionsModalProps {

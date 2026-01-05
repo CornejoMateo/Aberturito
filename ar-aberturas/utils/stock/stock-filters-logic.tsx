@@ -1,4 +1,4 @@
-import type { StockCategory } from '@/lib/stock-config';
+import type { StockCategory } from '@/lib/stock/stock-config';
 
 export function filterStockItems(
 	stock: any[],

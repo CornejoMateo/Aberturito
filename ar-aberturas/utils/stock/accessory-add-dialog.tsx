@@ -15,11 +15,11 @@ import {
 } from '@/components/ui/dialog';
 import { useState, useEffect } from 'react';
 import { SiteSelect } from '@/components/stock/site-select';
-import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock-config';
+import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock/stock-config';
 import { useToast } from '@/components/ui/use-toast';
-import { type AccessoryItemStock } from '@/lib/accesorie-stock';
-import { type IronworkItemStock } from '@/lib/ironwork-stock';
-import { type SupplyItemStock } from '@/lib/supplies-stock';
+import { type AccessoryItemStock } from '@/lib/stock/accesorie-stock';
+import { type IronworkItemStock } from '@/lib/stock/ironwork-stock';
+import { type SupplyItemStock } from '@/lib/stock/supplies-stock';
 import { useAuth } from '@/components/provider/auth-provider';
 
 interface AccessoryFormDialogProps {

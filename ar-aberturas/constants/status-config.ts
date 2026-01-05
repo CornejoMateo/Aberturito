@@ -1,14 +1,9 @@
-import { CheckCircle, XCircle, Clock, Play } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 
-export const statusConfigCalendar = {
-	programado: { label: 'Programado', color: 'bg-muted text-muted-foreground' },
-	confirmado: { label: 'Confirmado', color: 'bg-accent/10 text-accent' },
-	completado: { label: 'Completado', color: 'bg-primary/10 text-primary' },
+export const statusConfig = {
+    pendiente: { label: 'Pendiente', icon: Clock, color: 'text-chart-3 bg-chart-3/10' },
+    en_progreso: { label: 'En progreso', icon: AlertCircle, color: 'text-chart-1 bg-chart-1/10' },
+    completada: { label: 'Completada', icon: CheckCircle2, color: 'text-accent bg-accent/10' },
 };
 
-export const statusConfigBudget = {
-	emitido: { label: 'Emitido', icon: Clock, color: 'bg-chart-3 text-chart-3' },
-	aceptado: { label: 'Aceptado', icon: CheckCircle, color: 'bg-accent text-accent' },
-	rechazado: { label: 'Rechazado', icon: XCircle, color: 'bg-destructive text-destructive' },
-	en_ejecucion: { label: 'En ejecución', icon: Play, color: 'bg-chart-1 text-chart-1' },
-};
+export type StatusFilter = 'todos' | 'pendiente' | 'en_progreso' | 'completada';

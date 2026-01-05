@@ -5,7 +5,7 @@ import {
 	updateAccessoryStock,
 	deleteAccesoryStock,
 	type AccessoryItemStock,
-} from '../../lib/accesorie-stock';
+} from '../../lib/stock/accesorie-stock';
 import { getSupabaseClient } from '../../lib/supabase-client';
 
 const mockAccessory: AccessoryItemStock = {

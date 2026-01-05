@@ -14,6 +14,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import { Checklist, editChecklist } from '@/lib/works/checklists';
+import { ChecklistPDFButton } from '@/components/ui/checklist-pdf-button';
+import { getWorkById } from '@/lib/works/works';
 
 type ChecklistCompletionModalProps = {
 	workId: string;
@@ -25,6 +27,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 	const [checklists, setChecklists] = useState<Checklist[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
+	const [clientName, setClientName] = useState<string>('');
 
 	// Load checklists when modal opens
 	useEffect(() => {
@@ -36,6 +39,18 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 	const loadChecklists = async () => {
 		try {
 			setLoading(true);
+			
+			// Load work data to get client name
+			const { data: workData, error: workError } = await getWorkById(workId);
+			if (workError) {
+				console.error('Error loading work data:', workError);
+			} else if (workData) {
+				const fullName = [workData.client_name, workData.client_last_name]
+					.filter(Boolean)
+					.join(' ');
+				setClientName(fullName);
+			}
+			
 			const { getChecklistsByWorkId } = await import('@/lib/works/checklists');
 			const { data, error } = await getChecklistsByWorkId(workId);
 
@@ -258,11 +273,17 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 						</div>
 
 						{/* Footer */}
-						<div className="flex justify-center pt-8 border-t">
+						<div className="flex flex-col sm:flex-row justify-center gap-3 pt-8 border-t">
+							<ChecklistPDFButton 
+								checklists={checklists} 
+								workId={workId}
+								clientName={clientName}
+								disabled={saving}
+							/>
 							<Button
 								variant="outline"
 								onClick={() => setIsOpen(false)}
-								className="px-8"
+								className="w-full sm:w-auto px-8"
 								disabled={saving}
 							>
 								Cerrar

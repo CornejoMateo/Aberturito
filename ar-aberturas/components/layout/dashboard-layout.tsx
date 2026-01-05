@@ -87,7 +87,7 @@ const navigation = [
 		name: 'Clientes',
 		href: '/clients',
 		icon: Users,
-		disabled: false,
+		disabled: true,
 	},
 	{
 		name: 'Presupuestos',
@@ -99,13 +99,13 @@ const navigation = [
 		name: 'Obras',
 		href: '/works',
 		icon: ClipboardCheck,
-		disabled: false,
+		disabled: true,
 	},
 	{
 		name: 'Calendario',
 		href: '/calendar',
 		icon: Calendar,
-		disabled: false,
+		disabled: true,
 	},
 	{
 		name: 'Reportes',

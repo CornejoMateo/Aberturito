@@ -105,7 +105,7 @@ const navigation = [
 		name: 'Calendario',
 		href: '/calendar',
 		icon: Calendar,
-		disabled: true,
+		disabled: false,
 	},
 	{
 		name: 'Reportes',

@@ -32,25 +32,17 @@ export function NotificationButton() {
   }, []);
 
   return (
-    <div className="flex items-center gap-2">
-      <NotificationSettingsModal>
-        <Button variant="outline" size="sm" className="relative">
-          <Settings className="h-4 w-4 mr-2" />
-          <Bell className="h-4 w-4 mr-2" />
-          Notificaciones
-          {activeSettings > 0 && (
-            <Badge variant="default" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
-              {activeSettings}
-            </Badge>
-          )}
-        </Button>
-      </NotificationSettingsModal>
-      
-      {activeSettings > 0 && (
-        <div className="text-sm text-muted-foreground">
-          {activeSettings} configuración{activeSettings !== 1 ? 'es' : ''} activa{activeSettings !== 1 ? 's' : ''}
-        </div>
-      )}
-    </div>
+    <NotificationSettingsModal>
+      <Button variant="outline" size="sm" className="relative">
+        <Settings className="h-4 w-4 mr-2" />
+        <Bell className="h-4 w-4 mr-2" />
+        Notificaciones
+        {activeSettings > 0 && (
+          <Badge variant="default" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
+            {activeSettings}
+          </Badge>
+        )}
+      </Button>
+    </NotificationSettingsModal>
   );
 }

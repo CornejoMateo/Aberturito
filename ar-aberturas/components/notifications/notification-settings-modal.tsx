@@ -199,18 +199,22 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto sm:max-w-2xl md:max-w-4xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <Settings className="h-5 w-5" />
-            Configuración de Notificaciones por Email
+            <span className="hidden sm:inline">Configuración de Notificaciones por Email</span>
+            <span className="sm:hidden">Notificaciones</span>
           </DialogTitle>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="list">Configuraciones Activas</TabsTrigger>
-            <TabsTrigger value="create">
+          <TabsList className="grid w-full grid-cols-2 h-auto">
+            <TabsTrigger value="list" className="text-xs sm:text-sm py-2 px-2">
+              <span className="hidden sm:inline">Configuraciones Activas</span>
+              <span className="sm:hidden">Activas</span>
+            </TabsTrigger>
+            <TabsTrigger value="create" className="text-xs sm:text-sm py-2 px-2">
               {editingSettings.id ? 'Editar' : 'Nueva'} Configuración
             </TabsTrigger>
           </TabsList>
@@ -315,30 +319,36 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
                   value={editingSettings.time}
                   onChange={(e) => setEditingSettings(prev => ({ ...prev, time: e.target.value }))}
                   placeholder="09:00"
+                  className="w-full"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label>Emails para notificar</Label>
-                {editingSettings.emails?.map((email, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      type="email"
-                      value={email}
-                      onChange={(e) => updateEmail(index, e.target.value)}
-                      placeholder="correo@ejemplo.com"
-                    />
-                    {editingSettings.emails!.length > 1 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeEmail(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
+                <div className="space-y-2">
+                  {editingSettings.emails?.map((email, index) => (
+                    <div key={index} className="flex gap-2 flex-col sm:flex-row">
+                      <Input
+                        type="email"
+                        value={email}
+                        onChange={(e) => updateEmail(index, e.target.value)}
+                        placeholder="correo@ejemplo.com"
+                        className="flex-1"
+                      />
+                      {editingSettings.emails!.length > 1 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeEmail(index)}
+                          className="w-full sm:w-auto"
+                        >
+                          <X className="h-4 w-4" />
+                          <span className="hidden sm:inline ml-1">Eliminar</span>
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
                 <Button variant="outline" onClick={addEmail} className="w-full">
                   <Plus className="h-4 w-4 mr-2" />
                   Agregar Email
@@ -350,57 +360,63 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
                 {(editingSettings.filters && editingSettings.filters.length > 0) ? (
                   editingSettings.filters.map((filter, index) => (
                   <Card key={filter.id} className="p-4">
-                    <div className="flex gap-2 items-end">
-                      <div className="flex-1">
-                        <Label htmlFor={`filter-type-${index}`}>Tipo de filtro</Label>
-                        <Select
-                          value={filter.type}
-                          onValueChange={(value: 'type' | 'title') => updateFilter(index, 'type', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="type">Por tipo de evento</SelectItem>
-                            <SelectItem value="title">Por palabras en el título</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex-1">
-                        <Label htmlFor={`filter-value-${index}`}>Valor</Label>
-                        {filter.type === 'type' ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor={`filter-type-${index}`} className="text-sm">Tipo de filtro</Label>
                           <Select
-                            value={filter.value}
-                            onValueChange={(value) => updateFilter(index, 'value', value)}
+                            value={filter.type}
+                            onValueChange={(value: 'type' | 'title') => updateFilter(index, 'type', value)}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar tipo" />
+                              <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {availableEventTypes.map(type => (
-                                <SelectItem key={type} value={type}>{type}</SelectItem>
-                              ))}
+                              <SelectItem value="type">Por tipo de evento</SelectItem>
+                              <SelectItem value="title">Por palabras en el título</SelectItem>
                             </SelectContent>
                           </Select>
-                        ) : (
-                          <Input
-                            value={filter.value}
-                            onChange={(e) => updateFilter(index, 'value', e.target.value)}
-                            placeholder="Ej: cumpleaños"
-                          />
-                        )}
+                        </div>
+                        <div>
+                          <Label htmlFor={`filter-value-${index}`} className="text-sm">Valor</Label>
+                          {filter.type === 'type' ? (
+                            <Select
+                              value={filter.value}
+                              onValueChange={(value) => updateFilter(index, 'value', value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar tipo" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableEventTypes.map(type => (
+                                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Input
+                              value={filter.value}
+                              onChange={(e) => updateFilter(index, 'value', e.target.value)}
+                              placeholder="Ej: cumpleaños"
+                            />
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={filter.enabled}
-                          onCheckedChange={(checked) => updateFilter(index, 'enabled', checked)}
-                        />
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={filter.enabled}
+                            onCheckedChange={(checked) => updateFilter(index, 'enabled', checked)}
+                          />
+                          <Label className="text-sm">Filtro activo</Label>
+                        </div>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => removeFilter(index)}
                         >
                           <X className="h-4 w-4" />
+                          <span className="hidden sm:inline ml-1">Eliminar</span>
                         </Button>
                       </div>
                     </div>
@@ -426,8 +442,8 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
                 </div>
               )}
 
-              <div className="flex gap-2 pt-4">
-                <Button onClick={handleSave} disabled={isLoading} className="flex-1">
+              <div className="flex gap-2 pt-4 flex-col sm:flex-row">
+                <Button onClick={handleSave} disabled={isLoading} className="flex-1 w-full sm:w-auto">
                   <Save className="h-4 w-4 mr-2" />
                   {editingSettings.id ? 'Actualizar' : 'Guardar'} Configuración
                 </Button>
@@ -437,6 +453,7 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
                     setActiveTab('list');
                     resetEditingSettings();
                   }}
+                  className="w-full sm:w-auto"
                 >
                   Cancelar
                 </Button>

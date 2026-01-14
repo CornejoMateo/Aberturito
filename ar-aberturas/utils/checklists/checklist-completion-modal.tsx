@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -12,8 +12,11 @@ import {
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import { Checklist, editChecklist } from '@/lib/works/checklists';
+import { ChecklistPDFButton } from '@/components/ui/checklist-pdf-button';
+import { getWorkById } from '@/lib/works/works';
 
 type ChecklistCompletionModalProps = {
 	workId: string;
@@ -25,6 +28,9 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 	const [checklists, setChecklists] = useState<Checklist[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
+	const [savingNotes, setSavingNotes] = useState<Record<string, boolean>>({});
+	const [clientName, setClientName] = useState<string>('');
+	const notesDebounceTimersRef = useRef<Record<string, number | undefined>>({});
 
 	// Load checklists when modal opens
 	useEffect(() => {
@@ -36,6 +42,18 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 	const loadChecklists = async () => {
 		try {
 			setLoading(true);
+			
+			// Load work data to get client name
+			const { data: workData, error: workError } = await getWorkById(workId);
+			if (workError) {
+				console.error('Error loading work data:', workError);
+			} else if (workData) {
+				const fullName = [workData.client_name, workData.client_last_name]
+					.filter(Boolean)
+					.join(' ');
+				setClientName(fullName);
+			}
+			
 			const { getChecklistsByWorkId } = await import('@/lib/works/checklists');
 			const { data, error } = await getChecklistsByWorkId(workId);
 
@@ -118,8 +136,73 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 		}
 	};
 
+	const setAllChecklistItems = async (checklistId: string, done: boolean) => {
+		const previousChecklists = checklists;
+
+		// Update local state optimistically
+		const updatedChecklists = checklists.map((checklist) => {
+			if (checklist.id !== checklistId) return checklist;
+			const items = (checklist.items || []).map((item) => ({ ...item, done }));
+			return { ...checklist, items };
+		});
+		setChecklists(updatedChecklists);
+
+		// Persist
+		try {
+			setSaving(true);
+			const targetChecklist = updatedChecklists.find((c) => c.id === checklistId);
+			if (targetChecklist) {
+				const { error } = await editChecklist(checklistId, { items: targetChecklist.items });
+				if (error) {
+					console.error('Error saving checklist bulk update:', error);
+					setChecklists(previousChecklists);
+				}
+			}
+		} catch (error) {
+			console.error('Error saving checklist bulk update:', error);
+			setChecklists(previousChecklists);
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	const updateChecklistNotes = (checklistId: string, notes: string) => {
+		// Update local state
+		setChecklists((prev) =>
+			prev.map((c) => (c.id === checklistId ? { ...c, notes } : c))
+		);
+
+		// Debounced save
+		const existingTimer = notesDebounceTimersRef.current[checklistId];
+		if (existingTimer) {
+			window.clearTimeout(existingTimer);
+		}
+
+		notesDebounceTimersRef.current[checklistId] = window.setTimeout(async () => {
+			try {
+				setSavingNotes((prev) => ({ ...prev, [checklistId]: true }));
+				const { error } = await editChecklist(checklistId, { notes });
+				if (error) {
+					console.error('Error saving checklist notes:', error);
+				}
+			} catch (error) {
+				console.error('Error saving checklist notes:', error);
+			} finally {
+				setSavingNotes((prev) => ({ ...prev, [checklistId]: false }));
+			}
+		}, 600);
+	};
+
+	useEffect(() => {
+		return () => {
+			Object.values(notesDebounceTimersRef.current).forEach((timerId) => {
+				if (timerId) window.clearTimeout(timerId);
+			});
+		};
+	}, []);
+
 	const calculateProgress = (items: any[] = []) => {
-		if (items.length === 0) return 0;
+		if (items.length === 0) return 100;
 		const completed = items.filter((item) => item.done).length;
 		return Math.round((completed / items.length) * 100);
 	};
@@ -212,13 +295,49 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 												/>
 											</div>
 										</div>
+
+										<div className="space-y-2 pt-2">
+											<div className="flex items-center justify-between">
+												<Label className="text-xs text-muted-foreground">Nota / recordatorio</Label>
+												{savingNotes[checklist.id] && (
+													<span className="text-xs text-muted-foreground">Guardando...</span>
+												)}
+											</div>
+											<Textarea
+												value={checklist.notes || ''}
+												onChange={(e) => updateChecklistNotes(checklist.id, e.target.value)}
+												placeholder="Escribí una nota para esta abertura (ej: falta sellador, revisar nivel, etc.)"
+												className="text-sm"
+												disabled={loading}
+											/>
+										</div>
 									</CardHeader>
 
 									<CardContent className="pt-0 pb-6">
 										<div className="space-y-3">
-											<h4 className="font-medium text-sm text-muted-foreground">
-												Items de Checklist
-											</h4>
+											<div className="flex items-center justify-between gap-2">
+												<h4 className="font-medium text-sm text-muted-foreground">Items de Checklist</h4>
+												<div className="flex items-center gap-2">
+													<Button
+														type="button"
+														variant="outline"
+														size="sm"
+														onClick={() => setAllChecklistItems(checklist.id, true)}
+														disabled={saving || (checklist.items || []).length === 0}
+													>
+														Marcar todo
+													</Button>
+													<Button
+														type="button"
+														variant="outline"
+														size="sm"
+														onClick={() => setAllChecklistItems(checklist.id, false)}
+														disabled={saving || (checklist.items || []).length === 0}
+													>
+														Desmarcar todo
+													</Button>
+												</div>
+											</div>
 
 											<div className="space-y-2 max-h-80 overflow-y-auto pr-1">
 												{(checklist.items || []).map((item, itemIndex) => (
@@ -258,11 +377,17 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 						</div>
 
 						{/* Footer */}
-						<div className="flex justify-center pt-8 border-t">
+						<div className="flex flex-col sm:flex-row justify-center gap-3 pt-8 border-t">
+							<ChecklistPDFButton 
+								checklists={checklists} 
+								workId={workId}
+								clientName={clientName}
+								disabled={saving}
+							/>
 							<Button
 								variant="outline"
 								onClick={() => setIsOpen(false)}
-								className="px-8"
+								className="w-full sm:w-auto px-8"
 								disabled={saving}
 							>
 								Cerrar

@@ -14,6 +14,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { DeleteWorkDialog } from '@/utils/works/delete-work-dialog';
 import { EditableField } from '@/utils/works/editable-field';
+import { toast } from '@/components/ui/use-toast';
 
 interface WorksListProps {
   works: Work[];
@@ -358,9 +359,16 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                         onWorkUpdated(updatedWork);
                       }
                       
-                      console.log('Checklists guardadas exitosamente');
+                      toast({
+                        title: 'Checklists guardadas',
+                        description: 'Las checklists se han guardado correctamente.',
+                      });
                     } catch (error) {
-                      console.error('Error al guardar las checklists:', error);
+                        toast({
+                        title: 'Error al guardar',
+                        description: 'Hubo un error al guardar las checklists. Inténtalo de nuevo.',
+                        variant: 'destructive',
+                      });
                     }
                   }}
                 >

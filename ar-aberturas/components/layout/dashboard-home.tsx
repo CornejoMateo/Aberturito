@@ -67,7 +67,7 @@ export function DashboardHome() {
 								</div>
 							))
 						) : (
-							<p className="text-sm text-muted-foreground">No hay eventos vencidos</p>
+							<p className="text-sm text-muted-foreground text-center">No hay eventos vencidos</p>
 						)}
 					</div>
 				</Card>

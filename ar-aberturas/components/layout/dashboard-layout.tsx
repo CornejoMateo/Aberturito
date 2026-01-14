@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
-import { NotificationButton } from '@/components/notifications/notification-button';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -452,7 +451,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 						<h1 className="text-lg font-semibold text-foreground">Sistema de Gestión</h1>
 					</div>
 					<div className="flex items-center gap-2">
-						<NotificationButton />
 						<ThemeToggle />
 					</div>
 				</header>

@@ -28,7 +28,9 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 	const [checklists, setChecklists] = useState<Checklist[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
+	const [savingNotes, setSavingNotes] = useState<Record<string, boolean>>({});
 	const [clientName, setClientName] = useState<string>('');
+	const notesDebounceTimersRef = useRef<Record<string, number>>({});
 
 	// Load checklists when modal opens
 	useEffect(() => {

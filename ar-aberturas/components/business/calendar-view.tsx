@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { EventFormModal } from '../../utils/calendar/event-form-modal';
 import { EventDetailsModal } from '../../utils/calendar/event-details-modal';
 import { createEvent, deleteEvent } from '@/lib/calendar/events';
+import { NotificationButton } from '@/components/notifications/notification-button';
 import {
 	Calendar as CalendarIcon,
 	ChevronLeft,
@@ -159,8 +160,10 @@ export function CalendarView() {
 					<p className="text-muted-foreground mt-1">Colocaciones, mediciones y más.</p>
 				</div>
 
-				<EventFormModal
-					onSave={async (eventData) => {
+				<div className="flex items-center gap-2">
+					<NotificationButton />
+					<EventFormModal
+						onSave={async (eventData) => {
 						try {
 							const dateStr =
 								typeof eventData.date === 'string'
@@ -215,6 +218,7 @@ export function CalendarView() {
 						Nuevo evento
 					</Button>
 				</EventFormModal>
+				</div>
 			</div>
 
 			<div className="grid gap-6 lg:grid-cols-3">

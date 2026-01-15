@@ -23,7 +23,7 @@ class NotificationScheduler {
     this.isRunning = true;
     this.scheduleAllNotifications();
     
-    // Re-programar cada hora para detectar cambios en la configuración
+    // Reprogram every hour to detect changes in settings
     cron.schedule('0 * * * *', () => {
       this.refreshSchedules();
     });
@@ -33,7 +33,7 @@ class NotificationScheduler {
     console.log('🛑 Deteniendo scheduler de notificaciones...');
     this.isRunning = false;
     
-    // Detener todas las tareas programadas
+    // Stop all scheduled tasks
     this.scheduledTasks.forEach(({ task }) => {
       task.stop();
     });
@@ -52,11 +52,11 @@ class NotificationScheduler {
 
       const activeSettings = settingsResult.data.filter(setting => setting.enabled);
       
-      // Eliminar tareas antiguas
+      // Remove old tasks
       this.scheduledTasks.forEach(({ task }) => task.stop());
       this.scheduledTasks.clear();
 
-      // Programar nuevas tareas
+      // Schedule new tasks
       for (const settings of activeSettings) {
         this.scheduleNotification(settings);
       }
@@ -73,7 +73,7 @@ class NotificationScheduler {
       return;
     }
 
-    // Parsear hora (formato HH:MM)
+    // Parse hour (format HH:MM)
     const [hours, minutes] = settings.time.split(':').map(Number);
     
     if (isNaN(hours) || isNaN(minutes)) {
@@ -81,14 +81,14 @@ class NotificationScheduler {
       return;
     }
 
-    // Crear expresión cron: minutos hora * * *
+    // Create cron expression: minutes hours * * *
     const cronExpression = `${minutes} ${hours} * * *`;
     
     try {
       const task = cron.schedule(cronExpression, async () => {
         await this.processNotification(settings);
       }, {
-        timezone: 'America/Argentina/Buenos_Aires' // Ajustar según tu zona horaria
+        timezone: 'America/Argentina/Buenos_Aires'
       });
 
       this.scheduledTasks.set(settings.id, {
@@ -108,7 +108,7 @@ class NotificationScheduler {
       
       const today = new Date().toISOString().split('T')[0];
       
-      // Obtener eventos de hoy
+      // Get events for today
       const eventsResult = await getEventsForDate(today);
       
       if (eventsResult.error || !eventsResult.data) {
@@ -123,7 +123,7 @@ class NotificationScheduler {
         return;
       }
 
-      // Filtrar eventos según los criterios
+      // Filter events according to criteria
       const filteredEvents = filterEvents(events, settings);
       
       if (filteredEvents.length === 0) {
@@ -133,7 +133,7 @@ class NotificationScheduler {
 
       console.log(`🎯 Se encontraron ${filteredEvents.length} eventos que coinciden con los filtros`);
 
-      // Generar y enviar email
+      // Generate and send email
       const emailContent = generateEmailContent(filteredEvents, settings);
       
       const emailResult = await sendEmail(
@@ -143,11 +143,11 @@ class NotificationScheduler {
         emailContent.text
       );
 
-      // Registrar el intento de notificación
+      // Register the notification attempt
       for (const event of filteredEvents) {
         await createEmailNotification({
           settings_id: settings.id,
-          event_id: parseInt(event.id), // Convertir string a number
+          event_id: parseInt(event.id),
           status: emailResult.success ? 'sent' : 'failed',
           error_message: emailResult.error,
         });
@@ -181,7 +181,7 @@ class NotificationScheduler {
     };
   }
 
-  // Método para probar manualmente una notificación
+  // Method to manually test a notification
   async testNotification(settingsId: string, date?: string) {
     try {
       const settingsResult = await getNotificationSettings();
@@ -211,10 +211,10 @@ class NotificationScheduler {
   }
 }
 
-// Exportar una instancia singleton
+// Export a singleton instance
 export const notificationScheduler = new NotificationScheduler();
 
-// Auto-iniciar el scheduler si no estamos en modo de prueba
+// Auto-start the scheduler if we're not in test mode
 if (typeof window === 'undefined' && process.env.NODE_ENV !== 'test') {
   notificationScheduler.start();
 }

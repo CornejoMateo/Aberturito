@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Obtener todas las configuraciones de notificaciones activas
+    // Get all active notification settings
     const settingsResult = await getNotificationSettings();
     if (settingsResult.error || !settingsResult.data) {
       return NextResponse.json(
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'No hay configuraciones activas' });
     }
 
-    // Obtener eventos para la fecha especificada
+    // Get events for the specified date
     const eventsResult = await getEventsForDate(date);
     if (eventsResult.error || !eventsResult.data) {
       return NextResponse.json(
@@ -48,20 +48,20 @@ export async function POST(request: NextRequest) {
 
     const results = [];
 
-    // Procesar cada configuración activa
+    // Process each active configuration
     for (const settings of activeSettings) {
       try {
-        // Filtrar eventos según los criterios de esta configuración
+        // Filter events according to this configuration's criteria
         const filteredEvents = filterEvents(events, settings);
         
         if (filteredEvents.length === 0) {
-          continue; // No hay eventos que coincidan con los filtros
+          continue; // No events match the filters
         }
 
-        // Generar contenido del email
+        // Generate email content
         const emailContent = generateEmailContent(filteredEvents, settings);
         
-        // Enviar email
+        // Send email
         const emailResult = await sendEmail(
           settings.emails,
           emailContent.subject,
@@ -69,11 +69,11 @@ export async function POST(request: NextRequest) {
           emailContent.text
         );
 
-        // Registrar el intento de notificación para cada evento
+        // Register notification attempt for each event
         for (const event of filteredEvents) {
           await createEmailNotification({
             settings_id: settings.id,
-            event_id: parseInt(event.id), // Convertir string a number
+            event_id: parseInt(event.id), // Convert string to number
             status: emailResult.success ? 'sent' : 'failed',
             error_message: emailResult.error,
           });
@@ -120,13 +120,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Endpoint para probar manualmente el envío de notificaciones
+// Endpoint to manually test notification sending
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
 
-    // Simular una petición POST para reutilizar la lógica
+    // Simulate a POST request to reuse the logic
     const response = await POST(new NextRequest('http://localhost', {
       method: 'POST',
       body: JSON.stringify({ date }),

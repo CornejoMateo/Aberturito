@@ -27,6 +27,7 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
   const [settings, setSettings] = useState<NotificationSettings[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [availableEventTypes, setAvailableEventTypes] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('list');
   const [editingSettings, setEditingSettings] = useState<Partial<NotificationSettings>>({
@@ -46,13 +47,20 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
 
   const loadSettings = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const result = await getNotificationSettings();
       if (result.data) {
         setSettings(result.data);
       }
     } catch (error) {
-      console.error('Error al cargar configuración:', error);
+      console.error('Error loading settings:', error);
+      setError('No se pudieron cargar las configuraciones');
+      toast({
+        title: 'Error',
+        description: 'No se pudieron cargar las configuraciones',
+        variant: 'destructive'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -222,7 +230,15 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
           </TabsList>
 
           <TabsContent value="list" className="space-y-4">
-            {isLoading ? (
+            {error ? (
+              <div className="text-center py-8 text-destructive">
+                <div className="mb-4">⚠️ Error al cargar configuraciones</div>
+                <div className="text-sm text-muted-foreground mb-4">{error}</div>
+                <Button onClick={loadSettings} variant="outline">
+                  Reintentar
+                </Button>
+              </div>
+            ) : isLoading ? (
               <div className="text-center py-8">Cargando configuraciones...</div>
             ) : settings.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">

@@ -2,7 +2,7 @@ name: Send birthday emails
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "0 21 * * *"
   workflow_dispatch:
 
 jobs:

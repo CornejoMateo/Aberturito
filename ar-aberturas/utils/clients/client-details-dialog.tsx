@@ -240,23 +240,23 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
 
         <div className="flex-1 overflow-y-auto p-2 sm:p-3 pt-0">
           <div className="mb-2">
-            <h3 className="text-sm text-center font-semibold mb-1">{clientData.name} {clientData.last_name}</h3>
+            <h3 className="text-lg text-center font-semibold mb-1">{clientData.name} {clientData.last_name}</h3>
             <div className="flex flex-wrap justify-center gap-6">
               <div className="flex items-center justify-center">
-                <EmailLink email={clientData.email || ''} className="text-xs hover:underline">
+                <EmailLink email={clientData.email || ''} className="text-sm hover:underline">
                   {clientData.email}
                 </EmailLink>
               </div>
               <div className="flex items-center justify-center">
                 <WhatsAppLink 
                   phone={clientData.phone_number || ''} 
-                  className="text-xs hover:underline"
+                  className="text-sm hover:underline"
                   message={`Hola ${clientData.name || ''}`}
                 >
                   {clientData.phone_number}
                 </WhatsAppLink>
               </div>
-              <div className="flex items-center justify-center gap-1 text-xs">
+              <div className="flex items-center justify-center gap-1 text-sm">
                 <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                 <span className="text-xs">{clientData.locality}</span>
               </div>

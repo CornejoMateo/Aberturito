@@ -30,6 +30,7 @@ import { Work } from '@/lib/works/works';
 import { BalanceDetailsModal } from './balance-details-modal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatCurrency, formatCurrencyUSD } from './formats';
 
 interface ClientBalancesProps {
 	clientId: string;
@@ -125,14 +126,6 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 		}
 	};
 
-	const formatCurrency = (amount: number | null | undefined) => {
-		if (!amount) return '$0.00';
-		return new Intl.NumberFormat('es-AR', {
-			style: 'currency',
-			currency: 'ARS',
-			minimumFractionDigits: 2,
-		}).format(amount);
-	};
 
 	const getProgressPercentage = (balance: BalanceWithTotals) => {
 		if (!balance.budget || balance.budget === 0) return 0;
@@ -244,23 +237,38 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 
 									<div className="flex flex-col gap-3 min-w-[320px]">
 										<div className="flex gap-6 justify-between">
-											<div className="text-center flex-1">
+											<div>
 												<p className="text-xs text-muted-foreground mb-1">Presupuesto</p>
-												<p className="text-sm font-bold text-primary">
-													{formatCurrency(balance.budget)}
-												</p>
+												<div className="flex flex-col">
+													<p className="text-sm font-bold text-primary">{formatCurrency(balance.budget)}</p>
+													{balance.contract_date_usd && (
+														<p className="text-xs text-muted-foreground">
+															{formatCurrencyUSD((balance.budget || 0) / balance.contract_date_usd)} USD
+														</p>
+													)}
+												</div>
 											</div>
-											<div className="text-center flex-1">
+											<div>
 												<p className="text-xs text-muted-foreground mb-1">Entregado</p>
-												<p className="text-sm font-bold text-green-600">
-													{formatCurrency(balance.totalPaid)}
-												</p>
+												<div className="flex flex-col">
+													<p className="text-sm font-bold text-green-600">{formatCurrency(balance.totalPaid)}</p>
+													{balance.contract_date_usd && (
+														<p className="text-xs text-muted-foreground">
+															{formatCurrencyUSD((balance.totalPaid || 0) / balance.contract_date_usd)} USD
+														</p>
+													)}
+												</div>
 											</div>
-											<div className="text-center flex-1">
+											<div>
 												<p className="text-xs text-muted-foreground mb-1">Falta</p>
-												<p className="text-sm font-bold text-orange-600">
-													{formatCurrency(balance.remaining)}
-												</p>
+												<div className="flex flex-col">
+													<p className="text-sm font-bold text-orange-600">{formatCurrency(balance.remaining)}</p>
+													{balance.contract_date_usd && (
+														<p className="text-xs text-muted-foreground">
+															{formatCurrencyUSD((balance.remaining || 0) / balance.contract_date_usd)} USD
+														</p>
+													)}
+												</div>
 											</div>
 										</div>
 

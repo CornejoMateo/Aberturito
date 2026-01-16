@@ -28,7 +28,10 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
   const [isLoading, setIsLoading] = useState(false);
   const [availableEventTypes, setAvailableEventTypes] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  
+  // Move toast hook to top level
   const { toast } = useToast();
+  
   const [activeTab, setActiveTab] = useState('list');
   const [editingSettings, setEditingSettings] = useState<Partial<NotificationSettings>>({
     enabled: true,
@@ -38,10 +41,19 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
   });
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
+  // Add error boundary for component errors
+  const [componentError, setComponentError] = useState<string | null>(null);
+  
   useEffect(() => {
     if (isOpen) {
-      loadSettings();
-      loadEventTypes();
+      try {
+        setComponentError(null);
+        loadSettings();
+        loadEventTypes();
+      } catch (e) {
+        console.error('Component error on open:', e);
+        setComponentError('Error al abrir el modal');
+      }
     }
   }, [isOpen]);
 
@@ -210,13 +222,23 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
         )}
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto sm:max-w-2xl md:max-w-4xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <Settings className="h-5 w-5" />
-            <span className="hidden sm:inline">Configuración de Notificaciones por Email</span>
-            <span className="sm:hidden">Notificaciones</span>
-          </DialogTitle>
-        </DialogHeader>
+        {componentError ? (
+          <div className="text-center py-8">
+            <div className="text-destructive mb-4">⚠️ Error en el componente</div>
+            <div className="text-sm text-muted-foreground mb-4">{componentError}</div>
+            <Button onClick={() => setComponentError(null)} variant="outline">
+              Reintentar
+            </Button>
+          </div>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Settings className="h-5 w-5" />
+                <span className="hidden sm:inline">Configuración de Notificaciones por Email</span>
+                <span className="sm:hidden">Notificaciones</span>
+              </DialogTitle>
+            </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 h-auto">
@@ -520,6 +542,8 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
             </div>
           </TabsContent>
         </Tabs>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

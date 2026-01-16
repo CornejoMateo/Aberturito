@@ -15,7 +15,7 @@ jobs:
       - name: Trigger notification check
         run: |
           echo "Starting notification check..."
-          curl -X GET "https://aberturito-i04hs1052-mateos-projects-32f5da3a.vercel.app/api/notifications/cron" \
+          curl -X POST "https://aberturito-i04hs1052-mateos-projects-32f5da3a.vercel.app/api/notifications/cron" \
                -H "Authorization: Bearer ${{ secrets.VERCEL_CRON_SECRET }}" \
                -H "Content-Type: application/json" \
                --max-time 30 \

@@ -1,0 +1,2 @@
+eest# Desactivar protección Vercel para el endpoint de cron
+/api/notifications/cron 200

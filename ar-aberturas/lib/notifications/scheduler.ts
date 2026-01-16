@@ -96,7 +96,7 @@ class NotificationScheduler {
         task
       });
 
-      console.log(`⏰ Notificación programada para ${settings.time} (Config: ${settings.id.slice(0, 8)}...)`);
+      console.log(`⏰ Notificación programada para ${settings.time} (Config: ${String(settings.id).slice(0, 8)}...)`);
     } catch (error) {
       console.error(`Error al programar notificación para configuración ${settings.id}:`, error);
     }
@@ -104,7 +104,7 @@ class NotificationScheduler {
 
   private async processNotification(settings: any) {
     try {
-      console.log(`📧 Procesando notificación para configuración ${settings.id.slice(0, 8)}...`);
+      console.log(`📧 Procesando notificación para configuración ${String(settings.id).slice(0, 8)}...`);
       
       const today = new Date().toISOString().split('T')[0];
       

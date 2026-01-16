@@ -1,0 +1,17 @@
+name: Send birthday emails
+
+on:
+  schedule:
+    - cron: "52 16 * * *"
+  workflow_dispatch:
+
+jobs:
+  call-function:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Supabase Edge Function
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            https://zjxbclepoqzjvvfekxva.supabase.co/functions/v1/send-birthday-emails

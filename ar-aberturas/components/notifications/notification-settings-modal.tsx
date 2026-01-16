@@ -236,7 +236,7 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg flex items-center gap-2">
                           <Mail className="h-5 w-5" />
-                          Configuración {setting.id.slice(0, 8)}...
+                          Configuración #{String(setting.id).slice(0, 8)}
                           <Badge variant={setting.enabled ? "default" : "secondary"}>
                             {setting.enabled ? 'Activa' : 'Inactiva'}
                           </Badge>

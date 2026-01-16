@@ -195,21 +195,25 @@ class NotificationScheduler {
       const now = new Date();
       const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
       
+      // For GitHub Actions
       for (const setting of settings.data) {
         if (!setting.enabled) continue;
         
         // Verify if it's the scheduled time (with a 1-minute window)
         if (setting.time === currentTime) {
-          console.log(`Procesando notificación para configuración ${setting.id} a las ${currentTime}`);
+          console.log(`Procesando notificación para configuración ${setting.id} (hora: ${setting.time}, actual: ${currentTime})`);
           const result = await this.processNotification(setting);
           results.push({ settingsId: setting.id, result });
+        } else {
+          console.log(`Omitiendo configuración ${setting.id} (hora: ${setting.time}, actual: ${currentTime})`);
         }
       }
       
       return {
         processed: results.length,
         results,
-        currentTime
+        currentTime,
+        mode: 'github-actions'
       };
     } catch (error) {
       console.error('Error verificando notificaciones pendientes:', error);

@@ -1,0 +1,19 @@
+name: Notification Scheduler
+
+on:
+  schedule:
+    - cron: '* * * * *'  # Every minute
+  workflow_dispatch:  # Allow manual execution from GitHub UI
+
+jobs:
+  trigger-notifications:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger notification check
+        run: |
+          curl -X GET "https://aberturito.vercel.app/api/notifications/cron" \
+               -H "Authorization: Bearer ${{ secrets.VERCEL_CRON_SECRET }}" \
+               -H "Content-Type: application/json" \
+               --max-time 30 \
+               --retry 3 \
+               --retry-delay 5

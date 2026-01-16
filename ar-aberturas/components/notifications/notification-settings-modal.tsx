@@ -16,6 +16,7 @@ import { NotificationSettings, EventFilter } from '@/lib/notifications/types';
 import { getNotificationSettings, createNotificationSettings, updateNotificationSettings, deleteNotificationSettings } from '@/lib/notifications/database';
 import { getEventTypes, validateNotificationSettings } from '@/lib/notifications/event-filter';
 import { Event } from '@/lib/calendar/events';
+import { useToast } from '@/components/ui/use-toast';
 
 interface NotificationSettingsModalProps {
   children?: React.ReactNode;
@@ -26,6 +27,7 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
   const [settings, setSettings] = useState<NotificationSettings[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [availableEventTypes, setAvailableEventTypes] = useState<string[]>([]);
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('list');
   const [editingSettings, setEditingSettings] = useState<Partial<NotificationSettings>>({
     enabled: true,
@@ -457,6 +459,47 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
                 >
                   Cancelar
                 </Button>
+                {editingSettings.id && (
+                  <Button
+                    variant="secondary"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/notifications/send', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            date: new Date().toISOString().split('T')[0]
+                          })
+                        });
+                        const result = await response.json();
+                        if (result.error) {
+                          toast({
+                            title: 'Error',
+                            description: result.error,
+                            variant: 'destructive'
+                          });
+                        } else {
+                          toast({
+                            title: 'Prueba enviada',
+                            description: 'Se envió una notificación de prueba',
+                          });
+                        }
+                      } catch (error) {
+                        toast({
+                          title: 'Error',
+                          description: 'No se pudo enviar la prueba',
+                          variant: 'destructive'
+                        });
+                      }
+                    }}
+                    className="w-full sm:w-auto"
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Probar
+                  </Button>
+                )}
               </div>
             </div>
           </TabsContent>

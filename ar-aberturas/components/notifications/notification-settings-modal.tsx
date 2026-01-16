@@ -23,6 +23,8 @@ interface NotificationSettingsModalProps {
 }
 
 export function NotificationSettingsModal({ children }: NotificationSettingsModalProps) {
+  console.log('NotificationSettingsModal: Component initializing...');
+  
   const [isOpen, setIsOpen] = useState(false);
   const [settings, setSettings] = useState<NotificationSettings[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +32,9 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
   const [error, setError] = useState<string | null>(null);
   
   // Move toast hook to top level
+  console.log('NotificationSettingsModal: About to call useToast...');
   const { toast } = useToast();
+  console.log('NotificationSettingsModal: useToast called successfully');
   
   const [activeTab, setActiveTab] = useState('list');
   const [editingSettings, setEditingSettings] = useState<Partial<NotificationSettings>>({
@@ -45,6 +49,7 @@ export function NotificationSettingsModal({ children }: NotificationSettingsModa
   const [componentError, setComponentError] = useState<string | null>(null);
   
   useEffect(() => {
+    console.log('NotificationSettingsModal: isOpen changed to:', isOpen);
     if (isOpen) {
       try {
         setComponentError(null);

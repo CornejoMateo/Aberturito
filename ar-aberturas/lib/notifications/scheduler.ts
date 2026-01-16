@@ -181,24 +181,53 @@ class NotificationScheduler {
     };
   }
 
-  // Method to manually test a notification
-  async testNotification(settingsId: string, date?: string) {
+  // Method to check and send pending notifications for Vercel Cron
+  async checkAndSendPendingNotifications() {
     try {
-      const settingsResult = await getNotificationSettings();
+      console.log('Verificando notificaciones pendientes...');
       
-      if (settingsResult.error || !settingsResult.data) {
-        return { success: false, error: 'Error al obtener configuraciones' };
+      const settings = await getNotificationSettings();
+      if (!settings.data || settings.data.length === 0) {
+        return { message: 'No hay configuraciones activas' };
       }
 
-      const settings = settingsResult.data.find(s => s.id === settingsId);
+      const results = [];
+      const now = new Date();
+      const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
       
-      if (!settings) {
-        return { success: false, error: 'Configuración no encontrada' };
+      for (const setting of settings.data) {
+        if (!setting.enabled) continue;
+        
+        // Verify if it's the scheduled time (with a 1-minute window)
+        if (setting.time === currentTime) {
+          console.log(`Procesando notificación para configuración ${setting.id} a las ${currentTime}`);
+          const result = await this.processNotification(setting);
+          results.push({ settingsId: setting.id, result });
+        }
       }
-
-      const testDate = date || new Date().toISOString().split('T')[0];
       
-      await this.processNotification(settings);
+      return {
+        processed: results.length,
+        results,
+        currentTime
+      };
+    } catch (error) {
+      console.error('Error verificando notificaciones pendientes:', error);
+      throw error;
+    }
+  }
+
+  // Method to manually test a notification
+  async testNotification(settingsId: string) {
+    try {
+      const settings = await getNotificationSettings();
+      const setting = settings.data?.find(s => s.id === settingsId);
+      
+      if (!setting) {
+        throw new Error('Configuración no encontrada');
+      }
+      
+      await this.processNotification(setting);
       
       return { success: true, message: 'Notificación de prueba enviada' };
     } catch (error) {

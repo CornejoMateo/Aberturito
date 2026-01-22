@@ -18,7 +18,7 @@ serve(async (req) => {
     .from("events")
     .select("*")
     .eq("date", argDate)
-    .ilike("title", "%Cumpleaños%")
+    .eq("remember", true)
 
   if (error) {
     console.error(error)
@@ -54,13 +54,13 @@ serve(async (req) => {
   // Send email for each event
   for (const event of events) {
     const eventHtml = `
-      <div style="border-left: 4px solid #ec4899; padding: 16px; margin: 16px 0; background-color: #fdf2f8; border-radius: 0 8px 8px 0;">
-        <h3 style="margin: 0 0 8px 0; color: #be185d; font-size: 18px;">
-          🎂 ${event.client || 'Sin título'}
-        </h3>
-        <div style="color: #64748b; font-size: 14px; line-height: 1.6;">
-          ${event.description ? `<p>${event.description}</p>` : ''}
-        </div>
+      <div style="border-left: 4px solid #5e69ce ; padding: 16px; margin: 16px 0; background-color: #ebebeb; border-radius: 0 8px 8px 0;">
+        ${event.type ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #5e69ce;\">Tipo:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.type}</span></div>` : ''}
+        ${event.title ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #5e69ce;\">Título:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.title}</span></div>` : ''}
+        ${event.client ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #5e69ce;\">Cliente:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.client}</span></div>` : ''}
+        ${event.location ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #5e69ce;\">Localidad:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.location}</span></div>` : ''}
+        ${event.address ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #5e69ce;\">Dirección:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.address}</span></div>` : ''}
+        ${event.description ? `<div style=\"color: #64748b; font-size: 14px; line-height: 1.6; margin-top: 8px;\"><span style=\"font-size: 16px; font-weight: bold; color: #5e69ce;\">Descripción:</span> <span style=\"font-size: 14px; font-weight: normal; color: #222;\">${event.description}</span></div>` : ''}
       </div>
     `
 
@@ -70,27 +70,21 @@ serve(async (req) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Recordatorio de cumpleaños</title>
+        <title>Recordatorio</title>
       </head>
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; padding: 20px; margin: 0;">
         <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-          <div style="background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); padding: 30px; text-align: center;">
+          <div style="background: linear-gradient(135deg, #5e69ce 0%, #414992 100%); padding: 30px; text-align: center;">
             <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">
-              🎉 Hoy festejo de cumpleaños
+              Recordatorio
             </h1>
             <p style="color: #fce7f3; margin: 10px 0 0 0; font-size: 16px;">
               ${todayFormatted}
             </p>
           </div>
           <div style="padding: 30px;">
-            <p style="color: #334155; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-              Hoy es el cumpleaños de:
-            </p>
             ${eventHtml}
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center;">
-              <p style="color: #64748b; font-size: 14px; margin: 0;">
-                No olvides enviar tus saludos 🎂
-              </p>
             </div>
           </div>
           <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
@@ -103,7 +97,7 @@ serve(async (req) => {
       </html>
     `
 
-    const textContent = `Hoy es el cumpleaños de: ${event.client}`
+    const textContent = `Recordatorio: ${event.title}`
     
     try {
       const res = await fetch("https://api.resend.com/emails", {
@@ -115,7 +109,7 @@ serve(async (req) => {
         body: JSON.stringify({
           from: "AR Aberturas <onboarding@resend.dev>",
           to: emailTo,
-          subject: `🎂 Cumpleaños de ${event.client || event.title || 'Hoy'}`,
+          subject: `Recordatorio: ${event.title || ''}`,
           text: textContent,
           html: html,
         }),

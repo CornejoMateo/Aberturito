@@ -185,6 +185,7 @@ create table public.events (
   address character varying null,
   status character varying null,
   is_overdue boolean null default false,
+  remember boolean null default false,
   constraint events_pkey primary key (id)
 ) TABLESPACE pg_default;
 

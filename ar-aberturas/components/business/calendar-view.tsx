@@ -180,6 +180,7 @@ export function CalendarView() {
 								location: eventData.location,
 								address: eventData.address,
 								date: formattedDate,
+								remember: eventData.remember,
 							});
 
 							if (error) {
@@ -578,6 +579,7 @@ export function CalendarView() {
 						location: selectedEvent?.location ?? '',
 						address: selectedEvent?.address ?? '',
 						description: selectedEvent?.description ?? '',
+						remember: selectedEvent?.remember ?? false,
 					}}
 					onEventUpdated={refresh}
 				/>

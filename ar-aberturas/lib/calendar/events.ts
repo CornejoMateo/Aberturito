@@ -12,6 +12,7 @@ export type Event = {
   address?: string | null;
   status?: string | null;
   is_overdue?: boolean;
+  remember?: boolean;
 };
 
 const TABLE = 'events';
@@ -64,6 +65,7 @@ export async function createEvent(
       address: event.address,
       status: 'Pendiente',
       is_overdue: false,
+      remember: event.remember,
       created_at: new Date().toISOString(),
     };
 
@@ -109,8 +111,20 @@ export async function updateEvent(
 
   let updatePayload = { ...changes };
   if (Object.prototype.hasOwnProperty.call(changes, 'status')) {
-    if (changes.status && changes.status !== 'Pendiente') {
-      updatePayload.is_overdue = false;
+    if (changes.status) {
+      if (changes.status !== 'Pendiente') {
+        updatePayload.is_overdue = false;
+      } else {
+        const currentDate = new Date();
+        let eventDate: Date;
+        const { data: currentEvent, error: fetchError } = await supabase.from(TABLE).select('date').eq('id', id).single();
+        if (fetchError || !currentEvent?.date) {
+          eventDate = currentDate;
+        } else {
+          eventDate = new Date(currentEvent.date);
+        }
+        updatePayload.is_overdue = eventDate < currentDate;
+      }
     }
   }
 

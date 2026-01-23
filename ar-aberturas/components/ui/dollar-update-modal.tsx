@@ -129,14 +129,14 @@ export function DollarUpdateModal({
 
 		// The budget in USD stays constant, we calculate the new budget in pesos
 		const budgetInUSD = balance.budget && balance.contract_date_usd ? balance.budget / balance.contract_date_usd : 0;
-		const newBudgetInPesos = budgetInUSD * currentRate.venta;
+		const newBudgetInPesos = Math.round(budgetInUSD * currentRate.venta);
 		
 		// For paid and remaining, we need to calculate their USD equivalents first
 		const totalPaidInUSD = balance.totalPaid && balance.contract_date_usd ? balance.totalPaid / balance.contract_date_usd : 0;
-		const newTotalPaidInPesos = totalPaidInUSD * currentRate.venta;
+		const newTotalPaidInPesos = Math.round(totalPaidInUSD * currentRate.venta);
 		
 		const remainingInUSD = balance.remaining && balance.contract_date_usd ? balance.remaining / balance.contract_date_usd : 0;
-		const newRemainingInPesos = remainingInUSD * currentRate.venta;
+		const newRemainingInPesos = Math.round(remainingInUSD * currentRate.venta);
 
 		return {
 			budgetInUSD,

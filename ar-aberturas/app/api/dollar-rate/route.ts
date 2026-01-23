@@ -70,7 +70,7 @@ export async function POST(req: Request) {
     }
 
     // Update the balance with the new USD rate and recalculate budget in pesos
-    const newBudgetInPesos = existingBalance.budget ? (existingBalance.budget / existingBalance.contract_date_usd) * newUsdRate : null;
+    const newBudgetInPesos = existingBalance.budget ? Math.round((existingBalance.budget / existingBalance.contract_date_usd) * newUsdRate) : null;
     
     const { data: updatedBalance, error: updateError } = await supabase
       .from('balances')

@@ -31,7 +31,6 @@ interface BalanceWithTotals {
 	totalPaid?: number;
 	remaining?: number;
 	contract_date_usd?: number | null;
-	work_id?: number | null;
 }
 
 interface DollarUpdateModalProps {

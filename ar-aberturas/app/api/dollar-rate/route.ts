@@ -8,9 +8,7 @@ interface DollarRateRequest {
 
 export async function POST(req: Request) {
   try {
-    console.log('=== API dollar-rate called ===');
     const body: DollarRateRequest = await req.json();
-    console.log(`Updating balance ${body.balanceId} with new USD rate: ${body.newUsdRate}`);
 
     const { balanceId, newUsdRate } = body;
 
@@ -40,7 +38,6 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log(`Using key: ${process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE_KEY' : 'ANON_KEY'}`);
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -90,8 +87,6 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log(`Successfully updated balance ${balanceId} with new USD rate: ${newUsdRate}`);
-
     return NextResponse.json({
       success: true,
       message: 'Tipo de dólar actualizado exitosamente',
@@ -116,8 +111,7 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    console.log('=== API dollar-rate GET called ===');
-    
+      
     // Fetch current dollar rate from external API
     const response = await fetch('https://dolarapi.com/v1/dolares/oficial');
     

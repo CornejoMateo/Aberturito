@@ -14,4 +14,4 @@ jobs:
           curl -X POST \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
             -H "Content-Type: application/json" \
-            https://zjxbclepoqzjvvfekxva.supabase.co/functions/v1/send-birthday-emails
+            https://bkazhxfxjkjdzgyilpeq.supabase.co/functions/v1/send-birthday-emails

@@ -34,7 +34,7 @@ import {
 	deleteTransaction,
 } from '@/lib/works/balance_transactions';
 import { Work } from '@/lib/works/works';
-import { format } from 'date-fns';
+import { format, set } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
@@ -45,6 +45,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
+import { formatCurrency, formatCurrencyUSD } from './formats';
 
 interface BalanceDetailsModalProps {
 	balance: Balance | null;
@@ -73,6 +74,8 @@ export function BalanceDetailsModal({
 	const [transactionAmount, setTransactionAmount] = useState('');
 	const [paymentMethod, setPaymentMethod] = useState('');
 	const [notes, setNotes] = useState('');
+	const [quoteUsd, setQuoteUsd] = useState('');
+	const [usdAmount, setUsdAmount] = useState('');
 
 	useEffect(() => {
 		if (balance && isOpen) {
@@ -110,6 +113,8 @@ export function BalanceDetailsModal({
 				amount: parseFloat(transactionAmount),
 				payment_method: paymentMethod || null,
 				notes: notes || null,
+				quote_usd: quoteUsd ? parseFloat(quoteUsd) : null,
+				usd_amount: usdAmount ? parseFloat(usdAmount) : null,
 			});
 
 			if (error) {
@@ -131,6 +136,8 @@ export function BalanceDetailsModal({
 			setTransactionAmount('');
 			setPaymentMethod('');
 			setNotes('');
+			setQuoteUsd('');
+			setUsdAmount('');
 			setIsAddingTransaction(false);
 
 			// Reload transactions
@@ -170,24 +177,6 @@ export function BalanceDetailsModal({
 			setIsDeleteDialogOpen(false);
 			setTransactionToDelete(null);
 		}
-	};
-
-	const formatCurrency = (amount: number | null | undefined) => {
-		if (!amount) return '$0.00';
-		return new Intl.NumberFormat('es-AR', {
-			style: 'currency',
-			currency: 'ARS',
-			minimumFractionDigits: 2,
-		}).format(amount);
-	};
-
-	const formatCurrencyUSD = (amount: number | null | undefined) => {
-		if (!amount) return 'US$0.00';
-		return new Intl.NumberFormat('en-US', {
-			style: 'currency',
-			currency: 'USD',
-			minimumFractionDigits: 2,
-		}).format(amount);
 	};
 
 	const formatDate = (dateStr: string | null | undefined) => {
@@ -234,11 +223,6 @@ export function BalanceDetailsModal({
 							</div>
 
 							<div>
-								<p className="text-xs text-muted-foreground mb-1">Presupuesto</p>
-								<p className="text-sm font-bold text-primary">{formatCurrency(balance.budget)}</p>
-							</div>
-
-							<div>
 								<p className="text-xs text-muted-foreground mb-1">Dólar en fecha contratación</p>
 								<p className="text-sm font-bold text-blue-600">
 									{formatCurrencyUSD(balance.contract_date_usd)}
@@ -246,13 +230,39 @@ export function BalanceDetailsModal({
 							</div>
 
 							<div>
+								<p className="text-xs text-muted-foreground mb-1">Presupuesto</p>
+								<div className="flex flex-col">
+									<p className="text-sm font-bold text-primary">{formatCurrency(balance.budget)}</p>
+									{balance.contract_date_usd && (
+										<p className="text-xs text-muted-foreground">
+											{formatCurrencyUSD((balance.budget || 0) / balance.contract_date_usd)} USD
+										</p>
+									)}
+								</div>
+							</div>
+
+							<div>
 								<p className="text-xs text-muted-foreground mb-1">Entregado</p>
-								<p className="text-sm font-bold text-green-600">{formatCurrency(totalPaid)}</p>
+								<div className="flex flex-col">
+									<p className="text-sm font-bold text-green-600">{formatCurrency(totalPaid)}</p>
+									{balance.contract_date_usd && (
+										<p className="text-xs text-muted-foreground">
+											{formatCurrencyUSD(totalPaid / balance.contract_date_usd)} USD
+										</p>
+									)}
+								</div>
 							</div>
 
 							<div>
 								<p className="text-xs text-muted-foreground mb-1">Falta</p>
-								<p className="text-sm font-bold text-orange-600">{formatCurrency(remaining)}</p>
+								<div className="flex flex-col">
+									<p className="text-sm font-bold text-orange-600">{formatCurrency(remaining)}</p>
+									{balance.contract_date_usd && (
+										<p className="text-xs text-muted-foreground">
+											{formatCurrencyUSD(remaining / balance.contract_date_usd)} USD
+										</p>
+									)}
+								</div>
 							</div>
 						</div>
 
@@ -292,14 +302,33 @@ export function BalanceDetailsModal({
 									</div>
 
 									<div className="space-y-2">
-										<Label htmlFor="transaction-amount">Monto</Label>
+										<Label htmlFor="transaction-amount">Monto en pesos</Label>
 										<Input
 											id="transaction-amount"
 											type="number"
 											step="0.01"
-											placeholder="0.00"
 											value={transactionAmount}
 											onChange={(e) => setTransactionAmount(e.target.value)}
+										/>
+									</div>
+								</div>
+								<div className="grid grid-cols-2 gap-4">
+									<div className="space-y-2">
+										<Label htmlFor="usd-amount">Monto en USD</Label>
+										<Input
+											id="usd-amount"
+											type="text"
+											value={usdAmount}
+											onChange={(e) => setUsdAmount(e.target.value)}
+										/>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="quote-usd">Cotización USD</Label>
+										<Input
+											id="quote-usd"
+											type="text"
+											value={quoteUsd}
+											onChange={(e) => setQuoteUsd(e.target.value)}
 										/>
 									</div>
 								</div>
@@ -309,7 +338,6 @@ export function BalanceDetailsModal({
 										<Input
 											id="notes"
 											type="text"
-											placeholder="Observaciones (opcional)"
 											value={notes}
 											onChange={(e) => setNotes(e.target.value)}
 										/>
@@ -325,7 +353,9 @@ export function BalanceDetailsModal({
 												<SelectItem value="Transferencia">Transferencia</SelectItem>
 												<SelectItem value="Debito">Débito</SelectItem>
 												<SelectItem value="Credito">Crédito</SelectItem>
-												<SelectItem value="QR">QR</SelectItem>
+												<SelectItem value="Cheque">Cheque (físico)</SelectItem>		
+												<SelectItem value="Echeq">Echeq</SelectItem>
+												<SelectItem value="Cheque">Dólar</SelectItem>																						
 											</SelectContent>
 										</Select>
 									</div>
@@ -369,7 +399,8 @@ export function BalanceDetailsModal({
 										<TableHead>Fecha</TableHead>
 										<TableHead className="text-center">Método de pago</TableHead>
 										<TableHead className="text-center w-[200px]">Observaciones</TableHead>
-										<TableHead className="text-center">Monto</TableHead>
+										<TableHead className="text-center">Monto pesos/USD</TableHead>
+										<TableHead className="text-center">Cotización USD</TableHead>
 										<TableHead className="text-center w-[50px]">Acción</TableHead>
 									</TableRow>
 								</TableHeader>
@@ -397,7 +428,15 @@ export function BalanceDetailsModal({
 													{transaction.notes}
 												</TableCell>
 												<TableCell className="text-center font-sm">
-													{formatCurrency(transaction.amount)}
+												<div className="flex flex-col">
+													<span>{formatCurrency(transaction.amount)}</span>
+													<span className="text-muted-foreground text-xs">
+														{formatCurrencyUSD(transaction.usd_amount)}
+													</span>
+												</div>
+												</TableCell>
+												<TableCell className="text-center font-sm">
+													{formatCurrencyUSD(transaction.quote_usd)}
 												</TableCell>
 												<TableCell className="text-center">
 													<Button

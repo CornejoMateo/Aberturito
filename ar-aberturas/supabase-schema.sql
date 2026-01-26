@@ -185,6 +185,7 @@ create table public.events (
   address character varying null,
   status character varying null,
   is_overdue boolean null default false,
+  remember boolean null default false,
   constraint events_pkey primary key (id)
 ) TABLESPACE pg_default;
 
@@ -262,7 +263,8 @@ create table public.balance_transactions (
   balance_id bigint null,
   date date null,
   amount numeric null,
-  usd numeric null,
+  quote_usd numeric null,
+  usd_amount numeric null,
   notes text null,
   payment_method character varying null,
   constraint balance_transactions_pkey primary key (id),

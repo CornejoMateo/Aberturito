@@ -6,7 +6,8 @@ export type BalanceTransaction = {
 	balance_id?: string | null;
 	date?: string | null;
 	amount?: number | null;
-	usd?: number | null;
+	quote_usd?: number | null;
+	usd_amount?: number | null;
 	payment_method?: string | null;
 	notes?: string | null;
 };

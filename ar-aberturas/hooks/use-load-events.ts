@@ -33,6 +33,7 @@ export function useLoadEvents() {
 			address: event.address || 'Sin dirección',
 			status: event.status,
 			is_overdue: event.is_overdue || false,
+			remember: event.remember || false,
 		};
 	});
 

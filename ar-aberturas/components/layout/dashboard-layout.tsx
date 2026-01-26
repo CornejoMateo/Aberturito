@@ -42,7 +42,7 @@ import { ro } from 'date-fns/locale';
 
 const navigation = [
 	{
-		name: 'Dashboard',
+		name: 'Panel',
 		href: '/',
 		icon: LayoutDashboard,
 		disabled: false,
@@ -87,7 +87,7 @@ const navigation = [
 		name: 'Clientes',
 		href: '/clients',
 		icon: Users,
-		disabled: true,
+		disabled: false,
 	},
 	{
 		name: 'Presupuestos',
@@ -99,7 +99,7 @@ const navigation = [
 		name: 'Obras',
 		href: '/works',
 		icon: ClipboardCheck,
-		disabled: true,
+		disabled: false,
 	},
 	{
 		name: 'Calendario',
@@ -198,10 +198,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	// Definición de permisos por rol
 	const allowedByRole = useMemo(() => {
 		return {
-			Admin: ['Dashboard', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes'],
+			Admin: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes'],
 			Fabrica: ['Perfiles', 'Accesorios', 'Herrajes', 'Insumos'],
-			Ventas: ['Dashboard', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Calendario'],
-			Marketing: ['Dashboard', 'Calendario', 'Clientes', 'Reportes', 'Presupuestos'],
+			Ventas: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Calendario'],
+			Marketing: ['Panel', 'Calendario', 'Clientes', 'Reportes', 'Presupuestos'],
 			Colocador: ['Obras'],
 		} as Record<string, string[]>;
 	}, []);

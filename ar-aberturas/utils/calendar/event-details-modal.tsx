@@ -2,12 +2,21 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, MapPin, User, FileText, CheckCircle, Clock, ChevronDown } from 'lucide-react';
+import {
+	CalendarIcon,
+	MapPin,
+	User,
+	FileText,
+	CheckCircle,
+	Clock,
+	ChevronDown,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { typeConfig, statusOptions } from '@/constants/type-config';
 import { Event, updateEvent } from '@/lib/calendar/events';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
+import { Bell } from 'lucide-react';
 
 interface EventDetailsModalProps {
 	isOpen: boolean;
@@ -16,23 +25,56 @@ interface EventDetailsModalProps {
 	onEventUpdated?: () => void;
 }
 
-export function EventDetailsModal({ isOpen, onClose, event, onEventUpdated }: EventDetailsModalProps) {
-	const typeInfo = typeConfig[(event.type ?? 'otros') as keyof typeof typeConfig];	
+export function EventDetailsModal({
+	isOpen,
+	onClose,
+	event,
+	onEventUpdated,
+}: EventDetailsModalProps) {
+	const typeInfo = typeConfig[(event.type ?? 'otros') as keyof typeof typeConfig];
 	const TypeIcon = typeInfo.icon;
 	const { toast } = useToast();
 	const [currentStatus, setCurrentStatus] = useState(event.status || 'Pendiente');
+
+	const [currentRemember, setCurrentRemember] = useState(event.remember || false);
+
+	const handleRememberChange = async () => {
+		try {
+			const newRemember = !currentRemember;
+			setCurrentRemember(newRemember);
+			const { error } = await updateEvent(event.id, { remember: newRemember });
+			if (error) {
+				throw error;
+			}
+			onEventUpdated?.();
+			toast({
+				title: 'Recordatorio actualizado',
+				description: newRemember
+					? 'El recordatorio ha sido activado'
+					: 'El recordatorio ha sido desactivado',
+			});
+		} catch (error) {
+			console.error('Error al actualizar el recordatorio:', error);
+			setCurrentRemember(event.remember || false);
+			toast({
+				title: 'Error',
+				description: 'No se pudo actualizar el recordatorio',
+				variant: 'destructive',
+			});
+		}
+	};
 
 	const handleStatusChange = async (newStatus: string) => {
 		try {
 			setCurrentStatus(newStatus);
 			const { error } = await updateEvent(event.id, { status: newStatus });
-			
+
 			if (error) {
 				throw error;
 			}
-			
+
 			onEventUpdated?.();
-			
+
 			toast({
 				title: 'Estado actualizado',
 				description: `El evento ha sido marcado como ${newStatus}`,
@@ -125,7 +167,6 @@ export function EventDetailsModal({ isOpen, onClose, event, onEventUpdated }: Ev
 					</div>
 				</div>
 
-
 				<div className="flex items-center justify-between gap-2 mb-4">
 					<Badge
 						className="px-2 py-1 text-sm flex items-center gap-1"
@@ -136,9 +177,19 @@ export function EventDetailsModal({ isOpen, onClose, event, onEventUpdated }: Ev
 					{event.is_overdue && (
 						<span className="text-xs font-semibold text-red-600 mx-2">Evento vencido</span>
 					)}
-					<Button variant="outline" onClick={onClose}>
-						Cerrar
-					</Button>
+					<div className="flex items-center gap-2">
+						<Button variant="outline" onClick={onClose}>
+							Cerrar
+						</Button>
+						<Button
+							type="button"
+							variant="outline"
+							onClick={handleRememberChange}
+							className={`justify-start ${currentRemember ? 'bg-yellow-200' : ''}`}
+						>
+							<Bell className={`w-6 h-6 ${currentRemember ? 'text-red-600' : 'text-gray-700'}`} />
+						</Button>
+					</div>
 				</div>
 			</DialogContent>
 		</Dialog>

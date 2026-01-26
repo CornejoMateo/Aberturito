@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
+import { Bell } from 'lucide-react';
 
 interface EventFormModalProps {
 	onSave: (data: any) => void;
@@ -55,6 +56,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 		location: '',
 		address: '',
 		description: '',
+		remember: false,
 	});
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,6 +99,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 			location: '',
 			address: '',
 			description: '',
+			remember: false,
 		});
 
 		toast({
@@ -221,7 +224,16 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 						/>
 					</div>
 
-					<DialogFooter className='col-span-2'>
+					<DialogFooter className='col-span-2 flex flex-row gap-2'>
+						<Button
+							type="button"
+							variant="outline"
+							className={`justify-start ${formData.remember ? 'bg-yellow-200' : ''}`}
+							onClick={() => setFormData((prev) => ({ ...prev, remember: !prev.remember }))}
+						>
+							<Bell className={`w-6 h-6 ${formData.remember ? 'text-red-600' : 'text-gray-700'}`} />
+						</Button>
+						<div className="flex-1" />
 						<Button
 							type="button"
 							variant="outline"
@@ -234,6 +246,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 									location: '',
 									address: '',
 									description: '',
+									remember: false,
 								});
 								setIsOpen(false);
 							}}

@@ -35,6 +35,7 @@ import { formatCurrency, formatCurrencyUSD } from './formats';
 interface ClientBalancesProps {
 	clientId: string;
 	works: Work[];
+	onCreateBalance?: () => void;
 }
 
 interface BalanceWithTotals extends Balance {
@@ -42,7 +43,7 @@ interface BalanceWithTotals extends Balance {
 	remaining?: number;
 }
 
-export function ClientBalances({ clientId, works }: ClientBalancesProps) {
+export function ClientBalances({ clientId, works, onCreateBalance }: ClientBalancesProps) {
 	const [balances, setBalances] = useState<BalanceWithTotals[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [searchTerm, setSearchTerm] = useState('');
@@ -174,6 +175,16 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 						onChange={(e) => setSearchTerm(e.target.value)}
 					/>
 				</div>
+				{onCreateBalance && (
+					<Button
+						onClick={onCreateBalance}
+						size="default"
+						className="w-full sm:w-auto whitespace-nowrap"
+					>
+						<Plus className="h-4 w-4 mr-2" />
+						Crear Saldo
+					</Button>
+				)}
 			</div>
 
 			{isLoading ? (
@@ -207,10 +218,10 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 							>
 								<Trash2 className="h-4 w-4" />
 							</Button>
-							<CardContent className="">
-								<div className="flex items-center justify-between gap-4">
-									<div className="flex-1 min-w-0">
-										<div className="flex items-center gap-2 mb-8">
+					<CardContent className="pt-6">
+						<div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+							<div className="flex-1 min-w-0">
+								<div className="flex items-center gap-2 mb-3">
 											<DollarSign className="h-4 w-4 text-primary flex-shrink-0" />
 											<span className="font-semibold text-sm">
 												{(balance.budget || 0) - (balance.totalPaid || 0) > 0
@@ -235,37 +246,37 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 										</div>
 									</div>
 
-									<div className="flex flex-col gap-3 min-w-[320px]">
-										<div className="flex gap-6 justify-between">
-											<div>
-												<p className="text-xs text-muted-foreground mb-1">Presupuesto</p>
-												<div className="flex flex-col">
-													<p className="text-sm font-bold text-primary">{formatCurrency(balance.budget)}</p>
-													{balance.contract_date_usd && (
-														<p className="text-xs text-muted-foreground">
-															{formatCurrencyUSD((balance.budget || 0) / balance.contract_date_usd)} USD
-														</p>
-													)}
-												</div>
-											</div>
-											<div>
-												<p className="text-xs text-muted-foreground mb-1">Entregado</p>
-												<div className="flex flex-col">
-													<p className="text-sm font-bold text-green-600">{formatCurrency(balance.totalPaid)}</p>
-													{balance.contract_date_usd && (
-														<p className="text-xs text-muted-foreground">
-															{formatCurrencyUSD((balance.totalPaid || 0) / balance.contract_date_usd)} USD
-														</p>
-													)}
-												</div>
-											</div>
-											<div>
-												<p className="text-xs text-muted-foreground mb-1">Falta</p>
-												<div className="flex flex-col">
-													<p className="text-sm font-bold text-orange-600">{formatCurrency(balance.remaining)}</p>
-													{balance.contract_date_usd && (
-														<p className="text-xs text-muted-foreground">
-															{formatCurrencyUSD((balance.remaining || 0) / balance.contract_date_usd)} USD
+							<div className="flex flex-col gap-3 w-full lg:min-w-[280px] lg:max-w-[340px]">
+								<div className="grid grid-cols-3 gap-2 sm:gap-4">
+									<div className="flex flex-col">
+										<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">Presupuesto</p>
+										<div className="flex flex-col">
+											<p className="text-xs sm:text-sm font-bold text-primary truncate">{formatCurrency(balance.budget)}</p>
+											{balance.contract_date_usd && (
+												<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
+													{formatCurrencyUSD((balance.budget || 0) / balance.contract_date_usd)}
+												</p>
+											)}
+										</div>
+									</div>
+									<div className="flex flex-col">
+										<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">Entregado</p>
+										<div className="flex flex-col">
+											<p className="text-xs sm:text-sm font-bold text-green-600 truncate">{formatCurrency(balance.totalPaid)}</p>
+											{balance.contract_date_usd && (
+												<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
+													{formatCurrencyUSD((balance.totalPaid || 0) / balance.contract_date_usd)}
+												</p>
+											)}
+										</div>
+									</div>
+									<div className="flex flex-col">
+										<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">Falta</p>
+										<div className="flex flex-col">
+											<p className="text-xs sm:text-sm font-bold text-orange-600 truncate">{formatCurrency(balance.remaining)}</p>
+											{balance.contract_date_usd && (
+												<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
+													{formatCurrencyUSD((balance.remaining || 0) / balance.contract_date_usd)}
 														</p>
 													)}
 												</div>

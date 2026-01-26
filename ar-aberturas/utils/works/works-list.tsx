@@ -20,9 +20,10 @@ interface WorksListProps {
   works: Work[];
   onDelete?: (workId: string) => Promise<void>;
   onWorkUpdated?: (updatedWork: Work) => void;
+  onCreateWork?: () => void;
 }
 
-export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: WorksListProps) {
+export function WorksList({ works: initialWorks, onDelete, onWorkUpdated, onCreateWork }: WorksListProps) {
   const [workToDelete, setWorkToDelete] = useState<{id: string, address: string} | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -196,17 +197,30 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filtrar por estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los estados</SelectItem>
-            <SelectItem value="pendiente">Pendiente</SelectItem>
-            <SelectItem value="en progreso">En progreso</SelectItem>
-            <SelectItem value="finalizado">Finalizado</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Filtrar por estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los estados</SelectItem>
+              <SelectItem value="pendiente">Pendiente</SelectItem>
+              <SelectItem value="en progreso">En progreso</SelectItem>
+              <SelectItem value="finalizado">Finalizado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex-shrink-0">
+          {onCreateWork && (
+            <Button
+              onClick={onCreateWork}
+              className="w-full sm:w-[140px] whitespace-nowrap h-9"
+            >
+              <Building2 className="h-4 w-4 mr-1" />
+              Crear Obra
+            </Button>
+          )}
+        </div>
       </div>
 
       <DeleteWorkDialog
@@ -217,33 +231,50 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
       />
       {currentItems.map((work) => (
         <Card key={work.id} className="hover:shadow-md transition-shadow">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <div>
-                <EditableField
-                  value={work.address || ''}
-                  onSave={async (newValue) => {
-                    await handleUpdateWork(work.id, { address: newValue });
-                  }}
-                  label="Dirección"
-                  className="text-lg font-semibold"
-                />
-                <EditableField
-                  value={work.locality || ''}
-                  onSave={async (newValue) => {
-                    await handleUpdateWork(work.id, { locality: newValue });
-                  }}
-                  className="text-sm text-muted-foreground"
-                />
+          <CardHeader className="pb-2 sm:pb-3">
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between items-start">
+                <div className="flex-1 min-w-0">
+                  <EditableField
+                    value={work.address || ''}
+                    onSave={async (newValue) => {
+                      await handleUpdateWork(work.id, { address: newValue });
+                    }}
+                    label="Dirección"
+                    className="text-base sm:text-lg font-semibold truncate"
+                  />
+                  <EditableField
+                    value={work.locality || ''}
+                    onSave={async (newValue) => {
+                      await handleUpdateWork(work.id, { locality: newValue });
+                    }}
+                    className="text-xs sm:text-sm text-muted-foreground truncate"
+                  />
+                </div>
+                <div className="hidden sm:flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {loadingChecklists[work.id] ? (
+                      <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground animate-spin" />
+                    ) : workChecklists[work.id] ? (
+                      <div className="flex items-center gap-1 text-green-600" title="Checklist creada">
+                        <CheckSquare className="h-4 w-4" />
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 text-gray-400" title="Sin checklist">
+                        <CheckSquare className="h-4 w-4" />
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-sm text-muted-foreground group">
+              <div className="flex items-center justify-end gap-2">
+                <div className="flex items-center gap-1 text-[11px] sm:text-sm text-muted-foreground group">
                   <select
                     value={work.status || 'Pendiente'}
                     onChange={async (e) => {
                       await handleUpdateWork(work.id, { status: e.target.value });
                     }}
-                    className="bg-transparent border-none focus:ring-0 focus:ring-offset-0 p-1 pr-6 appearance-none focus:outline-none cursor-pointer hover:bg-muted rounded-md"
+                    className="bg-transparent border-none focus:ring-0 focus:ring-offset-0 p-0.5 pr-5 sm:p-1 sm:pr-6 appearance-none focus:outline-none cursor-pointer hover:bg-muted rounded-md text-[11px] sm:text-sm"
                   >
                     {statusOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -251,42 +282,44 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="h-3.5 w-3.5 -ml-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 -ml-4 sm:-ml-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div className="flex items-center gap-1">
-                  {loadingChecklists[work.id] ? (
-                    <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground animate-spin" />
-                  ) : workChecklists[work.id] ? (
-                    <div className="flex items-center gap-1 text-green-600" title="Checklist creada">
-                      <CheckSquare className="h-4 w-4" />
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1 text-gray-400" title="Sin checklist">
-                      <CheckSquare className="h-4 w-4" />
-                    </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex sm:hidden items-center gap-1">
+                    {loadingChecklists[work.id] ? (
+                      <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground animate-spin" />
+                    ) : workChecklists[work.id] ? (
+                      <div className="flex items-center gap-1 text-green-600" title="Checklist creada">
+                        <CheckSquare className="h-4 w-4" />
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 text-gray-400" title="Sin checklist">
+                        <CheckSquare className="h-4 w-4" />
+                      </div>
+                    )}
+                  </div>
+                  {onDelete && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive p-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setWorkToDelete({ id: work.id, address: work.address || ''});
+                        setIsDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    </Button>
                   )}
                 </div>
-                {onDelete && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-4 w-4 -mr-5 -mt-11 text-muted-foreground hover:text-destructive p-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setWorkToDelete({ id: work.id, address: work.address || ''});
-                      setIsDeleteDialogOpen(true);
-                    }}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                )}
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+          <CardContent className="pt-3 sm:pt-4">
+            <div className="flex flex-col gap-2 sm:grid sm:grid-cols-2 sm:gap-4 text-xs sm:text-sm">
               <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
                 <EditableField
                   value={work.architect || ''}
                   onSave={async (newValue) => {
@@ -295,7 +328,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                 />
               </div>
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
                 <EditableField
                   value={work.locality || ''}
                   onSave={async (newValue) => {
@@ -304,14 +337,14 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
                 />
               </div>
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>
+                <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+                <span className="truncate">
                   {work.created_at
                     ? format(new Date(work.created_at), 'PPP', { locale: es })
                     : 'Sin fecha'}
                 </span>
               </div>
-              <div className="flex items-end justify-between w-full -mx-3 px-3 pb-1">
+              <div className="flex items-end justify-start sm:justify-between w-full sm:-mx-3 sm:px-3 pb-1 sm:col-span-2">
                 <ChecklistModal 
                   workId={work.id}
                   existingChecklists={workChecklists[work.id] ? true : false}
@@ -381,8 +414,8 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated }: Work
       
       {/* Pagination */}
       {works.length > itemsPerPage && (
-        <div className="flex items-center justify-between px-2 mt-6">
-          <div className="text-sm text-muted-foreground">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 px-2 mt-6">
+          <div className="text-xs sm:text-sm text-muted-foreground">
             Mostrando {Math.min(
               (currentPage - 1) * itemsPerPage + 1,
               works.length

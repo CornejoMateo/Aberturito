@@ -296,17 +296,8 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                     </div>
                   </div>
                 </TabsContent>
-                <TabsContent value="works" className="relative space-y-4 pt-2">
-                  <div className="absolute -top-13 right-0">
-                    <Button 
-                      onClick={() => setIsWorkFormOpen(true)}
-                      size="sm"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Crear obra
-                    </Button>
-                  </div>
-                  <div className="mt-2">
+                <TabsContent value="works" className="space-y-4">
+                  <div>
                     {isLoading ? (
                       <p className="text-sm text-muted-foreground text-center py-4">
                         Cargando obras...
@@ -314,12 +305,22 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                     ) : works.length > 0 ? (
                       <WorksList 
                         works={works} 
-                        onDelete={handleWorkDelete} 
+                        onDelete={handleWorkDelete}
+                        onCreateWork={() => setIsWorkFormOpen(true)}
                       />
                     ) : (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        No hay obras registradas para este cliente.
-                      </p>
+                      <div className="text-center py-8">
+                        <p className="text-sm text-muted-foreground mb-4">
+                          No hay obras registradas para este cliente.
+                        </p>
+                        <Button 
+                          onClick={() => setIsWorkFormOpen(true)}
+                          size="sm"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Crear primera obra
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </TabsContent>
@@ -334,20 +335,12 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                     onNotesUpdate={handleNotesUpdate} 
                   />
                 </TabsContent>
-                <TabsContent value="balances" className="relative space-y-4 pt-2">
-                  <div className="absolute -top-13 right-0">
-                    <Button 
-                      onClick={() => setIsBalanceFormOpen(true)}
-                      size="sm"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Crear saldo
-                    </Button>
-                  </div>
+                <TabsContent value="balances" className="space-y-4">
                   <ClientBalances 
                     key={balancesKey}
                     clientId={clientData.id}
                     works={works}
+                    onCreateBalance={() => setIsBalanceFormOpen(true)}
                   />
                 </TabsContent>
               </div>

@@ -60,7 +60,7 @@ serve(async (req) => {
         ${event.client ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #5e69ce;\">Cliente:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.client}</span></div>` : ''}
         ${event.location ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #5e69ce;\">Localidad:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.location}</span></div>` : ''}
         ${event.address ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #5e69ce;\">Dirección:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.address}</span></div>` : ''}
-        ${event.description ? `<div style=\"color: #64748b; font-size: 14px; line-height: 1.6; margin-top: 8px;\"><span style=\"font-size: 16px; font-weight: bold; color: #5e69ce;\">Descripción:</span> <span style=\"font-size: 14px; font-weight: normal; color: #222;\">${event.description}</span></div>` : ''}
+        ${event.description ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #5e69ce;\">Dirección:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.description}</span></div>` : ''}
       </div>
     `
 
@@ -88,8 +88,11 @@ serve(async (req) => {
             </div>
           </div>
           <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
-            <p style="color: #94a3b8; font-size: 12px; margin: 0;">
-              AR Aberturas - Sistema de Gestión
+            <p style="color: #64748b; font-size: 12px; margin: 0;">
+              Dlay - AR Aberturas<br />
+              <span style="color:#94a3b8;">
+                Este mensaje fue generado automáticamente. Podés responder este email si necesitás reprogramar.
+              </span>
             </p>
           </div>
         </div>

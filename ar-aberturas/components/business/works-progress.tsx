@@ -21,6 +21,7 @@ import { Progress } from '@/components/ui/progress';
 import { ChecklistCompletionModal } from '@/utils/checklists/checklist-completion-modal';
 import { listWorks } from '@/lib/works/works';
 import { getChecklistsByWorkId } from '@/lib/works/checklists';
+import { getClientById } from '@/lib/clients/clients';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AddressLink } from '@/components/ui/address-link';
@@ -28,6 +29,9 @@ import type { Work } from '@/lib/works/works';
 import type { ChecklistItem } from '@/lib/works/checklists';
 import { statusConfig } from '@/constants/status-config';
 import type { StatusFilter } from '@/constants/status-config';
+import { EmailNotificationModal } from '@/components/ui/email-notification-modal';
+import { useAuth } from '@/components/provider/auth-provider';
+import { Mail } from 'lucide-react';
 
 type WorkWithProgress = Work & {
 	status: 'pendiente' | 'en_progreso' | 'completada';
@@ -41,6 +45,10 @@ export function WorksOpenings() {
 	const [loading, setLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>('todos');
+	const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+	const [selectedWork, setSelectedWork] = useState<WorkWithProgress | null>(null);
+	const [selectedClient, setSelectedClient] = useState<any>(null);
+	const { user } = useAuth();
 
 	useEffect(() => {
 		const fetchWorks = async () => {
@@ -132,8 +140,57 @@ export function WorksOpenings() {
 	};
 
 	const handleSaveChecklists = (checklists: any) => {
-		console.log('Checklists guardadas:', checklists);
+		console.log('Checklists guardados:', checklists);
 	};
+
+	const handleSendEmail = async (work: WorkWithProgress) => {
+		if (!work.client_id) {
+			console.error('La obra no tiene cliente asignado');
+			return;
+		}
+
+		try {
+			// Get client information
+			const { data: client, error } = await getClientById(work.client_id);
+			
+			if (error || !client) {
+				console.error('Error al obtener información del cliente:', error);
+				return;
+			}
+
+			setSelectedWork(work);
+			setSelectedClient(client);
+			setIsEmailModalOpen(true);
+		} catch (error) {
+			console.error('Error al preparar el email:', error);
+		}
+	};
+
+	const handleEmailSend = async (emailData: any) => {
+		try {
+			const response = await fetch('/api/send-email', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(emailData),
+			});
+
+			const result = await response.json();
+
+			if (!response.ok || !result.success) {
+				throw new Error(result.error || 'Error al enviar el email');
+			}
+
+			console.log('Email enviado exitosamente:', result);
+		} catch (error) {
+			console.error('Error al enviar email:', error);
+			throw error;
+		}
+	};
+
+	// Check if user has permission to send emails
+	const canSendEmail = user?.role === 'Admin' || user?.role === 'Ventas';
 
 	return (
 		<div className="space-y-6">
@@ -304,6 +361,18 @@ export function WorksOpenings() {
 											</Button>
 										</ChecklistCompletionModal>
 
+										{canSendEmail && (
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => handleSendEmail(installation)}
+												title="Enviar notificación por email"
+											>
+												<Mail className="mr-2 h-4 w-4" />
+												Email
+											</Button>
+										)}
+
 										{installation.hasNotes && (
 											<Badge
 												variant="secondary"
@@ -321,6 +390,14 @@ export function WorksOpenings() {
 					);
 				})}
 			</div>
+
+			<EmailNotificationModal
+				isOpen={isEmailModalOpen}
+				onOpenChange={setIsEmailModalOpen}
+				client={selectedClient}
+				work={selectedWork}
+				onSendEmail={handleEmailSend}
+			/>
 		</div>
 	);
 }

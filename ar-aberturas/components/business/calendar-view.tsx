@@ -334,7 +334,7 @@ export function CalendarView() {
 												{day}
 											</span>
 											{Object.keys(dayEvents).length > 0 && (
-												<div className="flex-1 flex items-center justify-center mt-1">
+												<div className="hidden sm:flex flex-1 items-center justify-center mt-1">
 													<div className="flex flex-wrap gap-1">
 														{Object.entries(dayEvents).map(([type, typeEvents]) => {
 															const safeType =

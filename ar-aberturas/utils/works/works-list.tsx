@@ -74,18 +74,6 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated, onCrea
     { value: 'Finalizado', label: 'Finalizado', icon: <CheckCircle className="h-4 w-4 text-green-500" /> },
   ];
 
-  const getStatusIcon = (status: string | null | undefined) => {
-    const statusValue = status || 'Pendiente';
-    const statusInfo = statusOptions.find(opt => opt.value === statusValue) || statusOptions[0];
-    return statusInfo.icon;
-  };
-
-  const getStatusLabel = (status: string | null | undefined) => {
-    const statusValue = status || 'Pendiente';
-    const statusInfo = statusOptions.find(opt => opt.value === statusValue) || statusOptions[0];
-    return statusInfo.label;
-  };
-
   const handleDeleteConfirm = async () => {
     if (workToDelete) {
       await onDelete?.(workToDelete.id);
@@ -233,7 +221,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated, onCrea
         <Card key={work.id} className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-2 sm:pb-3">
             <div className="flex flex-col gap-2">
-              <div className="flex justify-between items-start">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <EditableField
                     value={work.address || ''}
@@ -251,58 +239,43 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated, onCrea
                     className="text-xs sm:text-sm text-muted-foreground truncate"
                   />
                 </div>
-                <div className="hidden sm:flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    {loadingChecklists[work.id] ? (
-                      <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground animate-spin" />
-                    ) : workChecklists[work.id] ? (
-                      <div className="flex items-center gap-1 text-green-600" title="Checklist creada">
-                        <CheckSquare className="h-4 w-4" />
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 text-gray-400" title="Sin checklist">
-                        <CheckSquare className="h-4 w-4" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center justify-end gap-2">
-                <div className="flex items-center gap-1 text-[11px] sm:text-sm text-muted-foreground group">
-                  <select
-                    value={work.status || 'Pendiente'}
-                    onChange={async (e) => {
-                      await handleUpdateWork(work.id, { status: e.target.value });
-                    }}
-                    className="bg-transparent border-none focus:ring-0 focus:ring-offset-0 p-0.5 pr-5 sm:p-1 sm:pr-6 appearance-none focus:outline-none cursor-pointer hover:bg-muted rounded-md text-[11px] sm:text-sm"
-                  >
-                    {statusOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 -ml-4 sm:-ml-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex sm:hidden items-center gap-1">
-                    {loadingChecklists[work.id] ? (
-                      <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground animate-spin" />
-                    ) : workChecklists[work.id] ? (
-                      <div className="flex items-center gap-1 text-green-600" title="Checklist creada">
-                        <CheckSquare className="h-4 w-4" />
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 text-gray-400" title="Sin checklist">
-                        <CheckSquare className="h-4 w-4" />
-                      </div>
-                    )}
+                <div className="flex flex-row sm:flex-row gap-2 sm:gap-3 items-center justify-between sm:justify-end">
+                  <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center gap-1 text-[11px] sm:text-sm text-muted-foreground group">
+                      <select
+                        value={work.status || 'Pendiente'}
+                        onChange={async (e) => {
+                          await handleUpdateWork(work.id, { status: e.target.value });
+                        }}
+                        className="bg-transparent border-none focus:ring-0 focus:ring-offset-0 p-0.5 pr-5 sm:p-1 sm:pr-6 appearance-none focus:outline-none cursor-pointer hover:bg-muted rounded-md text-[11px] sm:text-sm"
+                      >
+                        {statusOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 -ml-4 sm:-ml-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {loadingChecklists[work.id] ? (
+                        <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground animate-spin" />
+                      ) : workChecklists[work.id] ? (
+                        <div className="flex items-center gap-1 text-green-600" title="Checklist creada">
+                          <CheckSquare className="h-4 w-4" />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 text-gray-400" title="Sin checklist">
+                          <CheckSquare className="h-4 w-4" />
+                        </div>
+                      )}
+                    </div>
                   </div>
                   {onDelete && (
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive p-1"
+                      className="h-7 w-7 sm:h-8 sm:w-8"
                       onClick={(e) => {
                         e.stopPropagation();
                         setWorkToDelete({ id: work.id, address: work.address || ''});
@@ -317,8 +290,8 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated, onCrea
             </div>
           </CardHeader>
           <CardContent className="pt-3 sm:pt-4">
-            <div className="flex flex-col gap-2 sm:grid sm:grid-cols-2 sm:gap-4 text-xs sm:text-sm">
-              <div className="flex items-center gap-2">
+  <div className="flex flex-col gap-2 sm:grid sm:grid-cols-2 sm:gap-4">
+<div className="flex items-center gap-2 w-full">
                 <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
                 <EditableField
                   value={work.architect || ''}
@@ -327,7 +300,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated, onCrea
                   }}
                 />
               </div>
-              <div className="flex items-center gap-2">
+<div className="flex items-center gap-2 w-full">
                 <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
                 <EditableField
                   value={work.locality || ''}
@@ -336,7 +309,7 @@ export function WorksList({ works: initialWorks, onDelete, onWorkUpdated, onCrea
                   }}
                 />
               </div>
-              <div className="flex items-center gap-2">
+<div className="flex items-center gap-2 w-full">
                 <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                 <span className="truncate">
                   {work.created_at

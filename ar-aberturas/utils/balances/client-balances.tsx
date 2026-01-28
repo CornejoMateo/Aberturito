@@ -23,11 +23,12 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from '@/components/ui/pagination';
-import { Plus, DollarSign, Search, Trash2 } from 'lucide-react';
+import { Plus, DollarSign, Search, Trash2, TrendingUp } from 'lucide-react';
 import { Balance, getBalancesByClientId, deleteBalance } from '@/lib/works/balances';
 import { getTotalByBalanceId } from '@/lib/works/balance_transactions';
 import { Work } from '@/lib/works/works';
 import { BalanceDetailsModal } from './balance-details-modal';
+import { DollarUpdateModal } from '@/components/ui/dollar-update-modal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatCurrency, formatCurrencyUSD } from './formats';
@@ -52,6 +53,8 @@ export function ClientBalances({ clientId, works, onCreateBalance }: ClientBalan
 	const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 	const [balanceToDelete, setBalanceToDelete] = useState<BalanceWithTotals | null>(null);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [isDollarUpdateModalOpen, setIsDollarUpdateModalOpen] = useState(false);
+	const [balanceToUpdate, setBalanceToUpdate] = useState<BalanceWithTotals | null>(null);
 	const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
 	const itemsPerPage = 2;
 
@@ -125,6 +128,40 @@ export function ClientBalances({ clientId, works, onCreateBalance }: ClientBalan
 			setIsDeleteDialogOpen(false);
 			setBalanceToDelete(null);
 		}
+	};
+
+	const handleDollarUpdate = async (newUsdRate: number) => {
+		if (!balanceToUpdate) return;
+
+		try {
+			const response = await fetch('/api/dollar-rate', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					balanceId: parseInt(balanceToUpdate.id),
+					newUsdRate,
+				}),
+			});
+
+			const result = await response.json();
+
+			if (!response.ok || !result.success) {
+				throw new Error(result.error || 'Error al actualizar el tipo de cambio');
+			}
+
+			// Refresh the list
+			handleBalanceUpdate();
+		} catch (error) {
+			console.error('Error al actualizar tipo de dólar:', error);
+			throw error;
+		}
+	};
+
+	const openDollarUpdateModal = (balance: BalanceWithTotals) => {
+		setBalanceToUpdate(balance);
+		setIsDollarUpdateModalOpen(true);
 	};
 
 
@@ -206,6 +243,18 @@ export function ClientBalances({ clientId, works, onCreateBalance }: ClientBalan
 								setIsDetailsModalOpen(true);
 							}}
 						>
+							<Button
+								variant="ghost"
+								size="icon"
+								className="absolute top-2 right-12 h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 z-10"
+								onClick={(e) => {
+									e.stopPropagation();
+									openDollarUpdateModal(balance);
+								}}
+								title="Actualizar precios con dólar actual"
+							>
+								<TrendingUp className="h-4 w-4" />
+							</Button>
 							<Button
 								variant="ghost"
 								size="icon"
@@ -405,6 +454,13 @@ export function ClientBalances({ clientId, works, onCreateBalance }: ClientBalan
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
+
+			<DollarUpdateModal
+				isOpen={isDollarUpdateModalOpen}
+				onOpenChange={setIsDollarUpdateModalOpen}
+				balance={balanceToUpdate}
+				onUpdateConfirmed={handleDollarUpdate}
+			/>
 		</div>
 	);
 }

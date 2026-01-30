@@ -268,7 +268,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
               <TabsList>
                 <TabsTrigger value="info">Información</TabsTrigger>
                 <TabsTrigger value="works">Obras</TabsTrigger>
-                <TabsTrigger value="budgets" disabled>Presupuestos</TabsTrigger>
+                <TabsTrigger value="budgets">Presupuestos</TabsTrigger>
                 <TabsTrigger value="balances">Saldos</TabsTrigger>
                 <TabsTrigger value="notes">Notas</TabsTrigger>
               </TabsList>

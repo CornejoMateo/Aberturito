@@ -236,9 +236,6 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 		<div className="space-y-4">
 			<div className="flex items-center justify-between gap-2">
 				<div className="min-w-0">
-					<p className="text-sm text-muted-foreground">
-						Organizá presupuestos por obra y luego por tipo. Marcá uno como elegido.
-					</p>
 					{chosenBudgetId ? (
 						<div className="mt-1">
 							<Badge variant="default" className="gap-2">

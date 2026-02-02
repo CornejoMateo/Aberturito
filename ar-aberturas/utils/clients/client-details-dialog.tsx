@@ -18,6 +18,7 @@ import { ClientBalances } from '@/utils/balances/client-balances';
 import { BalanceForm } from '@/utils/balances/balance-form';
 import { createBalance } from '@/lib/works/balances';
 import { toast } from '@/components/ui/use-toast';
+import { ClientBudgetsTab } from '@/utils/budgets/client-budgets-tab';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -325,9 +326,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                   </div>
                 </TabsContent>
                 <TabsContent value="budgets">
-                  <p className="text-sm text-muted-foreground">
-                    Aquí se mostrarán los presupuestos del cliente.
-                  </p>
+                  <ClientBudgetsTab clientId={clientData.id} works={works} />
                 </TabsContent>
                 <TabsContent value="notes" className="h-[calc(100%-2.5rem)]">
                   <ClientNotes 

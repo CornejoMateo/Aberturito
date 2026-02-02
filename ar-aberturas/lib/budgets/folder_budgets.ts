@@ -3,8 +3,8 @@ import { getSupabaseClient } from '../supabase-client';
 export type FolderBudget = {
 	id: string;
 	created_at: string;
-	work_id?: number | null;
-	client_id?: number | null;
+	work_id?: string | null;
+	client_id?: string | null;
 	works?: {
 		locality: string | null;
 		address: string | null;
@@ -41,7 +41,7 @@ export async function getFolderBudgetById(id: string): Promise<{ data: FolderBud
 }
 
 // Este tampoco se va a usar probablemente
-export async function getFolderBudgetsByWorkId(workId: number): Promise<{ data: FolderBudget[] | null; error: any }> {
+export async function getFolderBudgetsByWorkId(workId: string): Promise<{ data: FolderBudget[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
@@ -53,7 +53,7 @@ export async function getFolderBudgetsByWorkId(workId: number): Promise<{ data: 
 	return { data, error };
 }
 
-export async function getFolderBudgetsByClientId(clientId: number): Promise<{ data: FolderBudget[] | null; error: any }> {
+export async function getFolderBudgetsByClientId(clientId: string): Promise<{ data: FolderBudget[] | null; error: any }> {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase
         .from(TABLE)
@@ -64,6 +64,7 @@ export async function getFolderBudgetsByClientId(clientId: number): Promise<{ da
         .order('created_at', { ascending: false });
     return { data, error };
 }
+
 export async function createFolderBudget(
 	folderBudget: Omit<FolderBudget, 'id' | 'created_at'>
 ): Promise<{ data: FolderBudget | null; error: any }> {
@@ -77,7 +78,7 @@ export async function createFolderBudget(
 }
 
 export async function updateFolderBudget(
-	id: number,
+	id: string,
 	changes: Partial<Omit<FolderBudget, 'id' | 'created_at'>>
 ): Promise<{ data: FolderBudget | null; error: any }> {
 	const supabase = getSupabaseClient();
@@ -90,7 +91,7 @@ export async function updateFolderBudget(
 	return { data, error };
 }
 
-export async function deleteFolderBudget(id: number): Promise<{ data: null; error: any }> {
+export async function deleteFolderBudget(id: string): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { error } = await supabase
 		.from(TABLE)

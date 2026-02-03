@@ -30,8 +30,9 @@ import type { ChecklistItem } from '@/lib/works/checklists';
 import { statusConfig } from '@/constants/status-config';
 import type { StatusFilter } from '@/constants/status-config';
 import { EmailNotificationModal } from '@/components/ui/email-notification-modal';
+import { WhatsAppNotificationModal } from '@/components/ui/whatsapp-notification-modal';
 import { useAuth } from '@/components/provider/auth-provider';
-import { Mail } from 'lucide-react';
+import { Mail, MessageCircle } from 'lucide-react';
 
 type WorkWithProgress = Work & {
 	status: 'pendiente' | 'en_progreso' | 'completada';
@@ -46,6 +47,7 @@ export function WorksOpenings() {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>('todos');
 	const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+	const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 	const [selectedWork, setSelectedWork] = useState<WorkWithProgress | null>(null);
 	const [selectedClient, setSelectedClient] = useState<any>(null);
 	const { user } = useAuth();
@@ -166,6 +168,57 @@ export function WorksOpenings() {
 		}
 	};
 
+	const handleSendWhatsApp = async (work: WorkWithProgress) => {
+		if (!work.client_id) {
+			console.error('La obra no tiene cliente asignado');
+			return;
+		}
+
+		try {
+			// Get client information
+			const { data: client, error } = await getClientById(work.client_id);
+			
+			if (error || !client) {
+				console.error('Error al obtener información del cliente:', error);
+				return;
+			}
+
+			setSelectedWork(work);
+			setSelectedClient(client);
+			setIsWhatsAppModalOpen(true);
+		} catch (error) {
+			console.error('Error al preparar el WhatsApp:', error);
+		}
+	};
+
+	const handleWhatsAppSend = async (whatsappData: any) => {
+		try {
+			const response = await fetch('/api/send-whatsapp', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(whatsappData),
+			});
+
+			const result = await response.json();
+
+			if (!response.ok || !result.success) {
+				throw new Error(result.error || 'Error al generar el WhatsApp');
+			}
+
+			// Open WhatsApp in a new tab with the generated URL
+			if (result.data?.whatsappUrl) {
+				window.open(result.data.whatsappUrl, '_blank');
+			}
+
+			console.log('WhatsApp generado exitosamente:', result);
+		} catch (error) {
+			console.error('Error al generar WhatsApp:', error);
+			throw error;
+		}
+	};
+
 	const handleEmailSend = async (emailData: any) => {
 		try {
 			const response = await fetch('/api/send-email', {
@@ -189,8 +242,9 @@ export function WorksOpenings() {
 		}
 	};
 
-	// Check if user has permission to send emails
+	// Check if user has permission to send notifications
 	const canSendEmail = user?.role === 'Admin' || user?.role === 'Ventas';
+	const canSendWhatsApp = user?.role === 'Admin' || user?.role === 'Ventas';
 
 	return (
 		<div className="space-y-6">
@@ -373,6 +427,19 @@ export function WorksOpenings() {
 											</Button>
 										)}
 
+										{canSendWhatsApp && (
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => handleSendWhatsApp(installation)}
+												title="Enviar notificación por WhatsApp"
+												className="border-green-600 text-green-600 hover:bg-green-50"
+											>
+												<MessageCircle className="mr-2 h-4 w-4" />
+												WhatsApp
+											</Button>
+										)}
+
 										{installation.hasNotes && (
 											<Badge
 												variant="secondary"
@@ -397,6 +464,14 @@ export function WorksOpenings() {
 				client={selectedClient}
 				work={selectedWork}
 				onSendEmail={handleEmailSend}
+			/>
+
+			<WhatsAppNotificationModal
+				isOpen={isWhatsAppModalOpen}
+				onOpenChange={setIsWhatsAppModalOpen}
+				client={selectedClient}
+				work={selectedWork}
+				onSendWhatsApp={handleWhatsAppSend}
 			/>
 		</div>
 	);

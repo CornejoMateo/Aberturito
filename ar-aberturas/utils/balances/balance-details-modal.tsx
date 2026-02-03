@@ -189,8 +189,10 @@ export function BalanceDetailsModal({
 		}
 	};
 
-	const totalPaid = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-	const remaining = (balance?.budget || 0) - totalPaid;
+	const totalPaid = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
+	const totalPaidUSD = transactions.reduce((sum, t) => sum + (Number(t.usd_amount) || 0), 0);
+	//const remaining = (balance?.budget || 0) - totalPaid;
+	const remainingUSD = (balance?.budget_usd || 0) - totalPaidUSD;
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -202,7 +204,7 @@ export function BalanceDetailsModal({
 				{balance && (
 					<div className="space-y-6">
 						{/* Balance Info Header */}
-						<div className="grid grid-cols-2 md:grid-cols-6 gap-4 p-4 bg-muted/50 rounded-lg">
+						<div className="grid grid-cols-2 md:grid-cols-7 gap-4 p-4 bg-muted/50 rounded-lg">
 							<div>
 								<p className="text-xs text-muted-foreground mb-1">Obra</p>
 								<p className="text-sm font-medium">
@@ -230,12 +232,19 @@ export function BalanceDetailsModal({
 							</div>
 
 							<div>
+								<p className="text-xs text-muted-foreground mb-1">Dólar actual</p>
+								<p className="text-sm font-bold text-blue-600">
+									{formatCurrencyUSD(balance.usd_current)}
+								</p>
+							</div>
+
+							<div>
 								<p className="text-xs text-muted-foreground mb-1">Presupuesto</p>
 								<div className="flex flex-col">
-									<p className="text-sm font-bold text-primary">{formatCurrency(balance.budget)}</p>
+									<p className="text-sm font-bold text-primary">{formatCurrency((balance.budget_usd || 1) * (balance.usd_current || 1))}</p>
 									{balance.contract_date_usd && (
 										<p className="text-xs text-muted-foreground">
-											{formatCurrencyUSD((balance.budget || 0) / balance.contract_date_usd)} USD
+											{formatCurrencyUSD(balance.budget_usd)}
 										</p>
 									)}
 								</div>
@@ -247,7 +256,7 @@ export function BalanceDetailsModal({
 									<p className="text-sm font-bold text-green-600">{formatCurrency(totalPaid)}</p>
 									{balance.contract_date_usd && (
 										<p className="text-xs text-muted-foreground">
-											{formatCurrencyUSD(totalPaid / balance.contract_date_usd)} USD
+											{formatCurrencyUSD(totalPaid / (balance.usd_current || 1))}
 										</p>
 									)}
 								</div>
@@ -256,10 +265,10 @@ export function BalanceDetailsModal({
 							<div>
 								<p className="text-xs text-muted-foreground mb-1">Falta</p>
 								<div className="flex flex-col">
-									<p className="text-sm font-bold text-orange-600">{formatCurrency(remaining)}</p>
+									<p className="text-sm font-bold text-orange-600">{formatCurrency(remainingUSD * (balance.usd_current || 1))}</p> 
 									{balance.contract_date_usd && (
 										<p className="text-xs text-muted-foreground">
-											{formatCurrencyUSD(remaining / balance.contract_date_usd)} USD
+											{formatCurrencyUSD(remainingUSD || 0)}
 										</p>
 									)}
 								</div>
@@ -407,13 +416,13 @@ export function BalanceDetailsModal({
 								<TableBody>
 									{isLoading ? (
 										<TableRow>
-											<TableCell colSpan={5} className="text-center text-muted-foreground">
+											<TableCell colSpan={6} className="text-center text-muted-foreground">
 												Cargando transacciones...
 											</TableCell>
 										</TableRow>
 									) : transactions.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={5} className="text-center text-muted-foreground">
+											<TableCell colSpan={6} className="text-center text-muted-foreground">
 												No hay transacciones registradas
 											</TableCell>
 										</TableRow>

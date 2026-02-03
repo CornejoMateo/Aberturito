@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, TrendingUp, Calendar, DollarSign, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { BalanceWithTotals } from '@/utils/balances/client-balances';
 
 interface DollarRate {
 	moneda: string;
@@ -23,14 +24,6 @@ interface DollarRate {
 	compra: number;
 	venta: number;
 	fechaActualizacion: string;
-}
-
-interface BalanceWithTotals {
-	id: string;
-	budget?: number | null;
-	totalPaid?: number;
-	remaining?: number;
-	contract_date_usd?: number | null;
 }
 
 interface DollarUpdateModalProps {
@@ -127,23 +120,27 @@ export function DollarUpdateModal({
 		if (!currentRate || !balance) return null;
 
 		// The budget in USD stays constant, we calculate the new budget in pesos
-		const budgetInUSD = balance.budget && balance.contract_date_usd ? balance.budget / balance.contract_date_usd : 0;
+		const budgetInUSD = balance.budget_usd || 1;
 		const newBudgetInPesos = Math.round(budgetInUSD * currentRate.venta);
 		
 		// For paid and remaining, we need to calculate their USD equivalents first
-		const totalPaidInUSD = balance.totalPaid && balance.contract_date_usd ? balance.totalPaid / balance.contract_date_usd : 0;
-		const newTotalPaidInPesos = Math.round(totalPaidInUSD * currentRate.venta);
+		const totalPaidInUSD = balance.totalPaid && balance.usd_current ? (balance.totalPaid / balance.usd_current) : 0;
+		const newTotalPaidUSD = balance.totalPaid && currentRate.venta ? (balance.totalPaid / currentRate.venta) : 0;
+		const newTotalPaidInPesos = Math.round(balance.totalPaid || 0);
 		
-		const remainingInUSD = balance.remaining && balance.contract_date_usd ? balance.remaining / balance.contract_date_usd : 0;
-		const newRemainingInPesos = Math.round(remainingInUSD * currentRate.venta);
+		const remainingInUSD = balance.remainingUSD || 0;
+		const remainingInARS = Math.round(remainingInUSD * (balance.usd_current || 0));
+		const newRemainingInARS = Math.round(remainingInUSD * currentRate.venta);
 
 		return {
 			budgetInUSD,
 			newBudgetInPesos,
 			totalPaidInUSD,
 			newTotalPaidInPesos,
+			newTotalPaidUSD,
 			remainingInUSD,
-			newRemainingInPesos,
+			newRemainingInARS,
+			remainingInARS,
 		};
 	};
 
@@ -209,7 +206,7 @@ export function DollarUpdateModal({
 												${(balance.budget || 0).toLocaleString('es-AR')} → ${newValues.newBudgetInPesos.toLocaleString('es-AR')}
 											</div>
 											<div className="text-xs text-muted-foreground">
-												{newValues.budgetInUSD.toFixed(2)} USD (constante)
+												{newValues.budgetInUSD.toFixed(2)} USD
 											</div>
 										</div>
 									</div>
@@ -218,10 +215,10 @@ export function DollarUpdateModal({
 										<span>Entregado:</span>
 										<div className="text-right">
 											<div className="font-medium">
-												${(balance.totalPaid || 0).toLocaleString('es-AR')} → ${newValues.newTotalPaidInPesos.toLocaleString('es-AR')}
-											</div>
-											<div className="text-xs text-muted-foreground">
-												{newValues.totalPaidInUSD.toFixed(2)} USD (constante)
+											US$ {(balance.totalPaidUSD || 0).toFixed(2)} → US${newValues.newTotalPaidUSD.toFixed(2)}
+										</div>
+										<div className="text-xs text-muted-foreground">
+											${newValues.newTotalPaidInPesos.toLocaleString('es-AR')} ARS
 											</div>
 										</div>
 									</div>
@@ -230,20 +227,20 @@ export function DollarUpdateModal({
 										<span>Saldo restante:</span>
 										<div className="text-right">
 											<div className="font-medium">
-												${(balance.remaining || 0).toLocaleString('es-AR')} → ${newValues.newRemainingInPesos.toLocaleString('es-AR')}
+												${(newValues.remainingInARS || 0).toLocaleString('es-AR')} → ${newValues.newRemainingInARS.toLocaleString('es-AR')}
 											</div>
 											<div className="text-xs text-muted-foreground">
-												{newValues.remainingInUSD.toFixed(2)} USD (constante)
+												{newValues.remainingInUSD.toFixed(2)} USD
 											</div>
 										</div>
 									</div>
 								</div>
 
-								{balance.contract_date_usd !== currentRate.venta && (
+								{balance.usd_current !== currentRate.venta && (
 									<Alert>
 										<AlertCircle className="h-4 w-4" />
 										<AlertDescription className="text-xs">
-											El tipo de cambio cambiará de ${balance.contract_date_usd} a ${currentRate.venta}
+											El tipo de cambio cambiará de ${balance.usd_current} a ${currentRate.venta}
 											<br />
 											El presupuesto en USD se mantendrá fijo, el presupuesto en pesos se ajustará automáticamente.
 										</AlertDescription>

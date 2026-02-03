@@ -67,12 +67,14 @@ export async function POST(req: Request) {
     }
 
     // Update the balance with the new USD rate and recalculate budget in pesos
-    const newBudgetInPesos = existingBalance.budget ? Math.round((existingBalance.budget / existingBalance.contract_date_usd) * newUsdRate) : null;
-    
+    const newBudgetInPesos = Math.round(existingBalance.budget_usd * newUsdRate);
+    const oldUsd = existingBalance.usd_current;
+    const oldBudgetInPesos = existingBalance.budget;
+
     const { data: updatedBalance, error: updateError } = await supabase
       .from('balances')
       .update({
-        contract_date_usd: newUsdRate,
+        usd_current: newUsdRate,
         budget: newBudgetInPesos,
       })
       .eq('id', balanceId)
@@ -89,14 +91,14 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Tipo de dólar actualizado exitosamente',
+      message: 'Valor del dólar actualizado exitosamente',
       data: {
         balanceId,
-        oldUsdRate: existingBalance.contract_date_usd,
+        oldUsdRate: oldUsd,
         newUsdRate,
-        oldBudgetInPesos: existingBalance.budget,
+        oldBudgetInPesos: oldBudgetInPesos,
         newBudgetInPesos,
-        budgetInUSD: existingBalance.budget ? existingBalance.budget / existingBalance.contract_date_usd : null,
+        budgetInUSD: existingBalance.budget_usd,
       },
     });
 

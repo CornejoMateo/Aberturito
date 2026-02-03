@@ -32,8 +32,10 @@ export function BalanceForm({ clientId, works, onSubmit, onCancel }: BalanceForm
 	const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 	const [formData, setFormData] = useState<Partial<Balance>>({
 		budget: undefined,
+		budget_usd: undefined,
 		contract_date_usd: undefined,
 		start_date: undefined,
+		usd_current: undefined,
 	});
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -44,7 +46,9 @@ export function BalanceForm({ clientId, works, onSubmit, onCancel }: BalanceForm
 			work_id: selectedWorkId ? parseInt(selectedWorkId) : null,
 			start_date: formData.start_date ? format(formData.start_date, 'yyyy-MM-dd') : undefined,
 			budget: formData.budget || null,
+			budget_usd: formData.budget_usd || null,
 			contract_date_usd: formData.contract_date_usd || null,
+			usd_current: formData.usd_current || null,
 			notes: null,
 		};
 
@@ -129,18 +133,42 @@ export function BalanceForm({ clientId, works, onSubmit, onCancel }: BalanceForm
 					/>
 				</div>
 
-				<div className="space-y-2">
-					<Label htmlFor="contract_date_usd">USD en fecha de contratación</Label>
+				<div>
+					<Label htmlFor="budget_usd">Presupuesto total en USD</Label>
 					<Input
-						id="contract_date_usd"
-						name="contract_date_usd"
+						id="budget_usd"
+						name="budget_usd"
 						type="number"
 						step="0.01"
-						value={formData.contract_date_usd || ''}
+						value={formData.budget_usd || ''}
 						onChange={handleChange}
-						placeholder="0.00"
 					/>
 				</div>
+
+					<div className="space-y-2">
+						<Label htmlFor="contract_date_usd">USD en fecha de contratación</Label>
+						<Input
+							id="contract_date_usd"
+							name="contract_date_usd"
+							type="number"
+							step="0.01"
+							value={formData.contract_date_usd || ''}
+							onChange={handleChange}
+							placeholder="0.00"
+						/>
+					</div>
+
+					<div className="space-y-2">
+						<Label htmlFor="usd_current">Valor dólar actual</Label>
+						<Input
+							id="usd_current"
+							name="usd_current"
+							type="number"
+							step="0.01"
+							disabled
+						/>
+					</div>
+
 			</div>
 
 			<div className="flex justify-end gap-2 pt-4">

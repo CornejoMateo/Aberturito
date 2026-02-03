@@ -39,9 +39,11 @@ interface ClientBalancesProps {
 	onCreateBalance?: () => void;
 }
 
-interface BalanceWithTotals extends Balance {
+export interface BalanceWithTotals extends Balance {
 	totalPaid?: number;
 	remaining?: number;
+	totalPaidUSD?: number;
+	remainingUSD?: number;
 }
 
 export function ClientBalances({ clientId, works, onCreateBalance }: ClientBalancesProps) {
@@ -73,12 +75,16 @@ export function ClientBalances({ clientId, works, onCreateBalance }: ClientBalan
 					data.map(async (balance) => {
 						const { data: totals } = await getTotalByBalanceId(balance.id);
 						const totalPaid = totals?.totalAmount || 0;
+						const totalPaidUSD = totals?.totalAmountUSD || 0;
 						const remaining = (balance.budget || 0) - totalPaid;
+						const remainingUSD = (balance.budget_usd || 0) - totalPaidUSD;
 
 						return {
 							...balance,
 							totalPaid,
+							totalPaidUSD,
 							remaining,
+							remainingUSD,
 						};
 					})
 				);
@@ -164,10 +170,9 @@ export function ClientBalances({ clientId, works, onCreateBalance }: ClientBalan
 		setIsDollarUpdateModalOpen(true);
 	};
 
-
 	const getProgressPercentage = (balance: BalanceWithTotals) => {
-		if (!balance.budget || balance.budget === 0) return 0;
-		const percentage = ((balance.totalPaid || 0) / balance.budget) * 100;
+		if (!balance.budget_usd || balance.budget_usd === 0) return 0;
+		const percentage = ((balance.totalPaidUSD || 0) / (balance.budget_usd || 1)) * 100;
 		return Math.min(Math.round(percentage), 100);
 	};
 
@@ -267,10 +272,10 @@ export function ClientBalances({ clientId, works, onCreateBalance }: ClientBalan
 							>
 								<Trash2 className="h-4 w-4" />
 							</Button>
-					<CardContent className="pt-6">
-						<div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-							<div className="flex-1 min-w-0">
-								<div className="flex items-center gap-2 mb-3">
+							<CardContent className="pt-6">
+								<div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+									<div className="flex-1 min-w-0">
+										<div className="flex items-center gap-2 mb-3">
 											<DollarSign className="h-4 w-4 text-primary flex-shrink-0" />
 											<span className="font-semibold text-sm">
 												{(balance.budget || 0) - (balance.totalPaid || 0) > 0
@@ -295,44 +300,56 @@ export function ClientBalances({ clientId, works, onCreateBalance }: ClientBalan
 										</div>
 									</div>
 
-							<div className="flex flex-col gap-3 w-full lg:min-w-[280px] lg:max-w-[340px]">
-								<div className="grid grid-cols-3 gap-2 sm:gap-4">
-									<div className="flex flex-col">
-										<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">Presupuesto</p>
-										<div className="flex flex-col">
-											<p className="text-xs sm:text-sm font-bold text-primary truncate">{formatCurrency(balance.budget)}</p>
-											{balance.contract_date_usd && (
-												<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
-													{formatCurrencyUSD((balance.budget || 0) / balance.contract_date_usd)}
+									<div className="flex flex-col gap-3 w-full lg:min-w-[280px] lg:max-w-[340px]">
+										<div className="grid grid-cols-3 gap-2 sm:gap-4">
+											<div className="flex flex-col">
+												<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">
+													Presupuesto
 												</p>
-											)}
-										</div>
-									</div>
-									<div className="flex flex-col">
-										<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">Entregado</p>
-										<div className="flex flex-col">
-											<p className="text-xs sm:text-sm font-bold text-green-600 truncate">{formatCurrency(balance.totalPaid)}</p>
-											{balance.contract_date_usd && (
-												<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
-													{formatCurrencyUSD((balance.totalPaid || 0) / balance.contract_date_usd)}
+												<div className="flex flex-col">
+													<p className="text-xs sm:text-sm font-bold text-primary truncate">
+														{formatCurrency((balance.budget_usd || 1) * (balance.usd_current || 1))}
+													</p>
+													{balance.contract_date_usd && (
+														<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
+															{formatCurrencyUSD(balance.budget_usd)}
+														</p>
+													)}
+												</div>
+											</div>
+											<div className="flex flex-col">
+												<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">
+													Entregado
 												</p>
-											)}
-										</div>
-									</div>
-									<div className="flex flex-col">
-										<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">Falta</p>
-										<div className="flex flex-col">
-											<p className="text-xs sm:text-sm font-bold text-orange-600 truncate">{formatCurrency(balance.remaining)}</p>
-											{balance.contract_date_usd && (
-												<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
-													{formatCurrencyUSD((balance.remaining || 0) / balance.contract_date_usd)}
+												<div className="flex flex-col">
+													<p className="text-xs sm:text-sm font-bold text-green-600 truncate">
+														{formatCurrency(balance.totalPaid)}
+													</p>
+													{balance.contract_date_usd && (
+														<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
+															{formatCurrencyUSD((balance.totalPaid || 1) / (balance.usd_current || 1))}
+														</p>
+													)}
+												</div>
+											</div>
+											<div className="flex flex-col">
+												<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">
+													Falta
+												</p>	
+												<div className="flex flex-col">
+													<p className="text-xs sm:text-sm font-bold text-orange-600 truncate">
+														{formatCurrency((balance.remainingUSD || 1) * (balance.usd_current || 1))}
+													</p>
+													{balance.contract_date_usd && (
+														<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
+															{formatCurrencyUSD(balance.remainingUSD)}														
 														</p>
 													)}
 												</div>
 											</div>
 										</div>
 
-										{balance.budget && balance.budget > 0 && (
+										{balance.budget_usd && balance.budget_usd >= 0 && (
 											<div className="w-full">
 												<div className="flex justify-between text-xs text-muted-foreground mb-1">
 													<span>Progreso</span>
@@ -437,10 +454,12 @@ export function ClientBalances({ clientId, works, onCreateBalance }: ClientBalan
 						<AlertDialogTitle>¿Eliminar saldo?</AlertDialogTitle>
 						<AlertDialogDescription>
 							Esta acción no se puede deshacer. Se eliminará permanentemente el saldo
-							{balanceToDelete && (() => {
-								const work = works.find((w) => Number(w.id) === Number(balanceToDelete.work_id));
-								return work ? ` de la obra en ${work.locality}` : '';
-							})()} y todas sus transacciones asociadas.
+							{balanceToDelete &&
+								(() => {
+									const work = works.find((w) => Number(w.id) === Number(balanceToDelete.work_id));
+									return work ? ` de la obra en ${work.locality}` : '';
+								})()}{' '}
+							y todas sus transacciones asociadas.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>

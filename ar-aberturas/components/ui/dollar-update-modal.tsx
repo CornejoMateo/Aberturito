@@ -215,7 +215,7 @@ export function DollarUpdateModal({
 										<span>Entregado:</span>
 										<div className="text-right">
 											<div className="font-medium">
-											US$ {(balance.totalPaidUSD || 0).toFixed(2)} → US${newValues.newTotalPaidUSD.toFixed(2)}
+											US$ {(newValues.totalPaidInUSD || 0).toFixed(2)} → US${newValues.newTotalPaidUSD.toFixed(2)}
 										</div>
 										<div className="text-xs text-muted-foreground">
 											${newValues.newTotalPaidInPesos.toLocaleString('es-AR')} ARS

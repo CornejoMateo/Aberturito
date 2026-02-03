@@ -281,11 +281,16 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 
 							<div className="grid gap-2">
 								<Label>Variante</Label>
-								<Input
-									value={formVersion}
-									onChange={(e) => setFormVersion(e.target.value)}
-									placeholder="Económico / Óptimo / Premium"
-								/>
+								<Select value={formVersion} onValueChange={setFormVersion}>
+									<SelectTrigger className="w-full">
+										<SelectValue placeholder="Seleccionar variante" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="Mínimo">Mínimo</SelectItem>
+										<SelectItem value="Estándar">Estándar</SelectItem>
+										<SelectItem value="Óptimo">Óptimo</SelectItem>
+									</SelectContent>
+								</Select>
 							</div>
 
 							<div className="grid gap-2">

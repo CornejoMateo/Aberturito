@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -18,9 +19,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { Work } from '@/lib/works/works';
-import { createBudget, chooseBudgetForClient, Budget, getBudgetsByFolderBudgetIds } from '@/lib/budgets/budgets';
-import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId } from '@/lib/budgets/folder_budgets';
-import { CheckCircle, FileText, Plus, ChevronDown } from 'lucide-react';
+import { createBudget, chooseBudgetForClient, Budget, getBudgetsByFolderBudgetIds, deleteBudget } from '@/lib/budgets/budgets';
+import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId, deleteFolderBudgetWithBudgets } from '@/lib/budgets/folder_budgets';
+import { CheckCircle, FileText, Plus, ChevronDown, Trash2 } from 'lucide-react';
 
 type BudgetFolderVM = FolderBudget & {
 	budgets: Budget[];
@@ -52,8 +53,20 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 	const [formVersion, setFormVersion] = useState<string>('');
 	const [formNumber, setFormNumber] = useState<string>('');
 	const [formAmount, setFormAmount] = useState<string>('');
+	const [formAmountUsd, setFormAmountUsd] = useState<string>('');
 	const [formWorkId, setFormWorkId] = useState<string>('none');
 	const [formPdf, setFormPdf] = useState<File | null>(null);
+
+	const [deleteBudgetConfirm, setDeleteBudgetConfirm] = useState<{
+		open: boolean;
+		budgetId: string | null;
+	}>({ open: false, budgetId: null });
+
+	const [deleteFolderConfirm, setDeleteFolderConfirm] = useState<{
+		open: boolean;
+		folderId: string | null;
+		budgetCount: number;
+	}>({ open: false, folderId: null, budgetCount: 0 });
 
 	const folderBudgetIds = useMemo(() => folderBudgets.map((f) => f.id), [folderBudgets]);
 
@@ -153,11 +166,73 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 		}
 	}
 
+	async function handleDeleteBudget(budgetId: string) {
+		setDeleteBudgetConfirm({ open: true, budgetId });
+	}
+
+	async function confirmDeleteBudget() {
+		if (!deleteBudgetConfirm.budgetId) return;
+
+		try {
+			setIsLoading(true);
+			const { error } = await deleteBudget(deleteBudgetConfirm.budgetId);
+			if (error) {
+				toast({
+					variant: 'destructive',
+					title: 'No se pudo eliminar el presupuesto',
+					description: 'Intente nuevamente.',
+				});
+				return;
+			}
+			toast({ title: 'Presupuesto eliminado' });
+			await load();
+		} finally {
+			setIsLoading(false);
+			setDeleteBudgetConfirm({ open: false, budgetId: null });
+		}
+	}
+
+	async function handleDeleteFolder(folderId: string) {
+		const budgetCount = budgetsByFolderId.get(folderId)?.length || 0;
+		setDeleteFolderConfirm({ 
+			open: true, 
+			folderId, 
+			budgetCount 
+		});
+	}
+
+	async function confirmDeleteFolder() {
+		if (!deleteFolderConfirm.folderId) return;
+
+		try {
+			setIsLoading(true);
+			const { error } = await deleteFolderBudgetWithBudgets(deleteFolderConfirm.folderId);
+			if (error) {
+				toast({
+					variant: 'destructive',
+					title: 'No se pudo eliminar la carpeta',
+					description: 'Intente nuevamente.',
+				});
+				return;
+			}
+			toast({ title: 'Carpeta eliminada' });
+			await load();
+		} finally {
+			setIsLoading(false);
+			setDeleteFolderConfirm({ 
+				open: false, 
+				folderId: null, 
+				budgetCount: 0 
+			});
+		}
+	}
+
 	function resetForm() {
 		setFormType('PVC');
 		setFormVersion('');
 		setFormNumber('');
 		setFormAmount('');
+		setFormAmountUsd('');
 		setFormWorkId('none');
 		setFormPdf(null);
 	}
@@ -198,8 +273,11 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 
 			const parsedNumber = formNumber.trim() ? Number(formNumber) : null;
 			const parsedAmount = formAmount.trim() ? Number(formAmount) : null;
+			const parsedAmountUsd = formAmountUsd.trim() ? Number(formAmountUsd) : null;
+		   
 			const number = parsedNumber !== null && !Number.isNaN(parsedNumber) ? parsedNumber : null;
 			const amount = parsedAmount !== null && !Number.isNaN(parsedAmount) ? parsedAmount : null;
+			const amountUsd = parsedAmountUsd !== null && !Number.isNaN(parsedAmountUsd) ? parsedAmountUsd : null;
 
 			const { error: createError } = await createBudget(
 				{
@@ -207,8 +285,9 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 					accepted: false,
 					type: formType,
 					version: formVersion.trim() || null,
-					number,
+					number: number?.toString() || null,
 					amount_ars: amount,
+					amount_usd: amountUsd,
 				},
 				formPdf,
 				clientId
@@ -233,7 +312,8 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 	}
 
 	return (
-		<div className="space-y-4">
+		<>
+			<div className="space-y-4">
 			<div className="flex items-center justify-between gap-2">
 				<div className="min-w-0">
 					<p className="text-sm text-muted-foreground">
@@ -312,7 +392,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 
 							<div className="grid grid-cols-2 gap-4">
 								<div className="grid gap-2">
-									<Label>Número (opcional)</Label>
+									<Label>Número de presupuesto *</Label>
 									<Input
 										type="number"
 										value={formNumber}
@@ -321,11 +401,20 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 									/>
 								</div>
 								<div className="grid gap-2">
-									<Label>Monto ARS (opcional)</Label>
+									<Label>Monto ARS *</Label>
 									<Input
 										type="number"
 										value={formAmount}
 										onChange={(e) => setFormAmount(e.target.value)}
+										placeholder="0"
+									/>
+								</div>
+								<div className="grid gap-2">
+									<Label>Monto USD *</Label>
+									<Input
+										type="number"
+										value={formAmountUsd}
+										onChange={(e) => setFormAmountUsd(e.target.value)}
 										placeholder="0"
 									/>
 								</div>
@@ -419,6 +508,18 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 											</div>
 										</button>
 									</CollapsibleTrigger>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={(e) => {
+											e.stopPropagation();
+											handleDeleteFolder(folder.id);
+										}}
+										disabled={isLoading}
+										className="text-destructive hover:text-destructive hover:bg-destructive/10"
+									>
+										<Trash2 className="h-4 w-4" />
+									</Button>
 								</div>
 
 								<CollapsibleContent>
@@ -461,16 +562,22 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 																		</div>
 
 																		<div className="mt-3 space-y-2">
-																			<div className="flex items-center justify-between">
+																			<div className="space-y-1">
 																				<p className="text-sm font-semibold text-foreground">
 																					{typeof b.amount_ars === 'number'
-																						? `$${b.amount_ars.toLocaleString('es-AR')}`
-																						: 'Monto no cargado'}
+																						? `$${b.amount_ars.toLocaleString('es-AR')} ARS`
+																						: 'Monto ARS no cargado'}
 																				</p>
-																				{typeof b.number === 'number' ? (
-																					<Badge variant="outline">#{b.number}</Badge>
-																				) : null}
+																				<p className="text-sm font-semibold text-foreground">
+																					{typeof b.amount_usd === 'number'
+																						? `$${b.amount_usd.toLocaleString('es-AR')} USD`
+																						: 'Monto USD no cargado'}
+																				</p>
 																			</div>
+																			{typeof b.number === 'number' ? (
+																				<Badge variant="outline">#{b.number}</Badge>
+																			) : null}
+																		</div>
 
 																			<div className="flex flex-wrap gap-2">
 																				{b.pdf_url ? (
@@ -496,8 +603,17 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 																					<CheckCircle className="h-4 w-4" />
 																					{isChosen ? 'Elegido' : chosenBudgetId ? 'Cambiar a este' : 'Elegir'}
 																				</Button>
+
+																				<Button
+																					variant="ghost"
+																					size="sm"
+																					onClick={() => handleDeleteBudget(b.id)}
+																					disabled={isLoading}
+																					className="text-destructive hover:text-destructive hover:bg-destructive/10"
+																				>
+																					<Trash2 className="h-4 w-4" />
+																				</Button>
 																			</div>
-																		</div>
 																	</Card>
 																);
 															})}
@@ -514,5 +630,24 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 				})}
 			</div>
 		</div>
-	);
+
+		<ConfirmDialog
+			open={deleteBudgetConfirm.open}
+			onOpenChange={(open) => setDeleteBudgetConfirm({ ...deleteBudgetConfirm, open })}
+			title="Eliminar presupuesto"
+			description="¿Estás seguro de que quieres eliminar este presupuesto? Esta acción no se puede deshacer."
+			onConfirm={confirmDeleteBudget}
+			isLoading={isLoading}
+		/>
+
+		<ConfirmDialog
+			open={deleteFolderConfirm.open}
+			onOpenChange={(open) => setDeleteFolderConfirm({ ...deleteFolderConfirm, open })}
+			title="Eliminar carpeta"
+			description={`¿Estás seguro de que quieres eliminar esta carpeta y sus ${deleteFolderConfirm.budgetCount} presupuesto(s)? Esta acción no se puede deshacer.`}
+			onConfirm={confirmDeleteFolder}
+			isLoading={isLoading}
+		/>
+	</>
+);
 }

@@ -271,11 +271,10 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 				folderId = folder.id;
 			}
 
-			const parsedNumber = formNumber.trim() ? Number(formNumber) : null;
 			const parsedAmount = formAmount.trim() ? Number(formAmount) : null;
 			const parsedAmountUsd = formAmountUsd.trim() ? Number(formAmountUsd) : null;
 		   
-			const number = parsedNumber !== null && !Number.isNaN(parsedNumber) ? parsedNumber : null;
+			const number = formNumber.trim() || null;
 			const amount = parsedAmount !== null && !Number.isNaN(parsedAmount) ? parsedAmount : null;
 			const amountUsd = parsedAmountUsd !== null && !Number.isNaN(parsedAmountUsd) ? parsedAmountUsd : null;
 
@@ -285,7 +284,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 					accepted: false,
 					type: formType,
 					version: formVersion.trim() || null,
-					number: number?.toString() || null,
+					number: number,
 					amount_ars: amount,
 					amount_usd: amountUsd,
 				},
@@ -316,19 +315,11 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 			<div className="space-y-4">
 			<div className="flex items-center justify-between gap-2">
 				<div className="min-w-0">
-					<p className="text-sm text-muted-foreground">
-						Organizá presupuestos por obra y luego por tipo. Marcá uno como elegido.
-					</p>
 					{chosenBudgetId ? (
-						<div className="mt-1">
-							<Badge variant="default" className="gap-2">
-								<CheckCircle className="h-4 w-4" />
-								Hay un presupuesto elegido
-							</Badge>
+						<div className="mt-1">	
 						</div>
 					) : (
-						<div className="mt-1">
-							<Badge variant="secondary">Sin presupuesto elegido</Badge>
+						<div className="mt-1">	
 						</div>
 					)}
 				</div>
@@ -394,10 +385,10 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 								<div className="grid gap-2">
 									<Label>Número de presupuesto *</Label>
 									<Input
-										type="number"
+										type="text"
 										value={formNumber}
 										onChange={(e) => setFormNumber(e.target.value)}
-										placeholder="Ej: 123"
+										placeholder="Ej: 123 o 1-2-A"
 									/>
 								</div>
 								<div className="grid gap-2">
@@ -583,7 +574,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 																						: 'Monto USD no cargado'}
 																				</p>
 																			</div>
-																			{typeof b.number === 'number' ? (
+																			{b.number ? (
 																				<Badge variant="outline">#{b.number}</Badge>
 																			) : null}
 																		</div>

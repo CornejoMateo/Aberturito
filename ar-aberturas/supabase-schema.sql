@@ -287,7 +287,7 @@ create table public.budgets (
   accepted boolean null,
   pdf_url text null,
   pdf_path text null,
-  number numeric null,
+  number text null,
   amount_ars numeric null,
   version text null,
   type text null,

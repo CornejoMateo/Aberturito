@@ -119,9 +119,10 @@ export function DollarUpdateModal({
 	const calculateNewValues = () => {
 		if (!currentRate || !balance) return null;
 
-		// The budget in USD stays constant, we calculate the new budget in pesos
-		const budgetInUSD = balance.budget_usd || 1;
-		const newBudgetInPesos = Math.round(budgetInUSD * currentRate.venta);
+		// Get the budget in ARS and USD from the budget relation
+		const budgetInARS = (balance.budget?.amount_usd || 0) * (balance.usd_current || 1);
+		const budgetInUSD = balance.budget?.amount_usd || 0;
+		const newBudgetInARS = (balance.budget?.amount_usd || 0) * currentRate.venta;
 		
 		// For paid and remaining, we need to calculate their USD equivalents first
 		const totalPaidInUSD = balance.totalPaid && balance.usd_current ? (balance.totalPaid / balance.usd_current) : 0;
@@ -129,12 +130,13 @@ export function DollarUpdateModal({
 		const newTotalPaidInPesos = Math.round(balance.totalPaid || 0);
 		
 		const remainingInUSD = balance.remainingUSD || 0;
-		const remainingInARS = Math.round(remainingInUSD * (balance.usd_current || 0));
-		const newRemainingInARS = Math.round(remainingInUSD * currentRate.venta);
+		const remainingInARS = (remainingInUSD * (balance.usd_current || 0));
+		const newRemainingInARS = (remainingInUSD * currentRate.venta);
 
 		return {
 			budgetInUSD,
-			newBudgetInPesos,
+			budgetInARS,
+			newBudgetInARS,
 			totalPaidInUSD,
 			newTotalPaidInPesos,
 			newTotalPaidUSD,
@@ -203,7 +205,7 @@ export function DollarUpdateModal({
 										<span>Presupuesto:</span>
 										<div className="text-right">
 											<div className="font-medium">
-												${(balance.budget || 0).toLocaleString('es-AR')} → ${newValues.newBudgetInPesos.toLocaleString('es-AR')}
+												${(newValues.budgetInARS || 0).toLocaleString('es-AR')} → ${newValues.newBudgetInARS.toLocaleString('es-AR')}
 											</div>
 											<div className="text-xs text-muted-foreground">
 												{newValues.budgetInUSD.toFixed(2)} USD
@@ -218,7 +220,7 @@ export function DollarUpdateModal({
 											US$ {(newValues.totalPaidInUSD || 0).toFixed(2)} → US${newValues.newTotalPaidUSD.toFixed(2)}
 										</div>
 										<div className="text-xs text-muted-foreground">
-											${newValues.newTotalPaidInPesos.toLocaleString('es-AR')} ARS
+											${newValues.newTotalPaidInPesos.toLocaleString('es-AR')} ARS (Sin modificación)
 											</div>
 										</div>
 									</div>

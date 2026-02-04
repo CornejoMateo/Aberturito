@@ -44,10 +44,10 @@ export async function POST(req: Request) {
       supabaseKey
     );
 
-    // First, get the current balance to verify it exists
+    // First, get the current balance to verify it exists and get the budget info
     const { data: existingBalance, error: fetchError } = await supabase
       .from('balances')
-      .select('*')
+      .select('*, budget:budgets(id, amount_ars, amount_usd)')
       .eq('id', balanceId)
       .single();
 
@@ -66,16 +66,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // Update the balance with the new USD rate and recalculate budget in pesos
-    const newBudgetInPesos = Math.round(existingBalance.budget_usd * newUsdRate);
+    // Get budget values from the budgets table
+    const budgetInARS = existingBalance.budget?.amount_ars || 0;
+    const budgetInUSD = existingBalance.budget?.amount_usd || 0;
     const oldUsd = existingBalance.usd_current;
-    const oldBudgetInPesos = existingBalance.budget;
 
     const { data: updatedBalance, error: updateError } = await supabase
       .from('balances')
       .update({
         usd_current: newUsdRate,
-        budget: newBudgetInPesos,
       })
       .eq('id', balanceId)
       .select()
@@ -96,9 +95,8 @@ export async function POST(req: Request) {
         balanceId,
         oldUsdRate: oldUsd,
         newUsdRate,
-        oldBudgetInPesos: oldBudgetInPesos,
-        newBudgetInPesos,
-        budgetInUSD: existingBalance.budget_usd,
+        budgetInARS: budgetInARS,
+        budgetInUSD: budgetInUSD,
       },
     });
 

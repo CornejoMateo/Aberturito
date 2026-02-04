@@ -1,17 +1,17 @@
 import { getSupabaseClient } from '../supabase-client';
 
 export type Budget = {
-	id: string;
-	created_at: string;
-	folder_budget_id?: string | null;
-	accepted?: boolean | null;
-	pdf_url?: string | null;
-	pdf_path?: string | null;
-	number?: number | null;
-	amount_ars?: number | null;
-	amount_usd?: number | null;
-	version?: string | null;
-	type?: string | null;
+  id: string;
+  created_at: string;
+  folder_budget_id?: string | null;
+  accepted?: boolean | null;
+  pdf_url?: string | null;
+  pdf_path?: string | null;
+  number?: string | null;
+  amount_ars?: number | null;
+  amount_usd?: number | null;
+  version?: string | null;
+  type?: string | null;
 };
 
 const TABLE = 'budgets';

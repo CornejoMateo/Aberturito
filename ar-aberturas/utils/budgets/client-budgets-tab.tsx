@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,7 +21,8 @@ import { cn } from '@/lib/utils';
 import { Work } from '@/lib/works/works';
 import { createBudget, chooseBudgetForClient, Budget, getBudgetsByFolderBudgetIds, deleteBudget } from '@/lib/budgets/budgets';
 import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId, deleteFolderBudgetWithBudgets } from '@/lib/budgets/folder_budgets';
-import { CheckCircle, FileText, Plus, ChevronDown, Trash2 } from 'lucide-react';
+import { getSupabaseClient } from '@/lib/supabase-client';
+import { CheckCircle, FileText, Plus, ChevronDown, Trash2, Download, X } from 'lucide-react';
 
 type BudgetFolderVM = FolderBudget & {
 	budgets: Budget[];
@@ -67,6 +68,12 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 		folderId: string | null;
 		budgetCount: number;
 	}>({ open: false, folderId: null, budgetCount: 0 });
+
+	const [pdfPreview, setPdfPreview] = useState<{
+		open: boolean;
+		budget: Budget | null;
+		pdfUrl: string | null;
+	}>({ open: false, budget: null, pdfUrl: null });
 
 	const folderBudgetIds = useMemo(() => folderBudgets.map((f) => f.id), [folderBudgets]);
 
@@ -227,6 +234,50 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 		}
 	}
 
+	async function handleViewPdf(budget: Budget) {
+		if (!budget.pdf_path) return;
+
+		try {
+			setIsLoading(true);
+			const supabase = getSupabaseClient();
+			const { data, error } = await supabase.storage
+				.from('clients')
+				.download(budget.pdf_path);
+
+			if (error) {
+				toast({
+					variant: 'destructive',
+					title: 'No se pudo cargar el PDF',
+					description: 'Intente nuevamente.',
+				});
+				return;
+			}
+
+			const url = URL.createObjectURL(data);
+			setPdfPreview({ open: true, budget, pdfUrl: url });
+		} finally {
+			setIsLoading(false);
+		}
+	}
+
+	function closePdfPreview() {
+		if (pdfPreview.pdfUrl) {
+			URL.revokeObjectURL(pdfPreview.pdfUrl);
+		}
+		setPdfPreview({ open: false, budget: null, pdfUrl: null });
+	}
+
+	async function handleDownloadPdf() {
+		if (!pdfPreview.pdfUrl || !pdfPreview.budget) return;
+
+		const link = document.createElement('a');
+		link.href = pdfPreview.pdfUrl;
+		link.download = `presupuesto_${pdfPreview.budget.type}_${pdfPreview.budget.number || 'sin-numero'}.pdf`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+	}
+
 	function resetForm() {
 		setFormType('PVC');
 		setFormVersion('');
@@ -271,11 +322,10 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 				folderId = folder.id;
 			}
 
-			const parsedNumber = formNumber.trim() ? Number(formNumber) : null;
 			const parsedAmount = formAmount.trim() ? Number(formAmount) : null;
 			const parsedAmountUsd = formAmountUsd.trim() ? Number(formAmountUsd) : null;
 		   
-			const number = parsedNumber !== null && !Number.isNaN(parsedNumber) ? parsedNumber : null;
+			const number = formNumber.trim() || null;
 			const amount = parsedAmount !== null && !Number.isNaN(parsedAmount) ? parsedAmount : null;
 			const amountUsd = parsedAmountUsd !== null && !Number.isNaN(parsedAmountUsd) ? parsedAmountUsd : null;
 
@@ -285,7 +335,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 					accepted: false,
 					type: formType,
 					version: formVersion.trim() || null,
-					number: number?.toString() || null,
+					number: number,
 					amount_ars: amount,
 					amount_usd: amountUsd,
 				},
@@ -316,19 +366,11 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 			<div className="space-y-4">
 			<div className="flex items-center justify-between gap-2">
 				<div className="min-w-0">
-					<p className="text-sm text-muted-foreground">
-						Organizá presupuestos por obra y luego por tipo. Marcá uno como elegido.
-					</p>
 					{chosenBudgetId ? (
-						<div className="mt-1">
-							<Badge variant="default" className="gap-2">
-								<CheckCircle className="h-4 w-4" />
-								Hay un presupuesto elegido
-							</Badge>
+						<div className="mt-1">	
 						</div>
 					) : (
-						<div className="mt-1">
-							<Badge variant="secondary">Sin presupuesto elegido</Badge>
+						<div className="mt-1">	
 						</div>
 					)}
 				</div>
@@ -394,10 +436,10 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 								<div className="grid gap-2">
 									<Label>Número de presupuesto *</Label>
 									<Input
-										type="number"
+										type="text"
 										value={formNumber}
 										onChange={(e) => setFormNumber(e.target.value)}
-										placeholder="Ej: 123"
+										placeholder="Ej: 123 o 1-2-A"
 									/>
 								</div>
 								<div className="grid gap-2">
@@ -543,12 +585,21 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 																	<Card
 																		key={b.id}
 																		className={cn(
-																			'min-w-[260px] max-w-[260px] p-4 border-border',
+																			'min-w-[260px] max-w-[260px] p-4 border-border relative',
 																			isChosen && 'border-primary bg-primary/5'
 																		)}
 																	>
+																		<Button
+																			variant="ghost"
+																			size="sm"
+																			onClick={() => handleDeleteBudget(b.id)}
+																			disabled={isLoading}
+																			className="absolute top-2 right-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+																		>	
+																			<Trash2 className="h-4 w-4" />
+																		</Button>
 																		<div className="flex items-start justify-between gap-2">
-																			<div className="min-w-0">
+																			<div className="min-w-0 pr-8">
 																				<p className="font-semibold text-foreground truncate">
 																					{b.version || 'Sin variante'}
 																				</p>
@@ -574,17 +625,17 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 																						: 'Monto USD no cargado'}
 																				</p>
 																			</div>
-																			{typeof b.number === 'number' ? (
+																			{b.number ? (
 																				<Badge variant="outline">#{b.number}</Badge>
 																			) : null}
 																		</div>
 
 																			<div className="flex flex-wrap gap-2">
-																				{b.pdf_url ? (
+																				{b.pdf_path ? (
 																					<Button
 																						variant="outline"
 																						size="sm"
-																						onClick={() => window.open(b.pdf_url ?? '', '_blank')}
+																						onClick={() => handleViewPdf(b)}
 																						className="gap-2"
 																					>
 																						<FileText className="h-4 w-4" /> Ver PDF
@@ -602,16 +653,6 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 																				>
 																					<CheckCircle className="h-4 w-4" />
 																					{isChosen ? 'Elegido' : chosenBudgetId ? 'Cambiar a este' : 'Elegir'}
-																				</Button>
-
-																				<Button
-																					variant="ghost"
-																					size="sm"
-																					onClick={() => handleDeleteBudget(b.id)}
-																					disabled={isLoading}
-																					className="text-destructive hover:text-destructive hover:bg-destructive/10"
-																				>
-																					<Trash2 className="h-4 w-4" />
 																				</Button>
 																			</div>
 																	</Card>
@@ -648,6 +689,53 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 			onConfirm={confirmDeleteFolder}
 			isLoading={isLoading}
 		/>
+
+		<Dialog open={pdfPreview.open} onOpenChange={closePdfPreview}>
+			<DialogContent className="max-w-4xl max-h-[90vh]">
+				<DialogHeader>
+					<div className="flex items-center justify-between">
+						<div>
+							<DialogTitle>
+								Vista previa - Presupuesto {pdfPreview.budget?.type} #{pdfPreview.budget?.number || 'sin número'}
+							</DialogTitle>
+							<DialogDescription>
+								{pdfPreview.budget?.version || 'Sin variante'} - {orderedFolders.find(f => f.id === pdfPreview.budget?.folder_budget_id)?.works ? workLabel(orderedFolders.find(f => f.id === pdfPreview.budget?.folder_budget_id)!) : 'Sin obra'}
+							</DialogDescription>
+						</div>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={closePdfPreview}
+							className="h-8 w-8 p-0"
+						>
+							<X className="h-4 w-4" />
+						</Button>
+					</div>
+				</DialogHeader>
+				<div className="flex-1 min-h-[600px]">
+					{pdfPreview.pdfUrl && (
+						<iframe
+							src={pdfPreview.pdfUrl}
+							className="w-full h-full min-h-[600px] border rounded"
+							title="Vista previa del PDF"
+						/>
+					)}
+				</div>
+				<div className="flex justify-end gap-2 pt-4">
+					<Button
+						variant="outline"
+						onClick={handleDownloadPdf}
+						className="gap-2"
+					>
+						<Download className="h-4 w-4" />
+						Descargar
+					</Button>
+					<Button onClick={closePdfPreview}>
+						Cerrar
+					</Button>
+				</div>
+			</DialogContent>
+		</Dialog>
 	</>
 );
 }

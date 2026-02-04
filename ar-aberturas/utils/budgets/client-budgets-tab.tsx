@@ -543,12 +543,21 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 																	<Card
 																		key={b.id}
 																		className={cn(
-																			'min-w-[260px] max-w-[260px] p-4 border-border',
+																			'min-w-[260px] max-w-[260px] p-4 border-border relative',
 																			isChosen && 'border-primary bg-primary/5'
 																		)}
 																	>
+																		<Button
+																			variant="ghost"
+																			size="sm"
+																			onClick={() => handleDeleteBudget(b.id)}
+																			disabled={isLoading}
+																			className="absolute top-2 right-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+																		>	
+																			<Trash2 className="h-4 w-4" />
+																		</Button>
 																		<div className="flex items-start justify-between gap-2">
-																			<div className="min-w-0">
+																			<div className="min-w-0 pr-8">
 																				<p className="font-semibold text-foreground truncate">
 																					{b.version || 'Sin variante'}
 																				</p>
@@ -602,16 +611,6 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 																				>
 																					<CheckCircle className="h-4 w-4" />
 																					{isChosen ? 'Elegido' : chosenBudgetId ? 'Cambiar a este' : 'Elegir'}
-																				</Button>
-
-																				<Button
-																					variant="ghost"
-																					size="sm"
-																					onClick={() => handleDeleteBudget(b.id)}
-																					disabled={isLoading}
-																					className="text-destructive hover:text-destructive hover:bg-destructive/10"
-																				>
-																					<Trash2 className="h-4 w-4" />
 																				</Button>
 																			</div>
 																	</Card>

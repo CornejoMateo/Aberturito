@@ -37,9 +37,13 @@ import {
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Client, listClients, deleteClient } from '@/lib/clients/clients';
+import { getFolderBudgetsByClientId } from '@/lib/budgets/folder_budgets';
+import { getBudgetsByFolderBudgetIds } from '@/lib/budgets/budgets';
 import { ClientsAddDialog } from '@/utils/clients/clients-add-dialog';
 import { ClientDetailsDialog } from '../../utils/clients/client-details-dialog';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, FileText } from 'lucide-react';
 
 export function ClientManagement() {
 	const {
@@ -55,6 +59,42 @@ export function ClientManagement() {
 		},
 		'clients_cache'
 	);
+
+	const [clientBudgetsInfo, setClientBudgetsInfo] = useState<Record<string, { total: number; chosen: number }>>({});
+
+	const loadClientBudgetsInfo = async () => {
+		const info: Record<string, { total: number; chosen: number }> = {};
+		
+		for (const client of clients) {
+			try {
+				const { data: folders } = await getFolderBudgetsByClientId(client.id);
+				const folderIds = (folders || []).map(f => f.id);
+				
+				if (folderIds.length > 0) {
+					const { data: budgets } = await getBudgetsByFolderBudgetIds(folderIds);
+					const chosenCount = (budgets || []).filter(b => b.accepted).length;
+					
+					info[client.id] = {
+						total: budgets?.length || 0,
+						chosen: chosenCount
+					};
+				} else {
+					info[client.id] = { total: 0, chosen: 0 };
+				}
+			} catch (error) {
+				console.error(`Error loading budgets for client ${client.id}:`, error);
+				info[client.id] = { total: 0, chosen: 0 };
+			}
+		}
+		
+		setClientBudgetsInfo(info);
+	};
+
+	useEffect(() => {
+		if (clients.length > 0) {
+			loadClientBudgetsInfo();
+		}
+	}, [clients]);
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -262,6 +302,28 @@ export function ClientManagement() {
 										<div className="flex items-center gap-2 text-muted-foreground">
 											<MapPin className="h-4 w-4" />
 											<span>{client.locality}</span>
+										</div>
+									</div>
+
+									{/* Información de presupuestos */}
+									<div className="border-t pt-3 mt-3">
+										<div className="flex items-center justify-between text-xs">
+											<div className="flex items-center gap-1">
+												<FileText className="h-3.5 w-3.5 text-muted-foreground" />
+												<span className="text-muted-foreground">
+													{clientBudgetsInfo[client.id]?.total || 0} presupuesto(s)
+												</span>
+											</div>
+											{clientBudgetsInfo[client.id]?.chosen > 0 ? (
+												<Badge variant="default" className="gap-1 text-xs h-5">
+													<CheckCircle className="h-3 w-3" />
+													{clientBudgetsInfo[client.id].chosen} elegido(s)
+												</Badge>
+											) : (
+												<Badge variant="secondary" className="text-xs h-5">
+													Sin elegidos
+												</Badge>
+											)}
 										</div>
 									</div>
 

@@ -600,27 +600,29 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 																			isChosen && 'border-primary bg-primary/5'
 																		)}
 																	>
-																		<Button
-																			variant="ghost"
-																			size="sm"
-																			onClick={() => handleDeleteBudget(b.id)}
-																			disabled={isLoading}
-																			className="absolute top-2 right-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-																		>	
-																			<Trash2 className="h-4 w-4" />
-																		</Button>
+																		<div className="absolute top-2 right-2 flex items-center gap-2">
+																			{isChosen ? (
+																				<Badge className="gap-1 shrink-0">
+																					<CheckCircle className="h-3.5 w-3.5" /> Elegido
+																				</Badge>
+																			) : null}
+																			<Button
+																				variant="ghost"
+																				size="sm"
+																				onClick={() => handleDeleteBudget(b.id)}
+																				disabled={isLoading}
+																				className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+																			>	
+																				<Trash2 className="h-4 w-4" />
+																			</Button>
+																		</div>
 																		<div className="flex items-start justify-between gap-2">
-																			<div className="min-w-0 pr-8">
+																			<div className="min-w-0">
 																				<p className="font-semibold text-foreground truncate">
 																					{b.version || 'Sin variante'}
 																				</p>
 																				<p className="text-xs text-muted-foreground truncate">{workLabel(folder)}</p>
 																			</div>
-																			{isChosen ? (
-																				<Badge className="gap-1">
-																					<CheckCircle className="h-3.5 w-3.5" /> Elegido
-																				</Badge>
-																			) : null}
 																		</div>
 
 																		<div className="mt-3 space-y-2">

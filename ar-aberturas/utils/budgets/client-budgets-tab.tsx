@@ -19,7 +19,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { Work } from '@/lib/works/works';
-import { createBudget, chooseBudgetForClient, Budget, getBudgetsByFolderBudgetIds, deleteBudget } from '@/lib/budgets/budgets';
+import { createBudget, chooseBudgetForClient, Budget, getBudgetsByFolderBudgetIds, deleteBudget, updateBudget } from '@/lib/budgets/budgets';
 import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId, deleteFolderBudgetWithBudgets } from '@/lib/budgets/folder_budgets';
 import { getSupabaseClient } from '@/lib/supabase-client';
 import { CheckCircle, FileText, Plus, ChevronDown, Trash2, Download, X } from 'lucide-react';
@@ -77,9 +77,9 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 
 	const folderBudgetIds = useMemo(() => folderBudgets.map((f) => f.id), [folderBudgets]);
 
-	const chosenBudgetId = useMemo(() => {
-		const chosen = budgets.find((b) => !!b.accepted);
-		return chosen?.id ?? null;
+	const chosenBudgetIds = useMemo(() => {
+		const chosen = budgets.filter((b) => !!b.accepted);
+		return chosen.map(b => b.id);
 	}, [budgets]);
 
 	const budgetsByFolderId = useMemo(() => {
@@ -158,15 +158,25 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 	async function handleChooseBudget(budgetId: string) {
 		try {
 			setIsLoading(true);
-			const { error } = await chooseBudgetForClient(budgetId, folderBudgetIds);
+			const budget = budgets.find(b => b.id === budgetId);
+			if (!budget) return;
+
+			const { error } = await updateBudget(budgetId, {
+				accepted: !budget.accepted
+			});
+			
 			if (error) {
 				toast({
 					variant: 'destructive',
-					title: 'No se pudo marcar como elegido',
+					title: 'No se pudo cambiar el estado',
 					description: 'Intente nuevamente.',
 				});
 				return;
 			}
+			
+			toast({ 
+				title: budget.accepted ? 'Presupuesto deseleccionado' : 'Presupuesto elegido' 
+			});
 			await load();
 		} finally {
 			setIsLoading(false);
@@ -366,8 +376,9 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 			<div className="space-y-4">
 			<div className="flex items-center justify-between gap-2">
 				<div className="min-w-0">
-					{chosenBudgetId ? (
+					{chosenBudgetIds.length > 0 ? (
 						<div className="mt-1">	
+							<Badge variant="secondary">{chosenBudgetIds.length} presupuesto(s) elegido(s)</Badge>
 						</div>
 					) : (
 						<div className="mt-1">	
@@ -504,7 +515,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 				{orderedFolders.map((folder) => {
 					const open = !!openFolders[folder.id];
 					const folderBudgetsList = folder.budgets;
-					const hasChosenInFolder = folderBudgetsList.some((b) => !!b.accepted);
+					const chosenCountInFolder = folderBudgetsList.filter((b) => !!b.accepted).length;
 
 					const budgetsByType = new Map<string, Budget[]>();
 					for (const t of DEFAULT_TYPES) budgetsByType.set(t, []);
@@ -537,9 +548,9 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 												<p className="text-xs text-muted-foreground">{folderBudgetsList.length} presupuesto(s)</p>
 											</div>
 											<div className="flex items-center gap-2">
-												{hasChosenInFolder ? (
+												{chosenCountInFolder > 0 ? (
 													<Badge className="gap-1">
-														<CheckCircle className="h-3.5 w-3.5" /> Elegido
+														<CheckCircle className="h-3.5 w-3.5" /> {chosenCountInFolder} elegido(s)
 													</Badge>
 												) : (
 													<Badge variant="secondary">Opciones</Badge>
@@ -652,7 +663,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 																					className="gap-2"
 																				>
 																					<CheckCircle className="h-4 w-4" />
-																					{isChosen ? 'Elegido' : chosenBudgetId ? 'Cambiar a este' : 'Elegir'}
+																					{isChosen ? 'Elegido' : chosenBudgetIds.length > 0 ? 'Agregar a elegidos' : 'Elegir'}
 																				</Button>
 																			</div>
 																	</Card>

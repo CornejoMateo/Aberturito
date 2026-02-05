@@ -65,28 +65,44 @@ export function ClientManagement() {
 	const loadClientBudgetsInfo = async () => {
 		const info: Record<string, { total: number; chosen: number }> = {};
 		
-		for (const client of clients) {
-			try {
-				const { data: folders } = await getFolderBudgetsByClientId(client.id);
-				const folderIds = (folders || []).map(f => f.id);
-				
-				if (folderIds.length > 0) {
-					const { data: budgets } = await getBudgetsByFolderBudgetIds(folderIds);
-					const chosenCount = (budgets || []).filter(b => b.accepted).length;
-					
-					info[client.id] = {
-						total: budgets?.length || 0,
-						chosen: chosenCount
-					};
-				} else {
-					info[client.id] = { total: 0, chosen: 0 };
-				}
-			} catch (error) {
-				console.error(`Error loading budgets for client ${client.id}:`, error);
-				info[client.id] = { total: 0, chosen: 0 };
-			}
-		}
+		// Obtener todas las carpetas de todos los clientes en paralelo
+		const folderPromises = clients.map(client => 
+			getFolderBudgetsByClientId(client.id).catch(error => {
+				console.error(`Error loading folders for client ${client.id}:`, error);
+				return { data: [] };
+			})
+		);
 		
+		const folderResults = await Promise.all(folderPromises);
+		
+		// Procesar resultados y obtener presupuestos en paralelo
+		const budgetPromises = folderResults.map((result, index) => {
+			const client = clients[index];
+			const folders = result.data || [];
+			const folderIds = folders.map(f => f.id);
+			
+			if (folderIds.length > 0) {
+				return getBudgetsByFolderBudgetIds(folderIds)
+					.then(budgetResult => {
+						const budgets = budgetResult.data || [];
+						const chosenCount = budgets.filter(b => b.accepted).length;
+						
+						info[client.id] = {
+							total: budgets.length,
+							chosen: chosenCount
+						};
+					})
+					.catch(error => {
+						console.error(`Error loading budgets for client ${client.id}:`, error);
+						info[client.id] = { total: 0, chosen: 0 };
+					});
+			} else {
+				info[client.id] = { total: 0, chosen: 0 };
+				return Promise.resolve();
+			}
+		});
+		
+		await Promise.all(budgetPromises);
 		setClientBudgetsInfo(info);
 	};
 

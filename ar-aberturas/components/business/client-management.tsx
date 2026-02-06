@@ -65,7 +65,7 @@ export function ClientManagement() {
 	const loadClientBudgetsInfo = async () => {
 		const info: Record<string, { total: number; chosen: number }> = {};
 		
-		// Obtener todas las carpetas de todos los clientes en paralelo
+		// Retrieve all folders from all clients in parallel.
 		const folderPromises = clients.map(client => 
 			getFolderBudgetsByClientId(client.id).catch(error => {
 				console.error(`Error loading folders for client ${client.id}:`, error);
@@ -75,7 +75,7 @@ export function ClientManagement() {
 		
 		const folderResults = await Promise.all(folderPromises);
 		
-		// Procesar resultados y obtener presupuestos en paralelo
+		// Process results and obtain budgets in parallel
 		const budgetPromises = folderResults.map((result, index) => {
 			const client = clients[index];
 			const folders = result.data || [];
@@ -321,7 +321,7 @@ export function ClientManagement() {
 										</div>
 									</div>
 
-									{/* Información de presupuestos */}
+									{/* Budget information */}
 									<div className="border-t pt-3 mt-3">
 										<div className="flex items-center justify-between text-xs">
 											<div className="flex items-center gap-1">
@@ -368,7 +368,7 @@ export function ClientManagement() {
 						))}
 					</div>
 
-					{/* Controles de paginación */}
+					{/* Pagination controls */}
 					{filteredClients.length > itemsPerPage && (
 						<div className="flex items-center justify-between px-2 mt-6">
 							<div className="text-sm text-muted-foreground">

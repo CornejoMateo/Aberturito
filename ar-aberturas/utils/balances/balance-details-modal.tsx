@@ -325,7 +325,7 @@ export function BalanceDetailsModal({
 										<Label htmlFor="usd-amount">Monto en USD</Label>
 										<Input
 											id="usd-amount"
-											type="text"
+											type="number"
 											value={usdAmount}
 											onChange={(e) => setUsdAmount(e.target.value)}
 										/>
@@ -334,7 +334,7 @@ export function BalanceDetailsModal({
 										<Label htmlFor="quote-usd">Cotización USD</Label>
 										<Input
 											id="quote-usd"
-											type="text"
+											type="number"
 											value={quoteUsd}
 											onChange={(e) => setQuoteUsd(e.target.value)}
 										/>
@@ -361,9 +361,9 @@ export function BalanceDetailsModal({
 												<SelectItem value="Transferencia">Transferencia</SelectItem>
 												<SelectItem value="Debito">Débito</SelectItem>
 												<SelectItem value="Credito">Crédito</SelectItem>
-												<SelectItem value="Cheque">Cheque (físico)</SelectItem>
+												<SelectItem value="Cheque Fisico">Cheque (físico)</SelectItem>
 												<SelectItem value="Echeq">Echeq</SelectItem>
-												<SelectItem value="Cheque">Dólar</SelectItem>
+												<SelectItem value="Dólar">Dólar</SelectItem>
 											</SelectContent>
 										</Select>
 									</div>

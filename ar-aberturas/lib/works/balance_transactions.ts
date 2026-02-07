@@ -81,13 +81,13 @@ export async function deleteTransaction(id: string): Promise<{ data: null; error
 }
 
 export async function getTotalByBalanceId(balanceId: string): Promise<{
-	data: { totalAmount: number} | null;
+	data: { totalAmount: number, totalAmountUSD: number} | null;
 	error: any;
 }> {
 	const supabase = getSupabaseClient();
 	const { data: transactions, error } = await supabase
 		.from(TABLE)
-		.select('amount')
+		.select('amount, usd_amount')
 		.eq('balance_id', balanceId);
 	
 	if (error) {
@@ -95,6 +95,7 @@ export async function getTotalByBalanceId(balanceId: string): Promise<{
 	}
 	
 	const totalAmount = transactions?.reduce((sum, t) => sum + (Number(t.amount) || 0), 0) || 0;
+	const totalAmountUSD = transactions?.reduce((sum, t) => sum + (Number(t.usd_amount) || 0), 0) || 0;
 	
-	return { data: { totalAmount }, error: null };
+	return { data: { totalAmount, totalAmountUSD }, error: null };
 }

@@ -99,3 +99,25 @@ export async function deleteFolderBudget(id: string): Promise<{ data: null; erro
 		.eq('id', id);
 	return { data: null, error };
 }
+
+export async function deleteFolderBudgetWithBudgets(folderId: string): Promise<{ error: any }> {
+	const supabase = getSupabaseClient();
+	
+	// First, delete all budgets in the folder
+	const { error: budgetsError } = await supabase
+		.from('budgets')
+		.delete()
+		.eq('folder_budget_id', folderId);
+	
+	if (budgetsError) {
+		return { error: budgetsError };
+	}
+	
+	// Then delete the folder
+	const { error: folderError } = await supabase
+		.from(TABLE)
+		.delete()
+		.eq('id', folderId);
+	
+	return { error: folderError };
+}

@@ -65,8 +65,11 @@ export function ClientManagement() {
 	const loadClientBudgetsInfo = async () => {
 		const info: Record<string, { total: number; chosen: number }> = {};
 		
-		// Retrieve all folders from all clients in parallel.
-		const folderPromises = clients.map(client => 
+		// Solo obtener carpetas de los clientes de la página actual
+		const currentClients = currentItems.map(item => item);
+		
+		// Obtener todas las carpetas de los clientes visibles en paralelo
+		const folderPromises = currentClients.map(client => 
 			getFolderBudgetsByClientId(client.id).catch(error => {
 				console.error(`Error loading folders for client ${client.id}:`, error);
 				return { data: [] };
@@ -75,9 +78,9 @@ export function ClientManagement() {
 		
 		const folderResults = await Promise.all(folderPromises);
 		
-		// Process results and obtain budgets in parallel
+		// Procesar resultados y obtener presupuestos en paralelo
 		const budgetPromises = folderResults.map((result, index) => {
-			const client = clients[index];
+			const client = currentClients[index];
 			const folders = result.data || [];
 			const folderIds = folders.map(f => f.id);
 			
@@ -105,12 +108,6 @@ export function ClientManagement() {
 		await Promise.all(budgetPromises);
 		setClientBudgetsInfo(info);
 	};
-
-	useEffect(() => {
-		if (clients.length > 0) {
-			loadClientBudgetsInfo();
-		}
-	}, [clients]);
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -178,6 +175,12 @@ export function ClientManagement() {
 		const startIndex = (currentPage - 1) * itemsPerPage;
 		return filteredClients.slice(startIndex, startIndex + itemsPerPage);
 	}, [filteredClients, currentPage, itemsPerPage]);
+
+	useEffect(() => {
+		if (currentItems.length > 0) {
+			loadClientBudgetsInfo();
+		}
+	}, [currentItems]);
 
 	useEffect(() => {
 		setCurrentPage(1);

@@ -34,7 +34,6 @@ interface Work {
 	client_id?: string | null;
 	client_name?: string | null;
 	client_last_name?: string | null;
-	status?: string | null;
 }
 
 interface WhatsAppNotificationModalProps {
@@ -130,7 +129,6 @@ Le informamos que nuestro equipo de colocación estará llegando a la obra ubica
 
 📍 *Detalles de la obra:*
 • Ubicación: ${workLocation}
-• Estado actual: ${work?.status || 'En proceso'}
 
 Por favor, asegúrese de que el lugar esté accesible y preparado para la instalación.
 
@@ -200,12 +198,6 @@ El equipo de AR Aberturas`;
 								<MapPin className="h-4 w-4 text-muted-foreground" />
 								<span className="font-medium">Obra:</span>
 								<span>{work.locality}{work.address ? `, ${work.address}` : ''}</span>
-							</div>
-							
-							<div className="flex items-center gap-2">
-								<Badge variant={work.status === 'completada' ? 'default' : 'secondary'}>
-									{work.status || 'En proceso'}
-								</Badge>
 							</div>
 						</div>
 					</div>

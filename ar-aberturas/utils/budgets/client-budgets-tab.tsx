@@ -188,12 +188,15 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 	}
 
 	async function confirmDeleteBudget() {
-		if (!deleteBudgetConfirm.budgetId) return;
+		if (!deleteBudgetConfirm.budgetId) {
+			return;
+		}
 
 		try {
 			setIsLoading(true);
-			const { error } = await deleteBudget(deleteBudgetConfirm.budgetId);
-			if (error) {
+			const budgetIdString = String(deleteBudgetConfirm.budgetId);
+			const { error } = await deleteBudget(budgetIdString);
+			if (error && error !== null) {
 				toast({
 					variant: 'destructive',
 					title: 'No se pudo eliminar el presupuesto',
@@ -219,12 +222,15 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 	}
 
 	async function confirmDeleteFolder() {
-		if (!deleteFolderConfirm.folderId) return;
+		if (!deleteFolderConfirm.folderId) {
+			return;
+		}
 
 		try {
 			setIsLoading(true);
-			const { error } = await deleteFolderBudgetWithBudgets(deleteFolderConfirm.folderId);
-			if (error) {
+			const folderIdString = String(deleteFolderConfirm.folderId);
+			const { error } = await deleteFolderBudgetWithBudgets(folderIdString);
+			if (error && error !== null) {
 				toast({
 					variant: 'destructive',
 					title: 'No se pudo eliminar la carpeta',

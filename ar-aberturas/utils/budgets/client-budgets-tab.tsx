@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -18,9 +19,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { Work } from '@/lib/works/works';
-import { createBudget, chooseBudgetForClient, Budget, getBudgetsByFolderBudgetIds } from '@/lib/budgets/budgets';
-import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId } from '@/lib/budgets/folder_budgets';
-import { CheckCircle, FileText, Plus, ChevronDown } from 'lucide-react';
+import { createBudget, chooseBudgetForClient, Budget, getBudgetsByFolderBudgetIds, deleteBudget, updateBudget } from '@/lib/budgets/budgets';
+import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId, deleteFolderBudgetWithBudgets } from '@/lib/budgets/folder_budgets';
+import { getSupabaseClient } from '@/lib/supabase-client';
+import { CheckCircle, FileText, Plus, ChevronDown, Trash2, Download, X } from 'lucide-react';
 
 type BudgetFolderVM = FolderBudget & {
 	budgets: Budget[];
@@ -52,14 +54,32 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 	const [formVersion, setFormVersion] = useState<string>('');
 	const [formNumber, setFormNumber] = useState<string>('');
 	const [formAmount, setFormAmount] = useState<string>('');
+	const [formAmountUsd, setFormAmountUsd] = useState<string>('');
 	const [formWorkId, setFormWorkId] = useState<string>('none');
 	const [formPdf, setFormPdf] = useState<File | null>(null);
 
+	const [deleteBudgetConfirm, setDeleteBudgetConfirm] = useState<{
+		open: boolean;
+		budgetId: string | null;
+	}>({ open: false, budgetId: null });
+
+	const [deleteFolderConfirm, setDeleteFolderConfirm] = useState<{
+		open: boolean;
+		folderId: string | null;
+		budgetCount: number;
+	}>({ open: false, folderId: null, budgetCount: 0 });
+
+	const [pdfPreview, setPdfPreview] = useState<{
+		open: boolean;
+		budget: Budget | null;
+		pdfUrl: string | null;
+	}>({ open: false, budget: null, pdfUrl: null });
+
 	const folderBudgetIds = useMemo(() => folderBudgets.map((f) => f.id), [folderBudgets]);
 
-	const chosenBudgetId = useMemo(() => {
-		const chosen = budgets.find((b) => !!b.accepted);
-		return chosen?.id ?? null;
+	const chosenBudgetIds = useMemo(() => {
+		const chosen = budgets.filter((b) => !!b.accepted);
+		return chosen.map(b => b.id);
 	}, [budgets]);
 
 	const budgetsByFolderId = useMemo(() => {
@@ -138,19 +158,140 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 	async function handleChooseBudget(budgetId: string) {
 		try {
 			setIsLoading(true);
-			const { error } = await chooseBudgetForClient(budgetId, folderBudgetIds);
+			const budget = budgets.find(b => b.id === budgetId);
+			if (!budget) return;
+
+			const { error } = await updateBudget(budgetId, {
+				accepted: !budget.accepted
+			});
+			
 			if (error) {
 				toast({
 					variant: 'destructive',
-					title: 'No se pudo marcar como elegido',
+					title: 'No se pudo cambiar el estado',
 					description: 'Intente nuevamente.',
 				});
 				return;
 			}
+			
+			toast({ 
+				title: budget.accepted ? 'Presupuesto deseleccionado' : 'Presupuesto elegido' 
+			});
 			await load();
 		} finally {
 			setIsLoading(false);
 		}
+	}
+
+	async function handleDeleteBudget(budgetId: string) {
+		setDeleteBudgetConfirm({ open: true, budgetId });
+	}
+
+	async function confirmDeleteBudget() {
+		if (!deleteBudgetConfirm.budgetId) {
+			return;
+		}
+
+		try {
+			setIsLoading(true);
+			const budgetIdString = String(deleteBudgetConfirm.budgetId);
+			const { error } = await deleteBudget(budgetIdString);
+			if (error && error !== null) {
+				toast({
+					variant: 'destructive',
+					title: 'No se pudo eliminar el presupuesto',
+					description: 'Intente nuevamente.',
+				});
+				return;
+			}
+			toast({ title: 'Presupuesto eliminado' });
+			await load();
+		} finally {
+			setIsLoading(false);
+			setDeleteBudgetConfirm({ open: false, budgetId: null });
+		}
+	}
+
+	async function handleDeleteFolder(folderId: string) {
+		const budgetCount = budgetsByFolderId.get(folderId)?.length || 0;
+		setDeleteFolderConfirm({ 
+			open: true, 
+			folderId, 
+			budgetCount 
+		});
+	}
+
+	async function confirmDeleteFolder() {
+		if (!deleteFolderConfirm.folderId) {
+			return;
+		}
+
+		try {
+			setIsLoading(true);
+			const folderIdString = String(deleteFolderConfirm.folderId);
+			const { error } = await deleteFolderBudgetWithBudgets(folderIdString);
+			if (error && error !== null) {
+				toast({
+					variant: 'destructive',
+					title: 'No se pudo eliminar la carpeta',
+					description: 'Intente nuevamente.',
+				});
+				return;
+			}
+			toast({ title: 'Carpeta eliminada' });
+			await load();
+		} finally {
+			setIsLoading(false);
+			setDeleteFolderConfirm({ 
+				open: false, 
+				folderId: null, 
+				budgetCount: 0 
+			});
+		}
+	}
+
+	async function handleViewPdf(budget: Budget) {
+		if (!budget.pdf_path) return;
+
+		try {
+			setIsLoading(true);
+			const supabase = getSupabaseClient();
+			const { data, error } = await supabase.storage
+				.from('clients')
+				.download(budget.pdf_path);
+
+			if (error) {
+				toast({
+					variant: 'destructive',
+					title: 'No se pudo cargar el PDF',
+					description: 'Intente nuevamente.',
+				});
+				return;
+			}
+
+			const url = URL.createObjectURL(data);
+			setPdfPreview({ open: true, budget, pdfUrl: url });
+		} finally {
+			setIsLoading(false);
+		}
+	}
+
+	function closePdfPreview() {
+		if (pdfPreview.pdfUrl) {
+			URL.revokeObjectURL(pdfPreview.pdfUrl);
+		}
+		setPdfPreview({ open: false, budget: null, pdfUrl: null });
+	}
+
+	async function handleDownloadPdf() {
+		if (!pdfPreview.pdfUrl || !pdfPreview.budget) return;
+
+		const link = document.createElement('a');
+		link.href = pdfPreview.pdfUrl;
+		link.download = `presupuesto_${pdfPreview.budget.type}_${pdfPreview.budget.number || 'sin-numero'}.pdf`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
 	}
 
 	function resetForm() {
@@ -158,6 +299,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 		setFormVersion('');
 		setFormNumber('');
 		setFormAmount('');
+		setFormAmountUsd('');
 		setFormWorkId('none');
 		setFormPdf(null);
 	}
@@ -196,10 +338,12 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 				folderId = folder.id;
 			}
 
-			const parsedNumber = formNumber.trim() ? Number(formNumber) : null;
 			const parsedAmount = formAmount.trim() ? Number(formAmount) : null;
-			const number = parsedNumber !== null && !Number.isNaN(parsedNumber) ? parsedNumber : null;
+			const parsedAmountUsd = formAmountUsd.trim() ? Number(formAmountUsd) : null;
+		   
+			const number = formNumber.trim() || null;
 			const amount = parsedAmount !== null && !Number.isNaN(parsedAmount) ? parsedAmount : null;
+			const amountUsd = parsedAmountUsd !== null && !Number.isNaN(parsedAmountUsd) ? parsedAmountUsd : null;
 
 			const { error: createError } = await createBudget(
 				{
@@ -207,8 +351,9 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 					accepted: false,
 					type: formType,
 					version: formVersion.trim() || null,
-					number,
+					number: number,
 					amount_ars: amount,
+					amount_usd: amountUsd,
 				},
 				formPdf,
 				clientId
@@ -233,22 +378,16 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 	}
 
 	return (
-		<div className="space-y-4">
+		<>
+			<div className="space-y-4">
 			<div className="flex items-center justify-between gap-2">
 				<div className="min-w-0">
-					<p className="text-sm text-muted-foreground">
-						Organizá presupuestos por obra y luego por tipo. Marcá uno como elegido.
-					</p>
-					{chosenBudgetId ? (
-						<div className="mt-1">
-							<Badge variant="default" className="gap-2">
-								<CheckCircle className="h-4 w-4" />
-								Hay un presupuesto elegido
-							</Badge>
+					{chosenBudgetIds.length > 0 ? (
+						<div className="mt-1">	
+							<Badge variant="secondary">{chosenBudgetIds.length} presupuesto(s) elegido(s)</Badge>
 						</div>
 					) : (
-						<div className="mt-1">
-							<Badge variant="secondary">Sin presupuesto elegido</Badge>
+						<div className="mt-1">	
 						</div>
 					)}
 				</div>
@@ -281,11 +420,16 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 
 							<div className="grid gap-2">
 								<Label>Variante</Label>
-								<Input
-									value={formVersion}
-									onChange={(e) => setFormVersion(e.target.value)}
-									placeholder="Económico / Óptimo / Premium"
-								/>
+								<Select value={formVersion} onValueChange={setFormVersion}>
+									<SelectTrigger className="w-full">
+										<SelectValue placeholder="Seleccionar variante" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="Mínimo">Mínimo</SelectItem>
+										<SelectItem value="Estándar">Estándar</SelectItem>
+										<SelectItem value="Óptimo">Óptimo</SelectItem>
+									</SelectContent>
+								</Select>
 							</div>
 
 							<div className="grid gap-2">
@@ -307,20 +451,29 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 
 							<div className="grid grid-cols-2 gap-4">
 								<div className="grid gap-2">
-									<Label>Número (opcional)</Label>
+									<Label>Número de presupuesto *</Label>
 									<Input
-										type="number"
+										type="text"
 										value={formNumber}
 										onChange={(e) => setFormNumber(e.target.value)}
-										placeholder="Ej: 123"
+										placeholder="Ej: 123 o 1-2-A"
 									/>
 								</div>
 								<div className="grid gap-2">
-									<Label>Monto ARS (opcional)</Label>
+									<Label>Monto ARS *</Label>
 									<Input
 										type="number"
 										value={formAmount}
 										onChange={(e) => setFormAmount(e.target.value)}
+										placeholder="0"
+									/>
+								</div>
+								<div className="grid gap-2">
+									<Label>Monto USD *</Label>
+									<Input
+										type="number"
+										value={formAmountUsd}
+										onChange={(e) => setFormAmountUsd(e.target.value)}
 										placeholder="0"
 									/>
 								</div>
@@ -368,7 +521,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 				{orderedFolders.map((folder) => {
 					const open = !!openFolders[folder.id];
 					const folderBudgetsList = folder.budgets;
-					const hasChosenInFolder = folderBudgetsList.some((b) => !!b.accepted);
+					const chosenCountInFolder = folderBudgetsList.filter((b) => !!b.accepted).length;
 
 					const budgetsByType = new Map<string, Budget[]>();
 					for (const t of DEFAULT_TYPES) budgetsByType.set(t, []);
@@ -401,9 +554,9 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 												<p className="text-xs text-muted-foreground">{folderBudgetsList.length} presupuesto(s)</p>
 											</div>
 											<div className="flex items-center gap-2">
-												{hasChosenInFolder ? (
+												{chosenCountInFolder > 0 ? (
 													<Badge className="gap-1">
-														<CheckCircle className="h-3.5 w-3.5" /> Elegido
+														<CheckCircle className="h-3.5 w-3.5" /> {chosenCountInFolder} elegido(s)
 													</Badge>
 												) : (
 													<Badge variant="secondary">Opciones</Badge>
@@ -414,6 +567,18 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 											</div>
 										</button>
 									</CollapsibleTrigger>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={(e) => {
+											e.stopPropagation();
+											handleDeleteFolder(folder.id);
+										}}
+										disabled={isLoading}
+										className="text-destructive hover:text-destructive hover:bg-destructive/10"
+									>
+										<Trash2 className="h-4 w-4" />
+									</Button>
 								</div>
 
 								<CollapsibleContent>
@@ -437,10 +602,26 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 																	<Card
 																		key={b.id}
 																		className={cn(
-																			'min-w-[260px] max-w-[260px] p-4 border-border',
+																			'min-w-[260px] max-w-[260px] p-4 border-border relative',
 																			isChosen && 'border-primary bg-primary/5'
 																		)}
 																	>
+																		<div className="absolute top-2 right-2 flex items-center gap-2">
+																			{isChosen ? (
+																				<Badge className="gap-1 shrink-0">
+																					<CheckCircle className="h-3.5 w-3.5" /> Elegido
+																				</Badge>
+																			) : null}
+																			<Button
+																				variant="ghost"
+																				size="sm"
+																				onClick={() => handleDeleteBudget(b.id)}
+																				disabled={isLoading}
+																				className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+																			>	
+																				<Trash2 className="h-4 w-4" />
+																			</Button>
+																		</div>
 																		<div className="flex items-start justify-between gap-2">
 																			<div className="min-w-0">
 																				<p className="font-semibold text-foreground truncate">
@@ -448,31 +629,32 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 																				</p>
 																				<p className="text-xs text-muted-foreground truncate">{workLabel(folder)}</p>
 																			</div>
-																			{isChosen ? (
-																				<Badge className="gap-1">
-																					<CheckCircle className="h-3.5 w-3.5" /> Elegido
-																				</Badge>
-																			) : null}
 																		</div>
 
 																		<div className="mt-3 space-y-2">
-																			<div className="flex items-center justify-between">
+																			<div className="space-y-1">
 																				<p className="text-sm font-semibold text-foreground">
 																					{typeof b.amount_ars === 'number'
-																						? `$${b.amount_ars.toLocaleString('es-AR')}`
-																						: 'Monto no cargado'}
+																						? `$${b.amount_ars.toLocaleString('es-AR')} ARS`
+																						: 'Monto ARS no cargado'}
 																				</p>
-																				{typeof b.number === 'number' ? (
-																					<Badge variant="outline">#{b.number}</Badge>
-																				) : null}
+																				<p className="text-sm font-semibold text-foreground">
+																					{typeof b.amount_usd === 'number'
+																						? `$${b.amount_usd.toLocaleString('es-AR')} USD`
+																						: 'Monto USD no cargado'}
+																				</p>
 																			</div>
+																			{b.number ? (
+																				<Badge variant="outline">#{b.number}</Badge>
+																			) : null}
+																		</div>
 
 																			<div className="flex flex-wrap gap-2">
-																				{b.pdf_url ? (
+																				{b.pdf_path ? (
 																					<Button
 																						variant="outline"
 																						size="sm"
-																						onClick={() => window.open(b.pdf_url ?? '', '_blank')}
+																						onClick={() => handleViewPdf(b)}
 																						className="gap-2"
 																					>
 																						<FileText className="h-4 w-4" /> Ver PDF
@@ -489,10 +671,9 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 																					className="gap-2"
 																				>
 																					<CheckCircle className="h-4 w-4" />
-																					{isChosen ? 'Elegido' : chosenBudgetId ? 'Cambiar a este' : 'Elegir'}
+																					{isChosen ? 'Elegido' : chosenBudgetIds.length > 0 ? 'Agregar a elegidos' : 'Elegir'}
 																				</Button>
 																			</div>
-																		</div>
 																	</Card>
 																);
 															})}
@@ -509,5 +690,71 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 				})}
 			</div>
 		</div>
-	);
+
+		<ConfirmDialog
+			open={deleteBudgetConfirm.open}
+			onOpenChange={(open) => setDeleteBudgetConfirm({ ...deleteBudgetConfirm, open })}
+			title="Eliminar presupuesto"
+			description="¿Estás seguro de que quieres eliminar este presupuesto? Esta acción no se puede deshacer."
+			onConfirm={confirmDeleteBudget}
+			isLoading={isLoading}
+		/>
+
+		<ConfirmDialog
+			open={deleteFolderConfirm.open}
+			onOpenChange={(open) => setDeleteFolderConfirm({ ...deleteFolderConfirm, open })}
+			title="Eliminar carpeta"
+			description={`¿Estás seguro de que quieres eliminar esta carpeta y sus ${deleteFolderConfirm.budgetCount} presupuesto(s)? Esta acción no se puede deshacer.`}
+			onConfirm={confirmDeleteFolder}
+			isLoading={isLoading}
+		/>
+
+		<Dialog open={pdfPreview.open} onOpenChange={closePdfPreview}>
+			<DialogContent className="max-w-4xl max-h-[90vh]">
+				<DialogHeader>
+					<div className="flex items-center justify-between">
+						<div>
+							<DialogTitle>
+								Vista previa - Presupuesto {pdfPreview.budget?.type} #{pdfPreview.budget?.number || 'sin número'}
+							</DialogTitle>
+							<DialogDescription>
+								{pdfPreview.budget?.version || 'Sin variante'} - {orderedFolders.find(f => f.id === pdfPreview.budget?.folder_budget_id)?.works ? workLabel(orderedFolders.find(f => f.id === pdfPreview.budget?.folder_budget_id)!) : 'Sin obra'}
+							</DialogDescription>
+						</div>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={closePdfPreview}
+							className="h-8 w-8 p-0"
+						>
+							<X className="h-4 w-4" />
+						</Button>
+					</div>
+				</DialogHeader>
+				<div className="flex-1 min-h-[600px]">
+					{pdfPreview.pdfUrl && (
+						<iframe
+							src={pdfPreview.pdfUrl}
+							className="w-full h-full min-h-[600px] border rounded"
+							title="Vista previa del PDF"
+						/>
+					)}
+				</div>
+				<div className="flex justify-end gap-2 pt-4">
+					<Button
+						variant="outline"
+						onClick={handleDownloadPdf}
+						className="gap-2"
+					>
+						<Download className="h-4 w-4" />
+						Descargar
+					</Button>
+					<Button onClick={closePdfPreview}>
+						Cerrar
+					</Button>
+				</div>
+			</DialogContent>
+		</Dialog>
+	</>
+);
 }

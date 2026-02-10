@@ -7,8 +7,9 @@ export type Budget = {
   accepted?: boolean | null;
   pdf_url?: string | null;
   pdf_path?: string | null;
-  number?: number | null;
+  number?: string | null;
   amount_ars?: number | null;
+  amount_usd?: number | null;
   version?: string | null;
   type?: string | null;
 };

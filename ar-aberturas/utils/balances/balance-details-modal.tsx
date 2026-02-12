@@ -262,7 +262,7 @@ export function BalanceDetailsModal({
 							</div>
 
 							<div>
-								<p className="text-xs text-muted-foreground mb-1">Falta</p>
+								<p className="text-xs text-muted-foreground mb-1">Saldo</p>
 								<div className="flex flex-col">
 									<p className="text-sm font-bold text-orange-600">
 										{formatCurrency(remainingUSD * (balance.usd_current || 1))}

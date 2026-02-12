@@ -346,7 +346,7 @@ export function ClientBalances({ clientId, onCreateBalance }: ClientBalancesProp
 											</div>
 											<div className="flex flex-col">
 												<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">
-													Falta
+													Saldo
 												</p>
 												<div className="flex flex-col">
 													<p className="text-xs sm:text-sm font-bold text-orange-600 truncate">

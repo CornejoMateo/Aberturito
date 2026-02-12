@@ -141,6 +141,7 @@ export function ClientManagement() {
 	const handleUpdateClient = async (updatedClient: Client) => {
 		try {
 			await updateClient(updatedClient.id, updatedClient);
+			await refresh();
 			setIsEditDialogOpen(false);
 			setSelectedClient(null);
 		} catch (err) {
@@ -163,6 +164,7 @@ export function ClientManagement() {
 				description: `${clientToDelete.name} ${clientToDelete.last_name} ha sido eliminado correctamente.`,
 			});
 			setClientToDelete(null);
+			await refresh();
 		} catch (err) {
 			console.error('Error eliminando el cliente:', err);
 			toast({
@@ -232,7 +234,11 @@ export function ClientManagement() {
 					<Plus className="h-4 w-4" />
 					Nuevo cliente
 				</Button>
-				<ClientsAddDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} />
+			<ClientsAddDialog 
+				open={isAddDialogOpen} 
+				onOpenChange={setIsAddDialogOpen}
+				onClientAdded={refresh}
+			/>
 				{selectedClient && (
 					<ClientsAddDialog
 						open={isEditDialogOpen}

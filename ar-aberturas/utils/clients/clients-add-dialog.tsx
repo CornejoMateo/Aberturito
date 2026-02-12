@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/clients/clients';
 import { createClientFolder } from '@/lib/clients/clients';
+import { useToast } from '@/components/ui/use-toast';
 
 interface ClientsAddDialogProps {
 	open: boolean;
@@ -29,6 +30,7 @@ export function ClientsAddDialog({
 	clientToEdit, 
 	onUpdateClient 
 }: ClientsAddDialogProps) {
+	const { toast } = useToast();
 	const [isLoading, setIsLoading] = useState(false);
 	const [formData, setFormData] = useState({
 		name: clientToEdit?.name || '',
@@ -76,6 +78,10 @@ export function ClientsAddDialog({
 					...clientToEdit,
 					...payload
 				});
+				toast({
+					title: 'Cliente actualizado',
+					description: `${payload.name} ${payload.last_name} ha sido actualizado correctamente.`,
+				});
 				onOpenChange(false);
 			} else {
 				// Create new client
@@ -89,6 +95,10 @@ export function ClientsAddDialog({
 					console.log('Creating folder for client ID:', client.id);
 					const folderResult = await createClientFolder(client.id);
 					console.log('Create folder result:', folderResult);
+					toast({
+						title: 'Cliente creado',
+						description: `${payload.name} ${payload.last_name} ha sido agregado correctamente.`,
+					});
 					onClientAdded?.();
 					onOpenChange(false);
 					setFormData({ name: '', last_name: '', email: '', phone_number: '', locality: '' });
@@ -96,6 +106,13 @@ export function ClientsAddDialog({
 			}
 		} catch (error) {
 			console.error('Error al procesar el cliente:', error);
+			toast({
+				title: 'Error',
+				description: clientToEdit 
+					? 'No se pudo actualizar el cliente. Por favor, intenta nuevamente.'
+					: 'No se pudo crear el cliente. Por favor, intenta nuevamente.',
+				variant: 'destructive',
+			});
 		} finally {
 			setIsLoading(false);
 		}

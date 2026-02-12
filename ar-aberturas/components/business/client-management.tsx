@@ -34,8 +34,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Client, listClients, deleteClient } from '@/lib/clients/clients';
 import { getFolderBudgetsByClientId } from '@/lib/budgets/folder_budgets';
 import { getBudgetsByFolderBudgetIds } from '@/lib/budgets/budgets';
@@ -44,8 +43,11 @@ import { ClientDetailsDialog } from '../../utils/clients/client-details-dialog';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, FileText } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 export function ClientManagement() {
+	const { toast } = useToast();
+
 	const {
 		data: clients,
 		loading,
@@ -65,10 +67,10 @@ export function ClientManagement() {
 	const loadClientBudgetsInfo = async () => {
 		const info: Record<string, { total: number; chosen: number }> = {};
 		
-		// Solo obtener carpetas de los clientes de la página actual
+		// Only get budgets info for currently displayed clients to optimize performance
 		const currentClients = currentItems.map(item => item);
 		
-		// Obtener todas las carpetas de los clientes visibles en paralelo
+		// Get folders for each client, handling errors individually
 		const folderPromises = currentClients.map(client => 
 			getFolderBudgetsByClientId(client.id).catch(error => {
 				console.error(`Error loading folders for client ${client.id}:`, error);
@@ -78,7 +80,6 @@ export function ClientManagement() {
 		
 		const folderResults = await Promise.all(folderPromises);
 		
-		// Procesar resultados y obtener presupuestos en paralelo
 		const budgetPromises = folderResults.map((result, index) => {
 			const client = currentClients[index];
 			const folders = result.data || [];
@@ -157,9 +158,18 @@ export function ClientManagement() {
 		try {
 			const { error } = await deleteClient(clientToDelete.id);
 			if (error) throw error;
+			toast({
+				title: 'Cliente eliminado',
+				description: `${clientToDelete.name} ${clientToDelete.last_name} ha sido eliminado correctamente.`,
+			});
 			setClientToDelete(null);
 		} catch (err) {
 			console.error('Error eliminando el cliente:', err);
+			toast({
+				title: 'Error al eliminar',
+				description: 'No se pudo eliminar el cliente. Por favor, intenta nuevamente.',
+				variant: 'destructive',
+			});
 		}
 	};
 

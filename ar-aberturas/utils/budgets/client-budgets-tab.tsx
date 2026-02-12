@@ -712,24 +712,12 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 		<Dialog open={pdfPreview.open} onOpenChange={closePdfPreview}>
 			<DialogContent className="max-w-4xl max-h-[90vh]">
 				<DialogHeader>
-					<div className="flex items-center justify-between">
-						<div>
-							<DialogTitle>
-								Vista previa - Presupuesto {pdfPreview.budget?.type} #{pdfPreview.budget?.number || 'sin número'}
-							</DialogTitle>
-							<DialogDescription>
-								{pdfPreview.budget?.version || 'Sin variante'} - {orderedFolders.find(f => f.id === pdfPreview.budget?.folder_budget_id)?.works ? workLabel(orderedFolders.find(f => f.id === pdfPreview.budget?.folder_budget_id)!) : 'Sin obra'}
-							</DialogDescription>
-						</div>
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={closePdfPreview}
-							className="h-8 w-8 p-0"
-						>
-							<X className="h-4 w-4" />
-						</Button>
-					</div>
+					<DialogTitle>
+						Vista previa - Presupuesto {pdfPreview.budget?.type} #{pdfPreview.budget?.number || 'sin número'}
+					</DialogTitle>
+					<DialogDescription>
+						{pdfPreview.budget?.version || 'Sin variante'} - {orderedFolders.find(f => f.id === pdfPreview.budget?.folder_budget_id)?.works ? workLabel(orderedFolders.find(f => f.id === pdfPreview.budget?.folder_budget_id)!) : 'Sin obra'}
+					</DialogDescription>
 				</DialogHeader>
 				<div className="flex-1 min-h-[600px]">
 					{pdfPreview.pdfUrl && (
@@ -739,19 +727,6 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 							title="Vista previa del PDF"
 						/>
 					)}
-				</div>
-				<div className="flex justify-end gap-2 pt-4">
-					<Button
-						variant="outline"
-						onClick={handleDownloadPdf}
-						className="gap-2"
-					>
-						<Download className="h-4 w-4" />
-						Descargar
-					</Button>
-					<Button onClick={closePdfPreview}>
-						Cerrar
-					</Button>
 				</div>
 			</DialogContent>
 		</Dialog>

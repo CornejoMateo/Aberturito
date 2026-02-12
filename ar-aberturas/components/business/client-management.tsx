@@ -230,12 +230,12 @@ export function ClientManagement() {
 						clientToEdit={
 							selectedClient
 								? {
-										id: selectedClient.id ?? '',
-										name: selectedClient.name ?? '',
-										last_name: selectedClient.last_name ?? '',
-										email: selectedClient.email ?? '',
-										phone_number: selectedClient.phone_number ?? '',
-										locality: selectedClient.locality ?? '',
+										id: selectedClient.id || '',
+										name: selectedClient.name || '',
+										last_name: selectedClient.last_name || '',
+										email: selectedClient.email || '',
+										phone_number: selectedClient.phone_number || '',
+										locality: selectedClient.locality || '',
 									}
 								: undefined
 						}

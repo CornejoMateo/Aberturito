@@ -99,7 +99,7 @@ const navigation = [
 		name: 'Obras',
 		href: '/works',
 		icon: ClipboardCheck,
-		disabled: false,
+		disabled: true,
 	},
 	{
 		name: 'Calendario',

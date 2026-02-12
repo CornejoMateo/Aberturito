@@ -38,16 +38,17 @@ export function ClientsAddDialog({
 		locality: clientToEdit?.locality || '',
 	});
 
-	// Reset form when dialog is opened/closed or when clientToEdit changes
 	useEffect(() => {
-		setFormData({
-			name: clientToEdit?.name || '',
-			last_name: clientToEdit?.last_name || '',
-			email: clientToEdit?.email || '',
-			phone_number: clientToEdit?.phone_number || '',
-			locality: clientToEdit?.locality || '',
-		});
-	}, [clientToEdit, open]);
+		if (!clientToEdit && open) {
+			setFormData({
+				name: '',
+				last_name: '',
+				email: '',
+				phone_number: '',
+				locality: '',
+			});
+		}
+	}, [open, clientToEdit]);
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { id, value } = e.target;

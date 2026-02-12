@@ -16,8 +16,9 @@ import { ClientNotes } from '@/utils/notes/client-notes';
 import { updateClient } from '@/lib/clients/clients';
 import { ClientBalances } from '@/utils/balances/client-balances';
 import { BalanceForm } from '@/utils/balances/balance-form';
-import { createBalance } from '@/lib/works/balances';
+import { createBalance, getBudgetsByClientId, BudgetWithWork } from '@/lib/works/balances';
 import { toast } from '@/components/ui/use-toast';
+import { ClientBudgetsTab } from '@/utils/budgets/client-budgets-tab';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -30,6 +31,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
   const [isWorkFormOpen, setIsWorkFormOpen] = useState(false);
   const [isBalanceFormOpen, setIsBalanceFormOpen] = useState(false);
   const [works, setWorks] = useState<Work[]>([]);
+  const [budgets, setBudgets] = useState<BudgetWithWork[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [clientData, setClientData] = useState<Client | null>(null);
@@ -39,34 +41,43 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
   const [balancesKey, setBalancesKey] = useState(0);
   
   useEffect(() => {
-    const loadWorks = async () => {
+    const loadData = async () => {
       if (isOpen && client) {
         try {
-          console.log('Cargando obras para el cliente ID:', client.id);
+          console.log('Cargando datos para el cliente ID:', client.id);
           setIsLoading(true);
           
-          // add little delay to ensure previous state is cleared
-          // ahi tenes los comentarios en ingles, te haces el gari bale
           await new Promise(resolve => setTimeout(resolve, 100));
           
-          const result = await getWorksByClientId(client.id);
-          console.log('Resultado de getWorksByClientId:', result);
+          const [worksResult, budgetsResult] = await Promise.all([
+            getWorksByClientId(client.id),
+            getBudgetsByClientId(client.id)
+          ]);
           
-          if (result.error) {
-            console.error('Error al cargar las obras:', result.error);
-            // show a more detailed message in the interface
-            return;
-          }
+          console.log('Resultado de getWorksByClientId:', worksResult);
+          console.log('Resultado de getBudgetsByClientId:', budgetsResult);
           
-          if (result.data) {
-            console.log('Obras cargadas:', result.data);
-            setWorks(result.data);
+          if (worksResult.error) {
+            console.error('Error al cargar las obras:', worksResult.error);
+          } else if (worksResult.data) {
+            console.log('Obras cargadas:', worksResult.data);
+            setWorks(worksResult.data);
           } else {
             console.log('No se encontraron obras para este cliente');
             setWorks([]);
           }
+
+          if (budgetsResult.error) {
+            console.error('Error al cargar los presupuestos:', budgetsResult.error);
+          } else if (budgetsResult.data) {
+            console.log('Presupuestos cargados:', budgetsResult.data);
+            setBudgets(budgetsResult.data);
+          } else {
+            console.log('No se encontraron presupuestos para este cliente');
+            setBudgets([]);
+          }
         } catch (error) {
-          console.error('Error inesperado al cargar obras:', {
+          console.error('Error inesperado al cargar datos:', {
             error,
             message: error instanceof Error ? error.message : 'Error desconocido',
             stack: error instanceof Error ? error.stack : undefined
@@ -75,13 +86,14 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           setIsLoading(false);
         }
       } else {
-        console.log('Limpiando lista de obras');
+        console.log('Limpiando listas');
         setWorks([]);
+        setBudgets([]);
       }
     };
     
     if (isOpen) {
-      loadWorks();
+      loadData();
     }
   }, [isOpen, client?.id]);
   
@@ -268,7 +280,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
               <TabsList>
                 <TabsTrigger value="info">Información</TabsTrigger>
                 <TabsTrigger value="works">Obras</TabsTrigger>
-                <TabsTrigger value="budgets" disabled>Presupuestos</TabsTrigger>
+                <TabsTrigger value="budgets">Presupuestos</TabsTrigger>
                 <TabsTrigger value="balances">Saldos</TabsTrigger>
                 <TabsTrigger value="notes">Notas</TabsTrigger>
               </TabsList>
@@ -296,17 +308,8 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                     </div>
                   </div>
                 </TabsContent>
-                <TabsContent value="works" className="relative space-y-4 pt-2">
-                  <div className="absolute -top-13 right-0">
-                    <Button 
-                      onClick={() => setIsWorkFormOpen(true)}
-                      size="sm"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Crear obra
-                    </Button>
-                  </div>
-                  <div className="mt-2">
+                <TabsContent value="works" className="space-y-4">
+                  <div>
                     {isLoading ? (
                       <p className="text-sm text-muted-foreground text-center py-4">
                         Cargando obras...
@@ -314,19 +317,27 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                     ) : works.length > 0 ? (
                       <WorksList 
                         works={works} 
-                        onDelete={handleWorkDelete} 
+                        onDelete={handleWorkDelete}
+                        onCreateWork={() => setIsWorkFormOpen(true)}
                       />
                     ) : (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        No hay obras registradas para este cliente.
-                      </p>
+                      <div className="text-center py-8">
+                        <p className="text-sm text-muted-foreground mb-4">
+                          No hay obras registradas para este cliente.
+                        </p>
+                        <Button 
+                          onClick={() => setIsWorkFormOpen(true)}
+                          size="sm"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Crear primera obra
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </TabsContent>
                 <TabsContent value="budgets">
-                  <p className="text-sm text-muted-foreground">
-                    Aquí se mostrarán los presupuestos del cliente.
-                  </p>
+                  <ClientBudgetsTab clientId={clientData.id} works={works} />
                 </TabsContent>
                 <TabsContent value="notes" className="h-[calc(100%-2.5rem)]">
                   <ClientNotes 
@@ -334,20 +345,11 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                     onNotesUpdate={handleNotesUpdate} 
                   />
                 </TabsContent>
-                <TabsContent value="balances" className="relative space-y-4 pt-2">
-                  <div className="absolute -top-13 right-0">
-                    <Button 
-                      onClick={() => setIsBalanceFormOpen(true)}
-                      size="sm"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Crear saldo
-                    </Button>
-                  </div>
+                <TabsContent value="balances" className="space-y-4">
                   <ClientBalances 
                     key={balancesKey}
                     clientId={clientData.id}
-                    works={works}
+                    onCreateBalance={() => setIsBalanceFormOpen(true)}
                   />
                 </TabsContent>
               </div>
@@ -376,7 +378,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           </DialogHeader>
           <BalanceForm
             clientId={parseInt(client?.id || '0')}
-            works={works}
+            budgets={budgets}
             onSubmit={handleBalanceCreated}
             onCancel={() => setIsBalanceFormOpen(false)}
           />

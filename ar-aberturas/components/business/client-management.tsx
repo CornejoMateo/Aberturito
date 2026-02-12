@@ -37,9 +37,13 @@ import {
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Client, listClients, deleteClient } from '@/lib/clients/clients';
+import { getFolderBudgetsByClientId } from '@/lib/budgets/folder_budgets';
+import { getBudgetsByFolderBudgetIds } from '@/lib/budgets/budgets';
 import { ClientsAddDialog } from '@/utils/clients/clients-add-dialog';
 import { ClientDetailsDialog } from '../../utils/clients/client-details-dialog';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, FileText } from 'lucide-react';
 
 export function ClientManagement() {
 	const {
@@ -55,6 +59,55 @@ export function ClientManagement() {
 		},
 		'clients_cache'
 	);
+
+	const [clientBudgetsInfo, setClientBudgetsInfo] = useState<Record<string, { total: number; chosen: number }>>({});
+
+	const loadClientBudgetsInfo = async () => {
+		const info: Record<string, { total: number; chosen: number }> = {};
+		
+		// Solo obtener carpetas de los clientes de la página actual
+		const currentClients = currentItems.map(item => item);
+		
+		// Obtener todas las carpetas de los clientes visibles en paralelo
+		const folderPromises = currentClients.map(client => 
+			getFolderBudgetsByClientId(client.id).catch(error => {
+				console.error(`Error loading folders for client ${client.id}:`, error);
+				return { data: [] };
+			})
+		);
+		
+		const folderResults = await Promise.all(folderPromises);
+		
+		// Procesar resultados y obtener presupuestos en paralelo
+		const budgetPromises = folderResults.map((result, index) => {
+			const client = currentClients[index];
+			const folders = result.data || [];
+			const folderIds = folders.map(f => f.id);
+			
+			if (folderIds.length > 0) {
+				return getBudgetsByFolderBudgetIds(folderIds)
+					.then(budgetResult => {
+						const budgets = budgetResult.data || [];
+						const chosenCount = budgets.filter(b => b.accepted).length;
+						
+						info[client.id] = {
+							total: budgets.length,
+							chosen: chosenCount
+						};
+					})
+					.catch(error => {
+						console.error(`Error loading budgets for client ${client.id}:`, error);
+						info[client.id] = { total: 0, chosen: 0 };
+					});
+			} else {
+				info[client.id] = { total: 0, chosen: 0 };
+				return Promise.resolve();
+			}
+		});
+		
+		await Promise.all(budgetPromises);
+		setClientBudgetsInfo(info);
+	};
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -122,6 +175,12 @@ export function ClientManagement() {
 		const startIndex = (currentPage - 1) * itemsPerPage;
 		return filteredClients.slice(startIndex, startIndex + itemsPerPage);
 	}, [filteredClients, currentPage, itemsPerPage]);
+
+	useEffect(() => {
+		if (currentItems.length > 0) {
+			loadClientBudgetsInfo();
+		}
+	}, [currentItems]);
 
 	useEffect(() => {
 		setCurrentPage(1);
@@ -265,6 +324,28 @@ export function ClientManagement() {
 										</div>
 									</div>
 
+									{/* Budget information */}
+									<div className="border-t pt-3 mt-3">
+										<div className="flex items-center justify-between text-xs">
+											<div className="flex items-center gap-1">
+												<FileText className="h-3.5 w-3.5 text-muted-foreground" />
+												<span className="text-muted-foreground">
+													{clientBudgetsInfo[client.id]?.total || 0} presupuesto(s)
+												</span>
+											</div>
+											{clientBudgetsInfo[client.id]?.chosen > 0 ? (
+												<Badge variant="default" className="gap-1 text-xs h-5">
+													<CheckCircle className="h-3 w-3" />
+													{clientBudgetsInfo[client.id].chosen} elegido(s)
+												</Badge>
+											) : (
+												<Badge variant="secondary" className="text-xs h-5">
+													Sin elegidos
+												</Badge>
+											)}
+										</div>
+									</div>
+
 									<div className="flex gap-2 pt-2">
 										<Button
 											variant="outline"
@@ -290,7 +371,7 @@ export function ClientManagement() {
 						))}
 					</div>
 
-					{/* Controles de paginación */}
+					{/* Pagination controls */}
 					{filteredClients.length > itemsPerPage && (
 						<div className="flex items-center justify-between px-2 mt-6">
 							<div className="text-sm text-muted-foreground">

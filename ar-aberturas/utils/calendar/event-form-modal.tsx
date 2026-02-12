@@ -56,7 +56,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 		location: '',
 		address: '',
 		description: '',
-		remember: false,
+		remember: true,
 	});
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,7 +99,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 			location: '',
 			address: '',
 			description: '',
-			remember: false,
+			remember: true,
 		});
 
 		toast({
@@ -246,7 +246,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 									location: '',
 									address: '',
 									description: '',
-									remember: false,
+									remember: true,
 								});
 								setIsOpen(false);
 							}}

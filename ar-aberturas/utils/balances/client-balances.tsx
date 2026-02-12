@@ -23,26 +23,34 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from '@/components/ui/pagination';
-import { Plus, DollarSign, Search, Trash2 } from 'lucide-react';
-import { Balance, getBalancesByClientId, deleteBalance } from '@/lib/works/balances';
+import { Plus, DollarSign, Search, Trash2, TrendingUp } from 'lucide-react';
+import {
+	Balance,
+	BalanceWithBudget,
+	getBalancesByClientId,
+	deleteBalance,
+} from '@/lib/works/balances';
 import { getTotalByBalanceId } from '@/lib/works/balance_transactions';
 import { Work } from '@/lib/works/works';
 import { BalanceDetailsModal } from './balance-details-modal';
+import { DollarUpdateModal } from '@/components/ui/dollar-update-modal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatCurrency, formatCurrencyUSD } from './formats';
 
 interface ClientBalancesProps {
 	clientId: string;
-	works: Work[];
+	onCreateBalance?: () => void;
 }
 
-interface BalanceWithTotals extends Balance {
+export interface BalanceWithTotals extends BalanceWithBudget {
 	totalPaid?: number;
 	remaining?: number;
+	totalPaidUSD?: number;
+	remainingUSD?: number;
 }
 
-export function ClientBalances({ clientId, works }: ClientBalancesProps) {
+export function ClientBalances({ clientId, onCreateBalance }: ClientBalancesProps) {
 	const [balances, setBalances] = useState<BalanceWithTotals[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [searchTerm, setSearchTerm] = useState('');
@@ -51,13 +59,15 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 	const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 	const [balanceToDelete, setBalanceToDelete] = useState<BalanceWithTotals | null>(null);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [isDollarUpdateModalOpen, setIsDollarUpdateModalOpen] = useState(false);
+	const [balanceToUpdate, setBalanceToUpdate] = useState<BalanceWithTotals | null>(null);
 	const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
 	const itemsPerPage = 2;
 
 	const loadBalances = async () => {
 		try {
 			setIsLoading(true);
-			const { data, error } = await getBalancesByClientId(parseInt(clientId));
+			const { data, error } = await getBalancesByClientId(clientId);
 
 			if (error) {
 				console.error('Error al cargar saldos:', error);
@@ -69,12 +79,20 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 					data.map(async (balance) => {
 						const { data: totals } = await getTotalByBalanceId(balance.id);
 						const totalPaid = totals?.totalAmount || 0;
-						const remaining = (balance.budget || 0) - totalPaid;
+						const totalPaidUSD = totals?.totalAmountUSD || 0;
+
+						const budgetArs = balance.budget?.amount_ars || 0;
+						const budgetUsd = balance.budget?.amount_usd || 0;
+
+						const remaining = budgetArs - totalPaid;
+						const remainingUSD = budgetUsd - totalPaidUSD;
 
 						return {
 							...balance,
 							totalPaid,
+							totalPaidUSD,
 							remaining,
+							remainingUSD,
 						};
 					})
 				);
@@ -126,10 +144,44 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 		}
 	};
 
+	const handleDollarUpdate = async (newUsdRate: number) => {
+		if (!balanceToUpdate) return;
+
+		try {
+			const response = await fetch('/api/dollar-rate', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					balanceId: parseInt(balanceToUpdate.id),
+					newUsdRate,
+				}),
+			});
+
+			const result = await response.json();
+
+			if (!response.ok || !result.success) {
+				throw new Error(result.error || 'Error al actualizar el tipo de cambio');
+			}
+
+			// Refresh the list
+			handleBalanceUpdate();
+		} catch (error) {
+			console.error('Error al actualizar tipo de dólar:', error);
+			throw error;
+		}
+	};
+
+	const openDollarUpdateModal = (balance: BalanceWithTotals) => {
+		setBalanceToUpdate(balance);
+		setIsDollarUpdateModalOpen(true);
+	};
 
 	const getProgressPercentage = (balance: BalanceWithTotals) => {
-		if (!balance.budget || balance.budget === 0) return 0;
-		const percentage = ((balance.totalPaid || 0) / balance.budget) * 100;
+		const budgetArs = balance.budget?.amount_ars || 0;
+		if (!budgetArs || budgetArs === 0) return 0;
+		const percentage = ((balance.totalPaid || 0) / budgetArs) * 100;
 		return Math.min(Math.round(percentage), 100);
 	};
 
@@ -137,14 +189,14 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 	const filteredBalances = useMemo(() => {
 		return balances.filter((balance) => {
 			const searchLower = searchTerm.toLowerCase();
-			const work = works.find((w) => Number(w.id) === Number(balance.work_id));
+			const work = balance.budget?.folder_budget?.work;
 			return (
 				work?.locality?.toLowerCase().includes(searchLower) ||
 				work?.address?.toLowerCase().includes(searchLower) ||
-				(balance.budget?.toString() || '').includes(searchLower)
+				(balance.budget?.amount_ars?.toString() || '').includes(searchLower)
 			);
 		});
-	}, [balances, searchTerm, works]);
+	}, [balances, searchTerm]);
 
 	// Calculate pagination
 	const totalPages = Math.ceil(filteredBalances.length / itemsPerPage);
@@ -174,6 +226,16 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 						onChange={(e) => setSearchTerm(e.target.value)}
 					/>
 				</div>
+				{onCreateBalance && (
+					<Button
+						onClick={onCreateBalance}
+						size="default"
+						className="w-full sm:w-auto whitespace-nowrap"
+					>
+						<Plus className="h-4 w-4 mr-2" />
+						Crear Saldo
+					</Button>
+				)}
 			</div>
 
 			{isLoading ? (
@@ -198,6 +260,18 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 							<Button
 								variant="ghost"
 								size="icon"
+								className="absolute top-2 right-12 h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 z-10"
+								onClick={(e) => {
+									e.stopPropagation();
+									openDollarUpdateModal(balance);
+								}}
+								title="Actualizar precios con dólar actual"
+							>
+								<TrendingUp className="h-4 w-4" />
+							</Button>
+							<Button
+								variant="ghost"
+								size="icon"
 								className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 z-10"
 								onClick={(e) => {
 									e.stopPropagation();
@@ -207,72 +281,89 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 							>
 								<Trash2 className="h-4 w-4" />
 							</Button>
-							<CardContent className="">
-								<div className="flex items-center justify-between gap-4">
+							<CardContent className="pt-6">
+								<div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 									<div className="flex-1 min-w-0">
-										<div className="flex items-center gap-2 mb-8">
+										<div className="flex items-center gap-2 mb-3">
 											<DollarSign className="h-4 w-4 text-primary flex-shrink-0" />
 											<span className="font-semibold text-sm">
-												{(balance.budget || 0) - (balance.totalPaid || 0) > 0
+												{(balance.budget?.amount_usd || 0) - (balance.totalPaidUSD || 0) > 0
 													? 'Deudor'
 													: 'Acreedor'}
 											</span>
 										</div>
 										<div className="text-sm">
-											{(() => {
-												if (!balance.work_id)
-													return <span className="text-muted-foreground">Sin obra asignada</span>;
-												const work = works.find((w) => Number(w.id) === Number(balance.work_id));
-												if (!work)
-													return <span className="text-muted-foreground">Obra no encontrada</span>;
-												return (
-													<div>
-														<p className="font-medium">{work.locality}</p>
-														<p className="text-muted-foreground text-xs">{work.address}</p>
-													</div>
-												);
-											})()}
+											{balance.budget?.folder_budget?.work ? (
+												<div>
+													<p className="font-medium">
+														{balance.budget.folder_budget.work.locality}
+													</p>
+													<p className="text-muted-foreground text-xs">
+														{balance.budget.folder_budget.work.address}
+													</p>
+												</div>
+											) : (
+												<span className="text-muted-foreground">Sin presupuesto asignado</span>
+											)}
 										</div>
 									</div>
 
-									<div className="flex flex-col gap-3 min-w-[320px]">
-										<div className="flex gap-6 justify-between">
-											<div>
-												<p className="text-xs text-muted-foreground mb-1">Presupuesto</p>
+									<div className="flex flex-col gap-3 w-full lg:min-w-[280px] lg:max-w-[340px]">
+										<div className="grid grid-cols-3 gap-2 sm:gap-4">
+											<div className="flex flex-col">
+												<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">
+													Presupuesto
+												</p>
 												<div className="flex flex-col">
-													<p className="text-sm font-bold text-primary">{formatCurrency(balance.budget)}</p>
-													{balance.contract_date_usd && (
-														<p className="text-xs text-muted-foreground">
-															{formatCurrencyUSD((balance.budget || 0) / balance.contract_date_usd)} USD
+													<p className="text-xs sm:text-sm font-bold text-primary truncate">
+														{formatCurrency(
+															(balance.budget?.amount_usd || 0) * (balance.usd_current || 1)
+														)}
+													</p>
+													{balance.budget?.amount_usd && (
+														<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
+															{formatCurrencyUSD(balance.budget.amount_usd)}
 														</p>
 													)}
 												</div>
 											</div>
-											<div>
-												<p className="text-xs text-muted-foreground mb-1">Entregado</p>
+											<div className="flex flex-col">
+												<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">
+													Entregado
+												</p>
 												<div className="flex flex-col">
-													<p className="text-sm font-bold text-green-600">{formatCurrency(balance.totalPaid)}</p>
+													<p className="text-xs sm:text-sm font-bold text-green-600 truncate">
+														{formatCurrency(balance.totalPaid || 0)}
+													</p>
 													{balance.contract_date_usd && (
-														<p className="text-xs text-muted-foreground">
-															{formatCurrencyUSD((balance.totalPaid || 0) / balance.contract_date_usd)} USD
+														<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
+															{formatCurrencyUSD(
+																(balance.totalPaid || 0) / (balance.usd_current || 1)
+															)}
 														</p>
 													)}
 												</div>
 											</div>
-											<div>
-												<p className="text-xs text-muted-foreground mb-1">Falta</p>
+											<div className="flex flex-col">
+												<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">
+													Saldo
+												</p>
 												<div className="flex flex-col">
-													<p className="text-sm font-bold text-orange-600">{formatCurrency(balance.remaining)}</p>
+													<p className="text-xs sm:text-sm font-bold text-orange-600 truncate">
+														{formatCurrency(
+															(balance.remainingUSD || 0) * (balance.usd_current || 1)
+														)}
+													</p>
 													{balance.contract_date_usd && (
-														<p className="text-xs text-muted-foreground">
-															{formatCurrencyUSD((balance.remaining || 0) / balance.contract_date_usd)} USD
+														<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
+															{formatCurrencyUSD(balance.remainingUSD || 0)}
 														</p>
 													)}
 												</div>
 											</div>
 										</div>
 
-										{balance.budget && balance.budget > 0 && (
+										{balance.budget?.amount_usd && balance.budget.amount_usd > 0 && (
 											<div className="w-full">
 												<div className="flex justify-between text-xs text-muted-foreground mb-1">
 													<span>Progreso</span>
@@ -361,11 +452,6 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 
 			<BalanceDetailsModal
 				balance={selectedBalance}
-				work={
-					selectedBalance
-						? works.find((w) => Number(w.id) === Number(selectedBalance.work_id)) || null
-						: null
-				}
 				isOpen={isDetailsModalOpen}
 				onOpenChange={setIsDetailsModalOpen}
 				onTransactionCreated={handleBalanceUpdate}
@@ -377,10 +463,9 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 						<AlertDialogTitle>¿Eliminar saldo?</AlertDialogTitle>
 						<AlertDialogDescription>
 							Esta acción no se puede deshacer. Se eliminará permanentemente el saldo
-							{balanceToDelete && (() => {
-								const work = works.find((w) => Number(w.id) === Number(balanceToDelete.work_id));
-								return work ? ` de la obra en ${work.locality}` : '';
-							})()} y todas sus transacciones asociadas.
+							{balanceToDelete?.budget?.folder_budget?.work &&
+								` de la obra en ${balanceToDelete.budget.folder_budget.work.locality}`}{' '}
+							y todas sus transacciones asociadas.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
@@ -394,6 +479,13 @@ export function ClientBalances({ clientId, works }: ClientBalancesProps) {
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
+
+			<DollarUpdateModal
+				isOpen={isDollarUpdateModalOpen}
+				onOpenChange={setIsDollarUpdateModalOpen}
+				balance={balanceToUpdate}
+				onUpdateConfirmed={handleDollarUpdate}
+			/>
 		</div>
 	);
 }

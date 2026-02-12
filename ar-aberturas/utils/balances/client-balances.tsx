@@ -351,7 +351,7 @@ export function ClientBalances({ clientId, onCreateBalance }: ClientBalancesProp
 												<div className="flex flex-col">
 													<p className="text-xs sm:text-sm font-bold text-orange-600 truncate">
 														{formatCurrency(
-															(balance.remainingUSD || 0) * (balance.usd_current || 1)
+															(balance.remaining || 0)
 														)}
 													</p>
 													{balance.contract_date_usd && (

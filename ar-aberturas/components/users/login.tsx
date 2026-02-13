@@ -28,6 +28,10 @@ export default function LoginPage() {
 		e.preventDefault();
 		setError(null);
 		try {
+			if (usuario.trim() === '' || contraseña.trim() === '') {
+				setError('Por favor, complete todos los campos.');
+				return;
+			}
 			await signIn(usuario, contraseña);
 			setIsRedirecting(true);
 			router.push('/');

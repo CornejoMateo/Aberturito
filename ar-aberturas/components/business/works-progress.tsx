@@ -398,7 +398,6 @@ export function WorksOpenings() {
 
 										<div className="space-y-2">
 											<div className="flex items-center justify-between text-sm">
-												<span className="text-muted-foreground">Progreso</span>
 												<div className="text-sm text-muted-foreground">
 													Progreso: {installation.progress}%
 												</div>

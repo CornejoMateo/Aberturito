@@ -25,13 +25,12 @@ import {
 } from '@/components/ui/pagination';
 import { Plus, DollarSign, Search, Trash2, TrendingUp } from 'lucide-react';
 import {
-	Balance,
 	BalanceWithBudget,
 	getBalancesByClientId,
 	deleteBalance,
 } from '@/lib/works/balances';
+import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { getTotalByBalanceId } from '@/lib/works/balance_transactions';
-import { Work } from '@/lib/works/works';
 import { BalanceDetailsModal } from './balance-details-modal';
 import { DollarUpdateModal } from '@/components/ui/dollar-update-modal';
 import { format } from 'date-fns';
@@ -51,8 +50,6 @@ export interface BalanceWithTotals extends BalanceWithBudget {
 }
 
 export function ClientBalances({ clientId, onCreateBalance }: ClientBalancesProps) {
-	const [balances, setBalances] = useState<BalanceWithTotals[]>([]);
-	const [isLoading, setIsLoading] = useState(false);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedBalance, setSelectedBalance] = useState<BalanceWithTotals | null>(null);
@@ -61,66 +58,59 @@ export function ClientBalances({ clientId, onCreateBalance }: ClientBalancesProp
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [isDollarUpdateModalOpen, setIsDollarUpdateModalOpen] = useState(false);
 	const [balanceToUpdate, setBalanceToUpdate] = useState<BalanceWithTotals | null>(null);
-	const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
+	const [balancesWithTotals, setBalancesWithTotals] = useState<BalanceWithTotals[]>([]);
 	const itemsPerPage = 2;
 
-	const loadBalances = async () => {
-		try {
-			setIsLoading(true);
-			const { data, error } = await getBalancesByClientId(clientId);
+	const {
+		data: rawBalances,
+		loading: isLoading,
+		refresh,
+	} = useOptimizedRealtime<BalanceWithBudget>(
+		'balances',
+		async () => {
+			const { data } = await getBalancesByClientId(clientId);
+			return data ?? [];
+		},
+		`balances_${clientId}`
+	);
 
-			if (error) {
-				console.error('Error al cargar saldos:', error);
+	// Calculate totals whenever rawBalances change
+	useEffect(() => {
+		const fetchTotals = async () => {
+			if (!rawBalances || rawBalances.length === 0) {
+				setBalancesWithTotals([]);
 				return;
 			}
 
-			if (data) {
-				const balancesWithTotals = await Promise.all(
-					data.map(async (balance) => {
-						const { data: totals } = await getTotalByBalanceId(balance.id);
-						const totalPaid = totals?.totalAmount || 0;
-						const totalPaidUSD = totals?.totalAmountUSD || 0;
+			const balancesWithTotals = await Promise.all(
+				rawBalances.map(async (balance) => {
+					const { data: totals } = await getTotalByBalanceId(balance.id);
+					const totalPaid = totals?.totalAmount || 0;
+					const totalPaidUSD = totals?.totalAmountUSD || 0;
 
-						const budgetArs = balance.budget?.amount_ars || 0;
-						const budgetUsd = balance.budget?.amount_usd || 0;
+					const budgetArs = balance.budget?.amount_ars || 0;
+					const budgetUsd = balance.budget?.amount_usd || 0;
 
-						const remaining = budgetArs - totalPaid;
-						const remainingUSD = budgetUsd - totalPaidUSD;
+					const remaining = budgetArs - totalPaid;
+					const remainingUSD = budgetUsd - totalPaidUSD;
 
-						return {
-							...balance,
-							totalPaid,
-							totalPaidUSD,
-							remaining,
-							remainingUSD,
-						};
-					})
-				);
-				setBalances(balancesWithTotals);
-			} else {
-				setBalances([]);
-			}
-		} catch (error) {
-			console.error('Error inesperado al cargar saldos:', error);
-		} finally {
-			setIsLoading(false);
-		}
-	};
+					return {
+						...balance,
+						totalPaid,
+						totalPaidUSD,
+						remaining,
+						remainingUSD,
+					};
+				})
+			);
+			setBalancesWithTotals(balancesWithTotals);
+		};
 
-	useEffect(() => {
-		if (clientId) {
-			loadBalances();
-		}
-	}, [clientId]);
-
-	useEffect(() => {
-		if (lastUpdate && clientId) {
-			loadBalances();
-		}
-	}, [lastUpdate]);
+		fetchTotals();
+	}, [rawBalances]);
 
 	const handleBalanceUpdate = () => {
-		setLastUpdate(Date.now());
+		refresh();
 	};
 
 	const handleDeleteBalance = async () => {
@@ -187,7 +177,7 @@ export function ClientBalances({ clientId, onCreateBalance }: ClientBalancesProp
 
 	// Filter balances based on search term
 	const filteredBalances = useMemo(() => {
-		return balances.filter((balance) => {
+		return balancesWithTotals.filter((balance) => {
 			const searchLower = searchTerm.toLowerCase();
 			const work = balance.budget?.folder_budget?.work;
 			return (
@@ -196,7 +186,7 @@ export function ClientBalances({ clientId, onCreateBalance }: ClientBalancesProp
 				(balance.budget?.amount_ars?.toString() || '').includes(searchLower)
 			);
 		});
-	}, [balances, searchTerm]);
+	}, [balancesWithTotals, searchTerm]);
 
 	// Calculate pagination
 	const totalPages = Math.ceil(filteredBalances.length / itemsPerPage);

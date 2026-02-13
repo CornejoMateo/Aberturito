@@ -18,6 +18,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { Work } from '@/lib/works/works';
 import { createBudget, chooseBudgetForClient, Budget, getBudgetsByFolderBudgetIds, deleteBudget, updateBudget } from '@/lib/budgets/budgets';
 import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId, deleteFolderBudgetWithBudgets } from '@/lib/budgets/folder_budgets';
@@ -45,9 +46,50 @@ function workLabel(folder: FolderBudget): string {
 
 export function ClientBudgetsTab({ clientId, works }: { clientId: string; works: Work[] }) {
 	const [isLoading, setIsLoading] = useState(false);
-	const [folderBudgets, setFolderBudgets] = useState<FolderBudget[]>([]);
-	const [budgets, setBudgets] = useState<Budget[]>([]);
 	const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
+
+	// Realtime hook for folder_budgets
+	const {
+		data: folderBudgets,
+		loading: loadingFolders,
+		refresh: refreshFolders,
+	} = useOptimizedRealtime<FolderBudget>(
+		'folder_budgets',
+		async () => {
+			const { data } = await getFolderBudgetsByClientId(clientId);
+			return data ?? [];
+		},
+		`folder_budgets_${clientId}`
+	);
+
+	const folderBudgetIds = useMemo(() => folderBudgets.map((f) => f.id), [folderBudgets]);
+
+	// Realtime hook for budgets
+	const {
+		data: budgets,
+		loading: loadingBudgets,
+		refresh: refreshBudgets,
+	} = useOptimizedRealtime<Budget>(
+		'budgets',
+		async () => {
+			if (folderBudgetIds.length === 0) return [];
+			const { data } = await getBudgetsByFolderBudgetIds(folderBudgetIds);
+			return data ?? [];
+		},
+		`budgets_${clientId}`
+	);
+
+	// Refresh budgets when folder IDs change
+	useEffect(() => {
+		if (folderBudgetIds.length > 0) {
+			refreshBudgets();
+		}
+	}, [folderBudgetIds.length, refreshBudgets]);
+
+	const refresh = () => {
+		refreshFolders();
+		refreshBudgets();
+	};
 
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const [formType, setFormType] = useState<string>('PVC');
@@ -74,8 +116,6 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 		budget: Budget | null;
 		pdfUrl: string | null;
 	}>({ open: false, budget: null, pdfUrl: null });
-
-	const folderBudgetIds = useMemo(() => folderBudgets.map((f) => f.id), [folderBudgets]);
 
 	const chosenBudgetIds = useMemo(() => {
 		const chosen = budgets.filter((b) => !!b.accepted);
@@ -110,41 +150,6 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 		});
 	}, [foldersVM]);
 
-	async function load() {
-		try {
-			setIsLoading(true);
-			const fb = await getFolderBudgetsByClientId(clientId);
-			if (fb.error) {
-				toast({
-					variant: 'destructive',
-					title: 'Error al cargar carpetas de presupuestos',
-					description: 'Intente nuevamente.',
-				});
-				return;
-			}
-			const folderList = fb.data ?? [];
-			setFolderBudgets(folderList);
-
-			const ids = folderList.map((x) => x.id);
-			const bs = await getBudgetsByFolderBudgetIds(ids);
-			if (bs.error) {
-				toast({
-					variant: 'destructive',
-					title: 'Error al cargar presupuestos',
-					description: 'Intente nuevamente.',
-				});
-				return;
-			}
-			setBudgets(bs.data ?? []);
-		} finally {
-			setIsLoading(false);
-		}
-	}
-
-	useEffect(() => {
-		load();
-	}, [clientId]);
-
 	useEffect(() => {
 		setOpenFolders((prev) => {
 			const next: Record<string, boolean> = { ...prev };
@@ -175,9 +180,10 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 			}
 			
 			toast({ 
-				title: budget.accepted ? 'Presupuesto deseleccionado' : 'Presupuesto elegido' 
+				title: budget.accepted ? 'Presupuesto deseleccionado' : 'Presupuesto elegido',
+				description: budget.accepted ? 'El presupuesto ya no será considerado como elegido.' : 'El presupuesto ahora es el elegido para este cliente.',
 			});
-			await load();
+			refresh();
 		} finally {
 			setIsLoading(false);
 		}
@@ -205,7 +211,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 				return;
 			}
 			toast({ title: 'Presupuesto eliminado' });
-			await load();
+			refresh();
 		} finally {
 			setIsLoading(false);
 			setDeleteBudgetConfirm({ open: false, budgetId: null });
@@ -239,7 +245,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 				return;
 			}
 			toast({ title: 'Carpeta eliminada' });
-			await load();
+			refresh();
 		} finally {
 			setIsLoading(false);
 			setDeleteFolderConfirm({ 
@@ -371,7 +377,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 			toast({ title: 'Presupuesto creado' });
 			setIsCreateOpen(false);
 			resetForm();
-			await load();
+			refresh();
 		} finally {
 			setIsLoading(false);
 		}
@@ -507,7 +513,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 				</Dialog>
 			</div>
 
-			{isLoading && folderBudgets.length === 0 ? (
+		{(loadingFolders || loadingBudgets) && folderBudgets.length === 0 ? (
 				<p className="text-sm text-muted-foreground text-center py-6">Cargando presupuestos...</p>
 			) : folderBudgets.length === 0 ? (
 				<Card className="p-6">

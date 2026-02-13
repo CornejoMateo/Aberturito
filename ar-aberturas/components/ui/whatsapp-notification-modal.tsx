@@ -124,16 +124,16 @@ export function WhatsAppNotificationModal({
 
 			let arrivalInfo = '';
 			if (formData.scheduledDate || formData.scheduledTime) {
-			arrivalInfo = '\n\n*Hora estimada de llegada:*\n';
-			if (formData.scheduledDate) {
-				arrivalInfo += `- Fecha: ${format(new Date(formData.scheduledDate + 'T00:00:00'), 'dd/MM/yyyy')}\n`;
+				arrivalInfo = '\n\n*Hora estimada de llegada:*\n';
+				if (formData.scheduledDate) {
+					arrivalInfo += `- Fecha: ${format(new Date(formData.scheduledDate + 'T00:00:00'), 'dd/MM/yyyy')}\n`;
+				}
+				if (formData.scheduledTime) {
+					arrivalInfo += `- Hora: ${formData.scheduledTime}\n`;
+				}
 			}
-			if (formData.scheduledTime) {
-				arrivalInfo += `- Hora: ${formData.scheduledTime}\n`;
-			}
-		}
 
-		const newMessage = `*AR Aberturas - Notificación de Obra*
+			const newMessage = `*AR Aberturas - Notificación de Obra*
 
 Estimado/a ${clientName},
 
@@ -219,9 +219,9 @@ El equipo de AR Aberturas`;
 					<div className="bg-secondary/50 rounded-lg p-4 space-y-3">
 						<h4 className="font-medium text-sm">Información del Cliente y Obra</h4>
 
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+						<div className="space-y-2 text-sm">
 							<div className="flex items-center gap-2">
-								<User className="h-4 w-4 text-muted-foreground" />
+								<User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
 								<span className="font-medium">Cliente:</span>
 								<span>
 									{client.name} {client.last_name}
@@ -229,13 +229,13 @@ El equipo de AR Aberturas`;
 							</div>
 
 							<div className="flex items-center gap-2">
-								<Smartphone className="h-4 w-4 text-muted-foreground" />
+								<Smartphone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
 								<span className="font-medium">Teléfono:</span>
 								<span className="text-green-600">{client.phone_number || 'No especificado'}</span>
 							</div>
 
 							<div className="flex items-center gap-2">
-								<MapPin className="h-4 w-4 text-muted-foreground" />
+								<MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
 								<span className="font-medium">Obra:</span>
 								<span>
 									{work.locality}
@@ -244,8 +244,6 @@ El equipo de AR Aberturas`;
 							</div>
 						</div>
 					</div>
-
-					{/* WhatsApp Form */}
 					<div className="space-y-4">
 						<div className="space-y-2">
 							<Label htmlFor="phoneNumber">Número de Teléfono</Label>

@@ -18,7 +18,6 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, MessageCircle, MapPin, Clock, User, AlertCircle, Smartphone } from 'lucide-react';
 import { format } from 'date-fns';
 
-
 interface Client {
 	id: string;
 	name?: string | null;
@@ -82,7 +81,7 @@ export function WhatsAppNotificationModal({
 
 	const handleSend = async () => {
 		const phoneNumber = formData.phoneNumber || client?.phone_number;
-		
+
 		if (!phoneNumber || !work) {
 			setError('No se puede enviar el mensaje: falta número de teléfono o información de la obra');
 			return;
@@ -117,18 +116,67 @@ export function WhatsAppNotificationModal({
 		}
 	}, [isOpen, client, work]);
 
+	// Update message when scheduled date or time changes
+	useEffect(() => {
+		if (isOpen && client && work && (formData.scheduledDate || formData.scheduledTime)) {
+			const clientName = `${client?.name || ''} ${client?.last_name || ''}`.trim();
+			const workLocation = `${work?.locality || ''}${work?.address ? `, ${work.address}` : ''}`;
+
+			let arrivalInfo = '';
+			if (formData.scheduledDate || formData.scheduledTime) {
+			arrivalInfo = '\n\n*Hora estimada de llegada:*\n';
+			if (formData.scheduledDate) {
+				arrivalInfo += `- Fecha: ${format(new Date(formData.scheduledDate + 'T00:00:00'), 'dd/MM/yyyy')}\n`;
+			}
+			if (formData.scheduledTime) {
+				arrivalInfo += `- Hora: ${formData.scheduledTime}\n`;
+			}
+		}
+
+		const newMessage = `*AR Aberturas - Notificación de Obra*
+
+Estimado/a ${clientName},
+
+Le informamos que nuestro equipo de colocación estará llegando a la obra ubicada en ${workLocation}${formData.scheduledDate || formData.scheduledTime ? ' en la fecha y horario indicados' : ' en las próximas horas'}.
+
+*Detalles de la obra:*
+- Ubicación: ${workLocation}${arrivalInfo}
+
+Si tiene alguna pregunta o necesita coordinar algún detalle adicional, no dude en contactarnos.
+
+Atentamente,
+El equipo de AR Aberturas`;
+
+			setFormData((prev) => ({
+				...prev,
+				message: newMessage,
+			}));
+		}
+	}, [formData.scheduledDate, formData.scheduledTime, isOpen, client, work]);
+
 	const generateDefaultMessage = () => {
 		const clientName = `${client?.name || ''} ${client?.last_name || ''}`.trim();
 		const workLocation = `${work?.locality || ''}${work?.address ? `, ${work.address}` : ''}`;
-		
+
+		let arrivalInfo = '';
+		if (formData.scheduledDate || formData.scheduledTime) {
+			arrivalInfo = '\n\n*Hora estimada de llegada:*\n';
+			if (formData.scheduledDate) {
+				arrivalInfo += `- Fecha: ${format(new Date(formData.scheduledDate + 'T00:00:00'), 'dd/MM/yyyy')}\n`;
+			}
+			if (formData.scheduledTime) {
+				arrivalInfo += `- Hora: ${formData.scheduledTime}\n`;
+			}
+		}
+
 		return `*AR Aberturas - Notificación de Obra*
 
 Estimado/a ${clientName},
 
-Le informamos que nuestro equipo de colocación estará llegando a la obra ubicada en ${workLocation} en las próximas horas.
+Le informamos que nuestro equipo de colocación estará llegando a la obra ubicada en ${workLocation}${formData.scheduledDate || formData.scheduledTime ? ' en la fecha y horario indicados' : ' en las próximas horas'}.
 
-📍 *Detalles de la obra:*
-• Ubicación: ${workLocation}
+*Detalles de la obra:*
+- Ubicación: ${workLocation}${arrivalInfo}
 
 Por favor, asegúrese de que el lugar esté accesible y preparado para la instalación.
 
@@ -139,17 +187,7 @@ El equipo de AR Aberturas`;
 	};
 
 	const handleInputChange = (field: string, value: string) => {
-		setFormData(prev => ({ ...prev, [field]: value }));
-	};
-
-	const formatPhoneNumber = (phone: string) => {
-		// Remove all non-digit characters
-		const digits = phone.replace(/\D/g, '');
-		// Ensure it starts with country code for Argentina (54)
-		if (digits.length === 10) {
-			return `54${digits}`;
-		}
-		return digits;
+		setFormData((prev) => ({ ...prev, [field]: value }));
 	};
 
 	if (!client || !work) {
@@ -180,24 +218,29 @@ El equipo de AR Aberturas`;
 					{/* Client and Work Info */}
 					<div className="bg-secondary/50 rounded-lg p-4 space-y-3">
 						<h4 className="font-medium text-sm">Información del Cliente y Obra</h4>
-						
+
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
 							<div className="flex items-center gap-2">
 								<User className="h-4 w-4 text-muted-foreground" />
 								<span className="font-medium">Cliente:</span>
-								<span>{client.name} {client.last_name}</span>
+								<span>
+									{client.name} {client.last_name}
+								</span>
 							</div>
-							
+
 							<div className="flex items-center gap-2">
 								<Smartphone className="h-4 w-4 text-muted-foreground" />
 								<span className="font-medium">Teléfono:</span>
 								<span className="text-green-600">{client.phone_number || 'No especificado'}</span>
 							</div>
-							
+
 							<div className="flex items-center gap-2">
 								<MapPin className="h-4 w-4 text-muted-foreground" />
 								<span className="font-medium">Obra:</span>
-								<span>{work.locality}{work.address ? `, ${work.address}` : ''}</span>
+								<span>
+									{work.locality}
+									{work.address ? `, ${work.address}` : ''}
+								</span>
 							</div>
 						</div>
 					</div>
@@ -205,7 +248,7 @@ El equipo de AR Aberturas`;
 					{/* WhatsApp Form */}
 					<div className="space-y-4">
 						<div className="space-y-2">
-							<Label htmlFor="phoneNumber">Número de Teléfono (con código de país)</Label>
+							<Label htmlFor="phoneNumber">Número de Teléfono</Label>
 							<Input
 								id="phoneNumber"
 								value={formData.phoneNumber}
@@ -230,7 +273,9 @@ El equipo de AR Aberturas`;
 
 						{/* Arrival Time Information */}
 						<div className="border-t pt-4">
-							<h4 className="font-medium text-sm mb-3">Fecha y Hora de Llegada (De los colocadores)</h4>
+							<h4 className="font-medium text-sm mb-3">
+								Fecha y hora de llegada (de los colocadores)
+							</h4>
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 								<div className="space-y-2">
 									<Label htmlFor="scheduledDate">Fecha de llegada</Label>
@@ -256,7 +301,9 @@ El equipo de AR Aberturas`;
 								<Alert>
 									<Clock className="h-4 w-4" />
 									<AlertDescription className="text-xs">
-										El equipo de colocación llegará el {formData.scheduledDate && format(new Date(formData.scheduledDate + 'T00:00:00'), "dd/MM/yyyy")}
+										El equipo de colocación llegará el{' '}
+										{formData.scheduledDate &&
+											format(new Date(formData.scheduledDate + 'T00:00:00'), 'dd/MM/yyyy')}
 										{formData.scheduledTime && ` a las ${formData.scheduledTime}`}
 									</AlertDescription>
 								</Alert>
@@ -266,11 +313,7 @@ El equipo de AR Aberturas`;
 				</div>
 
 				<DialogFooter>
-					<Button
-						variant="outline"
-						onClick={() => onOpenChange(false)}
-						disabled={isSending}
-					>
+					<Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSending}>
 						Cancelar
 					</Button>
 					<Button

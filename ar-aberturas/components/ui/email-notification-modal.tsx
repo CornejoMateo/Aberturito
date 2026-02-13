@@ -117,16 +117,65 @@ export function EmailNotificationModal({
 		}
 	}, [isOpen, client, work]);
 
+	// Update message when scheduled date or time changes
+	useEffect(() => {
+		if (isOpen && client && work && (formData.scheduledDate || formData.scheduledTime)) {
+			const clientName = `${client?.name || ''} ${client?.last_name || ''}`.trim();
+			const workLocation = `${work?.locality || ''}${work?.address ? `, ${work.address}` : ''}`;
+
+			let arrivalInfo = '';
+			if (formData.scheduledDate || formData.scheduledTime) {
+				arrivalInfo = '\n\nHora estimada de llegada:\n';
+				if (formData.scheduledDate) {
+					arrivalInfo += `- Fecha: ${format(new Date(formData.scheduledDate + 'T00:00:00'), 'dd/MM/yyyy')}\n`;
+				}
+				if (formData.scheduledTime) {
+					arrivalInfo += `- Hora: ${formData.scheduledTime}\n`;
+				}
+			}
+
+			const newMessage = `Estimado/a ${clientName},
+
+Le informamos que nuestro equipo de colocación estará llegando a la obra ubicada en ${workLocation}${formData.scheduledDate || formData.scheduledTime ? ' en la fecha y horario indicados' : ' en las próximas horas'}.
+
+Detalles de la obra:
+- Ubicación: ${workLocation}${arrivalInfo}
+
+Por favor, asegúrese de que el lugar esté accesible y preparado para la instalación.
+
+Si tiene alguna pregunta o necesita coordinar algún detalle adicional, no dude en contactarnos.
+
+Atentamente,
+El equipo de AR Aberturas`;
+
+			setFormData((prev) => ({
+				...prev,
+				message: newMessage,
+			}));
+		}
+	}, [formData.scheduledDate, formData.scheduledTime, isOpen, client, work]);
+
 	const generateDefaultMessage = () => {
 		const clientName = `${client?.name || ''} ${client?.last_name || ''}`.trim();
 		const workLocation = `${work?.locality || ''}${work?.address ? `, ${work.address}` : ''}`;
 		
+		let arrivalInfo = '';
+		if (formData.scheduledDate || formData.scheduledTime) {
+			arrivalInfo = '\n\nHora estimada de llegada:\n';
+			if (formData.scheduledDate) {
+				arrivalInfo += `- Fecha: ${format(new Date(formData.scheduledDate + 'T00:00:00'), 'dd/MM/yyyy')}\n`;
+			}
+			if (formData.scheduledTime) {
+				arrivalInfo += `- Hora: ${formData.scheduledTime}\n`;
+			}
+		}
+
 		return `Estimado/a ${clientName},
 
-Le informamos que nuestro equipo de colocación estará llegando a la obra ubicada en ${workLocation} en las próximas horas.
+Le informamos que nuestro equipo de colocación estará llegando a la obra ubicada en ${workLocation}${formData.scheduledDate || formData.scheduledTime ? ' en la fecha y horario indicados' : ' en las próximas horas'}.
 
 Detalles de la obra:
-- Ubicación: ${workLocation}
+- Ubicación: ${workLocation}${arrivalInfo}
 
 Por favor, asegúrese de que el lugar esté accesible y preparado para la instalación.
 

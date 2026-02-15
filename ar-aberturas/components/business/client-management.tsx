@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Client, listClients, deleteClient } from '@/lib/clients/clients';
-import { getFolderBudgetsByClientId } from '@/lib/budgets/folder_budgets';
+import { getFolderBudgetsByClientIds } from '@/lib/budgets/folder_budgets';
 import { getBudgetsByFolderBudgetIds } from '@/lib/budgets/budgets';
 import { ClientsAddDialog } from '@/utils/clients/clients-add-dialog';
 import { ClientDetailsDialog } from '../../utils/clients/client-details-dialog';
@@ -66,47 +66,68 @@ export function ClientManagement() {
 
 	const loadClientBudgetsInfo = async () => {
 		const info: Record<string, { total: number; chosen: number }> = {};
-		
-		// Only get budgets info for currently displayed clients to optimize performance
-		const currentClients = currentItems.map(item => item);
-		
-		// Get folders for each client, handling errors individually
-		const folderPromises = currentClients.map(client => 
-			getFolderBudgetsByClientId(client.id).catch(error => {
-				console.error(`Error loading folders for client ${client.id}:`, error);
-				return { data: [] };
-			})
-		);
-		
-		const folderResults = await Promise.all(folderPromises);
-		
-		const budgetPromises = folderResults.map((result, index) => {
-			const client = currentClients[index];
-			const folders = result.data || [];
-			const folderIds = folders.map(f => f.id);
-			
-			if (folderIds.length > 0) {
-				return getBudgetsByFolderBudgetIds(folderIds)
-					.then(budgetResult => {
-						const budgets = budgetResult.data || [];
-						const chosenCount = budgets.filter(b => b.accepted).length;
-						
-						info[client.id] = {
-							total: budgets.length,
-							chosen: chosenCount
-						};
-					})
-					.catch(error => {
-						console.error(`Error loading budgets for client ${client.id}:`, error);
-						info[client.id] = { total: 0, chosen: 0 };
-					});
-			} else {
-				info[client.id] = { total: 0, chosen: 0 };
-				return Promise.resolve();
+		const currentClients = currentItems;
+		const clientIds = currentClients.map((c) => c.id);
+		if (clientIds.length === 0) {
+			setClientBudgetsInfo({});
+			return;
+		}
+
+		const { data: folders, error: foldersError } = await getFolderBudgetsByClientIds(clientIds);
+		if (foldersError) {
+			console.error('Error loading folders for clients:', foldersError);
+			for (const c of currentClients) info[c.id] = { total: 0, chosen: 0 };
+			setClientBudgetsInfo(info);
+			return;
+		}
+
+		const folderIds = (folders ?? []).map((f) => f.id);
+		if (folderIds.length === 0) {
+			for (const c of currentClients) info[c.id] = { total: 0, chosen: 0 };
+			setClientBudgetsInfo(info);
+			return;
+		}
+
+		const { data: budgets, error: budgetsError } = await getBudgetsByFolderBudgetIds(folderIds);
+		if (budgetsError) {
+			console.error('Error loading budgets for folders:', budgetsError);
+			for (const c of currentClients) info[c.id] = { total: 0, chosen: 0 };
+			setClientBudgetsInfo(info);
+			return;
+		}
+
+		const foldersByClientId = new Map<string, string[]>();
+		for (const f of folders ?? []) {
+			const cid = f.client_id ?? '';
+			if (!cid) continue;
+			const prev = foldersByClientId.get(cid) ?? [];
+			prev.push(f.id);
+			foldersByClientId.set(cid, prev);
+		}
+
+		const budgetsAggByFolderId = new Map<string, { total: number; chosen: number }>();
+		for (const b of budgets ?? []) {
+			const fid = b.folder_budget_id ?? '';
+			if (!fid) continue;
+			const prev = budgetsAggByFolderId.get(fid) ?? { total: 0, chosen: 0 };
+			prev.total += 1;
+			if (b.accepted) prev.chosen += 1;
+			budgetsAggByFolderId.set(fid, prev);
+		}
+
+		for (const c of currentClients) {
+			const fids = foldersByClientId.get(c.id) ?? [];
+			let total = 0;
+			let chosen = 0;
+			for (const fid of fids) {
+				const agg = budgetsAggByFolderId.get(fid);
+				if (!agg) continue;
+				total += agg.total;
+				chosen += agg.chosen;
 			}
-		});
-		
-		await Promise.all(budgetPromises);
+			info[c.id] = { total, chosen };
+		}
+
 		setClientBudgetsInfo(info);
 	};
 
@@ -175,11 +196,13 @@ export function ClientManagement() {
 		}
 	};
 
-	const filteredClients = clients.filter(
-		(client) =>
-			client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			client.locality?.toLowerCase().includes(searchTerm.toLowerCase())
-	);
+	const filteredClients = useMemo(() => {
+		return clients.filter(
+			(client) =>
+				client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				client.locality?.toLowerCase().includes(searchTerm.toLowerCase())
+		);
+	}, [clients, searchTerm]);
 
 	const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
 

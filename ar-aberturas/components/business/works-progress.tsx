@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { ChecklistCompletionModal } from '@/utils/checklists/checklist-completion-modal';
 import { listWorks } from '@/lib/works/works';
-import { getChecklistsByWorkId } from '@/lib/works/checklists';
+import { getChecklistsByWorkIds } from '@/lib/works/checklists';
 import { getClientById } from '@/lib/clients/clients';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -69,39 +69,50 @@ export function WorksOpenings() {
 				}
 
 				// get checklists for each work and calculate progress
-				const worksWithChecklists = await Promise.all(
-					works.map(async (work) => {
-						const { data: checklists } = await getChecklistsByWorkId(work.id);
+				const workIds = works.map((w) => w.id);
+				const { data: allChecklists, error: checklistsError } = await getChecklistsByWorkIds(workIds);
+				if (checklistsError) {
+					console.error('Error al obtener checklists:', checklistsError);
+				}
 
-						let progress = 0;
-						let tasks: ChecklistItem[] = [];
-						let hasNotes = false;
+				const checklistsByWorkId = new Map<string, ChecklistItem[]>();
+				const hasNotesByWorkId = new Map<string, boolean>();
+				for (const cl of allChecklists ?? []) {
+					const wid = cl.work_id ?? '';
+					if (!wid) continue;
+					const prevItems = checklistsByWorkId.get(wid) ?? [];
+					const items = cl.items ?? [];
+					prevItems.push(...items);
+					checklistsByWorkId.set(wid, prevItems);
 
-						if (checklists && checklists.length > 0) {
-							tasks = checklists.flatMap((checklist) => checklist.items || []);
-							hasNotes = checklists.some((checklist) => (checklist.notes || '').trim().length > 0);
+					if (!hasNotesByWorkId.get(wid)) {
+						hasNotesByWorkId.set(wid, (cl.notes || '').trim().length > 0);
+					}
+				}
 
-							const totalTasks = tasks.length;
-							const completedTasks = tasks.filter((task) => task.done).length;
-							progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-						}
+				const worksWithChecklists = works.map((work) => {
+					const tasks = checklistsByWorkId.get(work.id) ?? [];
+					const hasNotes = hasNotesByWorkId.get(work.id) ?? false;
 
-						let status: 'pendiente' | 'en_progreso' | 'completada' = 'pendiente';
-						if (progress === 100) {
-							status = 'completada';
-						} else if (progress > 0) {
-							status = 'en_progreso';
-						}
+					const totalTasks = tasks.length;
+					const completedTasks = tasks.filter((task) => task.done).length;
+					const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-						return {
-							...work,
-							status,
-							tasks,
-							progress,
-							hasNotes,
-						};
-					})
-				);
+					let status: 'pendiente' | 'en_progreso' | 'completada' = 'pendiente';
+					if (progress === 100) {
+						status = 'completada';
+					} else if (progress > 0) {
+						status = 'en_progreso';
+					}
+
+					return {
+						...work,
+						status,
+						tasks,
+						progress,
+						hasNotes,
+					};
+				});
 
 				setInstallations(worksWithChecklists);
 			} catch (error) {

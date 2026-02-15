@@ -117,16 +117,65 @@ export function EmailNotificationModal({
 		}
 	}, [isOpen, client, work]);
 
+	// Update message when scheduled date or time changes
+	useEffect(() => {
+		if (isOpen && client && work && (formData.scheduledDate || formData.scheduledTime)) {
+			const clientName = `${client?.name || ''} ${client?.last_name || ''}`.trim();
+			const workLocation = `${work?.locality || ''}${work?.address ? `, ${work.address}` : ''}`;
+
+			let arrivalInfo = '';
+			if (formData.scheduledDate || formData.scheduledTime) {
+				arrivalInfo = '\n\nHora estimada de llegada:\n';
+				if (formData.scheduledDate) {
+					arrivalInfo += `- Fecha: ${format(new Date(formData.scheduledDate + 'T00:00:00'), 'dd/MM/yyyy')}\n`;
+				}
+				if (formData.scheduledTime) {
+					arrivalInfo += `- Hora: ${formData.scheduledTime}\n`;
+				}
+			}
+
+			const newMessage = `Estimado/a ${clientName},
+
+Le informamos que nuestro equipo de colocación estará llegando a la obra ubicada en ${workLocation}${formData.scheduledDate || formData.scheduledTime ? ' en la fecha y horario indicados' : ' en las próximas horas'}.
+
+Detalles de la obra:
+- Ubicación: ${workLocation}${arrivalInfo}
+
+Por favor, asegúrese de que el lugar esté accesible y preparado para la instalación.
+
+Si tiene alguna pregunta o necesita coordinar algún detalle adicional, no dude en contactarnos.
+
+Atentamente,
+El equipo de AR Aberturas`;
+
+			setFormData((prev) => ({
+				...prev,
+				message: newMessage,
+			}));
+		}
+	}, [formData.scheduledDate, formData.scheduledTime, isOpen, client, work]);
+
 	const generateDefaultMessage = () => {
 		const clientName = `${client?.name || ''} ${client?.last_name || ''}`.trim();
 		const workLocation = `${work?.locality || ''}${work?.address ? `, ${work.address}` : ''}`;
-		
+
+		let arrivalInfo = '';
+		if (formData.scheduledDate || formData.scheduledTime) {
+			arrivalInfo = '\n\nHora estimada de llegada:\n';
+			if (formData.scheduledDate) {
+				arrivalInfo += `- Fecha: ${format(new Date(formData.scheduledDate + 'T00:00:00'), 'dd/MM/yyyy')}\n`;
+			}
+			if (formData.scheduledTime) {
+				arrivalInfo += `- Hora: ${formData.scheduledTime}\n`;
+			}
+		}
+
 		return `Estimado/a ${clientName},
 
-Le informamos que nuestro equipo de colocación estará llegando a la obra ubicada en ${workLocation} en las próximas horas.
+Le informamos que nuestro equipo de colocación estará llegando a la obra ubicada en ${workLocation}${formData.scheduledDate || formData.scheduledTime ? ' en la fecha y horario indicados' : ' en las próximas horas'}.
 
 Detalles de la obra:
-- Ubicación: ${workLocation}
+- Ubicación: ${workLocation}${arrivalInfo}
 
 Por favor, asegúrese de que el lugar esté accesible y preparado para la instalación.
 
@@ -137,7 +186,7 @@ El equipo de AR Aberturas`;
 	};
 
 	const handleInputChange = (field: string, value: string) => {
-		setFormData(prev => ({ ...prev, [field]: value }));
+		setFormData((prev) => ({ ...prev, [field]: value }));
 	};
 
 	if (!client || !work) {
@@ -168,26 +217,30 @@ El equipo de AR Aberturas`;
 					{/* Client and Work Info */}
 					<div className="bg-secondary/50 rounded-lg p-4 space-y-3">
 						<h4 className="font-medium text-sm">Información del Cliente y Obra</h4>
-						
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+
+						<div className="space-y-2 text-sm">
 							<div className="flex items-center gap-2">
-								<User className="h-4 w-4 text-muted-foreground" />
+								<User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
 								<span className="font-medium">Cliente:</span>
-								<span>{client.name} {client.last_name}</span>
-							</div>
-							
-							<div className="flex items-center gap-2">
-								<Mail className="h-4 w-4 text-muted-foreground" />
-								<span className="font-medium">Email:</span>
-								<span className="text-blue-600">{client.email}</span>
-							</div>
-							
-							<div className="flex items-center gap-2">
-								<MapPin className="h-4 w-4 text-muted-foreground" />
-								<span className="font-medium">Obra:</span>
-								<span>{work.locality}{work.address ? `, ${work.address}` : ''}</span>
+								<span>
+									{client.name} {client.last_name}
+								</span>
 							</div>
 
+							<div className="flex items-center gap-2">
+								<Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+								<span className="font-medium">Email:</span>
+								<span className="text-blue-600 truncate">{client.email}</span>
+							</div>
+
+							<div className="flex items-center gap-2">
+								<MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+								<span className="font-medium">Obra:</span>
+								<span>
+									{work.locality}
+									{work.address ? `, ${work.address}` : ''}
+								</span>
+							</div>
 						</div>
 					</div>
 
@@ -216,7 +269,9 @@ El equipo de AR Aberturas`;
 
 						{/* Arrival Time Information */}
 						<div className="border-t pt-4">
-							<h4 className="font-medium text-sm mb-3">Fecha y Hora de Llegada (De los colocadores)</h4>
+							<h4 className="font-medium text-sm mb-3">
+								Fecha y Hora de Llegada (De los colocadores)
+							</h4>
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 								<div className="space-y-2">
 									<Label htmlFor="scheduledDate">Fecha de llegada</Label>
@@ -242,7 +297,9 @@ El equipo de AR Aberturas`;
 								<Alert>
 									<Clock className="h-4 w-4" />
 									<AlertDescription className="text-xs">
-										El equipo de colocación llegará el {formData.scheduledDate && format(new Date(formData.scheduledDate + 'T00:00:00'), "dd/MM/yyyy")}
+										El equipo de colocación llegará el{' '}
+										{formData.scheduledDate &&
+											format(new Date(formData.scheduledDate + 'T00:00:00'), 'dd/MM/yyyy')}
 										{formData.scheduledTime && ` a las ${formData.scheduledTime}`}
 									</AlertDescription>
 								</Alert>
@@ -252,17 +309,10 @@ El equipo de AR Aberturas`;
 				</div>
 
 				<DialogFooter>
-					<Button
-						variant="outline"
-						onClick={() => onOpenChange(false)}
-						disabled={isSending}
-					>
+					<Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSending}>
 						Cancelar
 					</Button>
-					<Button
-						onClick={handleSend}
-						disabled={isSending || !client.email}
-					>
+					<Button onClick={handleSend} disabled={isSending || !client.email}>
 						{isSending ? (
 							<>
 								<Loader2 className="h-4 w-4 mr-2 animate-spin" />

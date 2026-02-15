@@ -169,8 +169,9 @@ create table public.works (
   status character varying null,
   architect character varying null,
   notes character varying[] null,
-  balance_id bigint null,  constraint works_pkey primary key (id),
-  constraint works_client_id_fkey foreign KEY (client_id) references clients (id) on update CASCADE
+  balance_id bigint null,
+  constraint works_pkey primary key (id),
+  constraint works_client_id_fkey foreign KEY (client_id) references clients (id) on update CASCADE on delete CASCADE
 ) TABLESPACE pg_default;
 
 create table public.events (
@@ -231,7 +232,7 @@ create table public.checklists (
   height double precision null,
   notes text null,
   constraint checklists_pkey primary key (id),
-  constraint checklists_work_id_fkey foreign KEY (work_id) references works (id) on update CASCADE
+  constraint checklists_work_id_fkey foreign KEY (work_id) references works (id) on update CASCADE on delete CASCADE
 ) TABLESPACE pg_default;
   
 create table public.users (
@@ -277,7 +278,7 @@ create table public.folder_budgets (
   work_id bigint null,
   client_id bigint null,
   constraint folder_budgets_pkey primary key (id),
-  constraint folder_budgets_client_id_fkey foreign KEY (client_id) references clients (id) on update CASCADE,
+  constraint folder_budgets_client_id_fkey foreign KEY (client_id) references clients (id) on update CASCADE on delete CASCADE,
   constraint folder_budgets_work_id_fkey foreign KEY (work_id) references works (id) on update CASCADE
 ) TABLESPACE pg_default;
 
@@ -294,5 +295,5 @@ create table public.budgets (
   folder_budget_id bigint null,
   amount_usd numeric null,
   constraint budgets_pkey primary key (id),
-  constraint budgets_folder_budget_id_fkey foreign KEY (folder_budget_id) references folder_budgets (id) on update CASCADE
+  constraint budgets_folder_budget_id_fkey foreign KEY (folder_budget_id) references folder_budgets (id) on update CASCADE on delete CASCADE
 ) TABLESPACE pg_default;

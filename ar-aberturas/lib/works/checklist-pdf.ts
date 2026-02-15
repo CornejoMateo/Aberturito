@@ -2,7 +2,17 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Checklist, ChecklistItem } from './checklists';
 
-export async function generateChecklistPDF(checklists: Checklist[], clientName?: string): Promise<void> {
+export function prepareChecklistData(checklists: Checklist[]): Checklist[] {
+	return checklists.map(checklist => ({ ...checklist, }));
+}
+
+export async function generateChecklistPDF(
+	checklists: Checklist[],
+	clientName?: string,
+	workLocality?: string,
+	workAddress?: string
+): Promise<void> {
+
 	const pdf = new jsPDF('p', 'mm', 'a4');
 	const pageWidth = pdf.internal.pageSize.getWidth();
 	const pageHeight = pdf.internal.pageSize.getHeight();
@@ -12,30 +22,63 @@ export async function generateChecklistPDF(checklists: Checklist[], clientName?:
 	const columnWidth = (pageWidth - (2 * margin) - gutter) / 2;
 	let yPosition = margin;
 
-	const addTextAt = (
-		text: string,
-		x: number,
-		y: number,
-		maxWidth: number,
-		fontSize: number = 12,
-		fontStyle: string = 'normal'
-	) => {
-		pdf.setFontSize(fontSize);
-		pdf.setFont('helvetica', fontStyle);
-		const lines = pdf.splitTextToSize(text, maxWidth);
-		const lineHeight = fontSize * 0.35;
-		lines.forEach((line: string, idx: number) => {
-			pdf.text(line, x, y + (idx * lineHeight));
-		});
-		return lines.length * lineHeight;
-	};
-
 	const estimateChecklistHeight = (checklist: Checklist) => {
-		const rowHeight = 7;
-		const itemsCount = checklist.items?.length ?? 0;
-		const headerHeight = rowHeight;
-		const tableRowsHeight = itemsCount * rowHeight;
-		const observationsHeight = 10 + (10 * 0.35) + 8;
+		const minRowHeight = 7;
+		const lineHeight = 3.5;
+		const cellPadding = 2;
+		const tableWidth = columnWidth;
+		const col1Width = tableWidth * 0.52;
+		const col2Width = tableWidth * 0.24;
+		const col3Width = tableWidth - col1Width - col2Width;
+
+		pdf.setFontSize(9);
+		const headerLines1 = pdf.splitTextToSize(
+			`${checklist.name || ''} - ${checklist.type_opening || ''}`,
+			col1Width - (2 * cellPadding)
+		);
+		const headerLines2 = pdf.splitTextToSize(
+			checklist.description || 'Sin descripción',
+			col2Width - (2 * cellPadding)
+		);
+		const headerLines3 = pdf.splitTextToSize(
+			`${checklist.width || '0'} X ${checklist.height || '0'}`,
+			col3Width - (2 * cellPadding)
+		);
+
+		const headerHeight = Math.max(
+			minRowHeight,
+			headerLines1.length * lineHeight + 4,
+			headerLines2.length * lineHeight + 4,
+			headerLines3.length * lineHeight + 4
+		);
+
+		let tableRowsHeight = 0;
+		pdf.setFontSize(8.5);
+
+		const items = checklist.items || [];
+		items.forEach((item: ChecklistItem) => {
+			const lines = pdf.splitTextToSize(
+				item.name,
+				col1Width - (2 * cellPadding)
+			);
+			const textHeight = lines.length * lineHeight;
+			const itemHeight = Math.max(minRowHeight, textHeight + 4);
+			tableRowsHeight += itemHeight;
+		});
+
+		let observationsHeight = 10;
+		if (checklist.notes && checklist.notes.trim()) {
+			pdf.setFontSize(9);
+			const obsTextWidth = pdf.getTextWidth('OBSERVACIONES:');
+			pdf.setFontSize(8.5);
+			const notesLines = pdf.splitTextToSize(
+				checklist.notes,
+				tableWidth - obsTextWidth - cellPadding - 3
+			);
+			observationsHeight += notesLines.length * 3.5;
+		}
+		observationsHeight += 8;
+
 		return headerHeight + tableRowsHeight + observationsHeight;
 	};
 
@@ -46,11 +89,12 @@ export async function generateChecklistPDF(checklists: Checklist[], clientName?:
 		yTop: number,
 		width: number
 	) => {
-		const startY = yTop;
+
 		const tableLeft = xLeft;
 		const tableWidth = width;
 		const cellPadding = 2;
-		const rowHeight = 7;
+		const minRowHeight = 7;
+		const lineHeight = 3.5;
 
 		const col1Width = tableWidth * 0.52;
 		const col2Width = tableWidth * 0.24;
@@ -59,50 +103,166 @@ export async function generateChecklistPDF(checklists: Checklist[], clientName?:
 		pdf.setFontSize(9);
 		pdf.setFont('helvetica', 'bold');
 
-		pdf.rect(tableLeft, startY, col1Width, rowHeight);
-		const identifierType = `${checklist.name || `PV${checklistIndex + 1}`} - ${checklist.type_opening || ''}`;
-		const identifierText = pdf.splitTextToSize(identifierType, col1Width - (2 * cellPadding));
-		pdf.text(identifierText[0] || '', tableLeft + cellPadding, startY + rowHeight / 2 + 1);
+		const headerText1 = pdf.splitTextToSize(
+			checklist.type_opening ? `${checklist.name || `PV${checklistIndex + 1}`} - ${checklist.type_opening || ''}` : (checklist.name || `PV${checklistIndex + 1}`),
+			col1Width - (2 * cellPadding)
+		);
 
-		pdf.rect(tableLeft + col1Width, startY, col2Width, rowHeight);
-		const descriptionText = pdf.splitTextToSize(checklist.description || 'Sin descripción', col2Width - (2 * cellPadding));
-		pdf.text(descriptionText[0] || '', tableLeft + col1Width + cellPadding, startY + rowHeight / 2 + 1);
+		const headerText2 = pdf.splitTextToSize(
+			checklist.description || 'Sin descripción',
+			col2Width - (2 * cellPadding)
+		);
 
-		pdf.rect(tableLeft + col1Width + col2Width, startY, col3Width, rowHeight);
-		pdf.text(`${checklist.width || '0'} X ${checklist.height || '0'}`, tableLeft + col1Width + col2Width + cellPadding, startY + rowHeight / 2 + 1);
+		const headerText3 = pdf.splitTextToSize(
+			`${checklist.width || '0'} X ${checklist.height || '0'}`,
+			col3Width - (2 * cellPadding)
+		);
 
+		const headerHeight = Math.max(
+			minRowHeight,
+			headerText1.length * lineHeight + 4,
+			headerText2.length * lineHeight + 4,
+			headerText3.length * lineHeight + 4
+		);
+
+		pdf.setFillColor(255, 255, 255);
+		pdf.setDrawColor(0, 0, 0);
+		pdf.setLineWidth(0.5);
+		pdf.setTextColor(0, 0, 0);
+		pdf.setFont('helvetica', 'bold');
+
+		pdf.rect(tableLeft, yTop, col1Width, headerHeight, 'FD');
+		pdf.rect(tableLeft + col1Width, yTop, col2Width, headerHeight, 'FD');
+		pdf.rect(tableLeft + col1Width + col2Width, yTop, col3Width, headerHeight, 'FD');
+
+		headerText1.forEach((line: string, i: number) => {
+			pdf.text(line, tableLeft + cellPadding, yTop + cellPadding + 3 + (i * lineHeight));
+		});
+
+		headerText2.forEach((line: string, i: number) => {
+			pdf.text(line, tableLeft + col1Width + cellPadding, yTop + cellPadding + 3 + (i * lineHeight));
+		});
+
+		headerText3.forEach((line: string, i: number) => {
+			pdf.text(line, tableLeft + col1Width + col2Width + cellPadding, yTop + cellPadding + 3 + (i * lineHeight));
+		});
+
+		pdf.setLineWidth(0.1);
+		pdf.setTextColor(0, 0, 0);
 		pdf.setFont('helvetica', 'normal');
 		pdf.setFontSize(8.5);
 
+		let currentY = yTop + headerHeight;
+
 		const items = checklist.items || [];
-		items.forEach((item: ChecklistItem, itemIndex: number) => {
-			const currentY = startY + ((itemIndex + 1) * rowHeight);
-			pdf.rect(tableLeft, currentY, col1Width, rowHeight);
-			const itemText = pdf.splitTextToSize(item.name, col1Width - (2 * cellPadding));
-			pdf.text(itemText[0] || '', tableLeft + cellPadding, currentY + rowHeight / 2 + 1);
-			pdf.rect(tableLeft + col1Width, currentY, col2Width, rowHeight);
-			pdf.rect(tableLeft + col1Width + col2Width, currentY, col3Width, rowHeight);
+
+		items.forEach((item: ChecklistItem) => {
+
+			const itemText = pdf.splitTextToSize(
+				item.name,
+				col1Width - (2 * cellPadding)
+			);
+
+			const itemHeight = Math.max(
+				minRowHeight,
+				itemText.length * lineHeight + 4
+			);
+
+			pdf.rect(tableLeft, currentY, col1Width, itemHeight);
+			pdf.rect(tableLeft + col1Width, currentY, col2Width, itemHeight);
+			pdf.rect(tableLeft + col1Width + col2Width, currentY, col3Width, itemHeight);
+
+			itemText.forEach((line: string, idx: number) => {
+				pdf.text(
+					line,
+					tableLeft + cellPadding,
+					currentY + cellPadding + 3 + (idx * lineHeight)
+				);
+			});
+
+			currentY += itemHeight;
 		});
 
-		const afterTableY = startY + ((items.length + 1) * rowHeight);
-		const obsY = afterTableY + 8;
-		addTextAt('OBSERVACIONES:', tableLeft, obsY, tableWidth, 9, 'bold');
-		return (obsY + (9 * 0.35) + 8) - startY;
+		const obsY = currentY + 8;
+		pdf.setFontSize(9);
+		pdf.setFont('helvetica', 'bold');
+		pdf.setTextColor(0, 0, 0);
+		pdf.text('OBSERVACIONES:', tableLeft, obsY);
+		
+		let finalY = obsY;
+		
+		if (checklist.notes && checklist.notes.trim()) {
+			const obsTextWidth = pdf.getTextWidth('OBSERVACIONES:');
+			pdf.setFontSize(8.5);
+			pdf.setFont('helvetica', 'normal');
+			const notesLines = pdf.splitTextToSize(checklist.notes, tableWidth - obsTextWidth - cellPadding - 3);
+			
+			if (notesLines.length > 0) {
+				pdf.text(notesLines[0], tableLeft + obsTextWidth + 3, obsY);
+			}
+			
+			for (let idx = 1; idx < notesLines.length; idx++) {
+				pdf.text(notesLines[idx], tableLeft, obsY + (idx * 3.5));
+			}
+			
+			finalY += notesLines.length * 3.5;
+		}
+		
+		finalY += 8;
+
+		return finalY - yTop;
 	};
 
-	const title = clientName ? `CHECKLISTS - ${clientName.toUpperCase()}` : 'CHECKLISTS';
-	const titleHeight = addTextAt(title, margin, yPosition, pageWidth - (2 * margin), 14, 'normal');
-	yPosition += titleHeight + 6;
+	pdf.setFontSize(16);
+	pdf.setFont('helvetica', 'bold');
+	yPosition += 8;
+
+	if (clientName) {
+		pdf.setFontSize(11);
+		
+		// Client
+		pdf.setFont('helvetica', 'bold');
+		pdf.setTextColor(0, 0, 0);
+		pdf.text('Cliente:', margin, yPosition);
+		
+		pdf.setFont('helvetica', 'normal');
+		pdf.setTextColor(0, 0, 0);
+		pdf.text(clientName, margin + 18, yPosition);
+
+		// work
+		if (workLocality && workAddress) {
+			const clientTextWidth = pdf.getTextWidth(clientName);
+			const obraStartX = margin + 18 + clientTextWidth + 15;
+			
+			pdf.setFont('helvetica', 'bold');
+			pdf.setTextColor(0, 0, 0);
+			pdf.text('Obra:', obraStartX, yPosition);
+			
+			pdf.setFont('helvetica', 'normal');
+			pdf.setTextColor(0, 0, 0);
+			pdf.text(`${workAddress}, ${workLocality}`, obraStartX + 13, yPosition);
+		}
+		
+		yPosition += 8;
+	}
+
+	// separator line
+	pdf.setDrawColor(200, 200, 200);
+	pdf.setLineWidth(0.5);
+	pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+	yPosition += 8;
 
 	for (let i = 0; i < checklists.length; i += 2) {
+
 		const left = checklists[i];
 		const right = i + 1 < checklists.length ? checklists[i + 1] : undefined;
 
 		const leftHeight = estimateChecklistHeight(left);
 		const rightHeight = right ? estimateChecklistHeight(right) : 0;
-		const rowHeight = Math.max(leftHeight, rightHeight);
 
-		if (yPosition + rowHeight > pageHeight - margin - footerReserve) {
+		const blockHeight = Math.max(leftHeight, rightHeight);
+
+		if (yPosition + blockHeight > pageHeight - margin - footerReserve) {
 			pdf.addPage();
 			yPosition = margin;
 		}
@@ -111,79 +271,31 @@ export async function generateChecklistPDF(checklists: Checklist[], clientName?:
 		const rightX = margin + columnWidth + gutter;
 
 		renderChecklistAt(left, i, leftX, yPosition, columnWidth);
+
 		if (right) {
 			renderChecklistAt(right, i + 1, rightX, yPosition, columnWidth);
 		}
 
-		yPosition += rowHeight + 6;
+		yPosition += blockHeight + 6;
 	}
 
-	// Footer on each page
-	const totalPages = pdf.internal.pages.length - 1; // pages array includes a dummy page at index 0
+	// Footer
+	const totalPages = pdf.internal.pages.length - 1;
+
 	for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
 		pdf.setPage(pageNum);
 		pdf.setFontSize(8);
 		pdf.setFont('helvetica', 'italic');
-		pdf.setTextColor(150, 150, 150);
+		pdf.setTextColor(150);
 		pdf.text(
 			`Página ${pageNum} de ${totalPages}`,
 			pageWidth / 2,
 			pageHeight - 10,
 			{ align: 'center' }
 		);
-		pdf.setTextColor(0, 0, 0);
+		pdf.setTextColor(0);
 	}
 
-	// Save the PDF
 	const fileName = `checklists_obra_${new Date().toISOString().split('T')[0]}.pdf`;
 	pdf.save(fileName);
-}
-
-// Alternative function to generate PDF from HTML element
-export async function generateChecklistPDFFromHTML(elementId: string, fileName?: string): Promise<void> {
-	const element = document.getElementById(elementId);
-	if (!element) {
-		throw new Error(`Element with id "${elementId}" not found`);
-	}
-
-	try {
-		const canvas = await html2canvas(element, {
-			scale: 2,
-			useCORS: true,
-			allowTaint: true,
-			backgroundColor: '#ffffff'
-		});
-
-		const imgData = canvas.toDataURL('image/png');
-		const pdf = new jsPDF('p', 'mm', 'a4');
-		
-		const imgWidth = 210;
-		const pageHeight = 297;
-		const imgHeight = (canvas.height * imgWidth) / canvas.width;
-		let heightLeft = imgHeight;
-		let position = 0;
-
-		pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-		heightLeft -= pageHeight;
-
-		while (heightLeft >= 0) {
-			position = heightLeft - imgHeight;
-			pdf.addPage();
-			pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-			heightLeft -= pageHeight;
-		}
-
-		const finalFileName = fileName || `checklist_obra_${new Date().toISOString().split('T')[0]}.pdf`;
-		pdf.save(finalFileName);
-	} catch (error) {
-		console.error('Error generating PDF from HTML:', error);
-		throw new Error('Failed to generate PDF from HTML element');
-	}
-}
-
-// Utility function to prepare checklist data for PDF generation
-export function prepareChecklistData(checklists: Checklist[]): Checklist[] {
-	return checklists.map(checklist => ({
-		...checklist,
-	}));
 }

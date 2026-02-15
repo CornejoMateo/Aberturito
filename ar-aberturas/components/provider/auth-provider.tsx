@@ -50,7 +50,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			const res = await getUser(username, password);
 
 			if (!res.data) {
-				throw new Error(res.error || 'Error desconocido');
+				const errorMessage = typeof res.error === 'string' 
+					? res.error 
+					: res.error?.message || 'Usuario o contraseña incorrectos';
+				throw new Error(errorMessage);
 			}
 
 			const sessionUser: SessionUser = { username: res.data.username, role: res.data.role as UserRole };

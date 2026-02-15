@@ -44,36 +44,28 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
     const loadData = async () => {
       if (isOpen && client) {
         try {
-          console.log('Cargando datos para el cliente ID:', client.id);
           setIsLoading(true);
-          
+
           await new Promise(resolve => setTimeout(resolve, 100));
-          
+
           const [worksResult, budgetsResult] = await Promise.all([
             getWorksByClientId(client.id),
             getBudgetsByClientId(client.id)
           ]);
-          
-          console.log('Resultado de getWorksByClientId:', worksResult);
-          console.log('Resultado de getBudgetsByClientId:', budgetsResult);
-          
+
           if (worksResult.error) {
             console.error('Error al cargar las obras:', worksResult.error);
           } else if (worksResult.data) {
-            console.log('Obras cargadas:', worksResult.data);
             setWorks(worksResult.data);
           } else {
-            console.log('No se encontraron obras para este cliente');
             setWorks([]);
           }
 
           if (budgetsResult.error) {
             console.error('Error al cargar los presupuestos:', budgetsResult.error);
           } else if (budgetsResult.data) {
-            console.log('Presupuestos cargados:', budgetsResult.data);
             setBudgets(budgetsResult.data);
           } else {
-            console.log('No se encontraron presupuestos para este cliente');
             setBudgets([]);
           }
         } catch (error) {
@@ -86,7 +78,6 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           setIsLoading(false);
         }
       } else {
-        console.log('Limpiando listas');
         setWorks([]);
         setBudgets([]);
       }

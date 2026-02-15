@@ -16,9 +16,14 @@ export async function getUser(
 		.from('users')
 		.select('*')
 		.eq('username', username)
-		.single();
+		.maybeSingle();
+		
 	if (error) {
-		return { data: null, error };
+		return { data: null, error: 'Error al buscar usuario' };
+	}
+
+	if (!data) {
+		return { data: null, error: 'Usuario no encontrado' };
 	}
 
 	const valid = await bcrypt.compare(password, data.password);

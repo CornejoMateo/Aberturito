@@ -83,3 +83,16 @@ export async function getChecklistsByWorkId(
 		.order('created_at', { ascending: false });
 	return { data, error };
 }
+
+export async function getChecklistsByWorkIds(
+	workIds: string[]
+): Promise<{ data: Checklist[] | null; error: any }> {
+	const supabase = getSupabaseClient();
+	if (workIds.length === 0) return { data: [], error: null };
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('*')
+		.in('work_id', workIds)
+		.order('created_at', { ascending: false });
+	return { data, error };
+}

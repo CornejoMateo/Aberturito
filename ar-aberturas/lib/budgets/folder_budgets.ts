@@ -65,6 +65,21 @@ export async function getFolderBudgetsByClientId(clientId: string): Promise<{ da
     return { data, error };
 }
 
+export async function getFolderBudgetsByClientIds(
+	clientIds: string[]
+): Promise<{ data: FolderBudget[] | null; error: any }> {
+	const supabase = getSupabaseClient();
+	if (clientIds.length === 0) return { data: [], error: null };
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select(`
+			*,
+			works:work_id (locality, address, status)		`)
+		.in('client_id', clientIds)
+		.order('created_at', { ascending: false });
+	return { data, error };
+}
+
 export async function createFolderBudget(
 	folderBudget: Omit<FolderBudget, 'id' | 'created_at'>
 ): Promise<{ data: FolderBudget | null; error: any }> {

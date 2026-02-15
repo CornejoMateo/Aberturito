@@ -265,7 +265,7 @@ export function BalanceDetailsModal({
 								<p className="text-xs text-muted-foreground mb-1">Saldo</p>
 								<div className="flex flex-col">
 									<p className="text-sm font-bold text-orange-600">
-										{formatCurrency(remainingUSD * (balance.usd_current || 1))}
+										{formatCurrency(remaining)}
 									</p>
 									<p className="text-xs text-muted-foreground">
 										{formatCurrencyUSD(remainingUSD || 0)}

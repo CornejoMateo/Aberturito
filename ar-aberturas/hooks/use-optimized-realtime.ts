@@ -19,10 +19,15 @@ export function useOptimizedRealtime<T extends { id: string }>(
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const supabase = getSupabaseClient();
+	const fetchFromDbRef = useRef(fetchFromDb);
 	
 	const cacheKeyFinal = cacheKey || `realtime_${table}`;
 	const debounceTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 	const versionRef = useRef(0);
+
+	useEffect(() => {
+		fetchFromDbRef.current = fetchFromDb;
+	}, [fetchFromDb]);
 
 	// Obtener datos del cache local
 	const getCachedData = useCallback((): T[] | null => {
@@ -73,7 +78,7 @@ export function useOptimizedRealtime<T extends { id: string }>(
 
 		setLoading(true);
 		try {
-			const res = await fetchFromDb();
+			const res = await fetchFromDbRef.current();
 			versionRef.current++;
 			setData([...res]);
 			setCachedData(res);
@@ -82,7 +87,7 @@ export function useOptimizedRealtime<T extends { id: string }>(
 		} finally {
 			setLoading(false);
 		}
-	}, [fetchFromDb, getCachedData, setCachedData]);
+	}, [getCachedData, setCachedData]);
 
 	// Procesar cambios individuales sin refresh completo
 	const processRealtimeEvent = useCallback((payload: any) => {
@@ -137,9 +142,6 @@ export function useOptimizedRealtime<T extends { id: string }>(
 	// Configuración de realtime
 	useEffect(() => {
 		if (!table) return;
-
-		console.log(`Suscribiendo realtime optimizado a ${table}`);
-
 		const channel = supabase
 			.channel(`${table}-optimized-realtime`)
 			.on('postgres_changes', 
@@ -148,17 +150,11 @@ export function useOptimizedRealtime<T extends { id: string }>(
 					schema: 'public', 
 					table 
 				}, 
-				(payload) => {
-					console.log(`[Realtime Optimizado] Cambio en ${table}:`, payload.eventType);
-					processRealtimeEvent(payload);
-				}
+				processRealtimeEvent
 			)
-			.subscribe((status) => {
-				console.log(`📡 Estado canal optimizado (${table}):`, status);
-			});
+			.subscribe();
 
 		return () => {
-			console.log(`Desuscribiendo canal optimizado de ${table}`);
 			if (debounceTimerRef.current) {
 				clearTimeout(debounceTimerRef.current);
 			}
@@ -185,14 +181,18 @@ export function useOptimizedRealtime<T extends { id: string }>(
 		return () => clearInterval(interval);
 	}, [cacheKeyFinal]);
 
+	const refresh = useCallback(() => fetchData(true), [fetchData]);
+
+	const invalidateCache = useCallback(() => {
+		localStorage.removeItem(cacheKeyFinal);
+		fetchData(true);
+	}, [cacheKeyFinal, fetchData]);
+
 	return { 
 		data, 
 		loading, 
 		error, 
-		refresh: () => fetchData(true),
-		invalidateCache: () => {
-			localStorage.removeItem(cacheKeyFinal);
-			fetchData(true);
-		}
+		refresh,
+		invalidateCache
 	};
 }

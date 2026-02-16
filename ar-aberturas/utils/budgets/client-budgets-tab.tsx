@@ -24,9 +24,10 @@ import { createBudget, chooseBudgetForClient, Budget, getBudgetsByFolderBudgetId
 import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId, deleteFolderBudgetWithBudgets } from '@/lib/budgets/folder_budgets';
 import { getSupabaseClient } from '@/lib/supabase-client';
 import { CheckCircle, FileText, Plus, ChevronDown, Trash2, Download, X } from 'lucide-react';
+import { BudgetWithWork } from '@/lib/works/balances';
 
 type BudgetFolderVM = FolderBudget & {
-	budgets: Budget[];
+	budgets: BudgetWithWork[];
 };
 
 const DEFAULT_TYPES = ['PVC', 'Aluminio', 'Otros'] as const;
@@ -44,7 +45,8 @@ function workLabel(folder: FolderBudget): string {
 	return parts.length > 0 ? parts.join(' - ') : 'Obra';
 }
 
-export function ClientBudgetsTab({ clientId, works }: { clientId: string; works: Work[] }) {
+export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { clientId: string; works: Work[]; onBudgetsChange: (budgets: BudgetWithWork[]) => void;
+ }) {
 	const [isLoading, setIsLoading] = useState(false);
 	const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
 
@@ -69,7 +71,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 		data: budgets,
 		loading: loadingBudgets,
 		refresh: refreshBudgets,
-	} = useOptimizedRealtime<Budget>(
+	} = useOptimizedRealtime<BudgetWithWork>(
 		'budgets',
 		async () => {
 			if (folderBudgetIds.length === 0) return [];
@@ -78,6 +80,10 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 		},
 		`budgets_${clientId}`
 	);
+
+	useEffect(() => {
+		onBudgetsChange(budgets);
+	}, [budgets, onBudgetsChange]);
 
 	// Refresh budgets when folder IDs change
 	useEffect(() => {
@@ -113,7 +119,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 
 	const [pdfPreview, setPdfPreview] = useState<{
 		open: boolean;
-		budget: Budget | null;
+		budget: BudgetWithWork | null;
 		pdfUrl: string | null;
 	}>({ open: false, budget: null, pdfUrl: null });
 
@@ -123,14 +129,24 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 	}, [budgets]);
 
 	const budgetsByFolderId = useMemo(() => {
-		const map = new Map<string, Budget[]>();
-		for (const b of budgets) {
-			const key = b.folder_budget_id ?? '';
-			if (!key) continue;
-			const prev = map.get(key) ?? [];
-			prev.push(b);
-			map.set(key, prev);
+		const map = new Map<string, BudgetWithWork[]>();
+
+		for (const budget of budgets) {
+			// validate folder_budget and folder_budget.id
+			if (!budget || !budget.folder_budget || !budget.folder_budget.id) {
+				console.warn('Budget sin folder_budget válido:', budget);
+				continue;
+			}
+
+			const folderId = budget.folder_budget.id;
+
+			if (!map.has(folderId)) {
+				map.set(folderId, []);
+			}
+
+			map.get(folderId)!.push(budget);
 		}
+
 		return map;
 	}, [budgets]);
 
@@ -256,7 +272,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 		}
 	}
 
-	async function handleViewPdf(budget: Budget) {
+	async function handleViewPdf(budget: BudgetWithWork) {
 		if (!budget.pdf_path) return;
 
 		try {
@@ -287,17 +303,6 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 			URL.revokeObjectURL(pdfPreview.pdfUrl);
 		}
 		setPdfPreview({ open: false, budget: null, pdfUrl: null });
-	}
-
-	async function handleDownloadPdf() {
-		if (!pdfPreview.pdfUrl || !pdfPreview.budget) return;
-
-		const link = document.createElement('a');
-		link.href = pdfPreview.pdfUrl;
-		link.download = `presupuesto_${pdfPreview.budget.type}_${pdfPreview.budget.number || 'sin-numero'}.pdf`;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
 	}
 
 	function resetForm() {
@@ -529,7 +534,7 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 					const folderBudgetsList = folder.budgets;
 					const chosenCountInFolder = folderBudgetsList.filter((b) => !!b.accepted).length;
 
-					const budgetsByType = new Map<string, Budget[]>();
+					const budgetsByType = new Map<string, BudgetWithWork[]>();
 					for (const t of DEFAULT_TYPES) budgetsByType.set(t, []);
 					for (const b of folderBudgetsList) {
 						const typeKey = normalizeType(b.type);
@@ -722,7 +727,9 @@ export function ClientBudgetsTab({ clientId, works }: { clientId: string; works:
 						Vista previa - Presupuesto {pdfPreview.budget?.type} #{pdfPreview.budget?.number || 'sin número'}
 					</DialogTitle>
 					<DialogDescription>
-						{pdfPreview.budget?.version || 'Sin variante'} - {orderedFolders.find(f => f.id === pdfPreview.budget?.folder_budget_id)?.works ? workLabel(orderedFolders.find(f => f.id === pdfPreview.budget?.folder_budget_id)!) : 'Sin obra'}
+						{pdfPreview.budget?.version || 'Sin variante'} - {pdfPreview.budget?.folder_budget.work
+  ? `${pdfPreview.budget.folder_budget.work.address} - ${pdfPreview.budget.folder_budget.work.locality}`
+  : 'Sin obra'}
 					</DialogDescription>
 				</DialogHeader>
 				<div className="flex-1 min-h-[600px]">

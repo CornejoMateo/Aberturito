@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Balance, BudgetWithWork } from '@/lib/works/balances';
 import { Work } from '@/lib/works/works';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
@@ -21,7 +21,7 @@ import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 interface BalanceFormProps {
-	clientId: number;
+	clientId: string;
 	budgets: BudgetWithWork[];
 	onSubmit: (balance: Omit<Balance, 'id' | 'created_at'>) => Promise<void>;
 	onCancel: () => void;
@@ -35,6 +35,10 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 		start_date: undefined,
 		usd_current: undefined,
 	});
+
+	const budgetsAccepted = useMemo(() => {
+		return budgets.filter((b) => b.accepted);
+	}, [budgets]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -72,13 +76,15 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 						</SelectTrigger>
 
 						<SelectContent>
-							{budgets.map((budget) => {
+							{budgetsAccepted.map((budget) => {
 								const work = budget.folder_budget?.work;
 								const locality = work?.locality || 'Sin localidad';
 								const address = work?.address || 'Sin dirección';
+								const budgetNumber = budget.number || 'Sin número';
+								const budgetType = budget.type || 'Sin tipo';
 								return (
 									<SelectItem key={budget.id} value={String(budget.id)}>
-										{locality} - {address} (${budget.amount_ars.toLocaleString('es-AR')})
+										{locality} - {address} - {budgetNumber} - {budgetType} (${budget.amount_ars.toLocaleString('es-AR')})
 									</SelectItem>
 								);
 							})}

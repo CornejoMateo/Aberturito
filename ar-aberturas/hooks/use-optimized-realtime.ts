@@ -93,6 +93,13 @@ export function useOptimizedRealtime<T extends { id: string }>(
 	const processRealtimeEvent = useCallback((payload: any) => {
 		const { eventType, new: newRecord, old: oldRecord } = payload;
 		
+		// Para la tabla 'balances', hacer refresh completo en INSERT/UPDATE
+		// porque necesita cargar las relaciones (budget.folder_budget.work)
+		if (table === 'balances' && (eventType === 'INSERT' || eventType === 'UPDATE')) {
+			fetchData(true);
+			return;
+		}
+		
 		setData(currentData => {
 			let newData = [...currentData];
 			
@@ -131,7 +138,7 @@ export function useOptimizedRealtime<T extends { id: string }>(
 			
 			return newData;
 		});
-	}, [setCachedData]);
+	}, [setCachedData, table, fetchData]);
 
 	// Inicialización
 	useEffect(() => {

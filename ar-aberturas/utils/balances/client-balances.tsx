@@ -117,7 +117,7 @@ export function ClientBalances({ clientId, onCreateBalance }: ClientBalancesProp
 		if (!balanceToDelete) return;
 
 		try {
-			const { error } = await deleteBalance(parseInt(balanceToDelete.id));
+			const { error } = await deleteBalance(balanceToDelete.id);
 
 			if (error) {
 				console.error('Error al eliminar saldo:', error);
@@ -144,7 +144,7 @@ export function ClientBalances({ clientId, onCreateBalance }: ClientBalancesProp
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify({
-					balanceId: parseInt(balanceToUpdate.id),
+					balanceId: balanceToUpdate.id,
 					newUsdRate,
 				}),
 			});

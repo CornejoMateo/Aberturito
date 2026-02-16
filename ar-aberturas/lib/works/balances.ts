@@ -142,7 +142,7 @@ export async function createBalance(
 }
 
 export async function updateBalance(
-	id: number,
+	id: string,
 	changes: Partial<Omit<Balance, 'id' | 'created_at'>>
 ): Promise<{ data: Balance | null; error: any }> {
 	const supabase = getSupabaseClient();
@@ -150,7 +150,7 @@ export async function updateBalance(
 	return { data, error };
 }
 
-export async function deleteBalance(id: number): Promise<{ data: null; error: any }> {
+export async function deleteBalance(id: string): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };

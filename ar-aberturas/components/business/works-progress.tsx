@@ -33,6 +33,15 @@ import { EmailNotificationModal } from '@/components/ui/email-notification-modal
 import { WhatsAppNotificationModal } from '@/components/ui/whatsapp-notification-modal';
 import { useAuth } from '@/components/provider/auth-provider';
 import { Mail, MessageCircle } from 'lucide-react';
+import {
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious,
+	PaginationEllipsis,
+} from '@/components/ui/pagination';
 
 type WorkWithProgress = Work & {
 	status: 'pendiente' | 'en_progreso' | 'completada';
@@ -50,6 +59,8 @@ export function WorksOpenings() {
 	const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 	const [selectedWork, setSelectedWork] = useState<WorkWithProgress | null>(null);
 	const [selectedClient, setSelectedClient] = useState<any>(null);
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 10;
 	const { user } = useAuth();
 
 	useEffect(() => {
@@ -147,6 +158,17 @@ export function WorksOpenings() {
 
 		return matchesStatus && matchesSearch;
 	});
+
+	// Calculate pagination
+	const totalPages = Math.ceil(filteredInstallations.length / itemsPerPage);
+	const startIndex = (currentPage - 1) * itemsPerPage;
+	const endIndex = startIndex + itemsPerPage;
+	const paginatedInstallations = filteredInstallations.slice(startIndex, endIndex);
+
+	// Reset to page 1 when filters change
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [searchQuery, statusFilter]);
 
 	const handleStatusFilter = (status: StatusFilter) => {
 		setStatusFilter(status);
@@ -355,7 +377,7 @@ export function WorksOpenings() {
 
 			{/* Installations list */}
 			<div className="space-y-4">
-				{filteredInstallations.map((installation) => {
+				{paginatedInstallations.map((installation) => {
 					const progress = getProgress(installation.tasks);
 					const statusInfo = statusConfig[installation.status];
 					const StatusIcon = statusInfo.icon;
@@ -467,6 +489,74 @@ export function WorksOpenings() {
 					);
 				})}
 			</div>
+
+			{/* Pagination */}
+			{totalPages > 1 && (
+				<div className="mt-8">
+					<Pagination>
+						<PaginationContent>
+							<PaginationItem>
+								<PaginationPrevious
+									href="#"
+									onClick={(e) => {
+										e.preventDefault();
+										if (currentPage > 1) setCurrentPage(currentPage - 1);
+									}}
+									className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+								/>
+							</PaginationItem>
+
+							{Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+								// Show first page, last page, current page, and pages around current
+								if (
+									page === 1 ||
+									page === totalPages ||
+									page === currentPage ||
+									page === currentPage - 1 ||
+									page === currentPage + 1
+								) {
+									return (
+										<PaginationItem key={page}>
+											<PaginationLink
+												href="#"
+												isActive={page === currentPage}
+												onClick={(e) => {
+													e.preventDefault();
+													setCurrentPage(page);
+												}}
+											>
+												{page}
+											</PaginationLink>
+										</PaginationItem>
+									);
+								}
+
+								// Show ellipsis for gaps
+								if (page === currentPage - 2 || page === currentPage + 2) {
+									return (
+										<PaginationItem key={`ellipsis-${page}`}>
+											<PaginationEllipsis />
+										</PaginationItem>
+									);
+								}
+
+								return null;
+							})}
+
+							<PaginationItem>
+								<PaginationNext
+									href="#"
+									onClick={(e) => {
+										e.preventDefault();
+										if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+									}}
+									className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+								/>
+							</PaginationItem>
+						</PaginationContent>
+					</Pagination>
+				</div>
+			)}
 
 			<EmailNotificationModal
 				isOpen={isEmailModalOpen}

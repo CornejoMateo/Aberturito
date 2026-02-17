@@ -138,7 +138,7 @@ export function useOptimizedRealtime<T extends { id: string }>(
 			
 			return newData;
 		});
-	}, [setCachedData, table, fetchData]);
+	}, [setCachedData, table]);
 
 	// Inicialización
 	useEffect(() => {

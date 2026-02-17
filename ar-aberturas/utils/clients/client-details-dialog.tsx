@@ -8,7 +8,7 @@ import { Client } from '@/lib/clients/clients';
 import { MapPin, X, Plus } from 'lucide-react';
 import { EmailLink } from '@/components/ui/email-link';
 import { WhatsAppLink } from '@/components/ui/whatsapp-link';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { WorkForm } from '@/utils/works/work-form';
 import { createWork, getWorksByClientId, Work, deleteWork } from '@/lib/works/works';
 import { WorksList } from '@/utils/works/works-list';

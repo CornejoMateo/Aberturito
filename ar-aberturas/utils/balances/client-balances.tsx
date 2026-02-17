@@ -40,6 +40,7 @@ import { formatCurrency, formatCurrencyUSD } from './formats';
 interface ClientBalancesProps {
 	clientId: string;
 	onCreateBalance?: () => void;
+	onBalanceDeleted?: () => void;
 }
 
 export interface BalanceWithTotals extends BalanceWithBudget {
@@ -49,7 +50,7 @@ export interface BalanceWithTotals extends BalanceWithBudget {
 	remainingUSD?: number;
 }
 
-export function ClientBalances({ clientId, onCreateBalance }: ClientBalancesProps) {
+export function ClientBalances({ clientId, onCreateBalance, onBalanceDeleted }: ClientBalancesProps) {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedBalance, setSelectedBalance] = useState<BalanceWithTotals | null>(null);
@@ -117,7 +118,7 @@ export function ClientBalances({ clientId, onCreateBalance }: ClientBalancesProp
 		if (!balanceToDelete) return;
 
 		try {
-			const { error } = await deleteBalance(parseInt(balanceToDelete.id));
+			const { error } = await deleteBalance(balanceToDelete.id);
 
 			if (error) {
 				console.error('Error al eliminar saldo:', error);
@@ -126,6 +127,11 @@ export function ClientBalances({ clientId, onCreateBalance }: ClientBalancesProp
 
 			// Refresh the list
 			handleBalanceUpdate();
+			
+			// Notify parent to reload budgets
+			if (onBalanceDeleted) {
+				onBalanceDeleted();
+			}
 		} catch (error) {
 			console.error('Error inesperado al eliminar saldo:', error);
 		} finally {
@@ -144,7 +150,7 @@ export function ClientBalances({ clientId, onCreateBalance }: ClientBalancesProp
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify({
-					balanceId: parseInt(balanceToUpdate.id),
+					balanceId: balanceToUpdate.id,
 					newUsdRate,
 				}),
 			});

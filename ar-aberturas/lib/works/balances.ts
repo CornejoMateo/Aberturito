@@ -1,3 +1,4 @@
+import { StyledString } from 'next/dist/build/swc/types';
 import { getSupabaseClient } from '../supabase-client';
 
 export type Balance = {
@@ -7,7 +8,7 @@ export type Balance = {
 	budget_id?: string | null;
 	contract_date_usd?: number | null;
 	usd_current?: number | null;
-	client_id?: number | null;
+	client_id?: string | null;
 	notes?: string[] | null;
 };
 
@@ -17,6 +18,7 @@ export type BalanceWithBudget = Balance & {
 		amount_ars: number;
 		amount_usd: number;
 		folder_budget: {
+			id: string;
 			work: {
 				address: string;
 				locality: string;
@@ -29,7 +31,14 @@ export type BudgetWithWork = {
 	id: string;
 	amount_ars: number;
 	amount_usd: number;
+	accepted?: boolean | null;
+	pdf_url?: string | null;
+	pdf_path?: string | null;
+	number?: string | null;
+	version?: string | null;
+	type?: string | null;
 	folder_budget: {
+		id: string;
 		work_id: string;
 		work: {
 			address: string;
@@ -71,11 +80,23 @@ export async function getBalancesByClientId(
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select(
-			'*, budget:budgets(id, amount_ars, amount_usd, folder_budget:folder_budgets(work:works(address, locality)))'
-		)
+		.select(`
+			*,
+			budget:budgets (
+				id,
+				amount_ars,
+				amount_usd,
+				folder_budget:folder_budgets (
+					work:works (
+						address,
+						locality
+					)
+				)
+			)
+		`)
 		.eq('client_id', clientId)
 		.order('created_at', { ascending: false });
+	
 	return { data, error };
 }
 
@@ -92,6 +113,7 @@ export async function getBudgetsByClientId(
 				amount_ars,
 				amount_usd,
 				folder_budget:folder_budgets!inner (
+					id,
 					work_id,
 					work:works!inner (
 					address,
@@ -120,6 +142,7 @@ export async function getBudgetsByClientId(
 				amount_ars: b.amount_ars,
 				amount_usd: b.amount_usd,
 				folder_budget: {
+					id: folderBudget.id,
 					work_id: folderBudget.work_id,
 					work: {
 						address: work.address,

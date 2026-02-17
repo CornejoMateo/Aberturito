@@ -40,6 +40,7 @@ import { formatCurrency, formatCurrencyUSD } from './formats';
 interface ClientBalancesProps {
 	clientId: string;
 	onCreateBalance?: () => void;
+	onBalanceDeleted?: () => void;
 }
 
 export interface BalanceWithTotals extends BalanceWithBudget {
@@ -49,7 +50,7 @@ export interface BalanceWithTotals extends BalanceWithBudget {
 	remainingUSD?: number;
 }
 
-export function ClientBalances({ clientId, onCreateBalance }: ClientBalancesProps) {
+export function ClientBalances({ clientId, onCreateBalance, onBalanceDeleted }: ClientBalancesProps) {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedBalance, setSelectedBalance] = useState<BalanceWithTotals | null>(null);
@@ -126,6 +127,11 @@ export function ClientBalances({ clientId, onCreateBalance }: ClientBalancesProp
 
 			// Refresh the list
 			handleBalanceUpdate();
+			
+			// Notify parent to reload budgets
+			if (onBalanceDeleted) {
+				onBalanceDeleted();
+			}
 		} catch (error) {
 			console.error('Error inesperado al eliminar saldo:', error);
 		} finally {

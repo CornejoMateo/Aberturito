@@ -16,9 +16,11 @@ import { ClientNotes } from '@/utils/notes/client-notes';
 import { updateClient } from '@/lib/clients/clients';
 import { ClientBalances } from '@/utils/balances/client-balances';
 import { BalanceForm } from '@/utils/balances/balance-form';
-import { createBalance, getBudgetsByClientId, BudgetWithWork } from '@/lib/works/balances';
+import { createBalance, BudgetWithWork } from '@/lib/works/balances';
 import { toast } from '@/components/ui/use-toast';
 import { ClientBudgetsTab } from '@/utils/budgets/client-budgets-tab';
+import { getFolderBudgetsByClientId } from '@/lib/budgets/folder_budgets';
+import { getBudgetsByFolderBudgetIds } from '@/lib/budgets/budgets';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -39,54 +41,64 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSavingCover, setIsSavingCover] = useState(false);
   const [balancesKey, setBalancesKey] = useState(0);
+  const [worksLoaded, setWorksLoaded] = useState(false);
+  const [budgetsLoaded, setBudgetsLoaded] = useState(false);
   
-  useEffect(() => {
-    const loadData = async () => {
-      if (isOpen && client) {
-        try {
-          setIsLoading(true);
-
-          await new Promise(resolve => setTimeout(resolve, 100));
-
-          const [worksResult, budgetsResult] = await Promise.all([
-            getWorksByClientId(client.id),
-            getBudgetsByClientId(client.id)
-          ]);
-
-          if (worksResult.error) {
-            console.error('Error al cargar las obras:', worksResult.error);
-          } else if (worksResult.data) {
-            setWorks(worksResult.data);
-          } else {
-            setWorks([]);
-          }
-
-          if (budgetsResult.error) {
-            console.error('Error al cargar los presupuestos:', budgetsResult.error);
-          } else if (budgetsResult.data) {
-            setBudgets(budgetsResult.data);
-          } else {
-            setBudgets([]);
-          }
-        } catch (error) {
-          console.error('Error inesperado al cargar datos:', {
-            error,
-            message: error instanceof Error ? error.message : 'Error desconocido',
-            stack: error instanceof Error ? error.stack : undefined
-          });
-        } finally {
-          setIsLoading(false);
+  // function to load works when the works tab is opened for the first time
+  const loadWorks = async (force = false) => {
+    if (!client || (!force && worksLoaded)) return;
+    
+    try {
+      setIsLoading(true);
+      const { data, error } = await getWorksByClientId(client.id);
+      
+      if (error) {
+        console.error('Error al cargar obras:', error);
+        setWorks([]);
+      } else {
+        setWorks(data || []);
+        setWorksLoaded(true);
+      }
+    } catch (error) {
+      console.error('Error inesperado al cargar obras:', error);
+      setWorks([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // function to load budgets when the budgets tab is opened for the first time
+  const loadBudgets = async (force = false) => {
+    if (!client || (!force && budgetsLoaded)) return;
+    
+    try {
+      const { data: folderBudgets } = await getFolderBudgetsByClientId(client.id);
+      
+      if (folderBudgets && folderBudgets.length > 0) {
+        const folderBudgetIds = folderBudgets.map((f) => f.id);
+        const { data: budgetsData } = await getBudgetsByFolderBudgetIds(folderBudgetIds);
+        
+        if (budgetsData) {
+          setBudgets(budgetsData);
+          setBudgetsLoaded(true);
         }
       } else {
-        setWorks([]);
         setBudgets([]);
+        setBudgetsLoaded(true);
       }
-    };
-    
-    if (isOpen) {
-      loadData();
+    } catch (error) {
+      console.error('Error al cargar presupuestos:', error);
+      setBudgets([]);
     }
-  }, [isOpen, client?.id]);
+  };
+  
+  const handleTabChange = (value: string) => {
+    if (value === 'works') {
+      loadWorks();
+    } else if (value === 'budgets') {
+      loadBudgets();
+    }
+  };
   
   const handleWorkDelete = async (workId: string) => {
     if (!client) return;
@@ -110,10 +122,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
       });
 
       // Refresh the works list
-      const { data: updatedWorks } = await getWorksByClientId(client.id);
-      if (updatedWorks) {
-        setWorks(updatedWorks);
-      }
+      await loadWorks(true);
     } catch (error) {
       console.error('Error inesperado al eliminar la obra:', error);
     } finally {
@@ -145,10 +154,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
         description: 'La obra se ha creado exitosamente.',
       });
       // reload the list of works
-      const { data: updatedWorks } = await getWorksByClientId(client.id);
-      if (updatedWorks) {
-        setWorks(updatedWorks);
-      }
+      await loadWorks(true);
       
       setIsWorkFormOpen(false);
     } catch (error) {
@@ -178,6 +184,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
       });
       setIsBalanceFormOpen(false);
       setBalancesKey(prev => prev + 1);
+      await loadBudgets(true);
     } catch (error) {
       console.error('Error inesperado al crear Saldo:', error);
     } finally {
@@ -191,6 +198,11 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
       setClientData(client);
       setCover(client.cover || '');
       setHasUnsavedChanges(false);
+      // Reset loaded flags when client changes
+      setWorksLoaded(false);
+      setBudgetsLoaded(false);
+      setWorks([]);
+      setBudgets([]);
     }
   }, [client]);
 
@@ -267,7 +279,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           </div>
 
           <div className="border-t pt-2">
-            <Tabs defaultValue="info" className="w-full">
+            <Tabs defaultValue="info" className="w-full" onValueChange={handleTabChange}>
               <TabsList>
                 <TabsTrigger value="info">Información</TabsTrigger>
                 <TabsTrigger value="works">Obras</TabsTrigger>
@@ -328,7 +340,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                   </div>
                 </TabsContent>
                 <TabsContent value="budgets">
-                  <ClientBudgetsTab clientId={clientData.id} works={works} />
+                  <ClientBudgetsTab clientId={clientData.id} works={works} onBudgetsChange={setBudgets} />
                 </TabsContent>
                 <TabsContent value="notes" className="h-[calc(100%-2.5rem)]">
                   <ClientNotes 
@@ -340,7 +352,10 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                   <ClientBalances 
                     key={balancesKey}
                     clientId={clientData.id}
-                    onCreateBalance={() => setIsBalanceFormOpen(true)}
+                    onCreateBalance={async () => {
+                      await loadBudgets();
+                      setIsBalanceFormOpen(true);
+                    }}
                   />
                 </TabsContent>
               </div>
@@ -368,7 +383,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
             <DialogTitle>Nuevo saldo</DialogTitle>
           </DialogHeader>
           <BalanceForm
-            clientId={parseInt(client?.id || '0')}
+            clientId={client?.id || ''}
             budgets={budgets}
             onSubmit={handleBalanceCreated}
             onCancel={() => setIsBalanceFormOpen(false)}

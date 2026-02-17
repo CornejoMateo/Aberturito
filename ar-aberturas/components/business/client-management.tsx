@@ -107,7 +107,7 @@ export function ClientManagement() {
 
 		const budgetsAggByFolderId = new Map<string, { total: number; chosen: number }>();
 		for (const b of budgets ?? []) {
-			const fid = b.folder_budget_id ?? '';
+			const fid = b.folder_budget.id ?? '';
 			if (!fid) continue;
 			const prev = budgetsAggByFolderId.get(fid) ?? { total: 0, chosen: 0 };
 			prev.total += 1;

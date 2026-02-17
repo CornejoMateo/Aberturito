@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '../supabase-client';
+import { BudgetWithWork } from '../works/balances';
 
 export type Budget = {
   id: string;
@@ -46,15 +47,70 @@ export async function getBudgetsByFolderBudgetId(
 
 export async function getBudgetsByFolderBudgetIds(
 	folderBudgetIds: string[]
-): Promise<{ data: Budget[] | null; error: any }> {
+): Promise<{ data: BudgetWithWork[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 	if (folderBudgetIds.length === 0) return { data: [], error: null };
+	
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('*')
+		.select(
+			`
+				id,
+				amount_ars,
+				amount_usd,
+				accepted,
+				pdf_url,
+				pdf_path,
+				number,
+				version,
+				type,
+				folder_budget:folder_budgets!inner (
+					id,
+					work_id,
+					work:works!inner (
+						address,
+						locality
+					)
+				)
+			`
+		)
 		.in('folder_budget_id', folderBudgetIds)
 		.order('created_at', { ascending: false });
-	return { data, error };
+
+	if (error) return { data: null, error };
+	if (!data) return { data: [], error: null };
+
+	const result: BudgetWithWork[] = data
+		.map((b: any) => {
+			const folderBudget = Array.isArray(b.folder_budget) ? b.folder_budget[0] : b.folder_budget;
+			if (!folderBudget) return null;
+
+			const work = Array.isArray(folderBudget.work) ? folderBudget.work[0] : folderBudget.work;
+			if (!work) return null;
+
+			return {
+				id: b.id,
+				amount_ars: b.amount_ars,
+				amount_usd: b.amount_usd,
+				accepted: b.accepted,
+				pdf_url: b.pdf_url,
+				pdf_path: b.pdf_path,
+				number: b.number,
+				version: b.version,
+				type: b.type,
+				folder_budget: {
+					id: folderBudget.id,
+					work_id: folderBudget.work_id,
+					work: {
+						address: work.address,
+						locality: work.locality,
+					},
+				},
+			} as BudgetWithWork;
+		})
+		.filter((b): b is BudgetWithWork => b !== null);
+
+	return { data: result, error: null };
 }
 
 export async function createBudget(

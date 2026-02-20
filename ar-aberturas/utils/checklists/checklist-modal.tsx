@@ -149,7 +149,6 @@ export function ChecklistModal({ workId, existingChecklists, open, onOpenChange,
 				})),
 			});
 		} else {
-			// Create mode - create new checklists
 			onSave(checklists);
 		}
 		setModalOpen(false);
@@ -180,14 +179,6 @@ export function ChecklistModal({ workId, existingChecklists, open, onOpenChange,
 
 	return (
 		<Dialog open={modalOpen} onOpenChange={setModalOpen}>
-			{(!isEditMode && user?.role === "Admin") && (
-				<DialogTrigger asChild>
-					<Button variant="outline" onClick={() => setModalOpen(true)}>
-						<CheckCircle2 className="mr-2 h-4 w-4" />
-						<span>{existingChecklists ? 'Agregar más checklists' : 'Crear checklists'}</span>
-					</Button>
-				</DialogTrigger>
-			)}
 			<DialogContent className="max-w-2xl! max-h-[85vh] overflow-y-auto p-6">
 				<DialogHeader>
 					<DialogTitle>

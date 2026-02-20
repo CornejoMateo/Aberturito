@@ -96,7 +96,7 @@ export function WorksOpenings() {
 
 					const totalTasks = tasks.length;
 					const completedTasks = tasks.filter((task) => task.done).length;
-					const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+					const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
 
 					let status: 'pendiente' | 'en_progreso' | 'completada' = 'pendiente';
 					if (progress === 100) {

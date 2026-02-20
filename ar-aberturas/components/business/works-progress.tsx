@@ -19,8 +19,13 @@ import {
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { ChecklistCompletionModal } from '@/utils/checklists/checklist-completion-modal';
+import { ChecklistModal } from '@/utils/checklists/checklist-modal';
 import { listWorks } from '@/lib/works/works';
-import { getChecklistsByWorkIds } from '@/lib/works/checklists';
+import {
+	getChecklistsByWorkIds,
+	createChecklist,
+	getChecklistsByWorkId,
+} from '@/lib/works/checklists';
 import { getClientById } from '@/lib/clients/clients';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -63,76 +68,76 @@ export function WorksOpenings() {
 	const itemsPerPage = 10;
 	const { user } = useAuth();
 
-	useEffect(() => {
-		const fetchWorks = async () => {
-			try {
-				setLoading(true);
-				const { data: works, error } = await listWorks();
+	const fetchWorks = async () => {
+		try {
+			setLoading(true);
+			const { data: works, error } = await listWorks();
 
-				if (error) {
-					console.error('Error al obtener las obras:', error);
-					throw error;
-				}
-
-				if (!works || works.length === 0) {
-					setInstallations([]);
-					return;
-				}
-
-				// get checklists for each work and calculate progress
-				const workIds = works.map((w) => w.id);
-				const { data: allChecklists, error: checklistsError } = await getChecklistsByWorkIds(workIds);
-				if (checklistsError) {
-					console.error('Error al obtener checklists:', checklistsError);
-				}
-
-				const checklistsByWorkId = new Map<string, ChecklistItem[]>();
-				const hasNotesByWorkId = new Map<string, boolean>();
-				for (const cl of allChecklists ?? []) {
-					const wid = cl.work_id ?? '';
-					if (!wid) continue;
-					const prevItems = checklistsByWorkId.get(wid) ?? [];
-					const items = cl.items ?? [];
-					prevItems.push(...items);
-					checklistsByWorkId.set(wid, prevItems);
-
-					if (!hasNotesByWorkId.get(wid)) {
-						hasNotesByWorkId.set(wid, (cl.notes || '').trim().length > 0);
-					}
-				}
-
-				const worksWithChecklists = works.map((work) => {
-					const tasks = checklistsByWorkId.get(work.id) ?? [];
-					const hasNotes = hasNotesByWorkId.get(work.id) ?? false;
-
-					const totalTasks = tasks.length;
-					const completedTasks = tasks.filter((task) => task.done).length;
-					const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-					let status: 'pendiente' | 'en_progreso' | 'completada' = 'pendiente';
-					if (progress === 100) {
-						status = 'completada';
-					} else if (progress > 0) {
-						status = 'en_progreso';
-					}
-
-					return {
-						...work,
-						status,
-						tasks,
-						progress,
-						hasNotes,
-					};
-				});
-
-				setInstallations(worksWithChecklists);
-			} catch (error) {
-				console.error('Error al cargar las obras:', error);
-			} finally {
-				setLoading(false);
+			if (error) {
+				console.error('Error al obtener las obras:', error);
+				throw error;
 			}
-		};
 
+			if (!works || works.length === 0) {
+				setInstallations([]);
+				return;
+			}
+
+			// get checklists for each work and calculate progress
+			const workIds = works.map((w) => w.id);
+			const { data: allChecklists, error: checklistsError } = await getChecklistsByWorkIds(workIds);
+			if (checklistsError) {
+				console.error('Error al obtener checklists:', checklistsError);
+			}
+
+			const checklistsByWorkId = new Map<string, ChecklistItem[]>();
+			const hasNotesByWorkId = new Map<string, boolean>();
+			for (const cl of allChecklists ?? []) {
+				const wid = cl.work_id ?? '';
+				if (!wid) continue;
+				const prevItems = checklistsByWorkId.get(wid) ?? [];
+				const items = cl.items ?? [];
+				prevItems.push(...items);
+				checklistsByWorkId.set(wid, prevItems);
+
+				if (!hasNotesByWorkId.get(wid)) {
+					hasNotesByWorkId.set(wid, (cl.notes || '').trim().length > 0);
+				}
+			}
+
+			const worksWithChecklists = works.map((work) => {
+				const tasks = checklistsByWorkId.get(work.id) ?? [];
+				const hasNotes = hasNotesByWorkId.get(work.id) ?? false;
+
+				const totalTasks = tasks.length;
+				const completedTasks = tasks.filter((task) => task.done).length;
+				const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
+
+				let status: 'pendiente' | 'en_progreso' | 'completada' = 'pendiente';
+				if (progress === 100) {
+					status = 'completada';
+				} else if (progress > 0) {
+					status = 'en_progreso';
+				}
+
+				return {
+					...work,
+					status,
+					tasks,
+					progress,
+					hasNotes,
+				};
+			});
+
+			setInstallations(worksWithChecklists);
+		} catch (error) {
+			console.error('Error al cargar las obras:', error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
 		fetchWorks();
 	}, []);
 
@@ -174,8 +179,41 @@ export function WorksOpenings() {
 		setStatusFilter(status);
 	};
 
-	const handleSaveChecklists = (checklists: any) => {
-		console.log('Checklists guardados:', checklists);
+	const handleSaveChecklists = async (workId: string, checklists: any) => {
+		try {
+			// Get existing checklists to calculate the next index
+			const { data: existingChecklists, error: fetchError } = await getChecklistsByWorkId(workId);
+
+			if (fetchError) throw fetchError;
+			const existingCount = existingChecklists?.length || 0;
+
+			// Create new checklists
+			const createPromises = checklists.map((checklist: any, index: number) => {
+				return createChecklist({
+					work_id: workId,
+					name: checklist.name || `Abertura ${existingCount + index + 1}`,
+					description: checklist.description || '',
+					width: checklist.width || null,
+					height: checklist.height || null,
+					type_opening: checklist.type_opening,
+					notes: '',
+					items: checklist.items.map((item: any) => ({
+						name: item.name,
+						done: item.completed,
+						key: 0,
+					})),
+					progress: checklist.items.length > 0 ? 0 : 100,
+				});
+			});
+			await Promise.all(createPromises);
+
+			// Reload data to update the UI
+			await fetchWorks();
+
+			console.log('Checklists guardados exitosamente');
+		} catch (error) {
+			console.error('Error al guardar checklists:', error);
+		}
 	};
 
 	const handleSendEmail = async (work: WorkWithProgress) => {
@@ -187,7 +225,7 @@ export function WorksOpenings() {
 		try {
 			// Get client information
 			const { data: client, error } = await getClientById(work.client_id);
-			
+
 			if (error || !client) {
 				console.error('Error al obtener información del cliente:', error);
 				return;
@@ -210,7 +248,7 @@ export function WorksOpenings() {
 		try {
 			// Get client information
 			const { data: client, error } = await getClientById(work.client_id);
-			
+
 			if (error || !client) {
 				console.error('Error al obtener información del cliente:', error);
 				return;
@@ -446,6 +484,18 @@ export function WorksOpenings() {
 												Ver checklists
 											</Button>
 										</ChecklistCompletionModal>
+
+										{user?.role === 'Admin' && (
+											<ChecklistModal
+												workId={installation.id}
+												onSave={(checklists) => handleSaveChecklists(installation.id, checklists)}
+											>
+												<Button variant="outline" size="sm">
+													<CheckCircle2 className="mr-2 h-4 w-4" />
+													Crear checklists
+												</Button>
+											</ChecklistModal>
+										)}
 
 										{canSendEmail && (
 											<Button

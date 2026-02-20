@@ -9,14 +9,26 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle2, Loader2 } from 'lucide-react';
-import { Checklist, editChecklist } from '@/lib/works/checklists';
+import { CheckCircle2, Loader2, Trash2, Edit } from 'lucide-react';
+import { Checklist, editChecklist, deleteChecklist } from '@/lib/works/checklists';
 import { ChecklistPDFButton } from '@/components/ui/checklist-pdf-button';
 import { getWorkById } from '@/lib/works/works';
+import { ChecklistModal } from './checklist-modal';
+import { useAuth } from '@/components/provider/auth-provider';
 
 type ChecklistCompletionModalProps = {
 	workId: string;
@@ -30,7 +42,12 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 	const [saving, setSaving] = useState(false);
 	const [savingNotes, setSavingNotes] = useState<Record<string, boolean>>({});
 	const [clientName, setClientName] = useState<string>('');
+	const [checklistToDelete, setChecklistToDelete] = useState<Checklist | null>(null);
+	const [checklistToEdit, setChecklistToEdit] = useState<Checklist | null>(null);
+	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const notesDebounceTimersRef = useRef<Record<string, number>>({});
+
+	const { user } = useAuth();
 
 	// Load checklists when modal opens
 	useEffect(() => {
@@ -193,6 +210,63 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 		}, 600);
 	};
 
+	const confirmDeleteChecklist = async () => {
+		if (!checklistToDelete) return;
+
+		try {
+			setSaving(true);
+			const { error } = await deleteChecklist(checklistToDelete.id);
+			if (error) {
+				console.error('Error deleting checklist:', error);
+				return;
+			}
+
+			// Update local state
+			setChecklists((prev) => prev.filter((c) => c.id !== checklistToDelete.id));
+			setChecklistToDelete(null);
+		} catch (error) {
+			console.error('Error deleting checklist:', error);
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	const handleEditChecklist = (checklist: Checklist) => {
+		setChecklistToEdit(checklist);
+		setIsEditModalOpen(true);
+	};
+
+	const handleUpdateChecklist = async (checklistId: string, updates: any) => {
+		try {
+			setSaving(true);
+			// Transform items to include key property
+			const transformedUpdates = {
+				...updates,
+				items: updates.items?.map((item: any, idx: number) => ({
+					name: item.name,
+					done: item.done,
+					key: idx,
+				})),
+			};
+			const { error } = await editChecklist(checklistId, transformedUpdates);
+			if (error) {
+				console.error('Error updating checklist:', error);
+				return;
+			}
+
+			// Update local state
+			setChecklists((prev) =>
+				prev.map((c) => (c.id === checklistId ? { ...c, ...transformedUpdates } : c))
+			);
+			setIsEditModalOpen(false);
+			setChecklistToEdit(null);
+		} catch (error) {
+			console.error('Error updating checklist:', error);
+		} finally {
+			setSaving(false);
+		}
+	};
+
 	useEffect(() => {
 		return () => {
 			Object.values(notesDebounceTimersRef.current).forEach((timerId) => {
@@ -213,7 +287,8 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 		}, 0) / (checklists.length || 1);
 
 	return (
-		<Dialog open={isOpen} onOpenChange={setIsOpen}>
+		<>
+			<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger asChild>
 				{children || (
 					<Button variant="outline">
@@ -236,8 +311,8 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 					<div className="space-y-8">
 						{/* Progress Overview */}
 						<div className="text-center space-y-2">
-							<div className="text-2xl font-bold text-primary">{Math.round(totalProgress)}%</div>
-							<div className="text-sm text-muted-foreground">Ver checklists</div>
+							<div className='text-sm font-medium text-foreground'>Progreso total: {Math.round(totalProgress)}%</div>
+							<div className="text-base"><b>{checklists.length > 0 ? 'Listado de checklists:' : 'No hay checklists disponibles'}</b></div>
 						</div>
 
 						{/* Checklists */}
@@ -245,19 +320,44 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 							{checklists.map((checklist, index) => (
 								<Card key={checklist.id} className="border-2 shadow-sm">
 									<CardHeader className="pb-4 space-y-4">
-										<div className="space-y-3">
-											<h3 className="text-xl font-bold text-foreground">
-												{checklist.name || `Abertura ${index + 1}`}
-											</h3>
+										<div className="flex items-start justify-between gap-2">
+											<div className="space-y-3 flex-1">
+												<h3 className="text-xl font-bold text-foreground">
+													{checklist.name || `Abertura ${index + 1}`}
+												</h3>
 
-											{checklist.description && (
-												<div className="space-y-1">
-													<Label className="text-xs text-muted-foreground">Descripción</Label>
-													<p className="text-sm text-foreground">{checklist.description}</p>
+												{checklist.description && (
+													<div className="space-y-1">
+														<Label className="text-xs text-muted-foreground">Descripción</Label>
+														<p className="text-sm text-foreground">{checklist.description}</p>
+													</div>
+												)}
+											</div>
+											{user?.role === "Admin" && (
+												<div className="flex items-center gap-1">
+													<Button
+														variant="ghost"
+														size="icon"
+														onClick={() => handleEditChecklist(checklist)}
+														disabled={saving}
+														className="text-muted-foreground hover:text-primary hover:bg-primary/10 flex-shrink-0 h-8 w-8"
+														title="Editar checklist"
+													>
+														<Edit className="h-4 w-4" />
+													</Button>
+													<Button
+														variant="ghost"
+														size="icon"
+														onClick={() => setChecklistToDelete(checklist)}
+														disabled={saving}
+														className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 h-8 w-8"
+														title="Eliminar checklist"
+													>
+														<Trash2 className="h-4 w-4" />	
+													</Button>
 												</div>
 											)}
 										</div>
-
 										<div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
 											{checklist.type_opening && (
 												<div className="space-y-1">
@@ -397,5 +497,49 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 				)}
 			</DialogContent>
 		</Dialog>
+
+		{/* Delete Confirmation Dialog */}
+		<AlertDialog open={!!checklistToDelete} onOpenChange={() => setChecklistToDelete(null)}>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>¿Eliminar checklist?</AlertDialogTitle>
+					<AlertDialogDescription>
+						Esta acción no se puede deshacer. Se eliminará permanentemente el checklist{' '}
+						<span className="font-semibold">
+							{checklistToDelete?.name || 'sin nombre'}
+						</span>{' '}
+						y todos sus datos asociados.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter>
+					<AlertDialogCancel disabled={saving}>Cancelar</AlertDialogCancel>
+					<AlertDialogAction
+						onClick={confirmDeleteChecklist}
+						disabled={saving}
+						className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+					>
+						{saving ? (
+							<>
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+								Eliminando...
+							</>
+						) : (
+							'Eliminar'
+						)}
+					</AlertDialogAction>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+
+		{/* Edit Checklist Modal */}
+		<ChecklistModal
+			workId={workId}
+			open={isEditModalOpen}
+			onOpenChange={setIsEditModalOpen}
+			checklistToEdit={checklistToEdit}
+			onUpdate={handleUpdateChecklist}
+			onSave={() => {}}
+		/>
+		</>
 	);
 }

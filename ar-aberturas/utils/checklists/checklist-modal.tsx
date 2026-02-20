@@ -20,12 +20,17 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import { CheckCircle2, X, Plus, Trash2 } from 'lucide-react';
+import { CheckCircle2, X, Plus, Trash2, Edit } from 'lucide-react';
 import { pvcChecklistItems, aluminioChecklistNames } from '@/lib/works/checklists.constants';
+import { Checklist } from '@/lib/works/checklists';
+import { useAuth } from '@/components/provider/auth-provider';
 
 type ChecklistModalProps = {
 	workId: string;
 	existingChecklists?: boolean;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
+	checklistToEdit?: Checklist | null;
 	onSave: (
 		checklists: Array<{
 			name?: string | null;
@@ -36,13 +41,27 @@ type ChecklistModalProps = {
 			items: Array<{ name: string; completed: boolean }>;
 		}>
 	) => void;
+	onUpdate?: (checklistId: string, checklist: {
+		name?: string | null;
+		description?: string | null;
+		width?: number | null;
+		height?: number | null;
+		type_opening?: 'PVC' | 'Aluminio' | null;
+		items: Array<{ name: string; done: boolean }>;
+	}) => void;
 	children?: React.ReactNode;
 };
 
-export function ChecklistModal({ workId, existingChecklists, onSave }: ChecklistModalProps) {
+export function ChecklistModal({ workId, existingChecklists, open, onOpenChange, checklistToEdit, onSave, onUpdate }: ChecklistModalProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const [step, setStep] = useState(1);
 	const [windowCount, setWindowCount] = useState(1);
+	const { user } = useAuth();
+
+	const isEditMode = !!checklistToEdit;
+	const isControlled = open !== undefined;
+	const modalOpen = isControlled ? open : isOpen;
+	const setModalOpen = isControlled ? (onOpenChange || (() => {})) : setIsOpen;
 	const [checklists, setChecklists] = useState<
 		Array<{
 			name?: string | null;
@@ -53,6 +72,25 @@ export function ChecklistModal({ workId, existingChecklists, onSave }: Checklist
 			items: Array<{ name: string; completed: boolean }>;
 		}>
 	>([]);
+
+	// Initialize from checklist to edit
+	useEffect(() => {
+		if (checklistToEdit && modalOpen) {
+			const editChecklist = {
+				name: checklistToEdit.name || null,
+				description: checklistToEdit.description || null,
+				width: checklistToEdit.width || null,
+				height: checklistToEdit.height || null,
+				type_opening: (checklistToEdit.type_opening as 'PVC' | 'Aluminio' | null) || null,
+				items: (checklistToEdit.items || []).map(item => ({
+					name: item.name,
+					completed: item.done || false,
+				})),
+			};
+			setChecklists([editChecklist]);
+			setStep(2); // Skip to edit screen
+		}
+	}, [checklistToEdit, modalOpen]);
 
 	// Initialize checklists with default items when window count changes
 	const initializeChecklists = (count: number) => {
@@ -100,8 +138,21 @@ export function ChecklistModal({ workId, existingChecklists, onSave }: Checklist
 	};
 
 	const handleSave = () => {
-		onSave(checklists);
-		setIsOpen(false);
+		if (isEditMode && onUpdate && checklistToEdit) {
+			// Edit mode - update existing checklist
+			const editedChecklist = checklists[0];
+			onUpdate(checklistToEdit.id, {
+				...editedChecklist,
+				items: editedChecklist.items.map(item => ({
+					name: item.name,
+					done: item.completed,
+				})),
+			});
+		} else {
+			// Create mode - create new checklists
+			onSave(checklists);
+		}
+		setModalOpen(false);
 		setStep(1);
 		setWindowCount(1);
 		setChecklists([]);
@@ -128,21 +179,23 @@ export function ChecklistModal({ workId, existingChecklists, onSave }: Checklist
 	};
 
 	return (
-		<Dialog open={isOpen} onOpenChange={setIsOpen}>
-			<DialogTrigger asChild>
-				<Button variant="outline" onClick={() => setIsOpen(true)}>
-					<CheckCircle2 className="mr-2 h-4 w-4" />
-					<span>{existingChecklists ? 'Agregar más checklists' : 'Crear checklists'}</span>
-				</Button>
-			</DialogTrigger>
-			<DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-6">
+		<Dialog open={modalOpen} onOpenChange={setModalOpen}>
+			{(!isEditMode && user?.role === "Admin") && (
+				<DialogTrigger asChild>
+					<Button variant="outline" onClick={() => setModalOpen(true)}>
+						<CheckCircle2 className="mr-2 h-4 w-4" />
+						<span>{existingChecklists ? 'Agregar más checklists' : 'Crear checklists'}</span>
+					</Button>
+				</DialogTrigger>
+			)}
+			<DialogContent className="max-w-2xl! max-h-[85vh] overflow-y-auto p-6">
 				<DialogHeader>
 					<DialogTitle>
-						{step === 1 ? 'Cantidad de Aberturas' : 'Configurar Checklists'}
+						{isEditMode ? 'Editar Checklist' : step === 1 ? 'Cantidad de Aberturas' : 'Configurar Checklists'}
 					</DialogTitle>
 				</DialogHeader>
 
-				{step === 1 ? (
+				{!isEditMode && step === 1 ? (
 					<form onSubmit={handleWindowCountSubmit} className="space-y-8 max-w-md mx-auto">
 						<div className="space-y-4">
 							<Label htmlFor="windowCount" className="text-lg font-medium">
@@ -163,7 +216,7 @@ export function ChecklistModal({ workId, existingChecklists, onSave }: Checklist
 							<Button
 								type="button"
 								variant="outline"
-								onClick={() => setIsOpen(false)}
+								onClick={() => setModalOpen(false)}
 								className="px-8"
 							>
 								Cancelar
@@ -330,19 +383,29 @@ export function ChecklistModal({ workId, existingChecklists, onSave }: Checklist
 						</div>
 
 						<div className="flex justify-center space-x-4 pt-8 border-t">
+							{!isEditMode && (
+								<Button
+									type="button"
+									variant="outline"
+									onClick={() => {
+										setStep(1);
+										setChecklists([]);
+									}}
+									className="px-8"
+								>
+									Atrás
+								</Button>
+							)}
 							<Button
 								type="button"
 								variant="outline"
-								onClick={() => {
-									setStep(1);
-									setChecklists([]);
-								}}
+								onClick={() => setModalOpen(false)}
 								className="px-8"
 							>
-								Atrás
+								Cancelar
 							</Button>
 							<Button onClick={handleSave} className="px-8">
-								Crear Checklists para Aberturas
+								{isEditMode ? 'Guardar Cambios' : 'Crear Checklists para Aberturas'}
 							</Button>
 						</div>
 					</div>

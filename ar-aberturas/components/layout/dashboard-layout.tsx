@@ -90,12 +90,6 @@ const navigation = [
 		disabled: false,
 	},
 	{
-		name: 'Presupuestos',
-		href: '/budgets',
-		icon: FileText,
-		disabled: true,
-	},
-	{
 		name: 'Obras',
 		href: '/works',
 		icon: ClipboardCheck,
@@ -106,6 +100,18 @@ const navigation = [
 		href: '/calendar',
 		icon: Calendar,
 		disabled: false,
+	},
+	{
+		name:'Reclamos',
+		href: '/claims',
+		icon: ClipboardCheck,
+		disabled: false,
+	},
+	{
+		name: 'Presupuestos',
+		href: '/budgets',
+		icon: FileText,
+		disabled: true,
 	},
 	{
 		name: 'Reportes',
@@ -198,7 +204,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	// Definición de permisos por rol
 	const allowedByRole = useMemo(() => {
 		return {
-			Admin: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes'],
+			Admin: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes', 'Reclamos'],
 			Fabrica: ['Perfiles', 'Accesorios', 'Herrajes', 'Insumos'],
 			Ventas: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Calendario'],
 			Marketing: ['Panel', 'Calendario', 'Clientes', 'Reportes', 'Presupuestos'],

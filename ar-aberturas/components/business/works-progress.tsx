@@ -62,6 +62,7 @@ export function WorksOpenings() {
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>('todos');
 	const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 	const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+	const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
 	const [selectedWork, setSelectedWork] = useState<WorkWithProgress | null>(null);
 	const [selectedClient, setSelectedClient] = useState<any>(null);
 	const [currentPage, setCurrentPage] = useState(1);
@@ -486,15 +487,17 @@ export function WorksOpenings() {
 										</ChecklistCompletionModal>
 
 										{user?.role === 'Admin' && (
-											<ChecklistModal
-												workId={installation.id}
-												onSave={(checklists) => handleSaveChecklists(installation.id, checklists)}
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => {
+													setSelectedWork(installation);
+													setIsChecklistModalOpen(true);
+												}}
 											>
-												<Button variant="outline" size="sm">
-													<CheckCircle2 className="mr-2 h-4 w-4" />
-													Crear checklists
-												</Button>
-											</ChecklistModal>
+												<List className="mr-2 h-4 w-4" />
+												Agregar checklists
+											</Button>
 										)}
 
 										{canSendEmail && (
@@ -623,6 +626,19 @@ export function WorksOpenings() {
 				work={selectedWork}
 				onSendWhatsApp={handleWhatsAppSend}
 			/>
+
+			<ChecklistModal
+				workId={selectedWork?.id || ''}
+				open={isChecklistModalOpen}
+				onOpenChange={setIsChecklistModalOpen}
+				onSave={(checklists) => {
+					if (selectedWork) {
+						handleSaveChecklists(selectedWork.id, checklists);
+					}
+				}}
+			>
+			</ChecklistModal>
+
 		</div>
 	);
 }

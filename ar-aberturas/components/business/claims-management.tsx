@@ -93,12 +93,7 @@ export function ClaimsManagement() {
 		setSelectedClaim(claim);
 		setIsEditDialogOpen(true);
 	};
-
-	const handleViewClaim = (claim: Claim) => {
-		setViewingClaim(claim);
-		setIsViewDialogOpen(true);
-	};
-
+	
 	const handleDeleteClick = (claim: Claim) => {
 		setClaimToDelete(claim);
 	};

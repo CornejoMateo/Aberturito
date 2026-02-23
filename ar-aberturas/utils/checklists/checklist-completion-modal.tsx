@@ -251,6 +251,10 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 				title: 'Reclamo creado',
 				description: `Se creó un reclamo para ${checklist.name || 'esta abertura'}.`,
 			});
+
+			// Invalidate claims cache and dispatch event for real-time refresh
+			localStorage.removeItem('claims_cache');
+			window.dispatchEvent(new CustomEvent('claims-updated'));
 		} catch (error) {
 			console.error('Error creating claim:', error);
 			toast({

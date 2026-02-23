@@ -41,7 +41,7 @@ import {
 	AlertCircle,
 	FileText,
 } from 'lucide-react';
-import { Claim, listClaims, deleteClaim, resolveClaim } from '@/lib/claims/claims';
+import { Claim, listClaims, deleteClaim, resolveClaim, reopenClaim } from '@/lib/claims/claims';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
@@ -49,7 +49,7 @@ import { es } from 'date-fns/locale';
 import { ClaimsAddDialog } from '@/utils/claims/claims-add-dialog';
 import { cn } from '@/lib/utils';
 
-type FilterType = 'todos' | 'pendientes' | 'resueltos';
+type FilterType = 'todos' | 'pendientes' | 'resueltos' | 'diario' | 'no-diario';
 
 export function ClaimsManagement() {
 	const { toast } = useToast();
@@ -115,6 +115,27 @@ export function ClaimsManagement() {
 		}
 	};
 
+	const handleToggleResolved = async (claim: Claim) => {
+		try {
+			const { error } = await reopenClaim(claim.id);
+			if (error) throw error;
+			toast({
+				title: claim.resolved ? 'Reclamo reabierto' : 'Reclamo resuelto',
+				description: claim.resolved
+					? 'El reclamo ha sido marcado como pendiente nuevamente.'
+					: 'El reclamo ha sido marcado como resuelto.',
+			});
+			await refresh();
+		} catch (err) {
+			console.error('Error actualizando el reclamo:', err);
+			toast({
+				title: 'Error al actualizar',
+				description: 'No se pudo actualizar el estado del reclamo. Por favor, intenta nuevamente.',
+				variant: 'destructive',
+			});
+		}
+	};
+
 	const handleResolveClaim = async (claim: Claim) => {
 		try {
 			const { error } = await resolveClaim(claim.id);
@@ -140,14 +161,19 @@ export function ClaimsManagement() {
 			const matchesFilter =
 				filterType === 'todos' ||
 				(filterType === 'pendientes' && !claim.resolved) ||
-				(filterType === 'resueltos' && claim.resolved);
+				(filterType === 'resueltos' && claim.resolved) ||
+				(filterType === 'diario' && claim.daily === true) ||
+				(filterType === 'no-diario' && claim.daily !== true);
 
 			// Filter by search term
 			const matchesSearch =
 				searchTerm === '' ||
 				claim.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 				claim.attend?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				claim.work_id?.toLowerCase().includes(searchTerm.toLowerCase());
+				claim.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				claim.work_zone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				claim.work_locality?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				claim.work_address?.toLowerCase().includes(searchTerm.toLowerCase());
 
 			return matchesFilter && matchesSearch;
 		});
@@ -198,86 +224,6 @@ export function ClaimsManagement() {
 							<Trash2 className="mr-2 h-4 w-4" />
 							Eliminar
 						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
-
-			{/* View Claim Dialog */}
-			<Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-				<DialogContent className="sm:max-w-[600px]">
-					<DialogHeader>
-						<DialogTitle>Detalles del reclamo</DialogTitle>
-					</DialogHeader>
-					{viewingClaim && (
-						<div className="space-y-4">
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<p className="text-sm font-medium text-muted-foreground">Estado</p>
-									<Badge
-										variant={viewingClaim.resolved ? 'default' : 'secondary'}
-										className="mt-1"
-									>
-										{viewingClaim.resolved ? (
-											<>
-												<CheckCircle className="h-3 w-3 mr-1" />
-												Resuelto
-											</>
-										) : (
-											<>
-												<Clock className="h-3 w-3 mr-1" />
-												Pendiente
-											</>
-										)}
-									</Badge>
-								</div>
-								<div>
-									<p className="text-sm font-medium text-muted-foreground">Tipo</p>
-									<p className="mt-1">{viewingClaim.alum_pvc || '-'}</p>
-								</div>
-								<div>
-									<p className="text-sm font-medium text-muted-foreground">Obra</p>
-									<p className="mt-1">{viewingClaim.work_id || '-'}</p>
-								</div>
-								<div>
-									<p className="text-sm font-medium text-muted-foreground">Atendido por</p>
-									<p className="mt-1">{viewingClaim.attend || '-'}</p>
-								</div>
-								<div>
-									<p className="text-sm font-medium text-muted-foreground">Fecha</p>
-									<p className="mt-1">{formatDate(viewingClaim.date)}</p>
-								</div>
-								{viewingClaim.resolved && (
-									<div>
-										<p className="text-sm font-medium text-muted-foreground">Fecha de resolución</p>
-										<p className="mt-1">{formatDate(viewingClaim.resolution_date)}</p>
-									</div>
-								)}
-								<div>
-									<p className="text-sm font-medium text-muted-foreground">Diario</p>
-									<p className="mt-1">{viewingClaim.daily ? 'Sí' : 'No'}</p>
-								</div>
-							</div>
-							<div>
-								<p className="text-sm font-medium text-muted-foreground">Descripción</p>
-								<p className="mt-1 text-sm">{viewingClaim.description || 'Sin descripción'}</p>
-							</div>
-						</div>
-					)}
-					<DialogFooter>
-						<Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
-							Cerrar
-						</Button>
-						{viewingClaim && !viewingClaim.resolved && (
-							<Button
-								onClick={() => {
-									handleResolveClaim(viewingClaim);
-									setIsViewDialogOpen(false);
-								}}
-							>
-								<CheckCircle className="mr-2 h-4 w-4" />
-								Marcar como resuelto
-							</Button>
-						)}
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
@@ -377,11 +323,29 @@ export function ClaimsManagement() {
 							<CheckCircle className="h-4 w-4 mr-2" />
 							Resueltos
 						</Button>
+						<Button
+							variant={filterType === 'diario' ? 'default' : 'outline'}
+							size="sm"
+							onClick={() => setFilterType('diario')}
+							className={cn(filterType === 'diario' && 'bg-blue-500 hover:bg-blue-600')}
+						>
+							<FileText className="h-4 w-4 mr-2" />
+							Diario
+						</Button>
+						<Button
+							variant={filterType === 'no-diario' ? 'default' : 'outline'}
+							size="sm"
+							onClick={() => setFilterType('no-diario')}
+							className={cn(filterType === 'no-diario' && 'bg-purple-500 hover:bg-purple-600')}
+						>
+							<FileText className="h-4 w-4 mr-2" />
+							No diario
+						</Button>
 					</div>
 					<div className="relative flex-1 md:max-w-sm">
 						<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 						<Input
-							placeholder="Buscar por descripción, atendido por, obra..."
+							placeholder="Buscar por descripción, cliente, zona, localidad, dirección..."
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
 							className="pl-9 bg-background"
@@ -398,23 +362,25 @@ export function ClaimsManagement() {
 							<TableRow>
 								<TableHead className='text-center'>Estado</TableHead>
 								<TableHead className='text-center'>Fecha</TableHead>
-								<TableHead className='text-center'>Obra</TableHead>
+								<TableHead className='text-center'>Cliente</TableHead>
+								<TableHead className='text-center'>Núm. de celular</TableHead>
+								<TableHead className='text-center'>Zona/Localidad</TableHead>
+								<TableHead className='text-center'>Dirección</TableHead>
 								<TableHead className='text-center'>Tipo</TableHead>
-								<TableHead className="hidden md:table-cell text-center">Atendido por</TableHead>
-								<TableHead className="hidden lg:table-cell text-center">Descripción</TableHead>
+								<TableHead className="lg:table-cell text-center">Descripción</TableHead>
 								<TableHead className="text-center">Acciones</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
 							{loading ? (
 								<TableRow>
-									<TableCell colSpan={7} className="text-center py-8">
+									<TableCell colSpan={9} className="text-center py-8">
 										Cargando reclamos...
 									</TableCell>
 								</TableRow>
 							) : currentItems.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={7} className="text-center py-8">
+									<TableCell colSpan={9} className="text-center py-8">
 										<div className="flex flex-col items-center gap-2">
 											<AlertCircle className="h-8 w-8 text-muted-foreground" />
 											<p className="text-muted-foreground">
@@ -426,7 +392,7 @@ export function ClaimsManagement() {
 							) : (
 								currentItems.map((claim) => (
 									<TableRow key={claim.id}>
-										<TableCell>
+										<TableCell className='text-center'>
 											<Badge variant={claim.resolved ? 'default' : 'secondary'}>
 												{claim.resolved ? (
 													<>
@@ -441,25 +407,28 @@ export function ClaimsManagement() {
 												)}
 											</Badge>
 										</TableCell>
-										<TableCell className="whitespace-nowrap">{formatDate(claim.date)}</TableCell>
-										<TableCell>{claim.work_id || '-'}</TableCell>
+										<TableCell className="whitespace-nowrap text-center">{formatDate(claim.date)}</TableCell>
+										<TableCell className='text-center'>{claim.client_name || '-'}</TableCell>
+										<TableCell className='text-center'>{claim.client_phone || '-'}</TableCell>
 										<TableCell>
+											<div className="text-sm text-center">
+												<div>{claim.work_zone || '-'}</div>
+												{claim.work_locality && (
+													<div className="text-muted-foreground text-xs">{claim.work_locality}</div>
+												)}
+											</div>
+										</TableCell>
+										<TableCell className='text-center'>
+											<div className="max-w-xs truncate">{claim.work_address || '-'}</div>
+										</TableCell>
+										<TableCell className='text-center'>
 											<Badge variant="outline">{claim.alum_pvc || '-'}</Badge>
 										</TableCell>
-										<TableCell className="hidden md:table-cell">{claim.attend || '-'}</TableCell>
-										<TableCell className="hidden lg:table-cell max-w-xs">
+										<TableCell className="lg:table-cell max-w-xs text-center">
 											<div className="truncate">{claim.description || '-'}</div>
 										</TableCell>
-										<TableCell>
-											<div className="flex items-center justify-end gap-2">
-												<Button
-													variant="ghost"
-													size="sm"
-													onClick={() => handleViewClaim(claim)}
-													className="h-8 w-8 p-0"
-												>
-													<Eye className="h-4 w-4" />
-												</Button>
+										<TableCell className='text-center'>
+											<div className="items-center justify-end gap-2">
 												<Button
 													variant="ghost"
 													size="sm"
@@ -476,6 +445,16 @@ export function ClaimsManagement() {
 														className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
 													>
 														<CheckCircle className="h-4 w-4" />
+													</Button>
+												)}
+												{claim.resolved && (
+													<Button
+														variant="ghost"
+														size="sm"
+														onClick={() => handleToggleResolved(claim)}
+														className="h-8 w-8 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+													>
+														<Clock className="h-4 w-4" />
 													</Button>
 												)}
 												<Button

@@ -3,8 +3,11 @@ import { getSupabaseClient } from '../supabase-client';
 export type Claim = {
   id: string;
   created_at?: string;
-  client_id?: number | null;
-  work_id?: string | null;
+  client_name?: string | null;
+  client_phone?: string | null;
+  work_zone?: string | null;
+  work_locality?: string | null;
+  work_address?: string | null;
   daily?: boolean | null;
   alum_pvc?: string | null;
   attend?: string | null;
@@ -35,22 +38,22 @@ export async function getClaimById(id: string): Promise<{ data: Claim | null; er
   return { data, error };
 }
 
-export async function getClaimsByClient(clientId: number): Promise<{ data: Claim[] | null; error: any }> {
+export async function getClaimsByClientName(clientName: string): Promise<{ data: Claim[] | null; error: any }> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from(TABLE)
     .select('*')
-    .eq('client_id', clientId)
+    .ilike('client_name', `%${clientName}%`)
     .order('created_at', { ascending: false });
   return { data, error };
 }
 
-export async function getClaimsByWork(workId: string): Promise<{ data: Claim[] | null; error: any }> {
+export async function getClaimsByWorkZone(workZone: string): Promise<{ data: Claim[] | null; error: any }> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from(TABLE)
     .select('*')
-    .eq('work_id', workId)
+    .ilike('work_zone', `%${workZone}%`)
     .order('created_at', { ascending: false });
   return { data, error };
 }
@@ -105,6 +108,21 @@ export async function resolveClaim(id: string, resolutionDate?: string): Promise
   const payload = {
     resolved: true,
     resolution_date: resolutionDate || new Date().toISOString(),
+  };
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function reopenClaim(id: string): Promise<{ data: Claim | null; error: any }> {
+  const supabase = getSupabaseClient();
+  const payload = {
+    resolved: false,
+    resolution_date: null,
   };
   const { data, error } = await supabase
     .from(TABLE)

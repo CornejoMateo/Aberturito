@@ -34,11 +34,11 @@ import {
 	ChevronDown,
 	ChevronRight,
 	Lock,
-	Sun,
-	Moon,
+	AlertCircle,
 } from 'lucide-react';
 import Image from 'next/image';
 import { ro } from 'date-fns/locale';
+import { Alert } from '../ui/alert';
 
 const navigation = [
 	{
@@ -104,7 +104,7 @@ const navigation = [
 	{
 		name:'Reclamos',
 		href: '/claims',
-		icon: ClipboardCheck,
+		icon: AlertCircle,
 		disabled: false,
 	},
 	{

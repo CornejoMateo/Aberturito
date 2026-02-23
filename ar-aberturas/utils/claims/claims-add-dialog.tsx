@@ -38,8 +38,11 @@ export function ClaimsAddDialog({
 	const { toast } = useToast();
 	const [isLoading, setIsLoading] = useState(false);
 	const [formData, setFormData] = useState({
-		client_id: claimToEdit?.client_id?.toString() || '',
-		work_id: claimToEdit?.work_id || '',
+		client_name: claimToEdit?.client_name || '',
+		client_phone: claimToEdit?.client_phone || '',
+		work_zone: claimToEdit?.work_zone || '',
+		work_locality: claimToEdit?.work_locality || '',
+		work_address: claimToEdit?.work_address || '',
 		daily: claimToEdit?.daily || false,
 		alum_pvc: claimToEdit?.alum_pvc || '',
 		attend: claimToEdit?.attend || '',
@@ -50,8 +53,11 @@ export function ClaimsAddDialog({
 	useEffect(() => {
 		if (claimToEdit && open) {
 			setFormData({
-				client_id: claimToEdit.client_id?.toString() || '',
-				work_id: claimToEdit.work_id || '',
+				client_name: claimToEdit.client_name || '',
+				client_phone: claimToEdit.client_phone || '',
+				work_zone: claimToEdit.work_zone || '',
+				work_locality: claimToEdit.work_locality || '',
+				work_address: claimToEdit.work_address || '',
 				daily: claimToEdit.daily || false,
 				alum_pvc: claimToEdit.alum_pvc || '',
 				attend: claimToEdit.attend || '',
@@ -60,8 +66,11 @@ export function ClaimsAddDialog({
 			});
 		} else if (!claimToEdit && open) {
 			setFormData({
-				client_id: '',
-				work_id: '',
+				client_name: '',
+				client_phone: '',
+				work_zone: '',
+				work_locality: '',
+				work_address: '',
 				daily: false,
 				alum_pvc: '',
 				attend: '',
@@ -100,8 +109,11 @@ export function ClaimsAddDialog({
 		setIsLoading(true);
 		try {
 			const payload = {
-				client_id: formData.client_id ? parseInt(formData.client_id) : null,
-				work_id: formData.work_id || null,
+				client_name: formData.client_name || null,
+				client_phone: formData.client_phone || null,
+				work_zone: formData.work_zone || null,
+				work_locality: formData.work_locality || null,
+				work_address: formData.work_address || null,
 				daily: formData.daily,
 				alum_pvc: formData.alum_pvc || null,
 				attend: formData.attend || null,
@@ -130,8 +142,11 @@ export function ClaimsAddDialog({
 			onClaimAdded?.();
 			onOpenChange(false);
 			setFormData({
-				client_id: '',
-				work_id: '',
+				client_name: '',
+				client_phone: '',
+				work_zone: '',
+				work_locality: '',
+				work_address: '',
 				daily: false,
 				alum_pvc: '',
 				attend: '',
@@ -169,29 +184,68 @@ export function ClaimsAddDialog({
 				<form onSubmit={handleSubmit} className="grid gap-4 py-4">
 					<div className="grid grid-cols-2 gap-4">
 						<div className="grid gap-2">
-							<Label htmlFor="work_id" className="text-foreground">
-								Obra
+							<Label htmlFor="client_name" className="text-foreground">
+								Nombre del cliente
 							</Label>
 							<Input
-								id="work_id"
-								value={formData.work_id}
+								id="client_name"
+								value={formData.client_name}
 								onChange={handleInputChange}
-								placeholder="ID de obra"
 								className="bg-background"
 							/>
 						</div>
 						<div className="grid gap-2">
-							<Label htmlFor="date" className="text-foreground">
-								Fecha
+							<Label htmlFor="client_phone" className="text-foreground">
+								Teléfono del cliente
 							</Label>
 							<Input
-								id="date"
-								type="date"
-								value={formData.date}
+								id="client_phone"
+								type="tel"
+								value={formData.client_phone}
 								onChange={handleInputChange}
 								className="bg-background"
 							/>
 						</div>
+					</div>
+
+					<div className="grid grid-cols-2 gap-4">
+						<div className="grid gap-2">
+							<Label htmlFor="work_locality" className="text-foreground">
+								Localidad de obra
+							</Label>
+							<Input
+								id="work_locality"
+								value={formData.work_locality}
+								onChange={handleInputChange}
+								placeholder="Localidad"
+								className="bg-background"
+							/>
+						</div>
+						<div className="grid gap-2">
+							<Label htmlFor="work_zone" className="text-foreground">
+								Zona de obra
+							</Label>
+							<Input
+								id="work_zone"
+								value={formData.work_zone}
+								onChange={handleInputChange}
+								placeholder="Zona"
+								className="bg-background"
+							/>
+						</div>
+					</div>
+
+					<div className="grid gap-2">
+						<Label htmlFor="work_address" className="text-foreground">
+							Dirección de obra
+						</Label>
+						<Input
+							id="work_address"
+							value={formData.work_address}
+							onChange={handleInputChange}
+							placeholder="Dirección completa"
+							className="bg-background"
+						/>
 					</div>
 
 					<div className="grid grid-cols-2 gap-4">
@@ -209,10 +263,26 @@ export function ClaimsAddDialog({
 								<SelectContent>
 									<SelectItem value="Aluminio">Aluminio</SelectItem>
 									<SelectItem value="PVC">PVC</SelectItem>
-									<SelectItem value="Ambos">Ambos</SelectItem>
+									<SelectItem value="Otros">Otros</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
+						
+						<div className="grid gap-2">
+							<Label htmlFor="date" className="text-foreground">
+								Fecha
+							</Label>
+							<Input
+								id="date"
+								type="date"
+								value={formData.date}
+								onChange={handleInputChange}
+								className="bg-background"
+							/>
+						</div>
+					</div>
+
+					{claimToEdit && (
 						<div className="grid gap-2">
 							<Label htmlFor="attend" className="text-foreground">
 								Atendido por
@@ -225,21 +295,7 @@ export function ClaimsAddDialog({
 								className="bg-background"
 							/>
 						</div>
-					</div>
-
-					<div className="grid gap-2">
-						<Label htmlFor="client_id" className="text-foreground">
-							ID de Cliente (opcional)
-						</Label>
-						<Input
-							id="client_id"
-							type="number"
-							value={formData.client_id}
-							onChange={handleInputChange}
-							placeholder="1234"
-							className="bg-background"
-						/>
-					</div>
+					)}
 
 					<div className="grid gap-2">
 						<Label htmlFor="description" className="text-foreground">
@@ -264,7 +320,7 @@ export function ClaimsAddDialog({
 							htmlFor="daily"
 							className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 						>
-							Reclamo diario
+							Diario
 						</Label>
 					</div>
 

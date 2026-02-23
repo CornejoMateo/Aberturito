@@ -93,7 +93,7 @@ export function ClaimsManagement() {
 		setSelectedClaim(claim);
 		setIsEditDialogOpen(true);
 	};
-	
+
 	const handleDeleteClick = (claim: Claim) => {
 		setClaimToDelete(claim);
 	};
@@ -465,7 +465,7 @@ export function ClaimsManagement() {
 								</TableRow>
 							) : (
 								currentItems.map((claim) => (
-									<TableRow key={claim.id}>
+									<TableRow key={claim.id} className={cn(claim.resolved && 'bg-green-300')}>
 										<TableCell className="text-center">
 											<Badge variant={claim.resolved ? 'default' : 'secondary'}>
 												{claim.resolved ? (

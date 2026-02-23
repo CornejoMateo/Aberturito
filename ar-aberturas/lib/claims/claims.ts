@@ -123,6 +123,7 @@ export async function reopenClaim(id: string): Promise<{ data: Claim | null; err
   const payload = {
     resolved: false,
     resolution_date: null,
+    attend: null,
   };
   const { data, error } = await supabase
     .from(TABLE)

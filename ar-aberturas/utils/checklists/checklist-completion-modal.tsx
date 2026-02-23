@@ -23,10 +23,10 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle2, Loader2, Trash2, Edit } from 'lucide-react';
+import { CheckCircle2, Loader2, Trash2, Edit, AlertCircle } from 'lucide-react';
 import { Checklist, editChecklist, deleteChecklist } from '@/lib/works/checklists';
 import { ChecklistPDFButton } from '@/components/ui/checklist-pdf-button';
-import { getWorkById, work } from '@/lib/works/works';
+import { getWorkById, Work } from '@/lib/works/works';
 import { ChecklistModal } from './checklist-modal';
 import { getClientById, Client } from '@/lib/clients/clients';
 import { useAuth } from '@/components/provider/auth-provider';
@@ -281,6 +281,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 			});
 		} finally {
 			setAddingClaim((prev) => ({ ...prev, [checklist.id]: false }));
+		}
     }
     
 	const confirmDeleteChecklist = async () => {

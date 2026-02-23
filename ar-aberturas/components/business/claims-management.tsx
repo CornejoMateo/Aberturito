@@ -41,7 +41,14 @@ import {
 	AlertCircle,
 	FileText,
 } from 'lucide-react';
-import { Claim, listClaims, deleteClaim, resolveClaim, reopenClaim } from '@/lib/claims/claims';
+import {
+	Claim,
+	listClaims,
+	deleteClaim,
+	resolveClaim,
+	reopenClaim,
+	updateClaim,
+} from '@/lib/claims/claims';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
@@ -76,8 +83,11 @@ export function ClaimsManagement() {
 	const [claimToDelete, setClaimToDelete] = useState<Claim | null>(null);
 	const [viewingClaim, setViewingClaim] = useState<Claim | null>(null);
 	const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+	const [claimToResolve, setClaimToResolve] = useState<Claim | null>(null);
+	const [resolvedBy, setResolvedBy] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 10;
+	const [descriptionToView, setDescriptionToView] = useState<string | null>(null);
 
 	const handleEditClaim = (claim: Claim) => {
 		setSelectedClaim(claim);
@@ -137,13 +147,28 @@ export function ClaimsManagement() {
 	};
 
 	const handleResolveClaim = async (claim: Claim) => {
+		setClaimToResolve(claim);
+		setResolvedBy('');
+	};
+
+	const confirmResolveClaim = async () => {
+		if (!claimToResolve) return;
+
 		try {
-			const { error } = await resolveClaim(claim.id);
+			const { error } = await resolveClaim(claimToResolve.id);
 			if (error) throw error;
+
+			// Update the attend field with who resolved it
+			if (resolvedBy.trim()) {
+				await updateClaim(claimToResolve.id, { attend: resolvedBy.trim() });
+			}
+
 			toast({
 				title: 'Reclamo resuelto',
 				description: 'El reclamo ha sido marcado como resuelto.',
 			});
+			setClaimToResolve(null);
+			setResolvedBy('');
 			await refresh();
 		} catch (err) {
 			console.error('Error resolviendo el reclamo:', err);
@@ -223,6 +248,58 @@ export function ClaimsManagement() {
 						<Button variant="destructive" onClick={confirmDelete}>
 							<Trash2 className="mr-2 h-4 w-4" />
 							Eliminar
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* Resolve Confirmation Dialog */}
+			<Dialog open={!!claimToResolve} onOpenChange={(open) => !open && setClaimToResolve(null)}>
+				<DialogContent className="sm:max-w-[425px]">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<CheckCircle className="h-5 w-5 text-green-600" />
+							Marcar reclamo como resuelto
+						</DialogTitle>
+						<DialogDescription>
+							Ingresa el nombre de la(s) persona(s) que resolvieron este reclamo.
+						</DialogDescription>
+					</DialogHeader>
+					<div className="py-4">
+						<Input
+							placeholder="Ej: Juan Pérez, María García"
+							value={resolvedBy}
+							onChange={(e) => setResolvedBy(e.target.value)}
+							className="bg-background"
+						/>
+					</div>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setClaimToResolve(null)}>
+							Cancelar
+						</Button>
+						<Button onClick={confirmResolveClaim} className="bg-green-600 hover:bg-green-700">
+							<CheckCircle className="mr-2 h-4 w-4" />
+							Marcar como resuelto
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* Description View Dialog */}
+			<Dialog open={!!descriptionToView} onOpenChange={(open) => !open && setDescriptionToView(null)}>
+				<DialogContent className="sm:max-w-[600px]">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<FileText className="h-5 w-5" />
+							Descripción del reclamo
+						</DialogTitle>
+					</DialogHeader>
+					<div className="py-4">
+						<p className="text-sm text-foreground whitespace-pre-wrap">{descriptionToView}</p>
+					</div>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setDescriptionToView(null)}>
+							Cerrar
 						</Button>
 					</DialogFooter>
 				</DialogContent>
@@ -360,27 +437,29 @@ export function ClaimsManagement() {
 					<Table>
 						<TableHeader>
 							<TableRow>
-								<TableHead className='text-center'>Estado</TableHead>
-								<TableHead className='text-center'>Fecha</TableHead>
-								<TableHead className='text-center'>Cliente</TableHead>
-								<TableHead className='text-center'>Núm. de celular</TableHead>
-								<TableHead className='text-center'>Zona/Localidad</TableHead>
-								<TableHead className='text-center'>Dirección</TableHead>
-								<TableHead className='text-center'>Tipo</TableHead>
+								<TableHead className="text-center">Estado</TableHead>
+								<TableHead className="text-center">Fecha</TableHead>
+								<TableHead className="text-center">Cliente</TableHead>
+								<TableHead className="text-center">Núm. de celular</TableHead>
+								<TableHead className="text-center">Zona/Localidad</TableHead>
+								<TableHead className="text-center">Dirección</TableHead>
+								<TableHead className="text-center">Tipo</TableHead>
 								<TableHead className="lg:table-cell text-center">Descripción</TableHead>
+								<TableHead className="text-center">Atendido por</TableHead>
+								<TableHead className="text-center">Fecha de resolución</TableHead>
 								<TableHead className="text-center">Acciones</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
 							{loading ? (
 								<TableRow>
-									<TableCell colSpan={9} className="text-center py-8">
+									<TableCell colSpan={11} className="text-center py-8">
 										Cargando reclamos...
 									</TableCell>
 								</TableRow>
 							) : currentItems.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={9} className="text-center py-8">
+									<TableCell colSpan={11} className="text-center py-8">
 										<div className="flex flex-col items-center gap-2">
 											<AlertCircle className="h-8 w-8 text-muted-foreground" />
 											<p className="text-muted-foreground">
@@ -392,7 +471,7 @@ export function ClaimsManagement() {
 							) : (
 								currentItems.map((claim) => (
 									<TableRow key={claim.id}>
-										<TableCell className='text-center'>
+										<TableCell className="text-center">
 											<Badge variant={claim.resolved ? 'default' : 'secondary'}>
 												{claim.resolved ? (
 													<>
@@ -407,9 +486,11 @@ export function ClaimsManagement() {
 												)}
 											</Badge>
 										</TableCell>
-										<TableCell className="whitespace-nowrap text-center">{formatDate(claim.date)}</TableCell>
-										<TableCell className='text-center'>{claim.client_name || '-'}</TableCell>
-										<TableCell className='text-center'>{claim.client_phone || '-'}</TableCell>
+										<TableCell className="whitespace-nowrap text-center">
+											{formatDate(claim.date)}
+										</TableCell>
+										<TableCell className="text-center">{claim.client_name || '-'}</TableCell>
+										<TableCell className="text-center">{claim.client_phone || '-'}</TableCell>
 										<TableCell>
 											<div className="text-sm text-center">
 												<div>{claim.work_zone || '-'}</div>
@@ -418,16 +499,26 @@ export function ClaimsManagement() {
 												)}
 											</div>
 										</TableCell>
-										<TableCell className='text-center'>
+										<TableCell className="text-center">
 											<div className="max-w-xs truncate">{claim.work_address || '-'}</div>
 										</TableCell>
-										<TableCell className='text-center'>
+										<TableCell className="text-center">
 											<Badge variant="outline">{claim.alum_pvc || '-'}</Badge>
 										</TableCell>
 										<TableCell className="lg:table-cell max-w-xs text-center">
-											<div className="truncate">{claim.description || '-'}</div>
+											<div 
+												className="truncate cursor-pointer hover:text-primary transition-colors"
+												onClick={() => setDescriptionToView(claim.description || '-')}
+												title="Click para ver descripción completa"
+											>
+												{claim.description || '-'}
+											</div>
 										</TableCell>
-										<TableCell className='text-center'>
+										<TableCell className="text-center">{claim.attend || '-'}</TableCell>
+										<TableCell className="text-center whitespace-nowrap">
+											{claim.resolved ? formatDate(claim.resolution_date) : '-'}
+										</TableCell>
+										<TableCell className="text-center">
 											<div className="items-center justify-end gap-2">
 												<Button
 													variant="ghost"

@@ -55,6 +55,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ClaimsAddDialog } from '@/utils/claims/claims-add-dialog';
 import { cn } from '@/lib/utils';
+import { userAgent } from 'next/server';
+import { useAuth } from '@/components/provider/auth-provider';
 
 type FilterType = 'todos' | 'pendientes' | 'resueltos' | 'diario' | 'no-diario';
 
@@ -88,6 +90,8 @@ export function ClaimsManagement() {
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 10;
 	const [descriptionToView, setDescriptionToView] = useState<string | null>(null);
+
+	const { user } = useAuth();
 
 	const handleEditClaim = (claim: Claim) => {
 		setSelectedClaim(claim);
@@ -306,10 +310,12 @@ export function ClaimsManagement() {
 					<h2 className="text-2xl font-bold text-foreground text-balance">Gestión de reclamos</h2>
 					<p className="text-muted-foreground mt-1">Administración de reclamos y seguimiento</p>
 				</div>
-				<Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
-					<Plus className="h-4 w-4" />
-					Nuevo reclamo
-				</Button>
+				{user?.role === 'Admin' && (
+					<Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
+						<Plus className="h-4 w-4" />
+						Nuevo reclamo
+					</Button>
+				)}
 			</div>
 
 			<ClaimsAddDialog
@@ -440,9 +446,13 @@ export function ClaimsManagement() {
 								<TableHead className="text-center">Dirección</TableHead>
 								<TableHead className="text-center">Tipo</TableHead>
 								<TableHead className="lg:table-cell text-center">Descripción</TableHead>
-								<TableHead className="text-center">Atendido por</TableHead>
+								{user?.role === 'Admin' && (
+									<TableHead className="text-center">Atendido por</TableHead>
+								)}
 								<TableHead className="text-center">Fecha de resolución</TableHead>
-								<TableHead className="text-center">Acciones</TableHead>
+								{user?.role === 'Admin' && (
+									<TableHead className="text-center">Acciones</TableHead>
+								)}
 							</TableRow>
 						</TableHeader>
 						<TableBody>
@@ -509,50 +519,54 @@ export function ClaimsManagement() {
 												{claim.description || '-'}
 											</div>
 										</TableCell>
-										<TableCell className="text-center">{claim.attend || '-'}</TableCell>
+										{user?.role === 'Admin' && (
+											<TableCell className="text-center">{claim.attend || '-'}</TableCell>
+										)}
 										<TableCell className="text-center whitespace-nowrap">
 											{claim.resolved ? formatDate(claim.resolution_date) : '-'}
 										</TableCell>
-										<TableCell className="text-center">
-											<div className="items-center justify-end gap-2">
-												<Button
-													variant="ghost"
-													size="sm"
-													onClick={() => handleEditClaim(claim)}
-													className="h-8 w-8 p-0"
-												>
-													<Edit className="h-4 w-4" />
-												</Button>
-												{!claim.resolved && (
+										{user?.role === 'Admin' && (
+											<TableCell className="text-center">
+												<div className="items-center justify-end gap-2">
 													<Button
 														variant="ghost"
 														size="sm"
-														onClick={() => handleResolveClaim(claim)}
-														className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+														onClick={() => handleEditClaim(claim)}
+														className="h-8 w-8 p-0"
 													>
-														<CheckCircle className="h-4 w-4" />
+														<Edit className="h-4 w-4" />
 													</Button>
-												)}
-												{claim.resolved && (
+													{!claim.resolved && (
+														<Button
+															variant="ghost"
+															size="sm"
+															onClick={() => handleResolveClaim(claim)}
+															className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+														>
+															<CheckCircle className="h-4 w-4" />
+														</Button>
+													)}
+													{claim.resolved && (
+														<Button
+															variant="ghost"
+															size="sm"
+															onClick={() => handleToggleResolved(claim)}
+															className="h-8 w-8 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+														>
+															<Clock className="h-4 w-4" />
+														</Button>
+													)}
 													<Button
 														variant="ghost"
 														size="sm"
-														onClick={() => handleToggleResolved(claim)}
-														className="h-8 w-8 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+														onClick={() => handleDeleteClick(claim)}
+														className="h-8 w-8 p-0 text-destructive hover:text-destructive"
 													>
-														<Clock className="h-4 w-4" />
+														<Trash2 className="h-4 w-4" />
 													</Button>
-												)}
-												<Button
-													variant="ghost"
-													size="sm"
-													onClick={() => handleDeleteClick(claim)}
-													className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-												>
-													<Trash2 className="h-4 w-4" />
-												</Button>
-											</div>
-										</TableCell>
+												</div>
+											</TableCell>
+										)}
 									</TableRow>
 								))
 							)}

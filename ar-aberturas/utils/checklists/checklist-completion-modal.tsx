@@ -484,26 +484,28 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 												className="text-sm"
 												disabled={loading}
 											/>
-											<Button
-												type="button"
-												variant="outline"
-												size="sm"
-												onClick={() => handleAddAsClaim(checklist)}
-												disabled={!checklist.notes?.trim() || addingClaim[checklist.id] || loading}
-												className="w-full mt-2"
-											>
-												{addingClaim[checklist.id] ? (
-													<>
-														<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-														Creando reclamo...
-													</>
-												) : (
-													<>
-														<AlertCircle className="mr-2 h-4 w-4" />
-														Agregar como reclamo
-													</>
-												)}
-											</Button>
+											{user?.role === 'Admin' && (
+												<Button
+													type="button"
+													variant="outline"
+													size="sm"
+													onClick={() => handleAddAsClaim(checklist)}
+													disabled={!checklist.notes?.trim() || addingClaim[checklist.id] || loading}
+													className="w-full mt-2"
+												>
+													{addingClaim[checklist.id] ? (
+														<>
+															<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+															Creando reclamo...
+														</>
+													) : (
+														<>
+															<AlertCircle className="mr-2 h-4 w-4" />
+															Agregar como reclamo
+														</>
+													)}
+												</Button>
+											)}
 										</div>
 									</CardHeader>
 

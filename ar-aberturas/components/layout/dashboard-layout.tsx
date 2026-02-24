@@ -208,7 +208,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 			Fabrica: ['Perfiles', 'Accesorios', 'Herrajes', 'Insumos'],
 			Ventas: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Calendario'],
 			Marketing: ['Panel', 'Calendario', 'Clientes', 'Reportes', 'Presupuestos'],
-			Colocador: ['Obras'],
+			Colocador: ['Obras', 'Reclamos'],
 		} as Record<string, string[]>;
 	}, []);
 

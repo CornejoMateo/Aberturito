@@ -51,8 +51,6 @@ import {
 } from '@/lib/claims/claims';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { useToast } from '@/components/ui/use-toast';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { ClaimsAddDialog } from '@/utils/claims/claims-add-dialog';
 import { cn } from '@/lib/utils';
 import { userAgent } from 'next/server';
@@ -83,8 +81,6 @@ export function ClaimsManagement() {
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
 	const [claimToDelete, setClaimToDelete] = useState<Claim | null>(null);
-	const [viewingClaim, setViewingClaim] = useState<Claim | null>(null);
-	const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 	const [claimToResolve, setClaimToResolve] = useState<Claim | null>(null);
 	const [resolvedBy, setResolvedBy] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);

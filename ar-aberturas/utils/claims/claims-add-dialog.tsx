@@ -17,7 +17,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import React, { useState, useEffect } from 'react';
 import { createClaim, updateClaim, Claim } from '@/lib/claims/claims';
 import { useToast } from '@/components/ui/use-toast';

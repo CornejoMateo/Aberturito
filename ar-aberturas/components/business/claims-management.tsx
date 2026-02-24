@@ -217,14 +217,10 @@ export function ClaimsManagement() {
 	const pendingCount = claims.filter((c) => !c.resolved).length;
 	const resolvedCount = claims.filter((c) => c.resolved).length;
 
-	const formatDate = (dateString?: string | null) => {
-		if (!dateString) return '-';
-		try {
-			return format(new Date(dateString), 'dd/MM/yyyy', { locale: es });
-		} catch {
-			return '-';
-		}
-	};
+	function formatDate(date: string): string {
+		const [year, month, day] = date.split("-");
+		return `${day}-${month}-${year}`;
+	}
 
 	return (
 		<div className="space-y-6">
@@ -266,7 +262,6 @@ export function ClaimsManagement() {
 					</DialogHeader>
 					<div className="py-4">
 						<Input
-							placeholder="Ej: Juan Pérez, María García"
 							value={resolvedBy}
 							onChange={(e) => setResolvedBy(e.target.value)}
 							className="bg-background"
@@ -492,7 +487,7 @@ export function ClaimsManagement() {
 											</Badge>
 										</TableCell>
 										<TableCell className="whitespace-nowrap text-center">
-											{formatDate(claim.date)}
+											{formatDate(claim.date || '')}
 										</TableCell>
 										<TableCell className="text-center">{claim.client_name || '-'}</TableCell>
 										<TableCell className="text-center">{claim.client_phone || '-'}</TableCell>
@@ -523,7 +518,7 @@ export function ClaimsManagement() {
 											<TableCell className="text-center">{claim.attend || '-'}</TableCell>
 										)}
 										<TableCell className="text-center whitespace-nowrap">
-											{claim.resolved ? formatDate(claim.resolution_date) : '-'}
+											{claim.resolved ? formatDate(claim.resolution_date || '') : '-'}
 										</TableCell>
 										{user?.role === 'Admin' && (
 											<TableCell className="text-center">

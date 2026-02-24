@@ -183,11 +183,10 @@ export function ClaimsManagement() {
 		return claims.filter((claim) => {
 			// Filter by status
 			const matchesFilter =
-				filterType === 'todos' ||
-				(filterType === 'pendientes' && !claim.resolved) ||
-				(filterType === 'resueltos' && claim.resolved) ||
-				(filterType === 'diario' && claim.daily === true) ||
-				(filterType === 'no-diario' && claim.daily !== true);
+				filterType === 'todos' && !claim.daily||
+				(filterType === 'pendientes' && !claim.resolved && !claim.daily) ||
+				(filterType === 'resueltos' && claim.resolved && !claim.daily) ||
+				(filterType === 'diario' && claim.daily === true);
 
 			// Filter by search term
 			const matchesSearch =
@@ -216,6 +215,7 @@ export function ClaimsManagement() {
 
 	const pendingCount = claims.filter((c) => !c.resolved).length;
 	const resolvedCount = claims.filter((c) => c.resolved).length;
+	const dailyCount = claims.filter((c) => c.daily).length;
 
 	function formatDate(date: string): string {
 		const [year, month, day] = date.split('-');
@@ -230,10 +230,12 @@ export function ClaimsManagement() {
 					<DialogHeader>
 						<DialogTitle className="text-destructive flex items-center gap-2">
 							<AlertTriangle className="h-5 w-5" />
-							Eliminar reclamo
+							{filterType === 'diario' ? 'Eliminar actividad diaria' : 'Eliminar reclamo'}
 						</DialogTitle>
 						<DialogDescription>
-							¿Estás seguro de que deseas eliminar este reclamo? Esta acción no se puede deshacer.
+							{filterType === 'diario' ? 
+								'¿Estás seguro de que deseas eliminar esta actividad diaria? Esta acción no se puede deshacer.'
+								: '¿Estás seguro de que deseas eliminar este reclamo? Esta acción no se puede deshacer.'}
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
@@ -254,10 +256,12 @@ export function ClaimsManagement() {
 					<DialogHeader>
 						<DialogTitle className="flex items-center gap-2">
 							<CheckCircle className="h-5 w-5 text-green-600" />
-							Marcar reclamo como resuelto
+							{filterType === 'diario' ? 'Marcar actividad diaria como resuelta' : 'Marcar reclamo como resuelto'}
 						</DialogTitle>
 						<DialogDescription>
-							Ingresa el nombre de la(s) persona(s) que resolvieron este reclamo.
+							{filterType === 'diario'
+								? '¿Estás seguro de que deseas marcar esta actividad diaria como resuelta?'
+								: '¿Estás seguro de que deseas marcar este reclamo como resuelto?'}
 						</DialogDescription>
 					</DialogHeader>
 					<div className="py-4">
@@ -273,7 +277,7 @@ export function ClaimsManagement() {
 						</Button>
 						<Button onClick={confirmResolveClaim} className="bg-green-600 hover:bg-green-700">
 							<CheckCircle className="mr-2 h-4 w-4" />
-							Marcar como resuelto
+							Marcar como resuelto/a
 						</Button>
 					</DialogFooter>
 				</DialogContent>
@@ -288,7 +292,7 @@ export function ClaimsManagement() {
 					<DialogHeader>
 						<DialogTitle className="flex items-center gap-2">
 							<FileText className="h-5 w-5" />
-							Descripción del reclamo
+							Descripción completa
 						</DialogTitle>
 					</DialogHeader>
 					<div className="py-4">
@@ -305,13 +309,15 @@ export function ClaimsManagement() {
 			{/* Header */}
 			<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 				<div>
-					<h2 className="text-2xl font-bold text-foreground text-balance">Gestión de reclamos</h2>
+					<h2 className="text-2xl font-bold text-foreground text-balance">Gestión de ajustes y actividades diarias</h2>
 					<p className="text-muted-foreground mt-1">Administración de reclamos y seguimiento</p>
 				</div>
 				{user?.role === 'Admin' && (
 					<Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
 						<Plus className="h-4 w-4" />
-						Nuevo reclamo
+						{filterType === 'diario' ? 'Agregar actividad diaria' : 'Agregar reclamo'
+
+						}
 					</Button>
 				)}
 			</div>
@@ -320,6 +326,7 @@ export function ClaimsManagement() {
 				open={isAddDialogOpen}
 				onOpenChange={setIsAddDialogOpen}
 				onClaimAdded={refresh}
+				mode={filterType === 'diario' ? 'diario' : 'reclamo'}
 			/>
 
 			{selectedClaim && (
@@ -328,6 +335,7 @@ export function ClaimsManagement() {
 					onOpenChange={setIsEditDialogOpen}
 					claimToEdit={selectedClaim}
 					onClaimAdded={refresh}
+					mode={selectedClaim.daily ? 'diario' : 'reclamo'}
 				/>
 			)}
 
@@ -336,8 +344,8 @@ export function ClaimsManagement() {
 				<Card className="p-6 bg-card border-border">
 					<div className="flex items-center justify-between">
 						<div>
-							<p className="text-sm font-medium text-muted-foreground">Total reclamos</p>
-							<p className="text-2xl font-bold text-foreground mt-2">{claims.length}</p>
+							<p className="text-sm font-medium text-muted-foreground">{filterType !== 'diario' ? 'Total reclamos' : 'Total actividades diarias'}</p>
+							<p className="text-2xl font-bold text-foreground mt-2">{filterType !== 'diario' ? claims.length : dailyCount}</p>
 						</div>
 						<div className="rounded-lg bg-secondary p-3 text-chart-1">
 							<FileText className="h-6 w-6" />
@@ -345,78 +353,80 @@ export function ClaimsManagement() {
 					</div>
 				</Card>
 
-				<Card className="p-6 bg-card border-border">
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="text-sm font-medium text-muted-foreground">Pendientes</p>
-							<p className="text-2xl font-bold text-foreground mt-2">{pendingCount}</p>
-						</div>
-						<div className="rounded-lg bg-orange-500/10 p-3 text-orange-500">
-							<Clock className="h-6 w-6" />
-						</div>
-					</div>
-				</Card>
+				{filterType !== 'diario' && (
+					<>
+						<Card className="p-6 bg-card border-border">
+							<div className="flex items-center justify-between">
+								<div>
+									<p className="text-sm font-medium text-muted-foreground">Pendientes</p>
+									<p className="text-2xl font-bold text-foreground mt-2">{pendingCount}</p>
+								</div>
+								<div className="rounded-lg bg-orange-500/10 p-3 text-orange-500">
+									<Clock className="h-6 w-6" />
+								</div>
+							</div>
+						</Card>
+					
 
-				<Card className="p-6 bg-card border-border">
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="text-sm font-medium text-muted-foreground">Resueltos</p>
-							<p className="text-2xl font-bold text-foreground mt-2">{resolvedCount}</p>
-						</div>
-						<div className="rounded-lg bg-green-500/10 p-3 text-green-500">
-							<CheckCircle className="h-6 w-6" />
-						</div>
-					</div>
-				</Card>
+						<Card className="p-6 bg-card border-border">
+							<div className="flex items-center justify-between">
+								<div>
+									<p className="text-sm font-medium text-muted-foreground">Resueltos</p>
+									<p className="text-2xl font-bold text-foreground mt-2">{resolvedCount}</p>
+								</div>
+								<div className="rounded-lg bg-green-500/10 p-3 text-green-500">
+									<CheckCircle className="h-6 w-6" />
+								</div>
+							</div>
+						</Card>
+					</>
+				)}
 			</div>
+			
 
 			{/* Filters and Search */}
 			<Card className="p-4 bg-card border-border">
 				<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-					<div className="flex flex-wrap gap-2">
-						<Button
-							variant={filterType === 'todos' ? 'default' : 'outline'}
-							size="sm"
-							onClick={() => setFilterType('todos')}
-						>
-							Todos
-						</Button>
-						<Button
-							variant={filterType === 'pendientes' ? 'default' : 'outline'}
-							size="sm"
-							onClick={() => setFilterType('pendientes')}
-							className={cn(filterType === 'pendientes' && 'bg-orange-500 hover:bg-orange-600')}
-						>
-							<Clock className="h-4 w-4 mr-2" />
-							Pendientes
-						</Button>
-						<Button
-							variant={filterType === 'resueltos' ? 'default' : 'outline'}
-							size="sm"
-							onClick={() => setFilterType('resueltos')}
-							className={cn(filterType === 'resueltos' && 'bg-green-500 hover:bg-green-600')}
-						>
-							<CheckCircle className="h-4 w-4 mr-2" />
-							Resueltos
-						</Button>
-						<Button
-							variant={filterType === 'diario' ? 'default' : 'outline'}
-							size="sm"
-							onClick={() => setFilterType('diario')}
-							className={cn(filterType === 'diario' && 'bg-blue-500 hover:bg-blue-600')}
-						>
-							<FileText className="h-4 w-4 mr-2" />
-							Diario
-						</Button>
-						<Button
-							variant={filterType === 'no-diario' ? 'default' : 'outline'}
-							size="sm"
-							onClick={() => setFilterType('no-diario')}
-							className={cn(filterType === 'no-diario' && 'bg-purple-500 hover:bg-purple-600')}
-						>
-							<FileText className="h-4 w-4 mr-2" />
-							No diario
-						</Button>
+					<div className="flex flex-wrap gap-2 items-center">
+						<div className="flex flex-wrap gap-2">
+							<Button
+								variant={filterType === 'todos' ? 'default' : 'outline'}
+								size="sm"
+								onClick={() => setFilterType('todos')}
+							>
+								Todos
+							</Button>
+							<Button
+								variant={filterType === 'pendientes' ? 'default' : 'outline'}
+								size="sm"
+								onClick={() => setFilterType('pendientes')}
+								className={cn(filterType === 'pendientes' && 'bg-orange-500 hover:bg-orange-600')}
+							>
+								<Clock className="h-4 w-4 mr-2" />
+								Pendientes
+							</Button>
+							<Button
+								variant={filterType === 'resueltos' ? 'default' : 'outline'}
+								size="sm"
+								onClick={() => setFilterType('resueltos')}
+								className={cn(filterType === 'resueltos' && 'bg-green-500 hover:bg-green-600')}
+							>
+								<CheckCircle className="h-4 w-4 mr-2" />
+								Resueltos
+							</Button>
+						</div>
+						<div className="h-8 w-px bg-border mx-2" />
+						<div className="flex flex-wrap gap-2">
+							<Button
+								variant={filterType === 'diario' ? 'default' : 'outline'}
+								size="sm"
+								onClick={() => setFilterType('diario')}
+								className={cn(filterType === 'diario' && 'bg-blue-500 hover:bg-blue-600')}
+							>
+								<FileText className="h-4 w-4 mr-2" />
+								Actividades diarias
+							</Button>
+						</div>
 					</div>
 					<div className="relative flex-1 md:max-w-sm">
 						<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -455,7 +465,7 @@ export function ClaimsManagement() {
 							{loading ? (
 								<TableRow>
 									<TableCell colSpan={11} className="text-center py-8">
-										Cargando reclamos...
+										{filterType === 'diario' ? 'Cargando actividades diarias...' : 'Cargando reclamos...'}
 									</TableCell>
 								</TableRow>
 							) : currentItems.length === 0 ? (
@@ -464,7 +474,7 @@ export function ClaimsManagement() {
 										<div className="flex flex-col items-center gap-2">
 											<AlertCircle className="h-8 w-8 text-muted-foreground" />
 											<p className="text-muted-foreground">
-												No se encontraron reclamos con los filtros aplicados
+												{filterType === 'diario' ? 'No se encontraron actividades diarias.' : 'No se encontraron reclamos.'}
 											</p>
 										</div>
 									</TableCell>
@@ -577,7 +587,7 @@ export function ClaimsManagement() {
 					<div className="text-sm text-muted-foreground">
 						Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, filteredClaims.length)}-
 						{Math.min(currentPage * itemsPerPage, filteredClaims.length)} de {filteredClaims.length}{' '}
-						reclamos
+						{filterType === 'diario' ? 'actividades diarias' : 'reclamos'}
 					</div>
 
 					<Pagination className="mx-0 w-auto">

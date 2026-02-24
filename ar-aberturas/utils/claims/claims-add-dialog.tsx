@@ -27,6 +27,7 @@ interface ClaimsAddDialogProps {
 	onOpenChange: (open: boolean) => void;
 	onClaimAdded?: () => void;
 	claimToEdit?: Claim;
+	mode?: 'reclamo' | 'diario';
 }
 
 export function ClaimsAddDialog({
@@ -34,6 +35,7 @@ export function ClaimsAddDialog({
 	onOpenChange,
 	onClaimAdded,
 	claimToEdit,
+	mode = 'reclamo',
 }: ClaimsAddDialogProps) {
 	const { toast } = useToast();
 	const [isLoading, setIsLoading] = useState(false);
@@ -112,7 +114,7 @@ export function ClaimsAddDialog({
 				work_zone: formData.work_zone || null,
 				work_locality: formData.work_locality || null,
 				work_address: formData.work_address || null,
-				daily: formData.daily,
+				daily: mode === 'diario' ? formData.daily : false,
 				alum_pvc: formData.alum_pvc || null,
 				attend: formData.attend || null,
 				description: formData.description || null,
@@ -124,16 +126,16 @@ export function ClaimsAddDialog({
 				const { error } = await updateClaim(claimToEdit.id, payload);
 				if (error) throw error;
 				toast({
-					title: 'Reclamo actualizado',
-					description: 'El reclamo ha sido actualizado correctamente.',
+					title: mode === 'reclamo' ? 'Reclamo actualizado' : 'Actividad actualizada',
+					description: mode === 'reclamo' ? 'El reclamo ha sido actualizado correctamente.' : 'La actividad diaria ha sido actualizada correctamente.',
 				});
 			} else {
 				// Create new claim
 				const { error } = await createClaim(payload);
 				if (error) throw error;
 				toast({
-					title: 'Reclamo creado',
-					description: 'El reclamo ha sido agregado correctamente.',
+					title: mode === 'reclamo' ? 'Reclamo creado' : 'Actividad creada',
+					description: mode === 'reclamo' ? 'El reclamo ha sido creado correctamente.' : 'La actividad diaria ha sido creada correctamente.',
 				});
 			}
 
@@ -170,12 +172,12 @@ export function ClaimsAddDialog({
 			<DialogContent className="bg-card max-w-2xl">
 				<DialogHeader>
 					<DialogTitle className="text-foreground">
-						{claimToEdit ? 'Editar reclamo' : 'Registrar nuevo reclamo'}
+						{claimToEdit ? (mode === 'reclamo' ? 'Editar reclamo' : 'Editar actividad') : (mode === 'reclamo' ? 'Registrar nuevo reclamo': 'Registrar nueva actividad')}
 					</DialogTitle>
 					<DialogDescription className="text-muted-foreground">
 						{claimToEdit
-							? 'Actualice los datos del reclamo'
-							: 'Complete los datos del reclamo para agregarlo al sistema'}
+							? (mode === 'reclamo' ? 'Actualice los datos del reclamo' : 'Actualice los datos de la actividad diaria')
+							: (mode === 'reclamo' ? 'Complete los datos del reclamo para agregarlo al sistema' : 'Complete los datos de la actividad diaria para agregarla al sistema')}
 					</DialogDescription>
 				</DialogHeader>
 
@@ -303,19 +305,9 @@ export function ClaimsAddDialog({
 							id="description"
 							value={formData.description}
 							onChange={handleInputChange}
-							placeholder="Describa el reclamo..."
+							placeholder="Describa el reclamo/actividad..."
 							className="bg-background min-h-[100px]"
 						/>
-					</div>
-
-					<div className="flex items-center space-x-2">
-						<Checkbox id="daily" checked={formData.daily} onCheckedChange={handleCheckboxChange} />
-						<Label
-							htmlFor="daily"
-							className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-						>
-							Diario
-						</Label>
 					</div>
 
 					<DialogFooter>
@@ -323,7 +315,7 @@ export function ClaimsAddDialog({
 							Cancelar
 						</Button>
 						<Button type="submit" disabled={isLoading}>
-							{isLoading ? 'Guardando...' : claimToEdit ? 'Actualizar reclamo' : 'Guardar reclamo'}
+							{isLoading ? 'Guardando...' : claimToEdit ? 'Actualizar' : 'Guardar'}
 						</Button>
 					</DialogFooter>
 				</form>

@@ -102,7 +102,7 @@ const navigation = [
 		disabled: false,
 	},
 	{
-		name:'Reclamos',
+		name:'Ajustes y Diario',
 		href: '/claims',
 		icon: AlertCircle,
 		disabled: false,
@@ -204,11 +204,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	// Definición de permisos por rol
 	const allowedByRole = useMemo(() => {
 		return {
-			Admin: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes', 'Reclamos'],
+			Admin: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes', 'Ajustes y Diario'],
 			Fabrica: ['Perfiles', 'Accesorios', 'Herrajes', 'Insumos'],
 			Ventas: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Calendario'],
 			Marketing: ['Panel', 'Calendario', 'Clientes', 'Reportes', 'Presupuestos'],
-			Colocador: ['Obras', 'Reclamos'],
+			Colocador: ['Obras', 'Ajustes y Diario'],
 		} as Record<string, string[]>;
 	}, []);
 

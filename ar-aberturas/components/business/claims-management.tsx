@@ -109,16 +109,16 @@ export function ClaimsManagement() {
 			const { error } = await deleteClaim(claimToDelete.id);
 			if (error) throw error;
 			toast({
-				title: 'Reclamo eliminado',
-				description: 'El reclamo ha sido eliminado correctamente.',
+				title: filterType === 'diario' ? 'Actividad diaria eliminada' : 'Reclamo eliminado',
+				description: filterType === 'diario' ? 'La actividad diaria ha sido eliminada correctamente.' : 'El reclamo ha sido eliminado correctamente.',
 			});
 			setClaimToDelete(null);
 			await refresh();
 		} catch (err) {
-			console.error('Error eliminando el reclamo:', err);
+			console.error('Error en la eliminación:', err);
 			toast({
 				title: 'Error al eliminar',
-				description: 'No se pudo eliminar el reclamo. Por favor, intenta nuevamente.',
+				description: 'No se pudo eliminar el item. Por favor, intenta nuevamente.',
 				variant: 'destructive',
 			});
 		}
@@ -129,17 +129,16 @@ export function ClaimsManagement() {
 			const { error } = await reopenClaim(claim.id);
 			if (error) throw error;
 			toast({
-				title: claim.resolved ? 'Reclamo reabierto' : 'Reclamo resuelto',
+				title: claim.resolved ? (filterType !== 'diario' ? 'Reclamo reabierto': 'Actividad reabierta') : (filterType !== 'diario' ? 'Reclamo resuelto' : 'Actividad resuelta'),
 				description: claim.resolved
-					? 'El reclamo ha sido marcado como pendiente nuevamente.'
-					: 'El reclamo ha sido marcado como resuelto.',
+					? (filterType !== 'diario' ? 'El reclamo ha sido marcado como pendiente nuevamente.' : 'La actividad diaria ha sido marcada como pendiente nuevamente.')
+					: (filterType !== 'diario' ? 'El reclamo ha sido marcado como resuelto.' : 'La actividad diaria ha sido marcada como resuelta.'),
 			});
 			await refresh();
 		} catch (err) {
-			console.error('Error actualizando el reclamo:', err);
 			toast({
 				title: 'Error al actualizar',
-				description: 'No se pudo actualizar el estado del reclamo. Por favor, intenta nuevamente.',
+				description: 'No se pudo actualizar el estado. Por favor, intenta nuevamente.',
 				variant: 'destructive',
 			});
 		}
@@ -163,8 +162,8 @@ export function ClaimsManagement() {
 			}
 
 			toast({
-				title: 'Reclamo resuelto',
-				description: 'El reclamo ha sido marcado como resuelto.',
+				title: filterType === 'diario' ? 'Actividad diaria marcada como resuelta' : 'Reclamo marcado como resuelto',
+				description: filterType === 'diario' ? 'La actividad diaria ha sido marcada como resuelta.' : 'El reclamo ha sido marcado como resuelto.',
 			});
 			setClaimToResolve(null);
 			setResolvedBy('');

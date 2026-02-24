@@ -255,7 +255,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
 
         <div className="flex-1 overflow-y-auto p-2 sm:p-3 pt-0">
           <div className="mb-2">
-            <h3 className="text-lg text-center font-semibold mb-1">{clientData.name} {clientData.last_name}</h3>
+            <h3 className="text-lg text-center font-semibold mb-1">{clientData.last_name} {clientData.name}</h3>
             <div className="flex flex-wrap justify-center gap-6">
               <div className="flex items-center justify-center">
                 <EmailLink email={clientData.email || ''} className="text-sm hover:underline">

@@ -443,7 +443,7 @@ export function WorksOpenings() {
 												</Badge>
 											</div>
 											<p className="text-sm text-foreground mt-1">
-												{[installation.client_name, installation.client_last_name]
+												{[installation.client_last_name, installation.client_name]
 													.filter(Boolean)
 													.join(' ') || 'Cliente no especificado'}
 											</p>

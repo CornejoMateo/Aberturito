@@ -335,7 +335,7 @@ export function ClientManagement() {
 											</div>
 											<div>
 												<h3 className="font-semibold text-foreground">
-													{client.name} {client.last_name}
+													{client.last_name} {client.name} 
 												</h3>
 											</div>
 										</div>

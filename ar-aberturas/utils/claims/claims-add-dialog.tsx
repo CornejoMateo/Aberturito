@@ -183,7 +183,7 @@ export function ClaimsAddDialog({
 					<div className="grid grid-cols-2 gap-4">
 						<div className="grid gap-2">
 							<Label htmlFor="client_name" className="text-foreground">
-								Nombre del cliente
+								Apellido y Nombre del cliente
 							</Label>
 							<Input
 								id="client_name"

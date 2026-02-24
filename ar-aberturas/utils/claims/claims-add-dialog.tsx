@@ -80,9 +80,7 @@ export function ClaimsAddDialog({
 		}
 	}, [open, claimToEdit]);
 
-	const handleInputChange = (
-		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-	) => {
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
 		const { id, value } = e.target;
 		setFormData((prev) => ({
 			...prev,
@@ -267,7 +265,7 @@ export function ClaimsAddDialog({
 								</SelectContent>
 							</Select>
 						</div>
-						
+
 						<div className="grid gap-2">
 							<Label htmlFor="date" className="text-foreground">
 								Fecha
@@ -311,11 +309,7 @@ export function ClaimsAddDialog({
 					</div>
 
 					<div className="flex items-center space-x-2">
-						<Checkbox
-							id="daily"
-							checked={formData.daily}
-							onCheckedChange={handleCheckboxChange}
-						/>
+						<Checkbox id="daily" checked={formData.daily} onCheckedChange={handleCheckboxChange} />
 						<Label
 							htmlFor="daily"
 							className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"

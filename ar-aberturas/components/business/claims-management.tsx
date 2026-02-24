@@ -218,7 +218,7 @@ export function ClaimsManagement() {
 	const resolvedCount = claims.filter((c) => c.resolved).length;
 
 	function formatDate(date: string): string {
-		const [year, month, day] = date.split("-");
+		const [year, month, day] = date.split('-');
 		return `${day}-${month}-${year}`;
 	}
 
@@ -280,7 +280,10 @@ export function ClaimsManagement() {
 			</Dialog>
 
 			{/* Description View Dialog */}
-			<Dialog open={!!descriptionToView} onOpenChange={(open) => !open && setDescriptionToView(null)}>
+			<Dialog
+				open={!!descriptionToView}
+				onOpenChange={(open) => !open && setDescriptionToView(null)}
+			>
 				<DialogContent className="sm:max-w-[600px]">
 					<DialogHeader>
 						<DialogTitle className="flex items-center gap-2">
@@ -445,9 +448,7 @@ export function ClaimsManagement() {
 									<TableHead className="text-center">Atendido por</TableHead>
 								)}
 								<TableHead className="text-center">Fecha de resolución</TableHead>
-								{user?.role === 'Admin' && (
-									<TableHead className="text-center">Acciones</TableHead>
-								)}
+								{user?.role === 'Admin' && <TableHead className="text-center">Acciones</TableHead>}
 							</TableRow>
 						</TableHeader>
 						<TableBody>
@@ -506,7 +507,7 @@ export function ClaimsManagement() {
 											<Badge variant="outline">{claim.alum_pvc || '-'}</Badge>
 										</TableCell>
 										<TableCell className="lg:table-cell max-w-xs text-center">
-											<div 
+											<div
 												className="truncate cursor-pointer hover:text-primary transition-colors"
 												onClick={() => setDescriptionToView(claim.description || '-')}
 												title="Click para ver descripción completa"

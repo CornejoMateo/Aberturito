@@ -24,6 +24,7 @@ export async function listClaims(): Promise<{ data: Claim[] | null; error: any }
   const { data, error } = await supabase
     .from(TABLE)
     .select('*')
+    .order('date', { ascending: false })
     .order('created_at', { ascending: false });
   return { data, error };
 }

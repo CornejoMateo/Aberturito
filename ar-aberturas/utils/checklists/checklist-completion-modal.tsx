@@ -56,8 +56,6 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 
 	const { user } = useAuth();
 
-	const { user } = useAuth();
-
 	// Load checklists when modal opens
 	useEffect(() => {
 		if (isOpen && workId) {

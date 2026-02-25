@@ -265,6 +265,7 @@ export function ClaimsManagement() {
 							value={resolvedBy}
 							onChange={(e) => setResolvedBy(e.target.value)}
 							className="bg-background"
+							placeholder='¿Quien hablo con el cliente?'
 						/>
 					</div>
 					<DialogFooter>

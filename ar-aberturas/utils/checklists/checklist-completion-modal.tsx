@@ -23,12 +23,15 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle2, Loader2, Trash2, Edit } from 'lucide-react';
+import { CheckCircle2, Loader2, Trash2, Edit, AlertCircle } from 'lucide-react';
 import { Checklist, editChecklist, deleteChecklist } from '@/lib/works/checklists';
 import { ChecklistPDFButton } from '@/components/ui/checklist-pdf-button';
-import { getWorkById } from '@/lib/works/works';
+import { getWorkById, Work } from '@/lib/works/works';
 import { ChecklistModal } from './checklist-modal';
+import { getClientById, Client } from '@/lib/clients/clients';
 import { useAuth } from '@/components/provider/auth-provider';
+import { useToast } from '@/components/ui/use-toast';
+import { createClaim } from '@/lib/claims/claims';
 
 type ChecklistCompletionModalProps = {
 	workId: string;
@@ -41,11 +44,15 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
 	const [savingNotes, setSavingNotes] = useState<Record<string, boolean>>({});
+	const [addingClaim, setAddingClaim] = useState<Record<string, boolean>>({});
 	const [clientName, setClientName] = useState<string>('');
+	const [workData, setWorkData] = useState<Work | null>(null);
+	const [clientData, setClientData] = useState<Client | null>(null);
 	const [checklistToDelete, setChecklistToDelete] = useState<Checklist | null>(null);
 	const [checklistToEdit, setChecklistToEdit] = useState<Checklist | null>(null);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const notesDebounceTimersRef = useRef<Record<string, number>>({});
+	const { toast } = useToast();
 
 	const { user } = useAuth();
 
@@ -60,15 +67,26 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 		try {
 			setLoading(true);
 			
-			// Load work data to get client name
-			const { data: workData, error: workError } = await getWorkById(workId);
+			// Load work data to get client name and other info
+			const { data: work, error: workError } = await getWorkById(workId);
 			if (workError) {
 				console.error('Error loading work data:', workError);
-			} else if (workData) {
-				const fullName = [workData.client_name, workData.client_last_name]
+			} else if (work) {
+				setWorkData(work);
+				const fullName = [work.client_name, work.client_last_name]
 					.filter(Boolean)
 					.join(' ');
 				setClientName(fullName);
+				
+				// Load client data to get phone number
+				if (work.client_id) {
+					const { data: client, error: clientError } = await getClientById(work.client_id);
+					if (clientError) {
+						console.error('Error loading client data:', clientError);
+					} else if (client) {
+						setClientData(client);
+					}
+				}
 			}
 			
 			const { getChecklistsByWorkId } = await import('@/lib/works/checklists');
@@ -210,6 +228,62 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 		}, 600);
 	};
 
+	const handleAddAsClaim = async (checklist: Checklist) => {
+		if (!workData || !checklist.notes?.trim()) {
+			toast({
+				title: 'No se puede crear el reclamo',
+				description: checklist.notes?.trim() ? 'Falta información de la obra.' : 'Esta abertura no tiene notas.',
+				variant: 'destructive',
+			});
+			return;
+		}
+
+		try {
+			setAddingClaim((prev) => ({ ...prev, [checklist.id]: true }));
+			
+			// Prepare claim data
+			const today = new Date().toISOString().split('T')[0];
+			
+			const claimData = {
+				date: today,
+				daily: false,
+				alum_pvc: checklist.type_opening || null,
+				attend: null,
+				description: checklist.notes,
+				resolved: false,
+				client_name: clientName || null,
+				client_phone: clientData?.phone_number || null,
+				work_zone: null,
+				work_locality: workData.locality || null,
+				work_address: workData.address || null,
+			};
+
+			const { error } = await createClaim(claimData);
+			
+			if (error) {
+				throw error;
+			}
+
+			toast({
+				title: 'Reclamo creado',
+				description: `Se creó un reclamo para ${checklist.name || 'esta abertura'}.`,
+			});
+
+			// Invalidate claims cache and dispatch event for real-time refresh
+			localStorage.removeItem('claims_cache');
+			window.dispatchEvent(new CustomEvent('claims-updated'));
+		} catch (error) {
+			console.error('Error creating claim:', error);
+			toast({
+				title: 'Error al crear reclamo',
+				description: 'No se pudo crear el reclamo. Por favor, intenta nuevamente.',
+				variant: 'destructive',
+			});
+		} finally {
+			setAddingClaim((prev) => ({ ...prev, [checklist.id]: false }));
+		}
+    }
+    
 	const confirmDeleteChecklist = async () => {
 		if (!checklistToDelete) return;
 
@@ -410,6 +484,28 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 												className="text-sm"
 												disabled={loading}
 											/>
+											{user?.role === 'Admin' && (
+												<Button
+													type="button"
+													variant="outline"
+													size="sm"
+													onClick={() => handleAddAsClaim(checklist)}
+													disabled={!checklist.notes?.trim() || addingClaim[checklist.id] || loading}
+													className="w-full mt-2"
+												>
+													{addingClaim[checklist.id] ? (
+														<>
+															<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+															Creando reclamo...
+														</>
+													) : (
+														<>
+															<AlertCircle className="mr-2 h-4 w-4" />
+															Agregar como reclamo
+														</>
+													)}
+												</Button>
+											)}
 										</div>
 									</CardHeader>
 

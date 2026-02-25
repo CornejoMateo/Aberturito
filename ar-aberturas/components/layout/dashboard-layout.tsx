@@ -34,11 +34,11 @@ import {
 	ChevronDown,
 	ChevronRight,
 	Lock,
-	Sun,
-	Moon,
+	AlertCircle,
 } from 'lucide-react';
 import Image from 'next/image';
 import { ro } from 'date-fns/locale';
+import { Alert } from '../ui/alert';
 
 const navigation = [
 	{
@@ -90,12 +90,6 @@ const navigation = [
 		disabled: false,
 	},
 	{
-		name: 'Presupuestos',
-		href: '/budgets',
-		icon: FileText,
-		disabled: true,
-	},
-	{
 		name: 'Obras',
 		href: '/works',
 		icon: ClipboardCheck,
@@ -106,6 +100,18 @@ const navigation = [
 		href: '/calendar',
 		icon: Calendar,
 		disabled: false,
+	},
+	{
+		name:'Ajustes y Diario',
+		href: '/claims',
+		icon: AlertCircle,
+		disabled: false,
+	},
+	{
+		name: 'Presupuestos',
+		href: '/budgets',
+		icon: FileText,
+		disabled: true,
 	},
 	{
 		name: 'Reportes',
@@ -198,11 +204,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	// Definición de permisos por rol
 	const allowedByRole = useMemo(() => {
 		return {
-			Admin: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes'],
+			Admin: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes', 'Ajustes y Diario'],
 			Fabrica: ['Perfiles', 'Accesorios', 'Herrajes', 'Insumos'],
 			Ventas: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Calendario'],
 			Marketing: ['Panel', 'Calendario', 'Clientes', 'Reportes', 'Presupuestos'],
-			Colocador: ['Obras'],
+			Colocador: ['Obras', 'Ajustes y Diario'],
 		} as Record<string, string[]>;
 	}, []);
 

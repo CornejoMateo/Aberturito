@@ -134,16 +134,16 @@ export function ClientsAddDialog({
 
 				<form onSubmit={handleSubmit} className="grid gap-4 py-4">
 					<div className="grid gap-2">
-						<Label htmlFor="clientName" className="text-foreground">
-							Nombre
-						</Label>
-						<Input id="clientName" value={formData.name} onChange={handleInputChange} className="bg-background" />
-					</div>
-					<div className="grid gap-2">
 						<Label htmlFor="clientLastName" className="text-foreground">
 							Apellido
 						</Label>
 						<Input id="clientLastName" value={formData.last_name} onChange={handleInputChange} className="bg-background" />
+					</div>
+					<div className="grid gap-2">
+						<Label htmlFor="clientName" className="text-foreground">
+							Nombre
+						</Label>
+						<Input id="clientName" value={formData.name} onChange={handleInputChange} className="bg-background" />
 					</div>
 					<div className="grid grid-cols-2 gap-4">
 						<div className="grid gap-2">

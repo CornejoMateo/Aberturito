@@ -62,6 +62,7 @@ export function WorksOpenings() {
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>('todos');
 	const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 	const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+	const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
 	const [selectedWork, setSelectedWork] = useState<WorkWithProgress | null>(null);
 	const [selectedClient, setSelectedClient] = useState<any>(null);
 	const [currentPage, setCurrentPage] = useState(1);
@@ -429,22 +430,23 @@ export function WorksOpenings() {
 											<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
 												<ClipboardCheck className="h-5 w-5 text-primary" />
 											</div>
-											<div className="flex-1 min-w-0">
-												<div className="flex items-center gap-2 flex-wrap">
-													<h3 className="text-lg font-semibold text-foreground">
-														{installation.id}
-													</h3>
-													<Badge variant="outline" className={`gap-1 ${statusInfo.color}`}>
-														<StatusIcon className="h-3 w-3" />
-														{statusInfo.label}
-													</Badge>
-												</div>
-												<p className="text-sm text-foreground mt-1">
-													{[installation.client_name, installation.client_last_name]
-														.filter(Boolean)
-														.join(' ') || 'Cliente no especificado'}
-												</p>
+											<h3 className="text-lg font-semibold text-foreground">
+												{installation.id}
+											</h3>
+										</div>
+
+										<div className="flex-1 min-w-0">
+											<div className="flex items-center gap-2 flex-wrap">
+												<Badge variant="outline" className={`gap-1 ${statusInfo.color}`}>
+													<StatusIcon className="h-3 w-3" />
+													{statusInfo.label}
+												</Badge>
 											</div>
+											<p className="text-sm text-foreground mt-1">
+												{[installation.client_last_name, installation.client_name]
+													.filter(Boolean)
+													.join(' ') || 'Cliente no especificado'}
+											</p>
 										</div>
 
 										<div className="grid gap-2 md:grid-cols-3 text-sm">
@@ -486,15 +488,17 @@ export function WorksOpenings() {
 										</ChecklistCompletionModal>
 
 										{user?.role === 'Admin' && (
-											<ChecklistModal
-												workId={installation.id}
-												onSave={(checklists) => handleSaveChecklists(installation.id, checklists)}
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => {
+													setSelectedWork(installation);
+													setIsChecklistModalOpen(true);
+												}}
 											>
-												<Button variant="outline" size="sm">
-													<CheckCircle2 className="mr-2 h-4 w-4" />
-													Crear checklists
-												</Button>
-											</ChecklistModal>
+												<List className="mr-2 h-4 w-4" />
+												Agregar checklists
+											</Button>
 										)}
 
 										{canSendEmail && (
@@ -623,6 +627,19 @@ export function WorksOpenings() {
 				work={selectedWork}
 				onSendWhatsApp={handleWhatsAppSend}
 			/>
+
+			<ChecklistModal
+				workId={selectedWork?.id || ''}
+				open={isChecklistModalOpen}
+				onOpenChange={setIsChecklistModalOpen}
+				onSave={(checklists) => {
+					if (selectedWork) {
+						handleSaveChecklists(selectedWork.id, checklists);
+					}
+				}}
+			>
+			</ChecklistModal>
+
 		</div>
 	);
 }

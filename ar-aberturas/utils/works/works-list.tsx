@@ -391,10 +391,11 @@ export function WorksList({
 							const existingCount = existingChecklists?.length || 0;
 
 							// Create new checklists (add to existing ones)
-							const createPromises = checklists.map((checklist, index) => {
+							for(let i = 0; i < checklists.length; i++) {
+								const checklist = checklists[i];
 								return createChecklist({
 									work_id: selectedWorkId,
-									name: checklist.name || `Abertura ${existingCount + index + 1}`,
+									name: checklist.name || `Abertura ${existingCount + i + 1}`,
 									description: checklist.description || '',
 									width: checklist.width || null,
 									height: checklist.height || null,
@@ -407,8 +408,7 @@ export function WorksList({
 									})),
 									progress: checklist.items.length > 0 ? 0 : 100,
 								});
-							});
-							await Promise.all(createPromises);
+							};
 
 							// Update checklist status
 							setWorkChecklists((prev) => ({

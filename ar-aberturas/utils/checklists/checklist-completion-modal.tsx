@@ -32,6 +32,7 @@ import { getClientById, Client } from '@/lib/clients/clients';
 import { useAuth } from '@/components/provider/auth-provider';
 import { useToast } from '@/components/ui/use-toast';
 import { createClaim } from '@/lib/claims/claims';
+import { getChecklistsByWorkId } from '@/lib/works/checklists';
 
 type ChecklistCompletionModalProps = {
 	workId: string;
@@ -89,7 +90,6 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 				}
 			}
 			
-			const { getChecklistsByWorkId } = await import('@/lib/works/checklists');
 			const { data, error } = await getChecklistsByWorkId(workId);
 
 			if (error) {
@@ -98,25 +98,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 			}
 
 			if (data) {
-				// Sort checklists by name or identifier to ensure sequential order
-				const sortedChecklists = data.sort((a, b) => {
-					// Try to extract number from name (e.g., "Ventana 1", "Ventana 2")
-					const aName = a.name || '';
-					const bName = b.name || '';
-
-					const aNum = parseInt(aName.match(/\d+/)?.[0] || '0');
-					const bNum = parseInt(bName.match(/\d+/)?.[0] || '0');
-
-					// If both have numbers, sort by number
-					if (aNum > 0 && bNum > 0) {
-						return aNum - bNum;
-					}
-
-					// Otherwise, sort alphabetically by name
-					return aName.localeCompare(bName);
-				});
-
-				setChecklists(sortedChecklists);
+				setChecklists(data);
 			}
 		} catch (error) {
 			console.error('Error loading checklists:', error);

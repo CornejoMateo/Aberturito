@@ -188,9 +188,10 @@ export function WorksOpenings() {
 			if (fetchError) throw fetchError;
 			const existingCount = existingChecklists?.length || 0;
 
-			// Create new checklists
-			const createPromises = checklists.map((checklist: any, index: number) => {
-				return createChecklist({
+			// Create new checklists sequentially
+			for (let index = 0; index < checklists.length; index++) {
+				const checklist = checklists[index];
+				await createChecklist({
 					work_id: workId,
 					name: checklist.name || `Abertura ${existingCount + index + 1}`,
 					description: checklist.description || '',
@@ -205,8 +206,7 @@ export function WorksOpenings() {
 					})),
 					progress: checklist.items.length > 0 ? 0 : 100,
 				});
-			});
-			await Promise.all(createPromises);
+			}
 
 			// Reload data to update the UI
 			await fetchWorks();

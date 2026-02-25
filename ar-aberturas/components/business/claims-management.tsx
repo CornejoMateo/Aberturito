@@ -56,7 +56,7 @@ import { cn } from '@/lib/utils';
 import { userAgent } from 'next/server';
 import { useAuth } from '@/components/provider/auth-provider';
 
-type FilterType = 'todos' | 'pendientes' | 'resueltos' | 'diario' | 'no-diario';
+type FilterType = 'todos' | 'pendientes' | 'resueltos' | 'diario';
 
 export function ClaimsManagement() {
 	const { toast } = useToast();
@@ -208,9 +208,10 @@ export function ClaimsManagement() {
 		setCurrentPage(1);
 	}, [searchTerm, filterType]);
 
-	const pendingCount = claims.filter((c) => !c.resolved).length;
-	const resolvedCount = claims.filter((c) => c.resolved).length;
 	const dailyCount = claims.filter((c) => c.daily).length;
+	const claimsCount = claims.length - dailyCount;
+	const pendingCount = claims.filter((c) => !c.resolved && !c.daily).length;
+	const resolvedCount = claims.filter((c) => c.resolved && !c.daily).length;
 
 	function formatDate(date: string): string {
 		const [year, month, day] = date.split('-');
@@ -340,7 +341,7 @@ export function ClaimsManagement() {
 					<div className="flex items-center justify-between">
 						<div>
 							<p className="text-sm font-medium text-muted-foreground">{filterType !== 'diario' ? 'Total reclamos' : 'Total actividades diarias'}</p>
-							<p className="text-2xl font-bold text-foreground mt-2">{filterType !== 'diario' ? claims.length : dailyCount}</p>
+							<p className="text-2xl font-bold text-foreground mt-2">{filterType !== 'diario' ? claimsCount : dailyCount}</p>
 						</div>
 						<div className="rounded-lg bg-secondary p-3 text-chart-1">
 							<FileText className="h-6 w-6" />

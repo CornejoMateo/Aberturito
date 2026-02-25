@@ -430,22 +430,23 @@ export function WorksOpenings() {
 											<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
 												<ClipboardCheck className="h-5 w-5 text-primary" />
 											</div>
-											<div className="flex-1 min-w-0">
-												<div className="flex items-center gap-2 flex-wrap">
-													<h3 className="text-lg font-semibold text-foreground">
-														{installation.id}
-													</h3>
-													<Badge variant="outline" className={`gap-1 ${statusInfo.color}`}>
-														<StatusIcon className="h-3 w-3" />
-														{statusInfo.label}
-													</Badge>
-												</div>
-												<p className="text-sm text-foreground mt-1">
-													{[installation.client_name, installation.client_last_name]
-														.filter(Boolean)
-														.join(' ') || 'Cliente no especificado'}
-												</p>
+											<h3 className="text-lg font-semibold text-foreground">
+												{installation.id}
+											</h3>
+										</div>
+
+										<div className="flex-1 min-w-0">
+											<div className="flex items-center gap-2 flex-wrap">
+												<Badge variant="outline" className={`gap-1 ${statusInfo.color}`}>
+													<StatusIcon className="h-3 w-3" />
+													{statusInfo.label}
+												</Badge>
 											</div>
+											<p className="text-sm text-foreground mt-1">
+												{[installation.client_last_name, installation.client_name]
+													.filter(Boolean)
+													.join(' ') || 'Cliente no especificado'}
+											</p>
 										</div>
 
 										<div className="grid gap-2 md:grid-cols-3 text-sm">

@@ -295,7 +295,7 @@ export function WorksList({
 											) : workChecklists[work.id] ? (
 												<div
 													className="flex items-center gap-1 text-green-600"
-													title="Checklist creada"
+													title="Checklists creadas"
 												>
 													<CheckSquare className="h-4 w-4" />
 												</div>

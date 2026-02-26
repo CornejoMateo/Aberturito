@@ -23,8 +23,9 @@ import { Work } from '@/lib/works/works';
 import { createBudget, chooseBudgetForClient, Budget, getBudgetsByFolderBudgetIds, deleteBudget, updateBudget } from '@/lib/budgets/budgets';
 import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId, deleteFolderBudgetWithBudgets } from '@/lib/budgets/folder_budgets';
 import { getSupabaseClient } from '@/lib/supabase-client';
-import { CheckCircle, FileText, Plus, ChevronDown, Trash2, Download, X } from 'lucide-react';
+import { CheckCircle, FileText, Plus, ChevronDown, Trash2, Download, X, TrendingUp } from 'lucide-react';
 import { BudgetWithWork } from '@/lib/works/balances';
+import { ClientBudgetsDollarUpdateModal } from '@/components/ui/client-budgets-dollar-update-modal';
 
 type BudgetFolderVM = FolderBudget & {
 	budgets: BudgetWithWork[];
@@ -122,6 +123,8 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 		budget: BudgetWithWork | null;
 		pdfUrl: string | null;
 	}>({ open: false, budget: null, pdfUrl: null });
+
+	const [isClientBudgetsUpdateModalOpen, setIsClientBudgetsUpdateModalOpen] = useState(false);
 
 	const chosenBudgetIds = useMemo(() => {
 		const chosen = budgets.filter((b) => !!b.accepted);
@@ -315,6 +318,38 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 		setFormPdf(null);
 	}
 
+	const handleClientBudgetsUpdate = async (newUsdRate: number) => {
+		try {
+			const response = await fetch('/api/budget-dollar-rate', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					clientId,
+					newUsdRate,
+				}),
+			});
+
+			const result = await response.json();
+
+			if (!response.ok || !result.success) {
+				throw new Error(result.error || 'Error al actualizar el tipo de cambio');
+			}
+
+			// Refresh budgets list
+			refresh();
+			
+			toast({
+				title: 'Presupuestos actualizados',
+				description: `${result.data.updatedCount} presupuesto(s) se actualizaron con el nuevo tipo de cambio.`,
+			});
+		} catch (error) {
+			console.error('Error al actualizar presupuestos del cliente:', error);
+			throw error;
+		}
+	};
+
 	async function handleCreateBudget() {
 		if (!formPdf) {
 			toast({
@@ -403,6 +438,19 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 					)}
 				</div>
 
+				<div className="flex gap-2">
+				{budgets.filter(b => b.amount_usd && b.amount_usd > 0).length > 0 && (
+					<Button
+						size="sm"
+						variant="outline"
+						className="gap-2"
+						disabled={isLoading}
+						onClick={() => setIsClientBudgetsUpdateModalOpen(true)}
+					>
+						<TrendingUp className="h-4 w-4" />
+						Actualizar Precios
+					</Button>
+				)}
 				<Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
 					<DialogTrigger asChild>
 						<Button size="sm" className="gap-2" disabled={isLoading}>
@@ -516,6 +564,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 						</div>
 					</DialogContent>
 				</Dialog>
+				</div>
 			</div>
 
 		{(loadingFolders || loadingBudgets) && folderBudgets.length === 0 ? (
@@ -743,6 +792,14 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 				</div>
 			</DialogContent>
 		</Dialog>
+
+		<ClientBudgetsDollarUpdateModal
+			isOpen={isClientBudgetsUpdateModalOpen}
+			onOpenChange={setIsClientBudgetsUpdateModalOpen}
+			budgets={budgets}
+			clientId={clientId}
+			onUpdateConfirmed={handleClientBudgetsUpdate}
+		/>
 	</>
 );
 }

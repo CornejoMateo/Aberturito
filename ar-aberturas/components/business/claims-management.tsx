@@ -48,6 +48,7 @@ import {
 	resolveClaim,
 	reopenClaim,
 	updateClaim,
+	deleteOldClaims,
 } from '@/lib/claims/claims';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { useToast } from '@/components/ui/use-toast';
@@ -86,6 +87,7 @@ export function ClaimsManagement() {
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 10;
 	const [descriptionToView, setDescriptionToView] = useState<string | null>(null);
+	const [showDeleteOldDialog, setShowDeleteOldDialog] = useState(false);
 
 	const { user } = useAuth();
 
@@ -169,6 +171,27 @@ export function ClaimsManagement() {
 			toast({
 				title: 'Error al resolver',
 				description: 'No se pudo marcar el reclamo como resuelto.',
+				variant: 'destructive',
+			});
+		}
+	};
+
+	const handleDeleteOldClaims = async () => {
+		try {
+			const { error } = await deleteOldClaims();
+			if (error) throw error;
+			
+			toast({
+				title: 'Reclamos antiguos eliminados',
+				description: 'Se han eliminado los reclamos y actividades diarias resueltos hace más de un mes.',
+			});
+			setShowDeleteOldDialog(false);
+			await refresh();
+		} catch (err) {
+			console.error('Error eliminando reclamos antiguos:', err);
+			toast({
+				title: 'Error al eliminar',
+				description: 'No se pudieron eliminar los reclamos antiguos.',
 				variant: 'destructive',
 			});
 		}
@@ -298,6 +321,30 @@ export function ClaimsManagement() {
 					<DialogFooter>
 						<Button variant="outline" onClick={() => setDescriptionToView(null)}>
 							Cerrar
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* Delete Old Claims Dialog */}
+			<Dialog open={showDeleteOldDialog} onOpenChange={setShowDeleteOldDialog}>
+				<DialogContent className="sm:max-w-[425px]">
+					<DialogHeader>
+						<DialogTitle className="text-destructive flex items-center gap-2">
+							<AlertTriangle className="h-5 w-5" />
+							Eliminar reclamos antiguos
+						</DialogTitle>
+						<DialogDescription>
+							¿Estás seguro de que deseas eliminar todos los reclamos y actividades diarias que fueron resueltos hace más de un mes? Esta acción no se puede deshacer.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setShowDeleteOldDialog(false)}>
+							Cancelar
+						</Button>
+						<Button variant="destructive" onClick={handleDeleteOldClaims}>
+							<Trash2 className="mr-2 h-4 w-4" />
+							Eliminar antiguos
 						</Button>
 					</DialogFooter>
 				</DialogContent>
@@ -634,6 +681,30 @@ export function ClaimsManagement() {
 					</Pagination>
 				</div>
 			)}
+
+			{/* delete old claims */}
+			{user?.role === 'Admin' && (
+				<Card className="p-4 bg-card border-border">
+					<div className="flex items-center justify-between">
+						<div>
+							<h3 className="text-sm font-medium text-foreground">Limpiar datos antiguos</h3>
+							<p className="text-xs text-muted-foreground mt-1">
+								Elimina reclamos y actividades diarias resueltos hace más de un mes
+							</p>
+						</div>
+						<Button
+							variant="destructive"
+							size="sm"
+							onClick={() => setShowDeleteOldDialog(true)}
+							className="gap-2"
+						>
+							<Trash2 className="h-4 w-4" />
+							Eliminar antiguos
+						</Button>
+					</div>
+				</Card>
+			)}
+
 		</div>
 	);
 }

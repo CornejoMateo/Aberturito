@@ -129,3 +129,19 @@ export async function deleteClaim(id: string): Promise<{ data: null; error: any 
 	const { error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };
 }
+
+// method to delete claims that were resolved more than a month ago
+export async function deleteOldClaims(): Promise<{ data: null; error: any }> {
+	const supabase = getSupabaseClient();
+	
+	const oneMonthAgo = new Date();
+	oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+	
+	const { error } = await supabase
+		.from(TABLE)
+		.delete()
+		.eq('resolved', true)
+		.lt('resolution_date', oneMonthAgo.toISOString());
+	
+	return { data: null, error };
+}

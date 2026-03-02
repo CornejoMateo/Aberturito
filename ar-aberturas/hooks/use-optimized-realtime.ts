@@ -67,23 +67,42 @@ export function useOptimizedRealtime<T extends { id: string }>(
 
 	// Fetch de datos con cache
 	const fetchData = useCallback(async (forceRefresh = false) => {
+		let hadCache = false;
+		let cachedIsEmpty = false;
+
 		if (!forceRefresh) {
 			const cached = getCachedData();
-			if (cached) {
+			if (cached !== null) {
+				hadCache = true;
+				cachedIsEmpty = cached.length === 0;
 				setData(cached);
+				// No bloqueamos UI si hay cache, pero revalidamos en background.
 				setLoading(false);
-				return;
 			}
 		}
 
-		setLoading(true);
+		// Si hay cache con datos, revalidamos sin spinner.
+		// Si no hay cache (o está vacío), sí mostramos loading.
+		if (!hadCache || cachedIsEmpty || forceRefresh) {
+			setLoading(true);
+		}
+		setError(null);
+
 		try {
 			const res = await fetchFromDbRef.current();
 			versionRef.current++;
 			setData([...res]);
 			setCachedData(res);
 		} catch (err: any) {
-			setError(err.message || 'Error al cargar datos');
+			if (typeof err?.message === 'string' && err.message.trim().length > 0) {
+				setError(err.message);
+			} else {
+				try {
+					setError(JSON.stringify(err));
+				} catch {
+					setError('Error al cargar datos');
+				}
+			}
 		} finally {
 			setLoading(false);
 		}

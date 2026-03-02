@@ -18,9 +18,29 @@ export async function listClients(): Promise<{ data: Client[] | null; error: any
     const supabase = getSupabaseClient();
     const { data, error } = await supabase
         .from(TABLE)
-        .select('name, last_name, id, phone_number, locality, email, notes')
-        .order('created_at', { ascending: false });
-    return { data, error };
+        .select('*');
+
+	if (data) {
+		const sorted = [...(data as Client[])].sort((a, b) => {
+			const aCreated = a.created_at ?? null;
+			const bCreated = b.created_at ?? null;
+			if (aCreated && bCreated) {
+				// ISO timestamps: ordenar desc por string es válido
+				if (aCreated === bCreated) return 0;
+				return aCreated < bCreated ? 1 : -1;
+			}
+
+			const aId = Number((a as any).id);
+			const bId = Number((b as any).id);
+			if (!Number.isNaN(aId) && !Number.isNaN(bId)) {
+				return bId - aId;
+			}
+			return 0;
+		});
+		return { data: sorted, error };
+	}
+
+	return { data, error };
 }
 
 export async function getClientById(id: string): Promise<{ data: Client | null; error: any }> {

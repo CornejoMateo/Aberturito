@@ -80,7 +80,7 @@ export async function getChecklistsByWorkId(
 		.from(TABLE)
 		.select('*')
 		.eq('work_id', workId)
-		.order('created_at', { ascending: true });
+		.order('created_at', { ascending: false });
 	return { data, error };
 }
 

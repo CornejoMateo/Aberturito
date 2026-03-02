@@ -180,41 +180,30 @@ export function WorksOpenings() {
 		setStatusFilter(status);
 	};
 
-	const handleSaveChecklists = async (workId: string, checklists: any) => {
-		try {
-			// Get existing checklists to calculate the next index
-			const { data: existingChecklists, error: fetchError } = await getChecklistsByWorkId(workId);
+	const handleSaveChecklist = async (checklist: any) => {
+		const { data: existingChecklists } = await getChecklistsByWorkId(selectedWork?.id || '');
+		const existingCount = existingChecklists?.length || 0;
 
-			if (fetchError) throw fetchError;
-			const existingCount = existingChecklists?.length || 0;
+		const { error } = await createChecklist({
+			work_id: selectedWork?.id || '',
+			name: checklist.name || `Abertura ${existingCount + 1}`,
+			description: checklist.description || '',
+			width: checklist.width || null,
+			height: checklist.height || null,
+			type_opening: checklist.type_opening,
+			notes: '',
+			items: checklist.items.map((item: any) => ({
+				name: item.name,
+				done: item.completed,
+				key: 0,
+			})),
+			progress: checklist.items.length > 0 ? 0 : 100,
+		});
 
-			// Create new checklists sequentially
-			for (let index = 0; index < checklists.length; index++) {
-				const checklist = checklists[index];
-				await createChecklist({
-					work_id: workId,
-					name: checklist.name || `Abertura ${existingCount + index + 1}`,
-					description: checklist.description || '',
-					width: checklist.width || null,
-					height: checklist.height || null,
-					type_opening: checklist.type_opening,
-					notes: '',
-					items: checklist.items.map((item: any) => ({
-						name: item.name,
-						done: item.completed,
-						key: 0,
-					})),
-					progress: checklist.items.length > 0 ? 0 : 100,
-				});
-			}
+		if (error) throw error;
 
-			// Reload data to update the UI
-			await fetchWorks();
-
-			console.log('Checklists guardados exitosamente');
-		} catch (error) {
-			console.error('Error al guardar checklists:', error);
-		}
+		// Reload data to update the UI
+		await fetchWorks();
 	};
 
 	const handleSendEmail = async (work: WorkWithProgress) => {
@@ -632,13 +621,8 @@ export function WorksOpenings() {
 				workId={selectedWork?.id || ''}
 				open={isChecklistModalOpen}
 				onOpenChange={setIsChecklistModalOpen}
-				onSave={(checklists) => {
-					if (selectedWork) {
-						handleSaveChecklists(selectedWork.id, checklists);
-					}
-				}}
-			>
-			</ChecklistModal>
+				onSave={handleSaveChecklist}
+			/>
 
 		</div>
 	);

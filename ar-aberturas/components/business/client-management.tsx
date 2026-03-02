@@ -329,6 +329,12 @@ export function ClientManagement() {
 										<div className="flex items-center gap-3">
 											<div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
 												<span className="font-semibold text-primary text-lg">
+													{client.last_name
+														?.split(' ')
+														.map((n) => n[0])
+														.join('')
+														.toUpperCase()
+														.slice(0, 2)}
 													{client.name
 														?.split(' ')
 														.map((n) => n[0])

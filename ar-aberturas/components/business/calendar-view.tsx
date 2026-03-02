@@ -23,6 +23,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { is } from 'date-fns/locale';
 import { deleteLastYearEvents } from '@/lib/calendar/events';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { useAuth } from '@/components/provider/auth-provider';
 
 export function CalendarView() {
 	const { toast } = useToast();
@@ -37,6 +38,8 @@ export function CalendarView() {
 	const [searchTerm, setSearchTerm] = useState('');
 	const maxVisibleEvents = 5; // Show only 5 events by default
 	const [showAllEvents, setShowAllEvents] = useState(false);
+
+	const { user } = useAuth();
 
 	const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
 	const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -536,31 +539,41 @@ export function CalendarView() {
 				</div>
 			</Card>
 
-			<div className="flex justify-center my-4">
-				<Button
-					variant="destructive"
-					className="w-full max-w-xs"
-					onClick={() => setIsDeleteDialogOpen(true)}
-				>
-					Eliminar eventos del año pasado
-				</Button>
-				<Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle>¿Eliminar eventos de años anteriores?</DialogTitle>
-						</DialogHeader>
-						<p className="py-2">Esta acción eliminará todos los eventos (finalizados) anteriores al 1 de enero del presente año. ¿Estás seguro?</p>
-						<DialogFooter>
-							<Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
-								Cancelar
-							</Button>
-							<Button variant="destructive" onClick={handleDeleteLastYearEvents} disabled={isDeleting}>
-								Eliminar
-							</Button>
-						</DialogFooter>
-					</DialogContent>
-				</Dialog>
-			</div>
+			{user?.role === 'Admin' && (
+				<Card className="p-4 bg-card border-border">
+					<div className="flex items-center justify-between">
+						<div>
+							<h3 className="text-sm font-medium text-foreground">Limpiar datos antiguos</h3>
+							<p className="text-xs text-muted-foreground mt-1">
+								Elimina eventos resueltos anteriores al 1 de enero del presente año para mantener el calendario limpio y relevante.
+							</p>
+						</div>
+						<Button
+							variant="destructive"
+							className="w-full max-w-xs"
+							onClick={() => setIsDeleteDialogOpen(true)}
+						>
+							Eliminar eventos del año pasado
+						</Button>
+						<Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+							<DialogContent>
+								<DialogHeader>
+									<DialogTitle>¿Eliminar eventos de años anteriores?</DialogTitle>
+								</DialogHeader>
+								<p className="py-2">Esta acción eliminará todos los eventos (finalizados) anteriores al 1 de enero del presente año. ¿Estás seguro?</p>
+								<DialogFooter>
+									<Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
+										Cancelar
+									</Button>
+									<Button variant="destructive" onClick={handleDeleteLastYearEvents} disabled={isDeleting}>
+										Eliminar
+									</Button>
+								</DialogFooter>
+							</DialogContent>
+						</Dialog>
+					</div>
+				</Card>
+			)}
 
 			{/* Event details */}
 			{selectedEvent && (

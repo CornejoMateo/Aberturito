@@ -265,6 +265,75 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 			setAddingClaim((prev) => ({ ...prev, [checklist.id]: false }));
 		}
     }
+
+	const handleAddAsDailyAct = async (checklist: Checklist) => {
+		if (!workData) {
+			toast({
+				title: 'No se puede crear la actividad',
+				description: 'Falta información de la obra.',
+				variant: 'destructive',
+			});
+			return;
+		}
+
+		// Build description from checklist items
+		let description = `${checklist.name || 'Checklist'}\n\n`;
+
+		const items = checklist.items?.filter((item) => item.done) || [];
+		
+		if (items && items.length > 0) {
+			description += 'Items:\n';
+			items.forEach((item) => {
+				const status = item.done ? '✓' : '✗';
+				description += `${status} ${item.name}\n`;
+			});
+		}
+
+		try {
+			setAddingClaim((prev) => ({ ...prev, [checklist.id]: true }));
+			
+			// Prepare daily activity data
+			const today = new Date().toISOString().split('T')[0];
+			
+			const claimData = {
+				date: today,
+				daily: true,
+				alum_pvc: checklist.type_opening || null,
+				attend: null,
+				description: description,
+				resolved: false,
+				client_name: clientName || null,
+				client_phone: clientData?.phone_number || null,
+				work_zone: null,
+				work_locality: workData.locality || null,
+				work_address: workData.address || null,
+			};
+
+			const { error } = await createClaim(claimData);
+			
+			if (error) {
+				throw error;
+			}
+
+			toast({
+				title: 'Actividad diaria creada',
+				description: `Se creó una actividad diaria para ${checklist.name || 'esta abertura'}.`,
+			});
+
+			// Invalidate claims cache and dispatch event for real-time refresh
+			localStorage.removeItem('claims_cache');
+			window.dispatchEvent(new CustomEvent('claims-updated'));
+		} catch (error) {
+			console.error('Error creating daily activity:', error);
+			toast({
+				title: 'Error al crear actividad diaria',
+				description: 'No se pudo crear la actividad diaria. Por favor, intenta nuevamente.',
+				variant: 'destructive',
+			});
+		} finally {
+			setAddingClaim((prev) => ({ ...prev, [checklist.id]: false }));
+		}
+    }
     
 	const confirmDeleteChecklist = async () => {
 		if (!checklistToDelete) return;
@@ -549,8 +618,32 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 												))}
 											</div>
 										</div>
+
+										{user?.role === 'Admin' && (
+											<Button
+												type="button"
+												variant="outline"
+												size="sm"
+												onClick={() => handleAddAsDailyAct(checklist)}
+												disabled={checklist.items?.length === 0 || checklist.items?.filter((item) => item.done).length === 0 || addingClaim[checklist.id] || loading}
+												className="w-full mt-2"
+											>
+												{addingClaim[checklist.id] ? (
+													<>
+														<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+														Creando actividad...
+													</>
+												) : (
+													<>
+														<AlertCircle className="mr-2 h-4 w-4" />
+														Agregar a actividades diarias
+													</>
+												)}
+											</Button>
+										)}
 									</CardContent>
 								</Card>
+								
 							))}
 						</div>
 
@@ -616,7 +709,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 			onOpenChange={setIsEditModalOpen}
 			checklistToEdit={checklistToEdit}
 			onUpdate={handleUpdateChecklist}
-			onSave={() => {}}
+			onSave={async () => {}}
 		/>
 		</>
 	);

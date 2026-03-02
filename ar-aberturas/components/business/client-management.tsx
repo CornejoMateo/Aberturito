@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, use } from 'react';
 import {
 	Pagination,
 	PaginationContent,
@@ -44,9 +44,11 @@ import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, FileText } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/components/provider/auth-provider';
 
 export function ClientManagement() {
 	const { toast } = useToast();
+	const { user } = useAuth();
 
 	const {
 		data: clients,
@@ -253,10 +255,12 @@ export function ClientManagement() {
 					<h2 className="text-2xl font-bold text-foreground text-balance">Gestión de Clientes</h2>
 					<p className="text-muted-foreground mt-1">Administración de clientes y contactos</p>
 				</div>
-				<Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
-					<Plus className="h-4 w-4" />
-					Nuevo cliente
-				</Button>
+				{user?.role !== 'Colocador' && (
+					<Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
+						<Plus className="h-4 w-4" />
+						Nuevo cliente
+					</Button>
+				)}
 			<ClientsAddDialog 
 				open={isAddDialogOpen} 
 				onOpenChange={setIsAddDialogOpen}
@@ -325,6 +329,12 @@ export function ClientManagement() {
 										<div className="flex items-center gap-3">
 											<div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
 												<span className="font-semibold text-primary text-lg">
+													{client.last_name
+														?.split(' ')
+														.map((n) => n[0])
+														.join('')
+														.toUpperCase()
+														.slice(0, 2)}
 													{client.name
 														?.split(' ')
 														.map((n) => n[0])
@@ -339,51 +349,57 @@ export function ClientManagement() {
 												</h3>
 											</div>
 										</div>
-										<button
-											onClick={() => handleDeleteClick(client)}
-											className="text-muted-foreground hover:text-destructive transition-colors p-0.1 -mt-13 -mr-3"
-											title="Eliminar cliente"
-										>
-											<Trash2 className="h-4 w-4" />
-										</button>
+										{user?.role !== 'Colocador' && (
+											<button
+												onClick={() => handleDeleteClick(client)}
+												className="text-muted-foreground hover:text-destructive transition-colors p-0.1 -mt-13 -mr-3"
+												title="Eliminar cliente"
+											>
+												<Trash2 className="h-4 w-4" />
+											</button>
+										)}
 									</div>
 
-									<div className="space-y-2 text-sm pt-2">
-										<div className="flex items-center gap-2 text-muted-foreground">
-											<Mail className="h-4 w-4" />
-											<span className="truncate">{client.email}</span>
+									{user?.role !== 'Colocador' && (
+										<div className="space-y-2 text-sm pt-2">
+											<div className="flex items-center gap-2 text-muted-foreground">
+												<Mail className="h-4 w-4" />
+												<span className="truncate">{client.email}</span>
+											</div>
+											<div className="flex items-center gap-2 text-muted-foreground">
+												<Phone className="h-4 w-4" />
+												<span>{client.phone_number}</span>
+											</div>
+											<div className="flex items-center gap-2 text-muted-foreground">
+												<MapPin className="h-4 w-4" />
+												<span>{client.locality}</span>
+											</div>
 										</div>
-										<div className="flex items-center gap-2 text-muted-foreground">
-											<Phone className="h-4 w-4" />
-											<span>{client.phone_number}</span>
-										</div>
-										<div className="flex items-center gap-2 text-muted-foreground">
-											<MapPin className="h-4 w-4" />
-											<span>{client.locality}</span>
-										</div>
-									</div>
+									)}
 
 									{/* Budget information */}
-									<div className="border-t pt-3 mt-3">
-										<div className="flex items-center justify-between text-xs">
-											<div className="flex items-center gap-1">
-												<FileText className="h-3.5 w-3.5 text-muted-foreground" />
-												<span className="text-muted-foreground">
-													{clientBudgetsInfo[client.id]?.total || 0} presupuesto(s)
-												</span>
+									{user?.role !== 'Colocador' && (
+										<div className="border-t pt-3 mt-3">
+											<div className="flex items-center justify-between text-xs">
+												<div className="flex items-center gap-1">
+													<FileText className="h-3.5 w-3.5 text-muted-foreground" />
+													<span className="text-muted-foreground">
+														{clientBudgetsInfo[client.id]?.total || 0} presupuesto(s)
+													</span>
+												</div>
+												{clientBudgetsInfo[client.id]?.chosen > 0 ? (
+													<Badge variant="default" className="gap-1 text-xs h-5">
+														<CheckCircle className="h-3 w-3" />
+														{clientBudgetsInfo[client.id].chosen} elegido(s)
+													</Badge>
+												) : (
+													<Badge variant="secondary" className="text-xs h-5">
+														Sin elegidos
+													</Badge>
+												)}
 											</div>
-											{clientBudgetsInfo[client.id]?.chosen > 0 ? (
-												<Badge variant="default" className="gap-1 text-xs h-5">
-													<CheckCircle className="h-3 w-3" />
-													{clientBudgetsInfo[client.id].chosen} elegido(s)
-												</Badge>
-											) : (
-												<Badge variant="secondary" className="text-xs h-5">
-													Sin elegidos
-												</Badge>
-											)}
 										</div>
-									</div>
+									)}
 
 									<div className="flex gap-2 pt-2">
 										<Button
@@ -395,15 +411,17 @@ export function ClientManagement() {
 											<Eye className="h-4 w-4" />
 											Ver
 										</Button>
-										<Button
-											variant="outline"
-											size="sm"
-											className="flex-1 gap-2 bg-transparent"
-											onClick={() => handleEditClient(client)}
-										>
-											<Edit className="h-4 w-4" />
-											Editar
-										</Button>
+										{user?.role !== 'Colocador' && (
+											<Button
+												variant="outline"
+												size="sm"
+												className="flex-1 gap-2 bg-transparent"
+												onClick={() => handleEditClient(client)}
+											>
+												<Edit className="h-4 w-4" />
+												Editar
+											</Button>
+										)}
 									</div>
 								</div>
 							</Card>

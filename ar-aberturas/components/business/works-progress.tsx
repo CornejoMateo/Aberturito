@@ -23,7 +23,7 @@ import { ChecklistModal } from '@/utils/checklists/checklist-modal';
 import { listWorks } from '@/lib/works/works';
 import {
 	getChecklistsByWorkIds,
-	createChecklist,
+	createChecklistsBulk,
 	getChecklistsByWorkId,
 } from '@/lib/works/checklists';
 import { getClientById } from '@/lib/clients/clients';
@@ -188,10 +188,8 @@ export function WorksOpenings() {
 			if (fetchError) throw fetchError;
 			const existingCount = existingChecklists?.length || 0;
 
-			// Create new checklists sequentially
-			for (let index = 0; index < checklists.length; index++) {
-				const checklist = checklists[index];
-				await createChecklist({
+			const { data: created, error: createError } = await createChecklistsBulk(
+				checklists.map((checklist: any, index: number) => ({
 					work_id: workId,
 					name: checklist.name || `Abertura ${existingCount + index + 1}`,
 					description: checklist.description || '',
@@ -205,7 +203,11 @@ export function WorksOpenings() {
 						key: 0,
 					})),
 					progress: checklist.items.length > 0 ? 0 : 100,
-				});
+				}))
+			);
+			if (createError) throw createError;
+			if ((created?.length ?? 0) !== checklists.length) {
+				throw new Error('No se pudieron guardar todas las checklists');
 			}
 
 			// Reload data to update the UI

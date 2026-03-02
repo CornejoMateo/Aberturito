@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Work, updateWork } from '@/lib/works/works';
-import { getChecklistsByWorkId, createChecklist, deleteChecklist } from '@/lib/works/checklists';
+import { getChecklistsByWorkId, createChecklistsBulk, deleteChecklist } from '@/lib/works/checklists';
 import {
 	MapPin,
 	Calendar,
@@ -390,10 +390,8 @@ export function WorksList({
 							if (fetchError) throw fetchError;
 							const existingCount = existingChecklists?.length || 0;
 
-							// Create new checklists (add to existing ones) - sequentially to maintain order
-							for (let i = 0; i < checklists.length; i++) {
-								const checklist = checklists[i];
-								await createChecklist({
+							const { data: created, error: createError } = await createChecklistsBulk(
+								checklists.map((checklist, i) => ({
 									work_id: selectedWorkId,
 									name: checklist.name || `Abertura ${existingCount + i + 1}`,
 									description: checklist.description || '',
@@ -407,7 +405,13 @@ export function WorksList({
 										key: 0,
 									})),
 									progress: checklist.items.length > 0 ? 0 : 100,
-								});
+								}))
+							);
+							if (createError) {
+								throw createError;
+							}
+							if ((created?.length ?? 0) !== checklists.length) {
+								throw new Error('No se pudieron guardar todas las checklists');
 							}
 
 							// Update checklist status

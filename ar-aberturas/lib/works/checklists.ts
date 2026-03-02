@@ -53,6 +53,32 @@ export async function createChecklist(
 	return { data, error };
 }
 
+export async function createChecklistsBulk(
+	checklists: Array<Omit<Checklist, 'id' | 'created_at'>>
+): Promise<{ data: Checklist[] | null; error: any }> {
+	const supabase = getSupabaseClient();
+	if (checklists.length === 0) return { data: [], error: null };
+
+	const CHUNK_SIZE = 20;
+	const created: Checklist[] = [];
+
+	for (let i = 0; i < checklists.length; i += CHUNK_SIZE) {
+		const chunk = checklists.slice(i, i + CHUNK_SIZE);
+		const payload = chunk.map((c) => ({
+			...c,
+			items: c.items ? c.items.map((item, idx) => ({ ...item, key: idx })) : null,
+		}));
+
+		const { data, error } = await supabase.from(TABLE).insert(payload).select();
+		if (error) {
+			return { data: created.length > 0 ? created : null, error };
+		}
+		created.push(...(((data as any) ?? []) as Checklist[]));
+	}
+
+	return { data: created, error: null };
+}
+
 export async function editChecklist(
 	id: string,
 	changes: Partial<Checklist>

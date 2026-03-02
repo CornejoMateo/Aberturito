@@ -258,6 +258,10 @@ export function ClaimsAddDialog({
 								<SelectContent>
 									<SelectItem value="Aluminio">Aluminio</SelectItem>
 									<SelectItem value="PVC">PVC</SelectItem>
+									<SelectItem value="Persiana">Persiana</SelectItem>
+									<SelectItem value="Mampara">Mampara</SelectItem>
+									<SelectItem value="Portón">Portón</SelectItem>
+									<SelectItem value="Vidrio">Vidrio</SelectItem>
 									<SelectItem value="Otros">Otros</SelectItem>
 								</SelectContent>
 							</Select>

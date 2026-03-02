@@ -381,62 +381,47 @@ export function WorksList({
 					existingChecklists={workChecklists[selectedWorkId] ? true : false}
 					open={isChecklistModalOpen}
 					onOpenChange={setIsChecklistModalOpen}
-					onSave={async (checklists) => {
-						try {
-							// Get existing checklists to calculate the next index
-							const { data: existingChecklists, error: fetchError } =
-								await getChecklistsByWorkId(selectedWorkId);
+					onSave={async (checklist) => {
+						// Get existing checklists to calculate the next index
+						const { data: existingChecklists, error: fetchError } =
+							await getChecklistsByWorkId(selectedWorkId);
 
-							if (fetchError) throw fetchError;
-							const existingCount = existingChecklists?.length || 0;
+						if (fetchError) throw fetchError;
+						const existingCount = existingChecklists?.length || 0;
 
-							// Create new checklists (add to existing ones) - sequentially to maintain order
-							for (let i = 0; i < checklists.length; i++) {
-								const checklist = checklists[i];
-								await createChecklist({
-									work_id: selectedWorkId,
-									name: checklist.name || `Abertura ${existingCount + i + 1}`,
-									description: checklist.description || '',
-									width: checklist.width || null,
-									height: checklist.height || null,
-									type_opening: checklist.type_opening,
-									notes: '',
-									items: checklist.items.map((item) => ({
-										name: item.name,
-										done: item.completed,
-										key: 0,
-									})),
-									progress: checklist.items.length > 0 ? 0 : 100,
-								});
-							}
+						const { error } = await createChecklist({
+							work_id: selectedWorkId,
+							name: checklist.name || `Abertura ${existingCount + 1}`,
+							description: checklist.description || '',
+							width: checklist.width || null,
+							height: checklist.height || null,
+							type_opening: checklist.type_opening,
+							notes: '',
+							items: checklist.items.map((item) => ({
+								name: item.name,
+								done: item.completed,
+								key: 0,
+							})),
+							progress: checklist.items.length > 0 ? 0 : 100,
+						});
 
-							// Update checklist status
-							setWorkChecklists((prev) => ({
-								...prev,
-								[selectedWorkId]: true,
-							}));
+						if (error) throw error;
 
-							// Update local state if needed
-							const work = works.find((w) => w.id === selectedWorkId);
-							if (work && onWorkUpdated) {
-								const updatedWork = {
-									...work,
-									has_checklist: true,
-									updated_at: new Date().toISOString(),
-								};
-								onWorkUpdated(updatedWork);
-							}
+						// Update checklist status
+						setWorkChecklists((prev) => ({
+							...prev,
+							[selectedWorkId]: true,
+						}));
 
-							toast({
-								title: 'Checklists guardadas',
-								description: 'Las checklists se han guardado correctamente.',
-							});
-						} catch (error) {
-							toast({
-								title: 'Error al guardar',
-								description: 'Hubo un error al guardar las checklists. Inténtalo de nuevo.',
-								variant: 'destructive',
-							});
+						// Update local state if needed
+						const work = works.find((w) => w.id === selectedWorkId);
+						if (work && onWorkUpdated) {
+							const updatedWork = {
+								...work,
+								has_checklist: true,
+								updated_at: new Date().toISOString(),
+							};
+							onWorkUpdated(updatedWork);
 						}
 					}}
 				/>

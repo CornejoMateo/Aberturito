@@ -65,7 +65,7 @@ export function useOptimizedRealtime<T extends { id: string }>(
 		}
 	}, [cacheKeyFinal]);
 
-	// Fetch de datos con cache
+	// Fetch data with cache optimization
 	const fetchData = useCallback(async (forceRefresh = false) => {
 		let hadCache = false;
 		let cachedIsEmpty = false;
@@ -76,13 +76,13 @@ export function useOptimizedRealtime<T extends { id: string }>(
 				hadCache = true;
 				cachedIsEmpty = cached.length === 0;
 				setData(cached);
-				// No bloqueamos UI si hay cache, pero revalidamos en background.
+				// No block UI if there is cache, but revalidate in background.
 				setLoading(false);
 			}
 		}
 
-		// Si hay cache con datos, revalidamos sin spinner.
-		// Si no hay cache (o está vacío), sí mostramos loading.
+		// If there is cache with data, revalidate without spinner.
+		// If there is no cache (or it's empty), show loading.
 		if (!hadCache || cachedIsEmpty || forceRefresh) {
 			setLoading(true);
 		}
@@ -108,12 +108,12 @@ export function useOptimizedRealtime<T extends { id: string }>(
 		}
 	}, [getCachedData, setCachedData]);
 
-	// Procesar cambios individuales sin refresh completo
+	// Process individual changes without full refresh
 	const processRealtimeEvent = useCallback((payload: any) => {
 		const { eventType, new: newRecord, old: oldRecord } = payload;
 		
-		// Para la tabla 'balances', hacer refresh completo en INSERT/UPDATE
-		// porque necesita cargar las relaciones (budget.folder_budget.work)
+		// For the 'balances' table, do a full refresh on INSERT/UPDATE
+		// because it needs to load relationships (budget.folder_budget.work)
 		if (table === 'balances' && (eventType === 'INSERT' || eventType === 'UPDATE')) {
 			fetchData(true);
 			return;
@@ -124,12 +124,12 @@ export function useOptimizedRealtime<T extends { id: string }>(
 			
 			switch (eventType) {
 				case 'INSERT':
-					// Agregar nuevo registro al inicio
+					// Add new record to the beginning
 					if (newRecord) newData.unshift(newRecord);
 					break;
 					
 				case 'UPDATE':
-					// Actualizar registro existente
+					// Update existing record
 					if (newRecord?.id) {
 						const index = newData.findIndex(item => item.id === newRecord.id);
 						if (index !== -1) {
@@ -139,14 +139,14 @@ export function useOptimizedRealtime<T extends { id: string }>(
 					break;
 					
 				case 'DELETE':
-					// Eliminar registro
+					// Remove record
 					if (oldRecord?.id) {
 						newData = newData.filter(item => item.id !== oldRecord.id);
 					}
 					break;
 			}
 			
-			// Actualizar cache con debounce
+			// Update cache with debounce
 			if (debounceTimerRef.current) {
 				clearTimeout(debounceTimerRef.current);
 			}
@@ -159,13 +159,13 @@ export function useOptimizedRealtime<T extends { id: string }>(
 		});
 	}, [setCachedData, table]);
 
-	// Inicialización
+	// Initialization
 	useEffect(() => {
 		fetchData();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []); // Solo se ejecuta al montar
+	}, []); // Only runs on mount
 
-	// Configuración de realtime
+	// Realtime configuration
 	useEffect(() => {
 		if (!table) return;
 		const channel = supabase
@@ -188,7 +188,7 @@ export function useOptimizedRealtime<T extends { id: string }>(
 		};
 	}, [table, processRealtimeEvent]);
 
-	// Limpiar cache expirado periódicamente
+	// Clean expired cache periodically
 	useEffect(() => {
 		const interval = setInterval(() => {
 			const cached = localStorage.getItem(cacheKeyFinal);

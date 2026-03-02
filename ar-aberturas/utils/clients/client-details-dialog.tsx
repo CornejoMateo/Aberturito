@@ -12,7 +12,6 @@ import { useState, useEffect } from 'react';
 import { WorkForm } from '@/utils/works/work-form';
 import { createWork, getWorksByClientId, Work, deleteWork } from '@/lib/works/works';
 import { WorksList } from '@/utils/works/works-list';
-import { ClientNotes } from '@/utils/notes/client-notes';
 import { updateClient } from '@/lib/clients/clients';
 import { ClientBalances } from '@/utils/balances/client-balances';
 import { BalanceForm } from '@/utils/balances/balance-form';
@@ -21,6 +20,8 @@ import { toast } from '@/components/ui/use-toast';
 import { ClientBudgetsTab } from '@/utils/budgets/client-budgets-tab';
 import { getFolderBudgetsByClientId } from '@/lib/budgets/folder_budgets';
 import { getBudgetsByFolderBudgetIds } from '@/lib/budgets/budgets';
+import { ClientImagesGallery } from '@/utils/images-client/images-client';
+import { useAuth } from '@/components/provider/auth-provider';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -43,6 +44,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
   const [balancesKey, setBalancesKey] = useState(0);
   const [worksLoaded, setWorksLoaded] = useState(false);
   const [budgetsLoaded, setBudgetsLoaded] = useState(false);
+  const { user } = useAuth();
   
   // function to load works when the works tab is opened for the first time
   const loadWorks = async (force = false) => {
@@ -206,19 +208,6 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
     }
   }, [client]);
 
-  const handleNotesUpdate = async (updatedNotes: string[]) => {
-    if (!client) return;
-    
-    try {
-      const { data: updatedClient } = await updateClient(client.id, { notes: updatedNotes });
-      if (updatedClient) {
-        setClientData(prev => prev ? { ...prev, notes: updatedNotes } : null);
-      }
-    } catch (error) {
-      console.error('Error updating notes:', error);
-    }
-  };
-
   const handleCoverChange = (value: string) => {
     setCover(value);
     setHasUnsavedChanges(true);
@@ -257,20 +246,24 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           <div className="mb-2">
             <h3 className="text-lg text-center font-semibold mb-1">{clientData.last_name} {clientData.name}</h3>
             <div className="flex flex-wrap justify-center gap-6">
-              <div className="flex items-center justify-center">
-                <EmailLink email={clientData.email || ''} className="text-sm hover:underline">
-                  {clientData.email}
-                </EmailLink>
-              </div>
-              <div className="flex items-center justify-center">
-                <WhatsAppLink 
-                  phone={clientData.phone_number || ''} 
-                  className="text-sm hover:underline"
-                  message={`Hola ${clientData.name || ''}`}
-                >
-                  {clientData.phone_number}
-                </WhatsAppLink>
-              </div>
+              {user?.role !== 'Colocador' && (
+                <>
+                  <div className="flex items-center justify-center">
+                    <EmailLink email={clientData.email || ''} className="text-sm hover:underline">
+                      {clientData.email}
+                    </EmailLink>
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <WhatsAppLink 
+                      phone={clientData.phone_number || ''} 
+                      className="text-sm hover:underline"
+                      message={`Hola ${clientData.name || ''}`}
+                    >
+                      {clientData.phone_number}
+                    </WhatsAppLink>
+                  </div>
+                </>
+              )}
               <div className="flex items-center justify-center gap-1 text-sm">
                 <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                 <span className="text-xs">{clientData.locality}</span>
@@ -279,13 +272,17 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
           </div>
 
           <div className="border-t pt-2">
-            <Tabs defaultValue="info" className="w-full" onValueChange={handleTabChange}>
+            <Tabs defaultValue={user?.role === 'Admin' ? 'info' : 'images'} className="w-full" onValueChange={handleTabChange}>
               <TabsList>
-                <TabsTrigger value="info">Información</TabsTrigger>
-                <TabsTrigger value="works">Obras</TabsTrigger>
-                <TabsTrigger value="budgets">Presupuestos</TabsTrigger>
-                <TabsTrigger value="balances">Saldos</TabsTrigger>
-                <TabsTrigger value="notes">Notas</TabsTrigger>
+                {user?.role !== 'Colocador' && (
+                  <>
+                    <TabsTrigger value="info">Información</TabsTrigger>
+                    <TabsTrigger value="works">Obras</TabsTrigger>
+                    <TabsTrigger value="budgets">Presupuestos</TabsTrigger>
+                    <TabsTrigger value="balances">Saldos</TabsTrigger>
+                  </>
+                )}
+                <TabsTrigger value="images">Archivos</TabsTrigger>
               </TabsList>
               
               <div className="mt-2">
@@ -342,11 +339,8 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                 <TabsContent value="budgets">
                   <ClientBudgetsTab clientId={clientData.id} works={works} onBudgetsChange={setBudgets} />
                 </TabsContent>
-                <TabsContent value="notes" className="h-[calc(100%-2.5rem)]">
-                  <ClientNotes 
-                    client={clientData} 
-                    onNotesUpdate={handleNotesUpdate} 
-                  />
+                <TabsContent value="images" className="h-[calc(100%-2.5rem)]">
+                  <ClientImagesGallery client={clientData} />
                 </TabsContent>
                 <TabsContent value="balances" className="space-y-4">
                   <ClientBalances 

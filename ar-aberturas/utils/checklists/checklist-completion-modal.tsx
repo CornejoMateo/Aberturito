@@ -709,7 +709,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 			onOpenChange={setIsEditModalOpen}
 			checklistToEdit={checklistToEdit}
 			onUpdate={handleUpdateChecklist}
-			onSave={() => {}}
+			onSave={async () => {}}
 		/>
 		</>
 	);

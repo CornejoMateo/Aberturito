@@ -242,7 +242,7 @@ export function ChecklistModal({
 		<Dialog open={modalOpen} onOpenChange={setModalOpen}>
 			<DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-6">
 				<DialogHeader>
-					<div className="flex items-center justify-between">
+					<div className="flex items-center justify-between pt-4">
 						<DialogTitle>{isEditMode ? 'Editar Checklist' : 'Crear Checklist'}</DialogTitle>
 						{!isEditMode && createdCount > 0 && (
 							<Badge variant="default" className="gap-1">

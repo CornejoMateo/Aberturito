@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, use } from 'react';
 import {
 	Pagination,
 	PaginationContent,
@@ -44,9 +44,11 @@ import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, FileText } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/components/provider/auth-provider';
 
 export function ClientManagement() {
 	const { toast } = useToast();
+	const { user } = useAuth();
 
 	const {
 		data: clients,
@@ -56,10 +58,7 @@ export function ClientManagement() {
 	} = useOptimizedRealtime<Client>(
 		'clients',
 		async () => {
-			const { data, error } = await listClients();
-			if (error) {
-				throw error;
-			}
+			const { data } = await listClients();
 			return data ?? [];
 		},
 		'clients_cache'
@@ -224,39 +223,6 @@ export function ClientManagement() {
 		setCurrentPage(1);
 	}, [searchTerm]);
 
-	if (loading) {
-		return (
-			<div className="space-y-6">
-				<div className="flex items-center justify-between">
-					<div>
-						<h2 className="text-2xl font-bold text-foreground text-balance">Gestión de Clientes</h2>
-						<p className="text-muted-foreground mt-1">Cargando clientes...</p>
-					</div>
-					<Button onClick={refresh} variant="outline">
-						Reintentar
-					</Button>
-				</div>
-			</div>
-		);
-	}
-
-	if (error) {
-		return (
-			<div className="space-y-6">
-				<div className="flex items-center justify-between">
-					<div>
-						<h2 className="text-2xl font-bold text-foreground text-balance">Gestión de Clientes</h2>
-						<p className="text-destructive mt-1">No se pudieron cargar los clientes.</p>
-						<p className="text-muted-foreground mt-1 text-sm break-words">{error}</p>
-					</div>
-					<Button onClick={refresh} variant="outline">
-						Reintentar
-					</Button>
-				</div>
-			</div>
-		);
-	}
-
 	return (
 		<div className="space-y-6">
 			{/* Delete Confirmation Dialog */}
@@ -289,10 +255,12 @@ export function ClientManagement() {
 					<h2 className="text-2xl font-bold text-foreground text-balance">Gestión de Clientes</h2>
 					<p className="text-muted-foreground mt-1">Administración de clientes y contactos</p>
 				</div>
-				<Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
-					<Plus className="h-4 w-4" />
-					Nuevo cliente
-				</Button>
+				{user?.role !== 'Colocador' && (
+					<Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
+						<Plus className="h-4 w-4" />
+						Nuevo cliente
+					</Button>
+				)}
 			<ClientsAddDialog 
 				open={isAddDialogOpen} 
 				onOpenChange={setIsAddDialogOpen}
@@ -350,42 +318,32 @@ export function ClientManagement() {
 					</Card>
 
 					{/* Clients grid */}
-					{clients.length === 0 ? (
-						<Card className="p-6 bg-card border-border">
-							<div className="space-y-3">
-								<p className="text-foreground font-medium">No hay clientes para mostrar</p>
-								<p className="text-muted-foreground text-sm">Si acabás de crear uno, probá refrescar.</p>
-								<Button onClick={refresh} variant="outline" className="w-fit">
-									Refrescar
-								</Button>
-							</div>
-						</Card>
-					) : (
-						<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-							{currentItems.map((client) => (
-								<Card
-									key={client.id}
-									className="p-6 bg-card border-border hover:border-primary/50 transition-colors"
-								>
-									<div className="space-y-4">
-										<div className="flex items-center justify-between w-full">
-											<div className="flex items-center gap-3">
-												<div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-													<span className="font-semibold text-primary text-lg">
-														{client.name
-															?.split(' ')
-															.map((n) => n[0])
-															.join('')
-															.toUpperCase()
-															.slice(0, 2)}
-													</span>
-												</div>
-												<div>
-													<h3 className="font-semibold text-foreground">
-														{client.last_name} {client.name}
-													</h3>
-												</div>
+					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+						{currentItems.map((client) => (
+							<Card
+								key={client.id}
+								className="p-6 bg-card border-border hover:border-primary/50 transition-colors"
+							>
+								<div className="space-y-4">
+									<div className="flex items-center justify-between w-full">
+										<div className="flex items-center gap-3">
+											<div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+												<span className="font-semibold text-primary text-lg">
+													{client.name
+														?.split(' ')
+														.map((n) => n[0])
+														.join('')
+														.toUpperCase()
+														.slice(0, 2)}
+												</span>
 											</div>
+											<div>
+												<h3 className="font-semibold text-foreground">
+													{client.last_name} {client.name} 
+												</h3>
+											</div>
+										</div>
+										{user?.role !== 'Colocador' && (
 											<button
 												onClick={() => handleDeleteClick(client)}
 												className="text-muted-foreground hover:text-destructive transition-colors p-0.1 -mt-13 -mr-3"
@@ -393,8 +351,10 @@ export function ClientManagement() {
 											>
 												<Trash2 className="h-4 w-4" />
 											</button>
-										</div>
+										)}
+									</div>
 
+									{user?.role !== 'Colocador' && (
 										<div className="space-y-2 text-sm pt-2">
 											<div className="flex items-center gap-2 text-muted-foreground">
 												<Mail className="h-4 w-4" />
@@ -409,8 +369,10 @@ export function ClientManagement() {
 												<span>{client.locality}</span>
 											</div>
 										</div>
+									)}
 
-										{/* Budget information */}
+									{/* Budget information */}
+									{user?.role !== 'Colocador' && (
 										<div className="border-t pt-3 mt-3">
 											<div className="flex items-center justify-between text-xs">
 												<div className="flex items-center gap-1">
@@ -431,17 +393,19 @@ export function ClientManagement() {
 												)}
 											</div>
 										</div>
+									)}
 
-										<div className="flex gap-2 pt-2">
-											<Button
-												variant="outline"
-												size="sm"
-												className="flex-1 gap-2 bg-transparent"
-												onClick={() => handleViewClient(client)}
-											>
-												<Eye className="h-4 w-4" />
-												Ver
-											</Button>
+									<div className="flex gap-2 pt-2">
+										<Button
+											variant="outline"
+											size="sm"
+											className="flex-1 gap-2 bg-transparent"
+											onClick={() => handleViewClient(client)}
+										>
+											<Eye className="h-4 w-4" />
+											Ver
+										</Button>
+										{user?.role !== 'Colocador' && (
 											<Button
 												variant="outline"
 												size="sm"
@@ -451,12 +415,12 @@ export function ClientManagement() {
 												<Edit className="h-4 w-4" />
 												Editar
 											</Button>
-										</div>
+										)}
 									</div>
-								</Card>
-							))}
-						</div>
-					)}
+								</div>
+							</Card>
+						))}
+					</div>
 
 					{/* Pagination controls */}
 					{filteredClients.length > itemsPerPage && (

@@ -21,7 +21,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { CheckCircle2, X, Plus, Trash2, Edit } from 'lucide-react';
-import { pvcChecklistItems, aluminioChecklistNames } from '@/lib/works/checklists.constants';
+import { pvcChecklistItems, aluminioChecklistNames, mamparasChecklistNames, vidrioChecklistNames, persianasChecklistNames, portonesChecklistNames } from '@/lib/works/checklists.constants';
 import { Checklist } from '@/lib/works/checklists';
 import { useAuth } from '@/components/provider/auth-provider';
 
@@ -37,7 +37,7 @@ type ChecklistModalProps = {
 			description?: string | null;
 			width?: number | null;
 			height?: number | null;
-			type_opening?: 'PVC' | 'Aluminio' | null;
+			type_opening?: 'PVC' | 'Aluminio' | 'Persiana' | 'Mampara' | 'Porton' | 'Vidrio' | null;
 			items: Array<{ name: string; completed: boolean }>;
 		}>
 	) => void;
@@ -46,7 +46,7 @@ type ChecklistModalProps = {
 		description?: string | null;
 		width?: number | null;
 		height?: number | null;
-		type_opening?: 'PVC' | 'Aluminio' | null;
+		type_opening?: 'PVC' | 'Aluminio' | 'Persiana' | 'Mampara' | 'Porton' | 'Vidrio' | null;
 		items: Array<{ name: string; done: boolean }>;
 	}) => void;
 	children?: React.ReactNode;
@@ -66,7 +66,7 @@ export function ChecklistModal({ workId, existingChecklists, open, onOpenChange,
 		Array<{
 			name?: string | null;
 			description?: string | null;
-			type_opening?: 'PVC' | 'Aluminio' | null;
+			type_opening?: 'PVC' | 'Aluminio' | 'Persiana' | 'Mampara' | 'Porton' | 'Vidrio' | null;
 			width?: number | null;
 			height?: number | null;
 			items: Array<{ name: string; completed: boolean }>;
@@ -81,7 +81,7 @@ export function ChecklistModal({ workId, existingChecklists, open, onOpenChange,
 				description: checklistToEdit.description || null,
 				width: checklistToEdit.width || null,
 				height: checklistToEdit.height || null,
-				type_opening: (checklistToEdit.type_opening as 'PVC' | 'Aluminio' | null) || null,
+				type_opening: (checklistToEdit.type_opening as 'PVC' | 'Aluminio' | 'Persiana' | 'Mampara' | 'Porton' | 'Vidrio' | null) || null,
 				items: (checklistToEdit.items || []).map(item => ({
 					name: item.name,
 					completed: item.done || false,
@@ -165,8 +165,30 @@ export function ChecklistModal({ workId, existingChecklists, open, onOpenChange,
 		};
 
 		if (field === 'type_opening') {
-			const defaultItems =
-				value === 'PVC' ? pvcChecklistItems : value === 'Aluminio' ? aluminioChecklistNames : [];
+			let defaultItems: string[] = [];
+			
+			switch (value) {
+				case 'PVC':
+					defaultItems = pvcChecklistItems;
+					break;
+				case 'Aluminio':
+					defaultItems = aluminioChecklistNames;
+					break;
+				case 'Mampara':
+					defaultItems = mamparasChecklistNames;
+					break;
+				case 'Vidrio':
+					defaultItems = vidrioChecklistNames;
+					break;
+				case 'Persiana':
+					defaultItems = persianasChecklistNames;
+					break;
+				case 'Porton':
+					defaultItems = portonesChecklistNames;
+					break;
+				default:
+					defaultItems = [];
+			}
 
 			updatedChecklists[index].items = defaultItems.map((itemName) => ({
 				name: itemName,
@@ -266,13 +288,17 @@ export function ChecklistModal({ workId, existingChecklists, open, onOpenChange,
 													<SelectContent>
 														<SelectItem value="PVC">PVC</SelectItem>
 														<SelectItem value="Aluminio">Aluminio</SelectItem>
-													</SelectContent>
-												</Select>
-											</div>
+													<SelectItem value="Mampara">Mampara</SelectItem>
+													<SelectItem value="Vidrio">Vidrio</SelectItem>
+													<SelectItem value="Persiana">Persiana</SelectItem>
+													<SelectItem value="Porton">Portón</SelectItem>
+												</SelectContent>
+											</Select>
 										</div>
+									</div>
 
-										<div className="grid grid-cols-2 gap-4">
-											<div className="space-y-2">
+									<div className="grid grid-cols-2 gap-4">
+										<div className="space-y-2">
 												<Label htmlFor={`width-${windowIndex}`} className="text-sm">
 													Ancho (cm)
 												</Label>

@@ -390,10 +390,10 @@ export function WorksList({
 							if (fetchError) throw fetchError;
 							const existingCount = existingChecklists?.length || 0;
 
-							// Create new checklists (add to existing ones)
-							for(let i = 0; i < checklists.length; i++) {
+							// Create new checklists (add to existing ones) - sequentially to maintain order
+							for (let i = 0; i < checklists.length; i++) {
 								const checklist = checklists[i];
-								return createChecklist({
+								await createChecklist({
 									work_id: selectedWorkId,
 									name: checklist.name || `Abertura ${existingCount + i + 1}`,
 									description: checklist.description || '',
@@ -408,7 +408,7 @@ export function WorksList({
 									})),
 									progress: checklist.items.length > 0 ? 0 : 100,
 								});
-							};
+							}
 
 							// Update checklist status
 							setWorkChecklists((prev) => ({

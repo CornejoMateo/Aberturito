@@ -32,8 +32,6 @@ jest.mock('@/components/ui/use-toast', () => ({
 
 jest.mock('@/lib/calendar/events', () => ({
   deleteEvent: jest.fn(() => Promise.resolve({ error: null })),
-  createEvent: jest.fn(),
-  deleteLastYearEvents: jest.fn(),
 }));
 
 jest.mock('@/components/provider/auth-provider', () => ({

@@ -504,7 +504,14 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 
 			{/* Upload Dialog */}
 			<Dialog open={isUploadDialogOpen} onOpenChange={(open) => !open && handleCloseUploadDialog()}>
-				<DialogContent className="sm:max-w-[500px]">
+				<DialogContent
+					className="
+						w-[95vw]
+						max-w-lg
+						max-h-[95vh]
+						overflow-auto
+					"
+				>
 					<DialogHeader>
 						<DialogTitle>Subir archivo</DialogTitle>
 						<DialogDescription>

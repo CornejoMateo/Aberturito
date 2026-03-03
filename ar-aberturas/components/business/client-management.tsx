@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, use } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
 	Pagination,
 	PaginationContent,
@@ -32,12 +32,9 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Client, listClients, deleteClient } from '@/lib/clients/clients';
-import { getFolderBudgetsByClientIds } from '@/lib/budgets/folder_budgets';
-import { getBudgetsByFolderBudgetIds } from '@/lib/budgets/budgets';
 import { ClientsAddDialog } from '@/utils/clients/clients-add-dialog';
 import { ClientDetailsDialog } from '../../utils/clients/client-details-dialog';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
@@ -45,10 +42,13 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, FileText } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/components/provider/auth-provider';
+import { translateError } from '@/lib/error-translator';
+import { useClientBudgetsInfo } from '@/hooks/clients/use-client-budgets-info';
 
 export function ClientManagement() {
 	const { toast } = useToast();
 	const { user } = useAuth();
+	const colocador = user?.role === 'Colocador';
 
 	const {
 		data: clients,
@@ -63,75 +63,6 @@ export function ClientManagement() {
 		},
 		'clients_cache'
 	);
-
-	const [clientBudgetsInfo, setClientBudgetsInfo] = useState<Record<string, { total: number; chosen: number }>>({});
-
-	const loadClientBudgetsInfo = async () => {
-		const info: Record<string, { total: number; chosen: number }> = {};
-		const currentClients = currentItems;
-		const clientIds = currentClients.map((c) => c.id);
-		if (clientIds.length === 0) {
-			setClientBudgetsInfo({});
-			return;
-		}
-
-		const { data: folders, error: foldersError } = await getFolderBudgetsByClientIds(clientIds);
-		if (foldersError) {
-			console.error('Error loading folders for clients:', foldersError);
-			for (const c of currentClients) info[c.id] = { total: 0, chosen: 0 };
-			setClientBudgetsInfo(info);
-			return;
-		}
-
-		const folderIds = (folders ?? []).map((f) => f.id);
-		if (folderIds.length === 0) {
-			for (const c of currentClients) info[c.id] = { total: 0, chosen: 0 };
-			setClientBudgetsInfo(info);
-			return;
-		}
-
-		const { data: budgets, error: budgetsError } = await getBudgetsByFolderBudgetIds(folderIds);
-		if (budgetsError) {
-			console.error('Error loading budgets for folders:', budgetsError);
-			for (const c of currentClients) info[c.id] = { total: 0, chosen: 0 };
-			setClientBudgetsInfo(info);
-			return;
-		}
-
-		const foldersByClientId = new Map<string, string[]>();
-		for (const f of folders ?? []) {
-			const cid = f.client_id ?? '';
-			if (!cid) continue;
-			const prev = foldersByClientId.get(cid) ?? [];
-			prev.push(f.id);
-			foldersByClientId.set(cid, prev);
-		}
-
-		const budgetsAggByFolderId = new Map<string, { total: number; chosen: number }>();
-		for (const b of budgets ?? []) {
-			const fid = b.folder_budget.id ?? '';
-			if (!fid) continue;
-			const prev = budgetsAggByFolderId.get(fid) ?? { total: 0, chosen: 0 };
-			prev.total += 1;
-			if (b.accepted) prev.chosen += 1;
-			budgetsAggByFolderId.set(fid, prev);
-		}
-
-		for (const c of currentClients) {
-			const fids = foldersByClientId.get(c.id) ?? [];
-			let total = 0;
-			let chosen = 0;
-			for (const fid of fids) {
-				const agg = budgetsAggByFolderId.get(fid);
-				if (!agg) continue;
-				total += agg.total;
-				chosen += agg.chosen;
-			}
-			info[c.id] = { total, chosen };
-		}
-
-		setClientBudgetsInfo(info);
-	};
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -181,7 +112,14 @@ export function ClientManagement() {
 
 		try {
 			const { error } = await deleteClient(clientToDelete.id);
-			if (error) throw error;
+			if (error) {
+				toast({
+					title: 'Error al eliminar',
+					description: translateError(error),
+					variant: 'destructive',
+				});
+				return;
+			}
 			toast({
 				title: 'Cliente eliminado',
 				description: `${clientToDelete.name} ${clientToDelete.last_name} ha sido eliminado correctamente.`,
@@ -192,7 +130,7 @@ export function ClientManagement() {
 			console.error('Error eliminando el cliente:', err);
 			toast({
 				title: 'Error al eliminar',
-				description: 'No se pudo eliminar el cliente. Por favor, intenta nuevamente.',
+				description: translateError(err),
 				variant: 'destructive',
 			});
 		}
@@ -213,11 +151,7 @@ export function ClientManagement() {
 		return filteredClients.slice(startIndex, startIndex + itemsPerPage);
 	}, [filteredClients, currentPage, itemsPerPage]);
 
-	useEffect(() => {
-		if (currentItems.length > 0) {
-			loadClientBudgetsInfo();
-		}
-	}, [currentItems]);
+	const { info: clientBudgetsInfo, loading: budgetsLoading } = useClientBudgetsInfo(currentItems);
 
 	useEffect(() => {
 		setCurrentPage(1);
@@ -255,7 +189,7 @@ export function ClientManagement() {
 					<h2 className="text-2xl font-bold text-foreground text-balance">Gestión de Clientes</h2>
 					<p className="text-muted-foreground mt-1">Administración de clientes y contactos</p>
 				</div>
-				{user?.role !== 'Colocador' && (
+				{!colocador && (
 					<Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
 						<Plus className="h-4 w-4" />
 						Nuevo cliente
@@ -349,7 +283,7 @@ export function ClientManagement() {
 												</h3>
 											</div>
 										</div>
-										{user?.role !== 'Colocador' && (
+										{!colocador && (
 											<button
 												onClick={() => handleDeleteClick(client)}
 												className="text-muted-foreground hover:text-destructive transition-colors p-0.1 -mt-13 -mr-3"
@@ -360,7 +294,7 @@ export function ClientManagement() {
 										)}
 									</div>
 
-									{user?.role !== 'Colocador' && (
+									{!colocador && (
 										<div className="space-y-2 text-sm pt-2">
 											<div className="flex items-center gap-2 text-muted-foreground">
 												<Mail className="h-4 w-4" />
@@ -378,7 +312,7 @@ export function ClientManagement() {
 									)}
 
 									{/* Budget information */}
-									{user?.role !== 'Colocador' && (
+									{!colocador && (
 										<div className="border-t pt-3 mt-3">
 											<div className="flex items-center justify-between text-xs">
 												<div className="flex items-center gap-1">
@@ -411,7 +345,7 @@ export function ClientManagement() {
 											<Eye className="h-4 w-4" />
 											Ver
 										</Button>
-										{user?.role !== 'Colocador' && (
+										{!colocador && (
 											<Button
 												variant="outline"
 												size="sm"

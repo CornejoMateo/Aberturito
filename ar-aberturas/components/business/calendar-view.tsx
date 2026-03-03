@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EventFormModal } from '../../utils/calendar/event-form-modal';
 import { EventDetailsModal } from '../../utils/calendar/event-details-modal';
+import { CalendarDay } from '../../utils/calendar/calendar-days';
 import { createEvent, deleteEvent } from '@/lib/calendar/events';
 import {
 	Calendar as CalendarIcon,
 	ChevronLeft,
 	ChevronRight,
-	Clock as ClockIcon,
 	MapPin,
 	Package,
 	Trash2,
@@ -20,7 +20,6 @@ import { typeConfig } from '@/constants/type-config';
 import { Event } from '@/lib/calendar/events';
 import { useLoadEvents } from '@/hooks/use-load-events';
 import { useToast } from '@/components/ui/use-toast';
-import { is } from 'date-fns/locale';
 import { deleteLastYearEvents } from '@/lib/calendar/events';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useAuth } from '@/components/provider/auth-provider';
@@ -304,73 +303,24 @@ export function CalendarView() {
 							{Array.from({ length: daysInMonth }).map((_, index) => {
 								const day = index + 1;
 								const dayEvents = getEventsForDate(day);
+								const dateStr = formatDateString(
+									currentDate.getFullYear(),
+									currentDate.getMonth(),
+									day
+								);
 								const isToday =
 									new Date().toDateString() ===
 									new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString();
 
 								return (
-									<div
+									<CalendarDay
 										key={day}
-										onClick={() => {
-											const dateStr = formatDateString(
-												currentDate.getFullYear(),
-												currentDate.getMonth(),
-												day
-											);
-											setSelectedDate(selectedDate === dateStr ? null : dateStr);
-										}}
-										className={`aspect-square p-2 rounded-lg border transition-colors cursor-pointer ${
-											isToday
-												? 'border-green-300 bg-green-300/10'
-												: selectedDate ===
-													  formatDateString(currentDate.getFullYear(), currentDate.getMonth(), day)
-													? 'border-primary bg-primary/10'
-													: Object.keys(dayEvents).length > 0
-														? 'border-border bg-secondary hover:bg-secondary/80'
-														: 'border-border hover:bg-secondary/50'
-										}`}
-									>
-										<div className="flex flex-col h-full">
-											<span
-												className={`text-sm font-medium ${isToday ? 'text-green-600' : Object.keys(dayEvents).length > 0 ? 'text-foreground' : 'text-muted-foreground'}`}
-											>
-												{day}
-											</span>
-											{Object.keys(dayEvents).length > 0 && (
-												<div className="hidden sm:flex flex-1 items-center justify-center mt-1">
-													<div className="flex flex-wrap gap-1">
-														{Object.entries(dayEvents).map(([type, typeEvents]) => {
-															const safeType =
-																type && typeConfig[type as keyof typeof typeConfig]
-																	? (type as keyof typeof typeConfig)
-																	: 'otros';
-															const typeInfo = typeConfig[safeType];
-
-															const dotsToShow = Math.min(typeEvents.length, 3);
-															const hasOverdue = typeEvents.some((ev) => ev.is_overdue);
-
-															return (
-																<div
-																	key={type}
-																	className="flex items-center gap-1"
-																	title={`${typeEvents.length} ${typeInfo.label.toLowerCase()}${typeEvents.length > 1 ? 's' : ''}`}
-																>
-																	<div
-																		className={`h-2 w-2 rounded-full ${hasOverdue ? 'bg-red-500' : typeInfo.color.split(' ')[0]}`}
-																	/>
-																	{typeEvents.length > 1 && (
-																		<span className="text-[10px] text-muted-foreground">
-																			{typeEvents.length}
-																		</span>
-																	)}
-																</div>
-															);
-														})}
-													</div>
-												</div>
-											)}
-										</div>
-									</div>
+										day={day}
+										events={dayEvents}
+										isToday={isToday}
+										isSelected={selectedDate === dateStr}
+										onClick={() => setSelectedDate(selectedDate === dateStr ? null : dateStr)}
+									/>
 								);
 							})}
 						</div>
@@ -413,7 +363,6 @@ export function CalendarView() {
 								{currentEvents.map((event) => {
 									const typeInfo =
 										typeConfig[(event.type ?? 'produccionOK') as keyof typeof typeConfig];
-									const TypeIcon = typeInfo.icon;
 									const isOverdue = event.is_overdue || false;
 
 									return (

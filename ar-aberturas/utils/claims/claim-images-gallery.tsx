@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Upload, Trash2, X, Loader2 } from 'lucide-react';
+import { Upload, Trash2, X, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { getSupabaseClient } from '@/lib/supabase-client';
 import {
@@ -33,6 +33,7 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 	const [isLoading, setIsLoading] = useState(false);
 	const [isUploading, setIsUploading] = useState(false);
 	const [imageToDelete, setImageToDelete] = useState<ClaimImage | null>(null);
+	const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
@@ -244,6 +245,18 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 		return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 	};
 
+	const handlePrevious = () => {
+		if (selectedImageIndex !== null && selectedImageIndex > 0) {
+			setSelectedImageIndex(selectedImageIndex - 1);
+		}
+	};
+
+	const handleNext = () => {
+		if (selectedImageIndex !== null && selectedImageIndex < images.length - 1) {
+			setSelectedImageIndex(selectedImageIndex + 1);
+		}
+	};
+
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center h-32">
@@ -290,16 +303,20 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 					{images.map((image) => (
 						<div
 							key={image.id}
-							className="group relative aspect-square rounded-lg overflow-hidden bg-muted"
+							className="group relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer"
+							onClick={() => setSelectedImageIndex(images.indexOf(image))}
 						>
 							<img src={image.url} alt={image.name} className="w-full h-full object-cover" />
 
-							<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+							<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
 								<Button
 									size="icon"
 									variant="destructive"
 									className="h-7 w-7"
-									onClick={() => setImageToDelete(image)}
+									onClick={(e) => {
+										e.stopPropagation();
+										setImageToDelete(image);
+									}}
 								>
 									<Trash2 className="h-3 w-3" />
 								</Button>
@@ -333,6 +350,56 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
+
+			{/* Image Viewer Modal */}
+			{selectedImageIndex !== null && images[selectedImageIndex] && (
+				<div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
+					<Button
+						size="icon"
+						variant="ghost"
+						className="absolute top-4 right-4 text-white hover:bg-white/20"
+						onClick={() => setSelectedImageIndex(null)}
+					>
+						<X className="h-6 w-6" />
+					</Button>
+
+					{selectedImageIndex > 0 && (
+						<Button
+							size="icon"
+							variant="ghost"
+							className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20"
+							onClick={handlePrevious}
+						>
+							<ChevronLeft className="h-8 w-8" />
+						</Button>
+					)}
+
+					{selectedImageIndex < images.length - 1 && (
+						<Button
+							size="icon"
+							variant="ghost"
+							className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20"
+							onClick={handleNext}
+						>
+							<ChevronRight className="h-8 w-8" />
+						</Button>
+					)}
+
+					<div className="max-w-[80vw] max-h-[80vh] flex flex-col items-center overflow-auto">
+						<img
+							src={images[selectedImageIndex].url}
+							alt={images[selectedImageIndex].name}
+							className="max-w-full max-h-full object-contain"
+						/>
+
+						<div className="mt-4 text-white text-center px-4 max-w-xl">
+							<p className="text-sm text-white/70 mt-2">
+								{selectedImageIndex + 1} de {images.length}
+							</p>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

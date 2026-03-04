@@ -44,6 +44,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/components/provider/auth-provider';
 import { translateError } from '@/lib/error-translator';
 import { useClientBudgetsInfo } from '@/hooks/clients/use-client-budgets-info';
+import { paginateAndFilter } from '@/helpers/clients/pagination';
 
 export function ClientManagement() {
 	const { toast } = useToast();
@@ -136,20 +137,23 @@ export function ClientManagement() {
 		}
 	};
 
-	const filteredClients = useMemo(() => {
-		return clients.filter(
-			(client) =>
-				client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				client.locality?.toLowerCase().includes(searchTerm.toLowerCase())
-		);
-	}, [clients, searchTerm]);
-
-	const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
-
-	const currentItems = useMemo(() => {
-		const startIndex = (currentPage - 1) * itemsPerPage;
-		return filteredClients.slice(startIndex, startIndex + itemsPerPage);
-	}, [filteredClients, currentPage, itemsPerPage]);
+	const {
+		filteredData: filteredClients,
+		paginatedData: currentItems,
+		totalPages,
+		totalItems
+	} = useMemo(() =>
+		paginateAndFilter(
+			clients,
+			searchTerm,
+			currentPage,
+			itemsPerPage,
+			(client, search) =>
+			client.name?.toLowerCase().includes(search) ||
+			client.last_name?.toLowerCase().includes(search) ||
+			client.locality?.toLowerCase().includes(search) || false
+		),[clients, searchTerm, currentPage, itemsPerPage]
+	);
 
 	const { info: clientBudgetsInfo, loading: budgetsLoading } = useClientBudgetsInfo(currentItems);
 
@@ -195,11 +199,11 @@ export function ClientManagement() {
 						Nuevo cliente
 					</Button>
 				)}
-			<ClientsAddDialog 
-				open={isAddDialogOpen} 
-				onOpenChange={setIsAddDialogOpen}
-				onClientAdded={refresh}
-			/>
+				<ClientsAddDialog
+					open={isAddDialogOpen}
+					onOpenChange={setIsAddDialogOpen}
+					onClientAdded={refresh}
+				/>
 				{selectedClient && (
 					<ClientsAddDialog
 						open={isEditDialogOpen}
@@ -279,7 +283,7 @@ export function ClientManagement() {
 											</div>
 											<div>
 												<h3 className="font-semibold text-foreground">
-													{client.last_name} {client.name} 
+													{client.last_name} {client.name}
 												</h3>
 											</div>
 										</div>

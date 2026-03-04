@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Upload, Trash2, X, ChevronLeft, ChevronRight, Download, Loader2 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { getSupabaseClient } from '@/lib/supabase-client';
+import { translateError } from '@/lib/error-translator';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -84,7 +85,7 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 				toast({
 					variant: 'destructive',
 					title: 'Error al cargar archivos',
-					description: 'No se pudieron cargar los archivos del cliente.',
+					description: translateError(error),
 				});
 				setFiles([]);
 				return;
@@ -197,7 +198,7 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 				toast({
 					variant: 'destructive',
 					title: 'Error al subir archivo',
-					description: 'Ocurrió un error al subir el archivo.',
+					description: translateError(error),
 				});
 			} else {
 				toast({
@@ -212,7 +213,7 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 			toast({
 				variant: 'destructive',
 				title: 'Error al subir archivo',
-				description: 'Ocurrió un error inesperado.',
+				description: translateError(error),
 			});
 		} finally {
 			setIsUploading(false);
@@ -240,7 +241,7 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 				toast({
 					variant: 'destructive',
 					title: 'Error al eliminar archivo',
-					description: 'No se pudo eliminar el archivo.',
+					description: translateError(error),
 				});
 			} else {
 				toast({
@@ -259,8 +260,8 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 			console.error('Error deleting file:', error);
 			toast({
 				variant: 'destructive',
-				title: 'Error',
-				description: 'Ocurrió un error inesperado.',
+				title: 'Error al eliminar archivo',
+				description: translateError(error),
 			});
 		} finally {
 			setFileToDelete(null);

@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { ClientManagement } from '@/components/business/client-management';
 import { useAuth } from '@/components/provider/auth-provider';
-import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 
 jest.mock('@/hooks/clients/use-client-budgets-info', () => ({
   useClientBudgetsInfo: () => ({
@@ -141,6 +140,35 @@ describe('ClientManagement', () => {
         expect(screen.queryByText('juan@test.com')).not.toBeInTheDocument();
         expect(screen.queryByText('123456')).not.toBeInTheDocument();
         expect(screen.queryByText('Cordoba')).not.toBeInTheDocument();
+    });
+
+    it('shows delete button client for Admin', () => {
+
+        render(<ClientManagement />);
+
+        expect(screen.getByTitle(/Eliminar cliente/i)).toBeInTheDocument();
+    });
+
+    it('shows delete button client for Ventas', () => {
+
+        (useAuth as jest.Mock).mockReturnValue({
+            user: { role: 'Ventas' },
+        });
+
+        render(<ClientManagement />);
+
+        expect(screen.getByTitle(/Eliminar cliente/i)).toBeInTheDocument();
+    });
+
+    it('does not shows delete button client for Colocador', () => {
+
+        (useAuth as jest.Mock).mockReturnValue({
+            user: { role: 'Colocador' },
+        });
+
+        render(<ClientManagement />);
+
+        expect(screen.queryByTitle(/Eliminar cliente/i)).not.toBeInTheDocument();
     });
 
 });

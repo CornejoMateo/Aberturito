@@ -1,14 +1,12 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Work, updateWork } from '@/lib/works/works';
-import { getChecklistsByWorkId, createChecklist, deleteChecklist } from '@/lib/works/checklists';
+import { getChecklistsByWorkId, createChecklist } from '@/lib/works/checklists';
 import {
 	MapPin,
 	Calendar,
 	Building2,
-	CheckCircle,
-	Clock,
 	Trash2,
 	ListChecks,
 	ChevronDown,
@@ -20,13 +18,6 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
 import { useState, useMemo, useEffect } from 'react';
 import {
 	Pagination,
@@ -38,13 +29,16 @@ import {
 } from '@/components/ui/pagination';
 import { DeleteWorkDialog } from '@/utils/works/delete-work-dialog';
 import { EditableField } from '@/utils/works/editable-field';
-import { toast } from '@/components/ui/use-toast';
+import { paginateAndFilter } from '@/helpers/clients/pagination';
+import { useWorkChecklists } from '@/hooks/clients/use-works-checklists';
+import { statusConfig } from '@/constants/type-config';
 
 interface WorksListProps {
 	works: Work[];
 	onDelete?: (workId: string) => Promise<void>;
 	onWorkUpdated?: (updatedWork: Work) => void;
 	onCreateWork?: () => void;
+	onUpdate?: (workId: string, updates: Partial<Work>) => Promise<Work>;
 }
 
 export function WorksList({
@@ -52,66 +46,17 @@ export function WorksList({
 	onDelete,
 	onWorkUpdated,
 	onCreateWork,
+	onUpdate,
 }: WorksListProps) {
 	const [workToDelete, setWorkToDelete] = useState<{ id: string; address: string } | null>(null);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
-	const [works, setWorks] = useState<Work[]>(initialWorks);
 	const [searchTerm, setSearchTerm] = useState('');
-	const [statusFilter, setStatusFilter] = useState<string>('all');
-	const [workChecklists, setWorkChecklists] = useState<Record<string, boolean>>({});
-	const [loadingChecklists, setLoadingChecklists] = useState<Record<string, boolean>>({});
 	const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
 	const [selectedWorkId, setSelectedWorkId] = useState<string | null>(null);
 	const itemsPerPage = 6;
 
-	// Filter works based on search term and filters
-	const filteredWorks = useMemo(() => {
-		return initialWorks.filter((work) => {
-			const searchLower = searchTerm.toLowerCase();
-			const matchesSearch =
-				work.architect?.toLowerCase().includes(searchLower) ||
-				work.address?.toLowerCase().includes(searchLower) ||
-				work.status?.toLowerCase().includes(searchLower);
-
-			const matchesStatus =
-				statusFilter === 'all' ||
-				(statusFilter === 'pendiente' && (!work.status || work.status === 'Pendiente')) ||
-				work.status?.toLowerCase() === statusFilter.toLowerCase();
-
-			return matchesSearch && matchesStatus;
-		});
-	}, [initialWorks, searchTerm, statusFilter]);
-
-	// Update local works when filteredWorks changes
-	useEffect(() => {
-		setWorks(filteredWorks);
-		setCurrentPage(1); // Reset to first page when filters change
-	}, [filteredWorks]);
-
-	// Call onWorkUpdated when works change
-	useEffect(() => {
-		if (works !== initialWorks && workToDelete?.id) {
-			const updatedWork = works.find((work) => work.id === workToDelete.id);
-			if (updatedWork) {
-				onWorkUpdated?.(updatedWork);
-			}
-		}
-	}, [works, initialWorks, workToDelete?.id, onWorkUpdated]);
-
-	const statusOptions = [
-		{ value: 'Pendiente', label: 'Pendiente', icon: <Clock className="h-4 w-4 text-gray-400" /> },
-		{
-			value: 'En progreso',
-			label: 'En progreso',
-			icon: <Clock className="h-4 w-4 text-yellow-500" />,
-		},
-		{
-			value: 'Finalizado',
-			label: 'Finalizado',
-			icon: <CheckCircle className="h-4 w-4 text-green-500" />,
-		},
-	];
+	const { workChecklists, loadingChecklists } = useWorkChecklists(initialWorks);
 
 	const handleDeleteConfirm = async () => {
 		if (workToDelete) {
@@ -122,89 +67,45 @@ export function WorksList({
 	};
 
 	const handleUpdateWork = async (workId: string, updates: Partial<Work>) => {
-		try {
-			// Optimistically update the UI
-			setWorks((prevWorks) =>
-				prevWorks.map((work) => (work.id === workId ? ({ ...work, ...updates } as Work) : work))
-			);
-
-			// Make the API call
-			const { data: updatedWork, error } = await updateWork(workId, updates);
-
-			if (error) {
-				// Revert the optimistic update if there's an error
-				setWorks(initialWorks);
-				throw error;
+		if (onUpdate) {
+			try {
+				const updatedWork = await onUpdate(workId, updates);
+				if (onWorkUpdated) {
+					onWorkUpdated(updatedWork);
+				}
+			} catch (error) {
+				console.error('Error updating work:', error);
 			}
-
-			// Ensure the UI is in sync with the server
-			const updatedWorkData = { ...updatedWork, ...updates } as Work;
-			setWorks((prevWorks) =>
-				prevWorks.map((work) => (work.id === workId ? updatedWorkData : work))
-			);
-
-			// Notify parent component about the update
-			onWorkUpdated?.(updatedWorkData);
-
-			return updatedWorkData;
-		} catch (error) {
-			console.error('Error updating work:', error);
-			throw error;
 		}
 	};
 
-	// Calculate pagination
-	const totalPages = Math.ceil(works.length / itemsPerPage);
+	const {
+		filteredData: filteredClients,
+		paginatedData: currentItems,
+		totalPages,
+		totalItems
+	} = useMemo(() =>
+		paginateAndFilter(
+			initialWorks,
+			searchTerm,
+			currentPage,
+			itemsPerPage,
+			(work, search) => {
+				// Filter by search term
+				const matchesSearch = 
+					work.address?.toLowerCase().includes(search) ||
+					work.architect?.toLowerCase().includes(search) ||
+					work.status?.toLowerCase().includes(search) || false;
+				
+				return matchesSearch;
+			}
+		),
+		[initialWorks, currentPage, itemsPerPage, searchTerm]
+	);
 
-	// Get current items
-	const currentItems = useMemo(() => {
-		const startIndex = (currentPage - 1) * itemsPerPage;
-		return works.slice(startIndex, startIndex + itemsPerPage);
-	}, [works, currentPage, itemsPerPage]);
-
-	// Reset to first page when works change
 	useEffect(() => {
 		setCurrentPage(1);
-	}, [works.length]);
-
-	// Check if works have checklists
-	useEffect(() => {
-		const checkWorkChecklists = async () => {
-			const newWorkChecklists: Record<string, boolean> = {};
-			const newLoadingChecklists: Record<string, boolean> = {};
-
-			// Initialize loading state
-			works.forEach((work) => {
-				newLoadingChecklists[work.id] = true;
-			});
-			setLoadingChecklists(newLoadingChecklists);
-
-			// Check each work for checklists
-			const checklistPromises = works.map(async (work) => {
-				try {
-					const { data: checklists, error } = await getChecklistsByWorkId(work.id);
-					if (error) {
-						console.error('Error checking checklists for work:', work.id, error);
-						newWorkChecklists[work.id] = false;
-					} else {
-						newWorkChecklists[work.id] = !!(checklists && checklists.length > 0);
-					}
-				} catch (error) {
-					console.error('Error checking checklists for work:', work.id, error);
-					newWorkChecklists[work.id] = false;
-				} finally {
-					setLoadingChecklists((prev) => ({ ...prev, [work.id]: false }));
-				}
-			});
-
-			await Promise.all(checklistPromises);
-			setWorkChecklists(newWorkChecklists);
-		};
-
-		if (works.length > 0) {
-			checkWorkChecklists();
-		}
-	}, [works]);
+	}, [initialWorks.length, searchTerm]);
 
 	return (
 		<div className="space-y-4 max-w-3xl mx-auto w-full">
@@ -219,19 +120,6 @@ export function WorksList({
 						value={searchTerm}
 						onChange={(e) => setSearchTerm(e.target.value)}
 					/>
-				</div>
-				<div className="flex gap-2">
-					<Select value={statusFilter} onValueChange={setStatusFilter}>
-						<SelectTrigger className="w-full sm:w-[180px]">
-							<SelectValue placeholder="Filtrar por estado" />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="all">Todos los estados</SelectItem>
-							<SelectItem value="pendiente">Pendiente</SelectItem>
-							<SelectItem value="en progreso">En progreso</SelectItem>
-							<SelectItem value="finalizado">Finalizado</SelectItem>
-						</SelectContent>
-					</Select>
 				</div>
 				<div className="flex-shrink-0">
 					{onCreateWork && (
@@ -275,13 +163,13 @@ export function WorksList({
 									<div className="flex items-center justify-end gap-2">
 										<div className="flex items-center gap-1 text-[11px] sm:text-sm text-muted-foreground group">
 											<select
-												value={work.status || 'Pendiente'}
+												value={work.status || 'pending'}
 												onChange={async (e) => {
 													await handleUpdateWork(work.id, { status: e.target.value });
 												}}
 												className="bg-transparent border-none focus:ring-0 focus:ring-offset-0 p-0.5 pr-5 sm:p-1 sm:pr-6 appearance-none focus:outline-none cursor-pointer hover:bg-muted rounded-md text-[11px] sm:text-sm"
 											>
-												{statusOptions.map((option) => (
+												{statusConfig.map((option) => (
 													<option key={option.value} value={option.value}>
 														{option.label}
 													</option>
@@ -407,14 +295,8 @@ export function WorksList({
 
 						if (error) throw error;
 
-						// Update checklist status
-						setWorkChecklists((prev) => ({
-							...prev,
-							[selectedWorkId]: true,
-						}));
-
 						// Update local state if needed
-						const work = works.find((w) => w.id === selectedWorkId);
+						const work = initialWorks.find((w) => w.id === selectedWorkId);
 						if (work && onWorkUpdated) {
 							const updatedWork = {
 								...work,
@@ -428,11 +310,11 @@ export function WorksList({
 			)}
 
 			{/* Pagination */}
-			{works.length > itemsPerPage && (
+			{initialWorks.length > itemsPerPage && (
 				<div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 px-2 mt-6">
 					<div className="text-xs sm:text-sm text-muted-foreground">
-						Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, works.length)}-
-						{Math.min(currentPage * itemsPerPage, works.length)} de {works.length} obras
+						Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}-
+						{Math.min(currentPage * itemsPerPage, totalItems)} de {totalItems} obras
 					</div>
 
 					<Pagination className="mx-0 w-auto">

@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Pencil, Check, X } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { translateError } from '@/lib/error-translator';
 
 interface EditableFieldProps {
   value: string;
@@ -32,6 +34,12 @@ export function EditableField({
         setIsEditing(false);
       } catch (error) {
         console.error('Error updating field:', error);
+        const errorMessage = translateError(error);
+        toast({
+          title: 'Error al guardar',
+          description: errorMessage,
+          variant: 'destructive',
+        });
       } finally {
         setIsSaving(false);
       }

@@ -1,12 +1,12 @@
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/clients/clients';
 import { createClientFolder } from '@/lib/clients/clients';
 import { useToast } from '@/components/ui/use-toast';
+import { translateError } from '@/lib/error-translator';
 
 interface ClientsAddDialogProps {
 	open: boolean;
@@ -40,15 +40,19 @@ export function ClientsAddDialog({
 		locality: clientToEdit?.locality || '',
 	});
 
+	const resetForm = () => {
+		setFormData({
+			name: '',
+			last_name: '',
+			email: '',
+			phone_number: '',
+			locality: '',
+		});
+	}
+
 	useEffect(() => {
 		if (!clientToEdit && open) {
-			setFormData({
-				name: '',
-				last_name: '',
-				email: '',
-				phone_number: '',
-				locality: '',
-			});
+			resetForm();
 		}
 	}, [open, clientToEdit]);
 
@@ -101,16 +105,15 @@ export function ClientsAddDialog({
 					});
 					onClientAdded?.();
 					onOpenChange(false);
-					setFormData({ name: '', last_name: '', email: '', phone_number: '', locality: '' });
+					resetForm();
 				}
 			}
 		} catch (error) {
 			console.error('Error al procesar el cliente:', error);
+			const message = translateError(error);
 			toast({
 				title: 'Error',
-				description: clientToEdit 
-					? 'No se pudo actualizar el cliente. Por favor, intenta nuevamente.'
-					: 'No se pudo crear el cliente. Por favor, intenta nuevamente.',
+				description: message,
 				variant: 'destructive',
 			});
 		} finally {

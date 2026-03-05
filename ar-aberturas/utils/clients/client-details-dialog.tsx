@@ -10,18 +10,19 @@ import { EmailLink } from '@/components/ui/email-link';
 import { WhatsAppLink } from '@/components/ui/whatsapp-link';
 import { useState, useEffect } from 'react';
 import { WorkForm } from '@/utils/works/work-form';
-import { createWork, getWorksByClientId, Work, deleteWork } from '@/lib/works/works';
+import { Work } from '@/lib/works/works';
 import { WorksList } from '@/utils/works/works-list';
 import { updateClient } from '@/lib/clients/clients';
 import { ClientBalances } from '@/utils/balances/client-balances';
 import { BalanceForm } from '@/utils/balances/balance-form';
-import { createBalance, BudgetWithWork } from '@/lib/works/balances';
+import { createBalance } from '@/lib/works/balances';
 import { toast } from '@/components/ui/use-toast';
 import { ClientBudgetsTab } from '@/utils/budgets/client-budgets-tab';
-import { getFolderBudgetsByClientId } from '@/lib/budgets/folder_budgets';
-import { getBudgetsByFolderBudgetIds } from '@/lib/budgets/budgets';
 import { ClientImagesGallery } from '@/utils/images-client/images-client';
 import { useAuth } from '@/components/provider/auth-provider';
+import { translateError } from '@/lib/error-translator';
+import { useClientWorks } from '@/hooks/clients/use-client-works';
+import { useClientBudgets } from '@/hooks/clients/use-client-budgets';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -33,66 +34,18 @@ interface ClientDetailsDialogProps {
 export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientDetailsDialogProps) {
   const [isWorkFormOpen, setIsWorkFormOpen] = useState(false);
   const [isBalanceFormOpen, setIsBalanceFormOpen] = useState(false);
-  const [works, setWorks] = useState<Work[]>([]);
-  const [budgets, setBudgets] = useState<BudgetWithWork[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [clientData, setClientData] = useState<Client | null>(null);
   const [cover, setCover] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSavingCover, setIsSavingCover] = useState(false);
   const [balancesKey, setBalancesKey] = useState(0);
-  const [worksLoaded, setWorksLoaded] = useState(false);
-  const [budgetsLoaded, setBudgetsLoaded] = useState(false);
   const { user } = useAuth();
   
-  // function to load works when the works tab is opened for the first time
-  const loadWorks = async (force = false) => {
-    if (!client || (!force && worksLoaded)) return;
-    
-    try {
-      setIsLoading(true);
-      const { data, error } = await getWorksByClientId(client.id);
-      
-      if (error) {
-        console.error('Error al cargar obras:', error);
-        setWorks([]);
-      } else {
-        setWorks(data || []);
-        setWorksLoaded(true);
-      }
-    } catch (error) {
-      console.error('Error inesperado al cargar obras:', error);
-      setWorks([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // function to load budgets when the budgets tab is opened for the first time
-  const loadBudgets = async (force = false) => {
-    if (!client || (!force && budgetsLoaded)) return;
-    
-    try {
-      const { data: folderBudgets } = await getFolderBudgetsByClientId(client.id);
-      
-      if (folderBudgets && folderBudgets.length > 0) {
-        const folderBudgetIds = folderBudgets.map((f) => f.id);
-        const { data: budgetsData } = await getBudgetsByFolderBudgetIds(folderBudgetIds);
-        
-        if (budgetsData) {
-          setBudgets(budgetsData);
-          setBudgetsLoaded(true);
-        }
-      } else {
-        setBudgets([]);
-        setBudgetsLoaded(true);
-      }
-    } catch (error) {
-      console.error('Error al cargar presupuestos:', error);
-      setBudgets([]);
-    }
-  };
+  const { works, isLoading, loadWorks, create, remove, update } =
+    useClientWorks(client?.id);
+
+  const { budgets, loadBudgets } =
+    useClientBudgets(client?.id);
   
   const handleTabChange = (value: string) => {
     if (value === 'works') {
@@ -103,94 +56,91 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
   };
   
   const handleWorkDelete = async (workId: string) => {
-    if (!client) return;
-    
     try {
-      setIsDeleting(true);
-      const { error } = await deleteWork(workId);
-      
-      if (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error al eliminar la obra',
-          description: 'Hubo un problema al eliminar la obra. Intente nuevamente.',
-        });
-        return;
-      }
-      
+      await remove(workId);
+
       toast({
         title: 'Obra eliminada',
         description: 'La obra se ha eliminado exitosamente.',
       });
 
-      // Refresh the works list
-      await loadWorks(true);
     } catch (error) {
-      console.error('Error inesperado al eliminar la obra:', error);
-    } finally {
-      setIsDeleting(false);
+      const errorMessage = translateError(error);
+      toast({
+        variant: 'destructive',
+        title: 'Error al eliminar la obra',
+        description: errorMessage || 'Hubo un problema al eliminar la obra.',
+      });
     }
   };
 
-  const handleWorkCreated = async (workData: Omit<Work, 'id' | 'created_at' | 'client_id'>) => {
-    if (!client) return;
-    
+  const handleWorkCreated = async (
+    workData: Omit<Work, 'id' | 'created_at' | 'client_id'>
+  ) => {
     try {
-      setIsLoading(true);
-      const { data: newWork, error } = await createWork({
-        ...workData,
-        client_id: client.id
-      });
-      
-      if (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error al crear la obra',
-          description: 'Hubo un problema al crear la obra. Intente nuevamente.',
-        });
-        return;
-      }
-      
+      await create(workData);
+
       toast({
         title: 'Obra creada',
         description: 'La obra se ha creado exitosamente.',
       });
-      // reload the list of works
-      await loadWorks(true);
-      
+
       setIsWorkFormOpen(false);
+
     } catch (error) {
-      console.error('Error inesperado al crear la obra:', error);
-    } finally {
-      setIsLoading(false);
+      const errorMessage = translateError(error);
+      toast({
+        variant: 'destructive',
+        title: 'Error al crear la obra',
+        description: errorMessage || 'Hubo un problema al crear la obra.',
+      });
     }
   };
 
-  const handleBalanceCreated = async (balanceData: any) => {    
+  const handleWorkUpdate = async (
+    workId: string,
+    updates: Partial<Work>
+  ): Promise<Work> => {
     try {
-      setIsLoading(true);
-      const { data, error } = await createBalance(balanceData);
-      
-      if (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error al crear balance',
-          description: 'Hubo un problema al crear el balance. Intente nuevamente.',
-        });
-        return;
-      }
-      
+      const updatedWork = await update(workId, updates);
+      toast({
+        title: 'Obra actualizada',
+        description: 'La obra se actualizó correctamente.',
+      });
+      return updatedWork as Work;
+
+    } catch (error) {
+      const errorMessage = translateError(error);
+
+      toast({
+        variant: 'destructive',
+        title: 'Error al actualizar la obra',
+        description:
+          errorMessage || 'Hubo un problema al actualizar la obra.',
+      });
+      throw error;
+    }
+  };
+
+  const handleBalanceCreated = async (balanceData: any) => {
+    try {
+      await createBalance(balanceData);
+
       toast({
         title: 'Saldo creado',
-        description: 'El Saldo se ha creado exitosamente.',
+        description: 'El saldo se ha creado exitosamente.',
       });
+
       setIsBalanceFormOpen(false);
-      setBalancesKey(prev => prev + 1);
-      await loadBudgets(true);
+      await loadBudgets();
+
     } catch (error) {
-      console.error('Error inesperado al crear Saldo:', error);
-    } finally {
-      setIsLoading(false);
+      const errorMessage = translateError(error);
+      toast({
+        variant: 'destructive',
+        title: 'Error al crear el saldo',
+        description: errorMessage || 'Hubo un problema al crear el saldo.',
+      });
     }
   };
   
@@ -200,11 +150,6 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
       setClientData(client);
       setCover(client.cover || '');
       setHasUnsavedChanges(false);
-      // Reset loaded flags when client changes
-      setWorksLoaded(false);
-      setBudgetsLoaded(false);
-      setWorks([]);
-      setBudgets([]);
     }
   }, [client]);
 
@@ -319,6 +264,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                         works={works} 
                         onDelete={handleWorkDelete}
                         onCreateWork={() => setIsWorkFormOpen(true)}
+                        onUpdate={handleWorkUpdate}
                       />
                     ) : (
                       <div className="text-center py-8">
@@ -337,7 +283,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                   </div>
                 </TabsContent>
                 <TabsContent value="budgets">
-                  <ClientBudgetsTab clientId={clientData.id} works={works} onBudgetsChange={setBudgets} />
+                  <ClientBudgetsTab clientId={clientData.id} works={works} onBudgetsChange={loadBudgets} />
                 </TabsContent>
                 <TabsContent value="images" className="h-[calc(100%-2.5rem)]">
                   <ClientImagesGallery client={clientData} />

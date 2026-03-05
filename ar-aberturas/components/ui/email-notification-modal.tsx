@@ -14,10 +14,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Mail, MapPin, Calendar, Clock, User, AlertCircle } from 'lucide-react';
+import { Loader2, Mail, MapPin, Clock, User, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 interface Client {
 	id: string;

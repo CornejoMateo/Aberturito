@@ -22,6 +22,7 @@ import { getFolderBudgetsByClientId } from '@/lib/budgets/folder_budgets';
 import { getBudgetsByFolderBudgetIds } from '@/lib/budgets/budgets';
 import { ClientImagesGallery } from '@/utils/images-client/images-client';
 import { useAuth } from '@/components/provider/auth-provider';
+import { useAutoSave } from '@/hooks/use-auto-save';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -39,13 +40,32 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientU
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [clientData, setClientData] = useState<Client | null>(null);
-  const [cover, setCover] = useState('');
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [isSavingCover, setIsSavingCover] = useState(false);
   const [balancesKey, setBalancesKey] = useState(0);
   const [worksLoaded, setWorksLoaded] = useState(false);
   const [budgetsLoaded, setBudgetsLoaded] = useState(false);
   const { user } = useAuth();
+
+  // Auto-save hook for cover field
+  const { isSaving, hasUnsavedChanges, value: cover, handleChange, handleKeyDown, setValue: setCover } = useAutoSave({
+    onSave: async (value: string) => {
+      if (!client) return { error: 'No client selected' };
+      
+      const { data, error } = await updateClient(client.id, { cover: value });
+      
+      if (!error && data) {
+        setClientData(data);
+        
+        // Notify parent component to refresh its data
+        if (onClientUpdated) {
+          onClientUpdated();
+        }
+      }
+      
+      return { data, error };
+    },
+    successMessage: 'Información guardada',
+    errorMessage: 'Error al guardar información',
+  });
   
   // function to load works when the works tab is opened for the first time
   const loadWorks = async (force = false) => {
@@ -217,7 +237,6 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientU
           setClientData(client);
           setCover(client.cover || '');
         }
-        setHasUnsavedChanges(false);
         // Reset loaded flags when client changes
         setWorksLoaded(false);
         setBudgetsLoaded(false);
@@ -229,59 +248,8 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientU
     } else if (!client) {
       setClientData(null);
       setCover('');
-      setHasUnsavedChanges(false);
     }
   }, [client, isOpen]);
-
-  const handleCoverChange = (value: string) => {
-    setCover(value);
-    setHasUnsavedChanges(true);
-  };
-
-  const handleSaveCover = async () => {
-    if (!client) return;
-    
-    try {
-      setIsSavingCover(true);
-      const { data, error } = await updateClient(client.id, { cover });
-      
-      if (error) {
-        console.error('Error updating cover:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error al guardar',
-          description: 'No se pudo guardar la información adicional. Intente nuevamente.',
-        });
-        return;
-      }
-      
-      // Update local client data with the response from server
-      if (data) {
-        setClientData(data);
-        setCover(data.cover || '');
-      }
-      setHasUnsavedChanges(false);
-      
-      // Notify parent component to refresh its data
-      if (onClientUpdated) {
-        onClientUpdated();
-      }
-      
-      toast({
-        title: 'Guardado exitoso',
-        description: 'La información adicional se ha guardado correctamente.',
-      });
-    } catch (error) {
-      console.error('Error updating cover:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error al guardar',
-        description: 'No se pudo guardar la información adicional. Intente nuevamente.',
-      });
-    } finally {
-      setIsSavingCover(false);
-    }
-  };
 
   if (!clientData) return null;
 
@@ -346,19 +314,24 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientU
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium text-xs">Información adicional</h4>
-                        <Button
-                          size="sm"
-                          onClick={handleSaveCover}
-                          disabled={!hasUnsavedChanges || isSavingCover}
-                        >
-                          {isSavingCover ? 'Guardando...' : 'Guardar'}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          {hasUnsavedChanges && (
+                            <span className="text-xs text-muted-foreground">
+                              {isSaving ? 'Guardando...' : 'Sin guardar'}
+                            </span>
+                          )}
+                          {isSaving && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                          )}
+                        </div>
                       </div>
                       <Textarea
                         value={cover}
-                        onChange={(e) => handleCoverChange(e.target.value)}
+                        onChange={(e) => handleChange(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         placeholder="Escribe aquí..."
                         className="min-h-[200px] bg-background"
+                        disabled={isSaving}
                       />
                     </div>
                   </div>

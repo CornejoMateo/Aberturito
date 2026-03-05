@@ -14,9 +14,7 @@ export function paginateAndFilter<T>(
 ): PaginationResult<T> {
 	const normalizedSearch = searchTerm.toLowerCase().trim();
 
-	const filteredData = normalizedSearch
-		? data.filter((item) => filterFn(item, normalizedSearch))
-		: data;
+	const filteredData = data.filter((item) => filterFn(item, normalizedSearch));
 
 	const totalItems = filteredData.length;
 	const totalPages = Math.ceil(totalItems / itemsPerPage);

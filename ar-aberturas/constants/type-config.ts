@@ -20,4 +20,4 @@ export const statusConfig = [
 	{value: 'completed', label: 'Finalizada', icon: CheckCircle, color: 'text-accent bg-accent/10' },
 ];
 
-export type StatusFilter = 'todos' | 'pending' | 'in_progress' | 'completed';
+export type StatusFilter = 'all' | 'pending' | 'in_progress' | 'completed';

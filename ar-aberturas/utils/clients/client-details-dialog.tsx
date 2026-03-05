@@ -12,7 +12,7 @@ import { useState, useEffect } from 'react';
 import { WorkForm } from '@/utils/works/work-form';
 import { createWork, getWorksByClientId, Work, deleteWork } from '@/lib/works/works';
 import { WorksList } from '@/utils/works/works-list';
-import { updateClient } from '@/lib/clients/clients';
+import { getClientById, updateClient } from '@/lib/clients/clients';
 import { ClientBalances } from '@/utils/balances/client-balances';
 import { BalanceForm } from '@/utils/balances/balance-form';
 import { createBalance, BudgetWithWork } from '@/lib/works/balances';
@@ -28,9 +28,10 @@ interface ClientDetailsDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onEdit: () => void;
+  onClientUpdated?: () => void;
 }
 
-export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientDetailsDialogProps) {
+export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientUpdated }: ClientDetailsDialogProps) {
   const [isWorkFormOpen, setIsWorkFormOpen] = useState(false);
   const [isBalanceFormOpen, setIsBalanceFormOpen] = useState(false);
   const [works, setWorks] = useState<Work[]>([]);
@@ -194,19 +195,43 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
     }
   };
   
-  // Update local client data when client prop changes
+  // Update local client data when client prop changes or dialog opens
   useEffect(() => {
-    if (client) {
-      setClientData(client);
-      setCover(client.cover || '');
+    if (client && isOpen) {
+      // Load fresh data when dialog opens
+      const loadFreshClientData = async () => {
+        try {
+          const { data: freshClientData, error } = await getClientById(client.id);
+          if (error) {
+            console.error('Error loading fresh client data:', error);
+            // Fallback to prop data if fresh data fails
+            setClientData(client);
+            setCover(client.cover || '');
+          } else if (freshClientData) {
+            setClientData(freshClientData);
+            setCover(freshClientData.cover || '');
+          }
+        } catch (error) {
+          console.error('Error loading fresh client data:', error);
+          // Fallback to prop data if fresh data fails
+          setClientData(client);
+          setCover(client.cover || '');
+        }
+        setHasUnsavedChanges(false);
+        // Reset loaded flags when client changes
+        setWorksLoaded(false);
+        setBudgetsLoaded(false);
+        setWorks([]);
+        setBudgets([]);
+      };
+      
+      loadFreshClientData();
+    } else if (!client) {
+      setClientData(null);
+      setCover('');
       setHasUnsavedChanges(false);
-      // Reset loaded flags when client changes
-      setWorksLoaded(false);
-      setBudgetsLoaded(false);
-      setWorks([]);
-      setBudgets([]);
     }
-  }, [client]);
+  }, [client, isOpen]);
 
   const handleCoverChange = (value: string) => {
     setCover(value);
@@ -218,11 +243,41 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
     
     try {
       setIsSavingCover(true);
-      await updateClient(client.id, { cover });
-      setClientData(prev => prev ? { ...prev, cover } : null);
+      const { data, error } = await updateClient(client.id, { cover });
+      
+      if (error) {
+        console.error('Error updating cover:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error al guardar',
+          description: 'No se pudo guardar la información adicional. Intente nuevamente.',
+        });
+        return;
+      }
+      
+      // Update local client data with the response from server
+      if (data) {
+        setClientData(data);
+        setCover(data.cover || '');
+      }
       setHasUnsavedChanges(false);
+      
+      // Notify parent component to refresh its data
+      if (onClientUpdated) {
+        onClientUpdated();
+      }
+      
+      toast({
+        title: 'Guardado exitoso',
+        description: 'La información adicional se ha guardado correctamente.',
+      });
     } catch (error) {
       console.error('Error updating cover:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error al guardar',
+        description: 'No se pudo guardar la información adicional. Intente nuevamente.',
+      });
     } finally {
       setIsSavingCover(false);
     }

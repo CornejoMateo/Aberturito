@@ -213,6 +213,35 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 		}
 	}
 
+	async function handleToggleSold(budgetId: string) {
+		try {
+			setIsLoading(true);
+			const budget = budgets.find(b => b.id === budgetId);
+			if (!budget) return;
+
+			const { error } = await updateBudget(budgetId, {
+				sold: !budget.sold
+			});
+			
+			if (error) {
+				toast({
+					variant: 'destructive',
+					title: 'No se pudo cambiar el estado de venta',
+					description: 'Intente nuevamente.',
+				});
+				return;
+			}
+			
+			toast({ 
+				title: budget.sold ? 'Presupuesto marcado como no vendido' : 'Presupuesto marcado como vendido',
+				description: budget.sold ? 'El presupuesto ya no está marcado como vendido.' : 'El presupuesto ahora está marcado como vendido.',
+			});
+			refresh();
+		} finally {
+			setIsLoading(false);
+		}
+	}
+
 	async function handleDeleteBudget(budgetId: string) {
 		setDeleteBudgetConfirm({ open: true, budgetId });
 	}
@@ -860,6 +889,13 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 									) : (
 										<Badge variant="secondary">No elegido</Badge>
 									)}
+									{budgetDetailModal.budget.sold ? (
+										<Badge className="gap-1 bg-green-500 hover:bg-green-600">
+											<CheckCircle className="h-3.5 w-3.5" /> Vendido
+										</Badge>
+									) : (
+										<Badge variant="outline">No vendido</Badge>
+									)}
 								</div>
 							</div>
 						</div>
@@ -913,6 +949,17 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 						<div className="flex justify-end gap-2 pt-4 border-t">
 							<Button variant="outline" onClick={closeBudgetDetailModal}>
 								Cerrar
+							</Button>
+							<Button
+								variant={budgetDetailModal.budget.sold ? "secondary" : "default"}
+								onClick={() => {
+									handleToggleSold(budgetDetailModal.budget!.id);
+								}}
+								className="gap-2"
+								disabled={isLoading}
+							>
+								<CheckCircle className="h-4 w-4" />
+								{budgetDetailModal.budget.sold ? 'Marcar como no vendido' : 'Marcar como vendido'}
 							</Button>
 							{!budgetDetailModal.budget.accepted && (
 								<Button

@@ -15,6 +15,12 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+	CLAIM_FILE_TYPES,
+	MAX_FILE_SIZE_CLAIM,
+	validateFileForUpload,
+	formatFileSize,
+} from '@/utils/file-upload-utils';
 
 interface ClaimImage {
 	id: string;
@@ -119,34 +125,13 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 
 		const file = selectedFiles[0]; // only handle single file upload
 
-		// Validate file type (images only)
-		const validTypes = [
-			'image/jpeg',
-			'image/jpg',
-			'image/png',
-			'image/gif',
-			'image/webp',
-		];
-
-		if (!validTypes.includes(file.type)) {
+		// Validate file type and size
+		const validation = validateFileForUpload(file, CLAIM_FILE_TYPES, MAX_FILE_SIZE_CLAIM);
+		if (!validation.isValid) {
 			toast({
 				variant: 'destructive',
-				title: 'Tipo de archivo no válido',
-				description: 'Solo se permiten archivos de imagen (JPG, PNG, GIF, WebP).',
-			});
-			if (fileInputRef.current) {
-				fileInputRef.current.value = '';
-			}
-			return;
-		}
-
-		// Validate file size (max 10MB)
-		const maxSize = 10 * 1024 * 1024;
-		if (file.size > maxSize) {
-			toast({
-				variant: 'destructive',
-				title: 'Archivo muy grande',
-				description: 'El archivo excede el tamaño máximo de 10MB.',
+				title: 'Archivo no válido',
+				description: validation.error,
 			});
 			if (fileInputRef.current) {
 				fileInputRef.current.value = '';
@@ -237,13 +222,6 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 		}
 	};
 
-	const formatFileSize = (bytes: number) => {
-		if (bytes === 0) return '0 Bytes';
-		const k = 1024;
-		const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-		const i = Math.floor(Math.log(bytes) / Math.log(k));
-		return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-	};
 
 	const handlePrevious = () => {
 		if (selectedImageIndex !== null && selectedImageIndex > 0) {

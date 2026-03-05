@@ -41,7 +41,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
   const [balancesKey, setBalancesKey] = useState(0);
   const { user } = useAuth();
   
-  const { works, isLoading, loadWorks, create, remove } =
+  const { works, isLoading, loadWorks, create, remove, update } =
     useClientWorks(client?.id);
 
   const { budgets, loadBudgets } =
@@ -97,6 +97,31 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
     }
   };
 
+  const handleWorkUpdate = async (
+    workId: string,
+    updates: Partial<Work>
+  ): Promise<Work> => {
+    try {
+      const updatedWork = await update(workId, updates);
+      toast({
+        title: 'Obra actualizada',
+        description: 'La obra se actualizó correctamente.',
+      });
+      return updatedWork as Work;
+
+    } catch (error) {
+      const errorMessage = translateError(error);
+
+      toast({
+        variant: 'destructive',
+        title: 'Error al actualizar la obra',
+        description:
+          errorMessage || 'Hubo un problema al actualizar la obra.',
+      });
+      throw error;
+    }
+  };
+
   const handleBalanceCreated = async (balanceData: any) => {
     try {
       await createBalance(balanceData);
@@ -118,7 +143,6 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
       });
     }
   };
-
   
   // Update local client data when client prop changes
   useEffect(() => {
@@ -240,6 +264,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                         works={works} 
                         onDelete={handleWorkDelete}
                         onCreateWork={() => setIsWorkFormOpen(true)}
+                        onUpdate={handleWorkUpdate}
                       />
                     ) : (
                       <div className="text-center py-8">

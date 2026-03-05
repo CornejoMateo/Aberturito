@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createWork, deleteWork, getWorksByClientId } from '@/lib/works/works';
+import { createWork, deleteWork, getWorksByClientId, updateWork } from '@/lib/works/works';
 import { Work } from '@/lib/works/works';
 
 export function useClientWorks(clientId?: string) {
@@ -42,5 +42,16 @@ export function useClientWorks(clientId?: string) {
 		await loadWorks();
 	};
 
-	return { works, isLoading, loadWorks, create, remove };
+	const update = async (workId: string, updates: Partial<Work>) => {
+		const { data, error } = await updateWork(workId, updates);
+		if (error) throw error;
+
+		setWorks((prev) =>
+			prev.map((work) => (work.id === workId ? { ...work, ...data, ...updates } as Work : work))
+		);
+
+		return data;
+	};
+
+	return { works, isLoading, loadWorks, create, remove, update };
 }

@@ -17,7 +17,7 @@ export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
   const [formData, setFormData] = useState<Omit<Work, 'id' | 'created_at' | 'client_id'>>({
     locality: '',
     address: '',
-    status: 'Sin empezar',
+    status: 'Pendiente',
     architect: '',
   });
 
@@ -69,7 +69,7 @@ export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
             onValueChange={(value) => 
               setFormData(prev => ({
                 ...prev,
-                status: value as 'Sin empezar' | 'En progreso' | 'Finalizado'
+                status: value as 'Pendiente' | 'En progreso' | 'Completada'
               }))
             }
             required
@@ -78,9 +78,9 @@ export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
               <SelectValue placeholder="Seleccionar estado" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Sin empezar">Sin empezar</SelectItem>
-              <SelectItem value="En progreso">En progreso</SelectItem>
-              <SelectItem value="Finalizado">Finalizado</SelectItem>
+              <SelectItem value="pending">Pendiente</SelectItem>
+              <SelectItem value="in_progress">En progreso</SelectItem>
+              <SelectItem value="completed">Finalizada</SelectItem>
             </SelectContent>
           </Select>
         </div>

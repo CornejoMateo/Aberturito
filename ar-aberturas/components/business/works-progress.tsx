@@ -32,8 +32,7 @@ import { es } from 'date-fns/locale';
 import { AddressLink } from '@/components/ui/address-link';
 import type { Work } from '@/lib/works/works';
 import type { ChecklistItem } from '@/lib/works/checklists';
-import { statusConfig } from '@/constants/status-config';
-import type { StatusFilter } from '@/constants/status-config';
+import { statusConfig, type StatusFilter } from '@/constants/type-config';
 import { EmailNotificationModal } from '@/components/ui/email-notification-modal';
 import { WhatsAppNotificationModal } from '@/components/ui/whatsapp-notification-modal';
 import { useAuth } from '@/components/provider/auth-provider';
@@ -49,7 +48,6 @@ import {
 } from '@/components/ui/pagination';
 
 type WorkWithProgress = Work & {
-	status: 'pendiente' | 'en_progreso' | 'completada';
 	tasks: ChecklistItem[];
 	progress: number;
 	hasNotes: boolean;
@@ -114,16 +112,8 @@ export function WorksOpenings() {
 				const completedTasks = tasks.filter((task) => task.done).length;
 				const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
 
-				let status: 'pendiente' | 'en_progreso' | 'completada' = 'pendiente';
-				if (progress === 100) {
-					status = 'completada';
-				} else if (progress > 0) {
-					status = 'en_progreso';
-				}
-
 				return {
 					...work,
-					status,
 					tasks,
 					progress,
 					hasNotes,
@@ -147,9 +137,9 @@ export function WorksOpenings() {
 		return (completed / tasks.length) * 100;
 	};
 
-	const pendingCount = installations.filter((i) => i.status === 'pendiente').length;
-	const inProgressCount = installations.filter((i) => i.status === 'en_progreso').length;
-	const completedCount = installations.filter((i) => i.status === 'completada').length;
+	const pendingCount = installations.filter((i) => i.status === 'pending').length;
+	const inProgressCount = installations.filter((i) => i.status === 'in_progress').length;
+	const completedCount = installations.filter((i) => i.status === 'completed').length;
 
 	const filteredInstallations = installations.filter((installation) => {
 		// Apply status filter
@@ -353,9 +343,9 @@ export function WorksOpenings() {
 				<Card
 					className={cn(
 						'p-6 bg-card border-border cursor-pointer transition-all hover:shadow-md',
-						statusFilter === 'pendiente' ? 'ring-2 ring-chart-3' : ''
+						statusFilter === 'pending' ? 'ring-2 ring-chart-3' : ''
 					)}
-					onClick={() => handleStatusFilter('pendiente')}
+					onClick={() => handleStatusFilter('pending')}
 				>
 					<div className="flex items-center justify-between">
 						<div>
@@ -370,9 +360,9 @@ export function WorksOpenings() {
 				<Card
 					className={cn(
 						'p-6 bg-card border-border cursor-pointer transition-all hover:shadow-md',
-						statusFilter === 'en_progreso' ? 'ring-2 ring-chart-1' : ''
+						statusFilter === 'in_progress' ? 'ring-2 ring-chart-1' : ''
 					)}
-					onClick={() => handleStatusFilter('en_progreso')}
+					onClick={() => handleStatusFilter('in_progress')}
 				>
 					<div className="flex items-center justify-between">
 						<div>
@@ -387,9 +377,9 @@ export function WorksOpenings() {
 				<Card
 					className={cn(
 						'p-6 bg-card border-border cursor-pointer transition-all hover:shadow-md',
-						statusFilter === 'completada' ? 'ring-2 ring-accent' : ''
+						statusFilter === 'completed' ? 'ring-2 ring-accent' : ''
 					)}
-					onClick={() => handleStatusFilter('completada')}
+					onClick={() => handleStatusFilter('completed')}
 				>
 					<div className="flex items-center justify-between">
 						<div>
@@ -407,8 +397,10 @@ export function WorksOpenings() {
 			<div className="space-y-4">
 				{paginatedInstallations.map((installation) => {
 					const progress = getProgress(installation.tasks);
-					const statusInfo = statusConfig[installation.status];
-					const StatusIcon = statusInfo.icon;
+					const statusInfo = statusConfig.find((s) => s.value === installation.status);
+					const StatusIcon = statusInfo?.icon || Clock;
+					const statusLabel = statusInfo?.label || 'Pendiente';
+					const statusColor = statusInfo?.color || 'text-gray-400 bg-gray-400/10';
 
 					return (
 						<Card key={installation.id} className="bg-card border-border">
@@ -426,9 +418,9 @@ export function WorksOpenings() {
 
 										<div className="flex-1 min-w-0">
 											<div className="flex items-center gap-2 flex-wrap">
-												<Badge variant="outline" className={`gap-1 ${statusInfo.color}`}>
+												<Badge variant="outline" className={`gap-1 ${statusColor}`}>
 													<StatusIcon className="h-3 w-3" />
-													{statusInfo.label}
+													{statusLabel}
 												</Badge>
 											</div>
 											<p className="text-sm text-foreground mt-1">

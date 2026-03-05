@@ -236,6 +236,9 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 				title: budget.sold ? 'Presupuesto marcado como no vendido' : 'Presupuesto marcado como vendido',
 				description: budget.sold ? 'El presupuesto ya no está marcado como vendido.' : 'El presupuesto ahora está marcado como vendido.',
 			});
+			
+			// Cerrar el modal y refrescar los datos inmediatamente
+			closeBudgetDetailModal();
 			refresh();
 		} finally {
 			setIsLoading(false);
@@ -755,7 +758,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 																			) : null}
 																		</div>
 
-																			<div className="flex flex-wrap gap-2">
+																			<div className="flex flex-wrap gap-2 mb-3">
 																				{b.pdf_path ? (
 																					<Button
 																						variant="outline"
@@ -783,9 +786,14 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 																					className="gap-2"
 																				>
 																					<CheckCircle className="h-4 w-4" />
-																					{isChosen ? 'Elegido' : chosenBudgetIds.length > 0 ? 'Agregar a elegidos' : 'Elegir'}
+																					{isChosen ? 'Elegido' : 'Elegir'}
 																				</Button>
 																			</div>
+																		{b.sold && (
+																			<div className="absolute bottom-0 left-0 right-0 bg-green-500 text-white text-xs font-semibold py-1 text-center rounded-b-lg">
+																				VENDIDO
+																			</div>
+																		)}
 																	</Card>
 																);
 															})}
@@ -938,7 +946,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 										onClick={() => handleViewPdf(budgetDetailModal.budget!)}
 										className="gap-2"
 									>
-										<FileText className="h-4 w-4" /> Ver PDF
+										<FileText className="h-10 w-10" /> Ver PDF
 									</Button>
 								) : (
 									<Badge variant="secondary">Borrador - Sin PDF</Badge>
@@ -970,7 +978,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 									className="gap-2"
 								>
 									<CheckCircle className="h-4 w-4" />
-									Elegir este presupuesto
+									Elegir
 								</Button>
 							)}
 						</div>

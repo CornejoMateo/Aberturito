@@ -126,6 +126,11 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 
 	const [isClientBudgetsUpdateModalOpen, setIsClientBudgetsUpdateModalOpen] = useState(false);
 
+	const [budgetDetailModal, setBudgetDetailModal] = useState<{
+		open: boolean;
+		budget: BudgetWithWork | null;
+	}>({ open: false, budget: null });
+
 	const chosenBudgetIds = useMemo(() => {
 		const chosen = budgets.filter((b) => !!b.accepted);
 		return chosen.map(b => b.id);
@@ -306,6 +311,14 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 			URL.revokeObjectURL(pdfPreview.pdfUrl);
 		}
 		setPdfPreview({ open: false, budget: null, pdfUrl: null });
+	}
+
+	function handleOpenBudgetDetail(budget: BudgetWithWork) {
+		setBudgetDetailModal({ open: true, budget });
+	}
+
+	function closeBudgetDetailModal() {
+		setBudgetDetailModal({ open: false, budget: null });
 	}
 
 	function resetForm() {
@@ -662,9 +675,10 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 																	<Card
 																		key={b.id}
 																		className={cn(
-																			'min-w-[260px] max-w-[260px] p-4 border-border relative',
+																			'min-w-[260px] max-w-[260px] p-4 border-border relative cursor-pointer hover:shadow-md transition-shadow',
 																			isChosen && 'border-primary bg-primary/5'
 																		)}
+																		onClick={() => handleOpenBudgetDetail(b)}
 																	>
 																		<div className="absolute top-2 right-2 flex items-center gap-2">
 																			{isChosen ? (
@@ -675,7 +689,10 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 																			<Button
 																				variant="ghost"
 																				size="sm"
-																				onClick={() => handleDeleteBudget(b.id)}
+																				onClick={(e) => {
+																					e.stopPropagation();
+																					handleDeleteBudget(b.id);
+																				}}
 																				disabled={isLoading}
 																				className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
 																			>	
@@ -714,7 +731,10 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 																					<Button
 																						variant="outline"
 																						size="sm"
-																						onClick={() => handleViewPdf(b)}
+																						onClick={(e) => {
+																							e.stopPropagation();
+																							handleViewPdf(b);
+																						}}
 																						className="gap-2"
 																					>
 																						<FileText className="h-4 w-4" /> Ver PDF
@@ -727,7 +747,10 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 																					variant={isChosen ? 'secondary' : 'default'}
 																					size="sm"
 																					disabled={isLoading}
-																					onClick={() => handleChooseBudget(b.id)}
+																					onClick={(e) => {
+																						e.stopPropagation();
+																						handleChooseBudget(b.id);
+																					}}
 																					className="gap-2"
 																				>
 																					<CheckCircle className="h-4 w-4" />
@@ -800,6 +823,114 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 			clientId={clientId}
 			onUpdateConfirmed={handleClientBudgetsUpdate}
 		/>
+
+		<Dialog open={budgetDetailModal.open} onOpenChange={closeBudgetDetailModal}>
+			<DialogContent className="max-w-2xl">
+				<DialogHeader>
+					<DialogTitle className="flex items-center gap-2">
+						<FileText className="h-5 w-5" />
+						Detalles del Presupuesto
+					</DialogTitle>
+					<DialogDescription>
+						Información completa del presupuesto seleccionado
+					</DialogDescription>
+				</DialogHeader>
+				{budgetDetailModal.budget && (
+					<div className="space-y-4">
+						<div className="grid grid-cols-2 gap-4">
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground">Tipo</Label>
+								<p className="text-sm font-semibold">{budgetDetailModal.budget.type}</p>
+							</div>
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground">Variante</Label>
+								<p className="text-sm font-semibold">{budgetDetailModal.budget.version || 'Sin variante'}</p>
+							</div>
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground">Número</Label>
+								<p className="text-sm font-semibold">#{budgetDetailModal.budget.number || 'Sin número'}</p>
+							</div>
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground">Estado</Label>
+								<div className="flex items-center gap-2">
+									{budgetDetailModal.budget.accepted ? (
+										<Badge className="gap-1">
+											<CheckCircle className="h-3.5 w-3.5" /> Elegido
+										</Badge>
+									) : (
+										<Badge variant="secondary">No elegido</Badge>
+									)}
+								</div>
+							</div>
+						</div>
+
+						<div className="grid grid-cols-2 gap-4">
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground">Monto ARS</Label>
+								<p className="text-sm font-semibold">
+									{typeof budgetDetailModal.budget.amount_ars === 'number'
+										? `$${budgetDetailModal.budget.amount_ars.toLocaleString('es-AR')} ARS`
+										: 'Monto ARS no cargado'}
+								</p>
+							</div>
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground">Monto USD</Label>
+								<p className="text-sm font-semibold">
+									{typeof budgetDetailModal.budget.amount_usd === 'number'
+										? `$${budgetDetailModal.budget.amount_usd.toLocaleString('es-AR')} USD`
+										: 'Monto USD no cargado'}
+								</p>
+							</div>
+						</div>
+
+						<div>
+							<Label className="text-sm font-medium text-muted-foreground">Obra</Label>
+							<p className="text-sm font-semibold">
+								{budgetDetailModal.budget.folder_budget?.work
+									? `${budgetDetailModal.budget.folder_budget.work.address} - ${budgetDetailModal.budget.folder_budget.work.locality}`
+									: 'Sin obra asignada'}
+							</p>
+						</div>
+
+						<div>
+							<Label className="text-sm font-medium text-muted-foreground">PDF</Label>
+							<div className="flex items-center gap-2 mt-1">
+								{budgetDetailModal.budget.pdf_path ? (
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => handleViewPdf(budgetDetailModal.budget!)}
+										className="gap-2"
+									>
+										<FileText className="h-4 w-4" /> Ver PDF
+									</Button>
+								) : (
+									<Badge variant="secondary">Borrador - Sin PDF</Badge>
+								)}
+							</div>
+						</div>
+
+						<div className="flex justify-end gap-2 pt-4 border-t">
+							<Button variant="outline" onClick={closeBudgetDetailModal}>
+								Cerrar
+							</Button>
+							{!budgetDetailModal.budget.accepted && (
+								<Button
+									onClick={() => {
+										handleChooseBudget(budgetDetailModal.budget!.id);
+										closeBudgetDetailModal();
+									}}
+									className="gap-2"
+								>
+									<CheckCircle className="h-4 w-4" />
+									Elegir este presupuesto
+								</Button>
+							)}
+						</div>
+					</div>
+				)}
+			</DialogContent>
+		</Dialog>
 	</>
 );
 }

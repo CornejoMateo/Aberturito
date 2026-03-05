@@ -237,7 +237,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 				description: budget.sold ? 'El presupuesto ya no está marcado como vendido.' : 'El presupuesto ahora está marcado como vendido.',
 			});
 			
-			// Cerrar el modal y refrescar los datos inmediatamente
+			// Close modal and refresh data immediately
 			closeBudgetDetailModal();
 			refresh();
 		} finally {

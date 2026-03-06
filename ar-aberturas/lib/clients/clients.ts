@@ -127,28 +127,24 @@ export async function listClientFiles(
 			return { data: [], error: null };
 		}
 
-		// For each image in the client's images array, get the file metadata from storage
-		const clientFiles: ClientFile[] = await Promise.all(
-			client.images.map(async (imageData: ClientFileMetadata) => {
-				const fileName = imageData.path.split('/').pop() || '';
+		const { data: files } = await supabase
+			.storage
+			.from('clients')
+			.list(clientId);		
 
-				// Try to get file metadata from storage
-				const { data: fileData } = await supabase.storage.from('clients').list(clientId, {
-					search: fileName,
-				});
+		const clientFiles = client.images.map((imageData) => {
+			const fileName = imageData.path.split('/').pop() || '';
 
-				const fileMetadata = fileData?.find((f) => f.name === fileName);
+			const fileMetadata = files?.find((f) => f.name === fileName);
 
-                // return the combined metadata for the client file
-				return {
-					...imageData,
-					name: fileName,
-					id: fileMetadata?.id || fileName,
-					size: fileMetadata?.metadata?.size || 0,
-					mimetype: fileMetadata?.metadata?.mimetype || 'image/jpeg',
-				};
-			})
-		);
+			return {
+				...imageData,
+				name: fileName,
+				id: fileMetadata?.id || fileName,
+				size: fileMetadata?.metadata?.size || 0,
+				mimetype: fileMetadata?.metadata?.mimetype || 'image/jpeg',
+			};
+		});
 
 		return { data: clientFiles, error: null };
 	} catch (err) {

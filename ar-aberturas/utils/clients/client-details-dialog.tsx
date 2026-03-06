@@ -12,7 +12,7 @@ import { useState, useEffect } from 'react';
 import { WorkForm } from '@/utils/works/work-form';
 import { createWork, getWorksByClientId, Work, deleteWork } from '@/lib/works/works';
 import { WorksList } from '@/utils/works/works-list';
-import { updateClient } from '@/lib/clients/clients';
+import { getClientById, updateClient } from '@/lib/clients/clients';
 import { ClientBalances } from '@/utils/balances/client-balances';
 import { BalanceForm } from '@/utils/balances/balance-form';
 import { createBalance, BudgetWithWork } from '@/lib/works/balances';
@@ -22,15 +22,17 @@ import { getFolderBudgetsByClientId } from '@/lib/budgets/folder_budgets';
 import { getBudgetsByFolderBudgetIds } from '@/lib/budgets/budgets';
 import { ClientImagesGallery } from '@/utils/images-client/images-client';
 import { useAuth } from '@/components/provider/auth-provider';
+import { useAutoSave } from '@/hooks/use-auto-save';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
   isOpen: boolean;
   onClose: () => void;
   onEdit: () => void;
+  onClientUpdated?: () => void;
 }
 
-export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientDetailsDialogProps) {
+export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientUpdated }: ClientDetailsDialogProps) {
   const [isWorkFormOpen, setIsWorkFormOpen] = useState(false);
   const [isBalanceFormOpen, setIsBalanceFormOpen] = useState(false);
   const [works, setWorks] = useState<Work[]>([]);
@@ -38,13 +40,32 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [clientData, setClientData] = useState<Client | null>(null);
-  const [cover, setCover] = useState('');
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [isSavingCover, setIsSavingCover] = useState(false);
   const [balancesKey, setBalancesKey] = useState(0);
   const [worksLoaded, setWorksLoaded] = useState(false);
   const [budgetsLoaded, setBudgetsLoaded] = useState(false);
   const { user } = useAuth();
+
+  // Auto-save hook for cover field
+  const { isSaving, hasUnsavedChanges, value: cover, handleChange, handleKeyDown, setValue: setCover } = useAutoSave({
+    onSave: async (value: string) => {
+      if (!client) return { error: 'No client selected' };
+      
+      const { data, error } = await updateClient(client.id, { cover: value });
+      
+      if (!error && data) {
+        setClientData(data);
+        
+        // Notify parent component to refresh its data
+        if (onClientUpdated) {
+          onClientUpdated();
+        }
+      }
+      
+      return { data, error };
+    },
+    successMessage: 'Información guardada',
+    errorMessage: 'Error al guardar información',
+  });
   
   // function to load works when the works tab is opened for the first time
   const loadWorks = async (force = false) => {
@@ -194,39 +215,41 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
     }
   };
   
-  // Update local client data when client prop changes
+  // Update local client data when client prop changes or dialog opens
   useEffect(() => {
-    if (client) {
-      setClientData(client);
-      setCover(client.cover || '');
-      setHasUnsavedChanges(false);
-      // Reset loaded flags when client changes
-      setWorksLoaded(false);
-      setBudgetsLoaded(false);
-      setWorks([]);
-      setBudgets([]);
+    if (client && isOpen) {
+      // Load fresh data when dialog opens
+      const loadFreshClientData = async () => {
+        try {
+          const { data: freshClientData, error } = await getClientById(client.id);
+          if (error) {
+            console.error('Error loading fresh client data:', error);
+            // Fallback to prop data if fresh data fails
+            setClientData(client);
+            setCover(client.cover || '');
+          } else if (freshClientData) {
+            setClientData(freshClientData);
+            setCover(freshClientData.cover || '');
+          }
+        } catch (error) {
+          console.error('Error loading fresh client data:', error);
+          // Fallback to prop data if fresh data fails
+          setClientData(client);
+          setCover(client.cover || '');
+        }
+        // Reset loaded flags when client changes
+        setWorksLoaded(false);
+        setBudgetsLoaded(false);
+        setWorks([]);
+        setBudgets([]);
+      };
+      
+      loadFreshClientData();
+    } else if (!client) {
+      setClientData(null);
+      setCover('');
     }
-  }, [client]);
-
-  const handleCoverChange = (value: string) => {
-    setCover(value);
-    setHasUnsavedChanges(true);
-  };
-
-  const handleSaveCover = async () => {
-    if (!client) return;
-    
-    try {
-      setIsSavingCover(true);
-      await updateClient(client.id, { cover });
-      setClientData(prev => prev ? { ...prev, cover } : null);
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      console.error('Error updating cover:', error);
-    } finally {
-      setIsSavingCover(false);
-    }
-  };
+  }, [client, isOpen]);
 
   if (!clientData) return null;
 
@@ -291,19 +314,24 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium text-xs">Información adicional</h4>
-                        <Button
-                          size="sm"
-                          onClick={handleSaveCover}
-                          disabled={!hasUnsavedChanges || isSavingCover}
-                        >
-                          {isSavingCover ? 'Guardando...' : 'Guardar'}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          {hasUnsavedChanges && (
+                            <span className="text-xs text-muted-foreground">
+                              {isSaving ? 'Guardando...' : 'Sin guardar'}
+                            </span>
+                          )}
+                          {isSaving && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                          )}
+                        </div>
                       </div>
                       <Textarea
                         value={cover}
-                        onChange={(e) => handleCoverChange(e.target.value)}
+                        onChange={(e) => handleChange(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         placeholder="Escribe aquí..."
                         className="min-h-[200px] bg-background"
+                        disabled={isSaving}
                       />
                     </div>
                   </div>

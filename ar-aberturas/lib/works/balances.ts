@@ -32,6 +32,7 @@ export type BudgetWithWork = {
 	amount_ars: number;
 	amount_usd: number;
 	accepted?: boolean | null;
+	sold?: boolean | null;
 	pdf_url?: string | null;
 	pdf_path?: string | null;
 	number?: string | null;

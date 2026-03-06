@@ -26,6 +26,7 @@ import { getSupabaseClient } from '@/lib/supabase-client';
 import { CheckCircle, FileText, Plus, ChevronDown, Trash2, Download, X, TrendingUp } from 'lucide-react';
 import { BudgetWithWork } from '@/lib/works/balances';
 import { ClientBudgetsDollarUpdateModal } from '@/components/ui/client-budgets-dollar-update-modal';
+import { translateError } from '@/lib/error-translator';
 
 type BudgetFolderVM = FolderBudget & {
 	budgets: BudgetWithWork[];
@@ -198,7 +199,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 				toast({
 					variant: 'destructive',
 					title: 'No se pudo cambiar el estado',
-					description: 'Intente nuevamente.',
+					description: translateError(error),
 				});
 				return;
 			}
@@ -227,7 +228,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 				toast({
 					variant: 'destructive',
 					title: 'No se pudo cambiar el estado de venta',
-					description: 'Intente nuevamente.',
+					description: translateError(error),
 				});
 				return;
 			}

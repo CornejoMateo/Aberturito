@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from '@/components/ui/use-toast';
+import { translateError } from '@/lib/translate-error';
 
 interface UseAutoSaveOptions {
   onSave: (value: string) => Promise<{ data?: any; error?: any }>;
@@ -24,12 +25,13 @@ export function useAutoSave({
       setIsSaving(true);
       const { data, error } = await onSave(value);
       
+      // use translateError
       if (error) {
         console.error('Error saving:', error);
         toast({
           variant: 'destructive',
           title: errorMessage,
-          description: 'No se pudo guardar la información. Intente nuevamente.',
+          description: translateError(error),
         });
         return { error };
       }
@@ -38,7 +40,7 @@ export function useAutoSave({
       
       toast({
         title: successMessage,
-        description: 'La información se ha guardado correctamente.',
+        description: translateError('success'),
       });
       
       return { data };
@@ -47,7 +49,7 @@ export function useAutoSave({
       toast({
         variant: 'destructive',
         title: errorMessage,
-        description: 'No se pudo guardar la información. Intente nuevamente.',
+        description: translateError(error),
       });
       return { error };
     } finally {

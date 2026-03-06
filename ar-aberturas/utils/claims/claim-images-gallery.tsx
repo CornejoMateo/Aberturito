@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Upload, Trash2, X, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { getSupabaseClient } from '@/lib/supabase-client';
+import { translateError } from '@/lib/error-translator';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -162,12 +163,12 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 				toast({
 					variant: 'destructive',
 					title: 'Error al subir imagen',
-					description: 'Ocurrió un error al subir la imagen.',
+					description: translateError(error.message),
 				});
 			} else {
 				toast({
 					title: 'Imagen subida',
-					description: 'La imagen se subió exitosamente.',
+					description: translateError('La imagen se subió exitosamente.'),
 				});
 				await loadImages();
 				if (fileInputRef.current) {
@@ -179,7 +180,7 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 			toast({
 				variant: 'destructive',
 				title: 'Error al subir imagen',
-				description: 'Ocurrió un error inesperado.',
+				description: translateError('Ocurrió un error inesperado.'),
 			});
 		} finally {
 			setIsUploading(false);
@@ -201,12 +202,12 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 				toast({
 					variant: 'destructive',
 					title: 'Error al eliminar imagen',
-					description: 'No se pudo eliminar la imagen.',
+					description: translateError('No se pudo eliminar la imagen.'),
 				});
 			} else {
 				toast({
 					title: 'Imagen eliminada',
-					description: 'La imagen se eliminó exitosamente.',
+					description: translateError('La imagen se eliminó exitosamente.'),
 				});
 				await loadImages();
 			}
@@ -215,7 +216,7 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 			toast({
 				variant: 'destructive',
 				title: 'Error',
-				description: 'Ocurrió un error inesperado.',
+				description: translateError('Ocurrió un error inesperado.'),
 			});
 		} finally {
 			setImageToDelete(null);

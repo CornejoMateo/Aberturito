@@ -18,7 +18,7 @@ import {
 	PaginationPrevious,
 	PaginationEllipsis,
 } from '@/components/ui/pagination';
-import { useWorksWithProgress } from '@/hooks/clients/use-works-wirh-progress';
+import { useWorksWithProgress } from '@/hooks/clients/use-works-with-progress';
 import { paginateAndFilter } from '@/helpers/clients/pagination';
 import { useNotifications } from '@/hooks/clients/use-notifications';
 import { StatsCardsWorks } from '@/utils/works/stats-cards-works';

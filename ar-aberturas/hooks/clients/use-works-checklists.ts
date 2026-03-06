@@ -28,8 +28,8 @@ export function useWorkChecklists(works: Work[]) {
                     newWorkChecklists[work.id] = false;
                 } finally {
                     setLoadingChecklists((prev) => ({
-                    ...prev,
-                    [work.id]: false,
+                        ...prev,
+                        [work.id]: false,
                     }));
                 }
                 })

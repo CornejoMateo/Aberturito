@@ -56,6 +56,7 @@ import { ClaimsAddDialog } from '@/utils/claims/claims-add-dialog';
 import { cn } from '@/lib/utils';
 import { userAgent } from 'next/server';
 import { useAuth } from '@/components/provider/auth-provider';
+import { ClaimImagesGallery } from '@/utils/claims/claim-images-gallery';
 
 type FilterType = 'todos' | 'pendientes' | 'resueltos' | 'diario';
 
@@ -88,6 +89,7 @@ export function ClaimsManagement() {
 	const itemsPerPage = 10;
 	const [descriptionToView, setDescriptionToView] = useState<string | null>(null);
 	const [showDeleteOldDialog, setShowDeleteOldDialog] = useState(false);
+	const [selectedClaimForImages, setSelectedClaimForImages] = useState<Claim | null>(null);
 
 	const { user } = useAuth();
 
@@ -306,20 +308,36 @@ export function ClaimsManagement() {
 			{/* Description View Dialog */}
 			<Dialog
 				open={!!descriptionToView}
-				onOpenChange={(open) => !open && setDescriptionToView(null)}
+				onOpenChange={(open) => {
+					if (!open) {
+						setDescriptionToView(null);
+						setSelectedClaimForImages(null);
+					}
+				}}
 			>
-				<DialogContent className="sm:max-w-[600px]">
+				<DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
 					<DialogHeader>
 						<DialogTitle className="flex items-center gap-2">
 							<FileText className="h-5 w-5" />
 							Descripción completa
 						</DialogTitle>
 					</DialogHeader>
-					<div className="py-4">
-						<p className="text-sm text-foreground whitespace-pre-wrap">{descriptionToView}</p>
+					<div className="py-4 space-y-6">
+						<div>
+							<p className="text-sm text-foreground whitespace-pre-wrap">{descriptionToView}</p>
+						</div>
+						
+						{selectedClaimForImages && (
+							<div className="border-t pt-6">
+								<ClaimImagesGallery claimId={selectedClaimForImages.id} />
+							</div>
+						)}
 					</div>
 					<DialogFooter>
-						<Button variant="outline" onClick={() => setDescriptionToView(null)}>
+						<Button variant="outline" onClick={() => {
+							setDescriptionToView(null);
+							setSelectedClaimForImages(null);
+						}}>
 							Cerrar
 						</Button>
 					</DialogFooter>
@@ -563,7 +581,10 @@ export function ClaimsManagement() {
 										<TableCell className="lg:table-cell max-w-xs text-center">
 											<div
 												className="truncate cursor-pointer hover:text-primary transition-colors"
-												onClick={() => setDescriptionToView(claim.description || '-')}
+												onClick={() => {
+													setDescriptionToView(claim.description || '-');
+													setSelectedClaimForImages(claim);
+												}}
 												title="Click para ver descripción completa"
 											>
 												{claim.description || '-'}

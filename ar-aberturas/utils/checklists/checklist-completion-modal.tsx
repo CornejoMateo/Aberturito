@@ -24,7 +24,7 @@ import { Checklist, editChecklist, deleteChecklist } from '@/lib/works/checklist
 import { ChecklistPDFButton } from '@/components/ui/checklist-pdf-button';
 import { ChecklistModal } from './checklist-modal';
 import { useAuth } from '@/components/provider/auth-provider';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { createClaim } from '@/lib/claims/claims';
 import { translateError } from '@/lib/error-translator';
 import { useWorkChecklistData } from '@/hooks/clients/use-works-checklists-data';
@@ -45,7 +45,6 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 	const [checklistToEdit, setChecklistToEdit] = useState<Checklist | null>(null);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const notesDebounceTimersRef = useRef<Record<string, number>>({});
-	const { toast } = useToast();
 
 	const { user } = useAuth();
 

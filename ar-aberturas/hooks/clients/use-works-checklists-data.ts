@@ -5,7 +5,11 @@ import { getClientById } from '@/lib/clients/clients';
 
 export function useWorkChecklistData(workId: string) {
 	const [clientData, setClientData] = useState<{ name: string; phone_number: string } | null>(null);
-	const [workData, setWorkData] = useState<{ id: string; locality: string; address: string } | null>(null);
+	const [workData, setWorkData] = useState<{
+		id: string;
+		locality: string;
+		address: string;
+	} | null>(null);
 	const [checklists, setChecklists] = useState<Checklist[]>([]);
 	const [loading, setLoading] = useState(false);
 
@@ -50,6 +54,6 @@ export function useWorkChecklistData(workId: string) {
 		workData,
 		checklists,
 		loading,
-		reload: loadChecklists
+		reload: loadChecklists,
 	};
 }

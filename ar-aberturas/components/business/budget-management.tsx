@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import {
 	BarChart3,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { getClientsCount } from '@/lib/clients/clients';
 
 // Datos dinámicos - se conectarán con APIs reales
 interface SalesMetrics {
@@ -44,16 +46,36 @@ interface ConversionData {
   percentage: number;
 }
 
-export function ReportsView() {
+export function BudgetManagement() {
 	// Placeholder para datos dinámicos
-	const metrics: SalesMetrics = {
+	const [metrics, setMetrics] = useState<SalesMetrics>({
 		totalClients: 0,
 		totalBudgets: 0,
 		totalSales: 0,
 		totalRevenue: 0,
 		conversionRate: 0,
 		averageTicket: 0,
-	};
+	});
+
+	const [loading, setLoading] = useState(true);
+
+	// Obtener cantidad de clientes
+	useEffect(() => {
+		const fetchClientsCount = async () => {
+			try {
+				const { data: clientsCount, error } = await getClientsCount();
+				if (!error && clientsCount !== null) {
+					setMetrics(prev => ({ ...prev, totalClients: clientsCount }));
+				}
+			} catch (err) {
+				console.error('Error fetching clients count:', err);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchClientsCount();
+	}, []);
 
 	const monthlyData: MonthlyData[] = [];
 	const locationData: LocationData[] = [];
@@ -74,9 +96,11 @@ export function ReportsView() {
 					<div className="flex items-center justify-between">
 						<div>
 							<p className="text-sm font-medium text-muted-foreground">Clientes totales</p>
-							<p className="text-2xl font-bold text-foreground mt-2">{metrics.totalClients || '--'}</p>
-							<p className="text-xs text-muted-foreground mt-1">
-							{metrics.totalClients > 0 ? 'Datos disponibles' : 'Sin datos'}
+							<p className="text-2xl font-bold text-foreground mt-2">
+							{loading ? '...' : metrics.totalClients}
+						</p>
+						<p className="text-xs text-muted-foreground mt-1">
+							{loading ? 'Cargando...' : metrics.totalClients > 0 ? 'Datos disponibles' : 'Sin datos'}
 						</p>
 						</div>
 						<div className="rounded-lg bg-secondary p-3 text-chart-1">

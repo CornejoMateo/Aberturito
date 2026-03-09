@@ -1,10 +1,10 @@
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
-import { BudgetManagement } from '@/components/business/budget-management';
+import { ReportsView } from '@/components/business/budget-management';
 
 export default function BudgetsPage() {
 	return (
 		<DashboardLayout>
-			<BudgetManagement />
+			<ReportsView />
 		</DashboardLayout>
 	);
 }

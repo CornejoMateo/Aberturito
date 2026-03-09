@@ -111,7 +111,7 @@ const navigation = [
 		name: 'Presupuestos',
 		href: '/budgets',
 		icon: FileText,
-		disabled: true,
+		disabled: false,
 	},
 	{
 		name: 'Reportes',

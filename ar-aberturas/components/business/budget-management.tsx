@@ -13,7 +13,10 @@ import {
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getClientsCount } from '@/lib/clients/clients';
+import { getBudgetsCount, getBudgetsTotalAmount, getSoldBudgetsCount, getChosenBudgetsCount, getSoldBudgetsTotalAmount, getChosenBudgetsTotalAmount } from '@/lib/budgets/budgets';
 
 // Datos dinámicos - se conectarán con APIs reales
 interface SalesMetrics {
@@ -23,6 +26,9 @@ interface SalesMetrics {
   totalRevenue: number;
   conversionRate: number;
   averageTicket: number;
+  soldAverageTicket: number;
+  chosenAverageTicket: number;
+  totalAverageTicket: number;
 }
 
 interface MonthlyData {
@@ -55,26 +61,120 @@ export function BudgetManagement() {
 		totalRevenue: 0,
 		conversionRate: 0,
 		averageTicket: 0,
+		soldAverageTicket: 0,
+		chosenAverageTicket: 0,
+		totalAverageTicket: 0,
 	});
 
 	const [loading, setLoading] = useState(true);
+	const [ticketType, setTicketType] = useState<'sold' | 'chosen' | 'total'>('sold');
 
-	// Obtener cantidad de clientes
+	const ticketTypes = [
+		{ id: 'sold', label: 'Vendidos', description: 'Presupuestos vendidos' },
+		{ id: 'chosen', label: 'Elegidos', description: 'Presupuestos elegidos' },
+		{ id: 'total', label: 'General', description: 'Todos los presupuestos' }
+	] as const;
+
+	const getCurrentTicketValue = () => {
+		switch (ticketType) {
+			case 'sold': return metrics.soldAverageTicket;
+			case 'chosen': return metrics.chosenAverageTicket;
+			case 'total': return metrics.totalAverageTicket;
+			default: return 0;
+		}
+	};
+
+	const getCurrentTicketLabel = () => {
+		const current = ticketTypes.find(t => t.id === ticketType);
+		return current?.description || '';
+	};
+
+	const handleNextTicket = () => {
+		const currentIndex = ticketTypes.findIndex(t => t.id === ticketType);
+		const nextIndex = (currentIndex + 1) % ticketTypes.length;
+		setTicketType(ticketTypes[nextIndex].id);
+	};
+
+	const handlePrevTicket = () => {
+		const currentIndex = ticketTypes.findIndex(t => t.id === ticketType);
+		const prevIndex = currentIndex === 0 ? ticketTypes.length - 1 : currentIndex - 1;
+		setTicketType(ticketTypes[prevIndex].id);
+	};
+
+	// Obtener cantidad de clientes y presupuestos
 	useEffect(() => {
-		const fetchClientsCount = async () => {
+		const fetchMetrics = async () => {
 			try {
-				const { data: clientsCount, error } = await getClientsCount();
-				if (!error && clientsCount !== null) {
+				// Obtener clientes
+				const { data: clientsCount, error: clientsError } = await getClientsCount();
+				if (!clientsError && clientsCount !== null) {
 					setMetrics(prev => ({ ...prev, totalClients: clientsCount }));
 				}
+
+				// Obtener presupuestos totales
+				const { data: budgetsCount, error: budgetsError } = await getBudgetsCount();
+				if (!budgetsError && budgetsCount !== null) {
+					setMetrics(prev => ({ ...prev, totalBudgets: budgetsCount }));
+				}
+
+				// Obtener presupuestos vendidos
+				const { data: soldBudgetsCount, error: soldError } = await getSoldBudgetsCount();
+				if (!soldError && soldBudgetsCount !== null) {
+					setMetrics(prev => ({ 
+						...prev, 
+						totalSales: soldBudgetsCount,
+						conversionRate: budgetsCount > 0 ? Math.round((soldBudgetsCount / budgetsCount) * 100) : 0
+					}));
+				}
+
+				// Obtener monto total de presupuestos vendidos
+				const { data: soldAmounts, error: soldAmountError } = await getSoldBudgetsTotalAmount();
+				if (!soldAmountError && soldAmounts) {
+					const soldCount = await getSoldBudgetsCount();
+					if (!soldCount.error && soldCount.data > 0) {
+						setMetrics(prev => ({ 
+							...prev, 
+							soldAverageTicket: Math.round(soldAmounts.totalArs / soldCount.data)
+						}));
+					}
+				}
+
+				// Obtener monto total de presupuestos elegidos
+				const { data: chosenAmounts, error: chosenAmountError } = await getChosenBudgetsTotalAmount();
+				if (!chosenAmountError && chosenAmounts) {
+					const chosenCount = await getChosenBudgetsCount();
+					if (!chosenCount.error && chosenCount.data > 0) {
+						setMetrics(prev => ({ 
+							...prev, 
+							chosenAverageTicket: Math.round(chosenAmounts.totalArs / chosenCount.data)
+						}));
+					}
+				}
+
+				// Obtener monto total de presupuestos generales
+				const { data: totalAmounts, error: amountError } = await getBudgetsTotalAmount();
+				if (!amountError && totalAmounts) {
+					setMetrics(prev => ({ 
+						...prev, 
+						totalRevenue: totalAmounts.totalArs
+					}));
+					
+					// Obtener ticket promedio general
+					if (budgetsCount > 0) {
+						setMetrics(prev => ({ 
+							...prev, 
+							totalAverageTicket: Math.round(totalAmounts.totalArs / budgetsCount)
+						}));
+					}
+				}
 			} catch (err) {
-				console.error('Error fetching clients count:', err);
+				console.error('Error fetching metrics:', err);
 			} finally {
 				setLoading(false);
 			}
 		};
 
-		fetchClientsCount();
+		fetchMetrics();
 	}, []);
 
 	const monthlyData: MonthlyData[] = [];
@@ -113,9 +213,11 @@ export function BudgetManagement() {
 					<div className="flex items-center justify-between">
 						<div>
 							<p className="text-sm font-medium text-muted-foreground">Presupuestos</p>
-							<p className="text-2xl font-bold text-foreground mt-2">{metrics.totalBudgets || '--'}</p>
-							<p className="text-xs text-muted-foreground mt-1">
-							{metrics.totalBudgets > 0 ? 'Datos disponibles' : 'Sin datos'}
+							<p className="text-2xl font-bold text-foreground mt-2">
+							{loading ? '...' : metrics.totalBudgets}
+						</p>
+						<p className="text-xs text-muted-foreground mt-1">
+							{loading ? 'Cargando...' : metrics.totalBudgets > 0 ? 'Datos disponibles' : 'Sin datos'}
 						</p>
 						</div>
 						<div className="rounded-lg bg-secondary p-3 text-chart-2">
@@ -128,9 +230,11 @@ export function BudgetManagement() {
 					<div className="flex items-center justify-between">
 						<div>
 							<p className="text-sm font-medium text-muted-foreground">Ventas cerradas</p>
-							<p className="text-2xl font-bold text-foreground mt-2">{metrics.totalSales || '--'}</p>
-							<p className="text-xs text-muted-foreground mt-1">
-							{metrics.totalSales > 0 ? 'Datos disponibles' : 'Sin datos'}
+							<p className="text-2xl font-bold text-foreground mt-2">
+							{loading ? '...' : metrics.totalSales}
+						</p>
+						<p className="text-xs text-muted-foreground mt-1">
+							{loading ? 'Cargando...' : metrics.totalSales > 0 ? 'Datos disponibles' : 'Sin datos'}
 						</p>
 						</div>
 						<div className="rounded-lg bg-secondary p-3 text-chart-3">
@@ -144,10 +248,10 @@ export function BudgetManagement() {
 						<div>
 							<p className="text-sm font-medium text-muted-foreground">Facturación</p>
 							<p className="text-2xl font-bold text-foreground mt-2">
-							{metrics.totalRevenue > 0 ? `$${(metrics.totalRevenue / 1000000).toFixed(1)}M` : '--'}
+							{loading ? '...' : metrics.totalRevenue > 0 ? `$${(metrics.totalRevenue / 1000000).toFixed(1)}M` : '--'}
 						</p>
-							<p className="text-xs text-muted-foreground mt-1">
-							{metrics.totalRevenue > 0 ? 'Datos disponibles' : 'Sin datos'}
+						<p className="text-xs text-muted-foreground mt-1">
+							{loading ? 'Cargando...' : metrics.totalRevenue > 0 ? 'Datos disponibles' : 'Sin datos'}
 						</p>
 						</div>
 						<div className="rounded-lg bg-secondary p-3 text-chart-4">
@@ -176,7 +280,7 @@ export function BudgetManagement() {
 
 					<div className="grid gap-4 md:grid-cols-2">
 						<Card className="p-6 bg-card border-border">
-							<h3 className="text-lg font-semibold text-foreground mb-4">Tasa de conversión</h3>
+							<h3 className="text-lg font-semibold text-foreground mb-4">Tasa de concreción</h3>
 							<div className="space-y-4">
 								<div className="flex items-center justify-between">
 									<span className="text-sm text-muted-foreground">Presupuestos → Ventas</span>
@@ -184,7 +288,7 @@ export function BudgetManagement() {
 								</div>
 								<Progress value={metrics.conversionRate} className="h-3" />
 								<p className="text-xs text-muted-foreground">
-									{metrics.totalBudgets > 0 ? `${metrics.totalSales} de ${metrics.totalBudgets} presupuestos convertidos` : 'Sin datos para calcular'}
+									{metrics.totalBudgets > 0 ? `${metrics.totalSales} de ${metrics.totalBudgets} presupuestos concretados` : 'Sin datos para calcular'}
 								</p>
 							</div>
 						</Card>
@@ -192,16 +296,51 @@ export function BudgetManagement() {
 						<Card className="p-6 bg-card border-border">
 							<h3 className="text-lg font-semibold text-foreground mb-4">Ticket promedio</h3>
 							<div className="space-y-4">
+								<div className="flex items-center justify-between mb-2">
+									<span className="text-sm text-muted-foreground">{getCurrentTicketLabel()}</span>
+									<div className="flex items-center gap-2">
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={handlePrevTicket}
+											className="h-8 w-8 p-0"
+										>
+											<ChevronLeft className="h-4 w-4" />
+										</Button>
+										<span className="text-xs text-muted-foreground min-w-[60px] text-center">
+											{ticketTypes.findIndex(t => t.id === ticketType) + 1} / {ticketTypes.length}
+										</span>
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={handleNextTicket}
+											className="h-8 w-8 p-0"
+										>
+											<ChevronRight className="h-4 w-4" />
+										</Button>
+									</div>
+								</div>
 								<div className="flex items-center justify-between">
-									<span className="text-sm text-muted-foreground">Por venta</span>
+									<span className="text-sm text-muted-foreground">Por presupuesto</span>
 									<span className="text-2xl font-bold text-foreground">
-										{metrics.averageTicket > 0 ? `$${(metrics.averageTicket / 1000).toFixed(0)}k` : '--'}
+										{loading ? '...' : getCurrentTicketValue() > 0 ? `$${(getCurrentTicketValue() / 1000).toFixed(0)}k` : '--'}
 									</span>
 								</div>
-								<Progress value={metrics.averageTicket > 0 ? Math.min((metrics.averageTicket / 50000) * 100, 100) : 0} className="h-3" />
+								<Progress value={getCurrentTicketValue() > 0 ? Math.min((getCurrentTicketValue() / 50000) * 100, 100) : 0} className="h-3" />
 								<p className="text-xs text-muted-foreground">
-									{metrics.totalSales > 0 ? `Basado en ${metrics.totalSales} ventas` : 'Sin datos para calcular'}
+									{loading ? 'Cargando...' : getCurrentTicketValue() > 0 ? `Basado en ${ticketType === 'sold' ? 'presupuestos vendidos' : ticketType === 'chosen' ? 'presupuestos elegidos' : 'todos los presupuestos'}` : 'Sin datos para calcular'}
 								</p>
+								<div className="flex justify-center gap-1 mt-2">
+									{ticketTypes.map((type, index) => (
+										<button
+											key={type.id}
+											onClick={() => setTicketType(type.id)}
+											className={`h-1 w-8 rounded-full transition-colors ${
+												ticketType === type.id ? 'bg-primary' : 'bg-muted'
+											}`}
+										/>
+									))}
+								</div>
 							</div>
 						</Card>
 					</div>

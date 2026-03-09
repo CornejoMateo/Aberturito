@@ -18,6 +18,88 @@ export type Budget = {
 
 const TABLE = 'budgets';
 
+export async function getBudgetsCount(): Promise<{ data: number; error: any }> {
+	const supabase = getSupabaseClient();
+	const { count, error } = await supabase
+		.from(TABLE)
+		.select('*', { count: 'exact', head: true });
+	return { data: count || 0, error };
+}
+
+export async function getBudgetsTotalAmount(): Promise<{ data: { totalArs: number; totalUsd: number }; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('amount_ars, amount_usd');
+	
+	if (error) return { data: { totalArs: 0, totalUsd: 0 }, error };
+	if (!data) return { data: { totalArs: 0, totalUsd: 0 }, error: null };
+	
+	const totalArs = data.reduce((sum, budget) => sum + (budget.amount_ars || 0), 0);
+	const totalUsd = data.reduce((sum, budget) => sum + (budget.amount_usd || 0), 0);
+	
+	return { data: { totalArs, totalUsd }, error: null };
+}
+
+export async function getAcceptedBudgetsCount(): Promise<{ data: number; error: any }> {
+	const supabase = getSupabaseClient();
+	const { count, error } = await supabase
+		.from(TABLE)
+		.select('*', { count: 'exact', head: true })
+		.eq('accepted', true);
+	return { data: count || 0, error };
+}
+
+export async function getSoldBudgetsCount(): Promise<{ data: number; error: any }> {
+	const supabase = getSupabaseClient();
+	const { count, error } = await supabase
+		.from(TABLE)
+		.select('*', { count: 'exact', head: true })
+		.eq('sold', true);
+	return { data: count || 0, error };
+}
+
+export async function getChosenBudgetsCount(): Promise<{ data: number; error: any }> {
+	const supabase = getSupabaseClient();
+	const { count, error } = await supabase
+		.from(TABLE)
+		.select('*', { count: 'exact', head: true })
+		.eq('accepted', true);
+	return { data: count || 0, error };
+}
+
+export async function getSoldBudgetsTotalAmount(): Promise<{ data: { totalArs: number; totalUsd: number }; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('amount_ars, amount_usd')
+		.eq('sold', true);
+	
+	if (error) return { data: { totalArs: 0, totalUsd: 0 }, error };
+	if (!data) return { data: { totalArs: 0, totalUsd: 0 }, error: null };
+	
+	const totalArs = data.reduce((sum, budget) => sum + (budget.amount_ars || 0), 0);
+	const totalUsd = data.reduce((sum, budget) => sum + (budget.amount_usd || 0), 0);
+	
+	return { data: { totalArs, totalUsd }, error: null };
+}
+
+export async function getChosenBudgetsTotalAmount(): Promise<{ data: { totalArs: number; totalUsd: number }; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('amount_ars, amount_usd')
+		.eq('accepted', true);
+	
+	if (error) return { data: { totalArs: 0, totalUsd: 0 }, error };
+	if (!data) return { data: { totalArs: 0, totalUsd: 0 }, error: null };
+	
+	const totalArs = data.reduce((sum, budget) => sum + (budget.amount_ars || 0), 0);
+	const totalUsd = data.reduce((sum, budget) => sum + (budget.amount_usd || 0), 0);
+	
+	return { data: { totalArs, totalUsd }, error: null };
+}
+
 // Este metodo tampoco se va a usar probablemente
 export async function listBudgets(): Promise<{ data: Budget[] | null; error: any }> {
 	const supabase = getSupabaseClient();

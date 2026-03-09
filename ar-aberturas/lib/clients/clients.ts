@@ -22,14 +22,6 @@ export type Client = {
 
 const TABLE = 'clients';
 
-export async function getClientsCount(): Promise<{ data: number; error: any }> {
-	const supabase = getSupabaseClient();
-	const { count, error } = await supabase
-		.from(TABLE)
-		.select('*', { count: 'exact', head: true });
-	return { data: count || 0, error };
-}
-
 export async function listClients(): Promise<{ data: Client[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase

@@ -8,7 +8,6 @@ import { buildChartPages, formatChartValue } from '@/utils/budgets/calculations'
 import { MetricCard } from '@/utils/budgets/metric-card';
 import { OverviewTab } from '@/utils/budgets/tabs/overview-tab';
 import { PerformanceTab } from '@/utils/budgets/tabs/performance-tab';
-import { ConversionTab } from '@/utils/budgets/tabs/conversion-tab';
 
 const ticketTypes = [
 	{ id: 'sold', label: 'Vendidos', description: 'Presupuestos vendidos' },
@@ -104,7 +103,6 @@ export function BudgetManagement() {
 				<TabsList className="bg-card border border-border">
 					<TabsTrigger value="overview">Resumen de Ventas</TabsTrigger>
 					<TabsTrigger value="performance">Rendimiento</TabsTrigger>
-					<TabsTrigger value="conversion">Conversión</TabsTrigger>
 				</TabsList>
 
 				<OverviewTab
@@ -126,8 +124,6 @@ export function BudgetManagement() {
 				/>
 
 				<PerformanceTab metrics={metrics} loading={loading} />
-
-				<ConversionTab metrics={metrics} loading={loading} />
 			</Tabs>
 		</div>
 	);

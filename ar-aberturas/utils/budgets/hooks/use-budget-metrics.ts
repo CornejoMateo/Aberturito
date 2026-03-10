@@ -9,7 +9,8 @@ import {
   getChosenBudgetsCount,
   getSoldBudgetsTotalAmount,
   getChosenBudgetsTotalAmount,
-  getClientsWithBudgetCount
+  getClientsWithBudgetCount,
+  getBudgetsByMonth
 } from '@/lib/budgets/budgets';
 import { SalesMetrics, DEFAULT_METRICS } from '../types';
 
@@ -87,6 +88,15 @@ export const useBudgetMetrics = () => {
               totalAverageTicket: Math.round(totalAmounts.totalArs / budgetsCount)
             }));
           }
+        }
+
+        // Obtener presupuestos por mes
+        const { data: budgetsByMonth, error: budgetsByMonthError } = await getBudgetsByMonth();
+        if (!budgetsByMonthError && budgetsByMonth) {
+          setMetrics(prev => ({
+            ...prev,
+            budgetsByMonth
+          }));
         }
       } catch (err) {
         console.error('Error fetching metrics:', err);

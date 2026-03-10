@@ -2,7 +2,7 @@
 
 import { Card } from '@/components/ui/card';
 import { TabsContent } from '@/components/ui/tabs';
-import { BarChart3 } from 'lucide-react';
+import { PerformanceChartsCarousel } from '../performance-charts-carousel';
 import { SalesMetrics } from '../types';
 
 interface PerformanceTabProps {
@@ -13,44 +13,43 @@ interface PerformanceTabProps {
 export function PerformanceTab({ metrics, loading }: PerformanceTabProps) {
   return (
     <TabsContent value="performance" className="space-y-4">
-      <Card className="p-6 bg-card border-border">
-        <h3 className="text-lg font-semibold text-foreground mb-6">Rendimiento de Ventas</h3>
-        <div className="text-center py-12">
-          <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No hay datos de rendimiento disponibles</p>
-          <p className="text-sm text-muted-foreground mt-2">Conecta las fuentes de datos para ver métricas de rendimiento</p>
-        </div>
-      </Card>
+      {/* Gráficos en Carrusel */}
+      <PerformanceChartsCarousel metrics={metrics} />
 
+      {/* Tarjetas de Métricas */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="p-6 bg-card border-border">
+        <Card className="p-6 bg-card border-border hover:shadow-md transition-shadow">
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Presupuestos del mes</p>
-            <p className="text-3xl font-bold text-foreground">{metrics.totalBudgets || '--'}</p>
+            <p className="text-sm font-medium text-muted-foreground">Clientes con Presupuesto</p>
+            <p className="text-3xl font-bold text-foreground">{metrics.clientsWithBudget || '--'}</p>
             <p className="text-xs text-muted-foreground">
-              {metrics.totalBudgets > 0 ? 'Datos del mes actual' : 'Sin datos'}
+              {metrics.clientsWithBudget > 0
+                ? `${Math.round((metrics.clientsWithBudget / Math.max(metrics.totalClients, 1)) * 100)}% de cobertura`
+                : 'Sin datos'}
             </p>
           </div>
         </Card>
 
-        <Card className="p-6 bg-card border-border">
+        <Card className="p-6 bg-card border-border hover:shadow-md transition-shadow">
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Ventas cerradas</p>
+            <p className="text-sm font-medium text-muted-foreground">Ventas Cerradas</p>
             <p className="text-3xl font-bold text-foreground">{metrics.totalSales || '--'}</p>
             <p className="text-xs text-muted-foreground">
-              {metrics.totalSales > 0 ? 'Ventas del mes actual' : 'Sin datos'}
+              {metrics.totalSales > 0
+                ? `${Math.round((metrics.totalSales / Math.max(metrics.totalBudgets, 1)) * 100)}% de conversión`
+                : 'Sin datos'}
             </p>
           </div>
         </Card>
 
-        <Card className="p-6 bg-card border-border">
+        <Card className="p-6 bg-card border-border hover:shadow-md transition-shadow">
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Facturación mensual</p>
+            <p className="text-sm font-medium text-muted-foreground">Facturación Total</p>
             <p className="text-3xl font-bold text-foreground">
               {metrics.totalRevenue > 0 ? `$${(metrics.totalRevenue / 1000000).toFixed(1)}M` : '--'}
             </p>
             <p className="text-xs text-muted-foreground">
-              {metrics.totalRevenue > 0 ? 'Facturación del mes' : 'Sin datos'}
+              {metrics.totalRevenue > 0 ? 'Ingresos generados' : 'Sin datos'}
             </p>
           </div>
         </Card>

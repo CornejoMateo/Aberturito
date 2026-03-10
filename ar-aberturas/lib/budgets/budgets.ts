@@ -264,6 +264,49 @@ export async function getClientsWithBudgetCount(): Promise<{ data: number; error
 	return { data: uniqueClients.size, error: null };
 }
 
+export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string; presupuestos: number; vendidos: number }> | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('created_at, sold');
+
+	if (error) return { data: null, error };
+	if (!data) return { data: [], error: null };
+
+	// Agrupar por mes
+	const monthMap = new Map<string, { presupuestos: number; vendidos: number }>();
+	const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+	// Inicializar todos los meses
+	months.forEach(month => {
+		monthMap.set(month, { presupuestos: 0, vendidos: 0 });
+	});
+
+	// Contar presupuestos por mes
+	data.forEach((budget: any) => {
+		if (budget.created_at) {
+			const date = new Date(budget.created_at);
+			const monthIndex = date.getMonth();
+			const monthName = months[monthIndex];
+
+			const current = monthMap.get(monthName) || { presupuestos: 0, vendidos: 0 };
+			current.presupuestos += 1;
+			if (budget.sold) {
+				current.vendidos += 1;
+			}
+			monthMap.set(monthName, current);
+		}
+	});
+
+	// Convertir a array ordenado
+	const result = months.map(month => ({
+		month,
+		...monthMap.get(month)!
+	}));
+
+	return { data: result, error: null };
+}
+
 export async function chooseBudgetForClient(
 	budgetId: string,
 	folderBudgetIds: string[]

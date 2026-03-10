@@ -1,83 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import {
-	BarChart3,
-	Download,
-	TrendingUp,
-	Users,
-	FileText,
-	Package,
-	DollarSign,
-	ChevronLeft,
-	ChevronRight,
-} from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { getClientsCount } from '@/lib/clients/clients';
-import { getBudgetsCount, getBudgetsTotalAmount, getSoldBudgetsCount, getChosenBudgetsCount, getSoldBudgetsTotalAmount, getChosenBudgetsTotalAmount, getClientsWithBudgetCount } from '@/lib/budgets/budgets';
+import { useState } from 'react';
+import { Users, FileText, Package, DollarSign } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useBudgetMetrics } from '@/utils/budgets/hooks/use-budget-metrics';
+import { buildChartPages, formatChartValue } from '@/utils/budgets/calculations';
+import { MetricCard } from '@/utils/budgets/metric-card';
+import { OverviewTab } from '@/utils/budgets/tabs/overview-tab';
+import { PerformanceTab } from '@/utils/budgets/tabs/performance-tab';
+import { ConversionTab } from '@/utils/budgets/tabs/conversion-tab';
 
-// Datos dinámicos - se conectarán con APIs reales
-interface SalesMetrics {
-  totalClients: number;
-  totalBudgets: number;
-  totalSales: number;
-  totalRevenue: number;
-  conversionRate: number;
-  averageTicket: number;
-  soldAverageTicket: number;
-  chosenAverageTicket: number;
-  totalAverageTicket: number;
-  clientsWithBudget: number;
-}
-
-interface MonthlyData {
-  month: string;
-  clients: number;
-  budgets: number;
-  sales: number;
-  revenue: number;
-}
-
-interface LocationData {
-  location: string;
-  clients: number;
-  percentage: number;
-}
-
-interface ConversionData {
-  category: string;
-  value: number;
-  total: number;
-  percentage: number;
-}
+const ticketTypes = [
+	{ id: 'sold', label: 'Vendidos', description: 'Presupuestos vendidos' },
+	{ id: 'chosen', label: 'Pendientes', description: 'Presupuestos pendientes' },
+	{ id: 'total', label: 'General', description: 'Todos los presupuestos' }
+] as const;
 
 export function BudgetManagement() {
-	// Placeholder para datos dinámicos
-	const [metrics, setMetrics] = useState<SalesMetrics>({
-		totalClients: 0,
-		totalBudgets: 0,
-		totalSales: 0,
-		totalRevenue: 0,
-		conversionRate: 0,
-		averageTicket: 0,
-		soldAverageTicket: 0,
-		chosenAverageTicket: 0,
-		totalAverageTicket: 0,
-		clientsWithBudget: 0,
-	});
-
-	const [loading, setLoading] = useState(true);
+	const { metrics, loading } = useBudgetMetrics();
 	const [ticketType, setTicketType] = useState<'sold' | 'chosen' | 'total'>('sold');
-
-	const ticketTypes = [
-		{ id: 'sold', label: 'Vendidos', description: 'Presupuestos vendidos' },
-		{ id: 'chosen', label: 'Pendientes', description: 'Presupuestos pendientes' },
-		{ id: 'total', label: 'General', description: 'Todos los presupuestos' }
-	] as const;
+	const [chartPage, setChartPage] = useState(0);
 
 	const getCurrentTicketValue = () => {
 		switch (ticketType) {
@@ -105,54 +47,6 @@ export function BudgetManagement() {
 		setTicketType(ticketTypes[prevIndex].id);
 	};
 
-	const [chartPage, setChartPage] = useState(0);
-
-	const soldPercentage = metrics.totalBudgets > 0 ? Math.round((metrics.totalSales / metrics.totalBudgets) * 100) : 0;
-	const chosenPercentage = 100 - soldPercentage;
-	const clientsWithBudgetPercentage = metrics.totalClients > 0 ? Math.round((metrics.clientsWithBudget / metrics.totalClients) * 100) : 0;
-	const clientsWithoutBudgetPercentage = 100 - clientsWithBudgetPercentage;
-
-	const chartPages = [
-		{
-			charts: [
-				{
-					title: 'Distribución de Presupuestos',
-					data: metrics.totalBudgets > 0 ? [
-						{ name: 'Vendidos', value: metrics.totalSales, color: '#10b981' },
-								{ name: 'Pendientes', value: metrics.totalBudgets - metrics.totalSales, color: '#3b82f6' },
-					] : []
-				},
-				{
-					title: 'Total de Presupuestos',
-					data: [
-						{ name: 'Totales', value: metrics.totalBudgets, color: '#8b5cf6' },
-						{ name: 'Procesados', value: metrics.totalSales, color: '#f59e0b' },
-					]
-				}
-			]
-		},
-		{
-			charts: [
-				{
-					title: 'Clientes con Presupuesto',
-					data: metrics.totalClients > 0 ? [
-						{ name: 'Con Presupuesto', value: metrics.clientsWithBudget, color: '#10b981' },
-						{ name: 'Sin Presupuesto', value: metrics.totalClients - metrics.clientsWithBudget, color: '#3b82f6' },
-					] : []
-				},
-				{
-					title: 'Ingresos por Tipo',
-					data: [
-						{ name: 'De Ventas', value: metrics.soldAverageTicket > 0 ? Math.round(metrics.totalSales * metrics.soldAverageTicket) : 0, color: '#06b6d4' },
-						{ name: 'Total', value: metrics.totalRevenue, color: '#ec4899' },
-					].filter(item => item.value > 0)
-				}
-			]
-		}
-	];
-
-	const currentPage = chartPages[chartPage % chartPages.length];
-
 	const handleNextChart = () => {
 		setChartPage((prev) => (prev + 1) % chartPages.length);
 	};
@@ -161,97 +55,8 @@ export function BudgetManagement() {
 		setChartPage((prev) => (prev - 1 + chartPages.length) % chartPages.length);
 	};
 
-	const formatChartValue = (value: number) => {
-		if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-		if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
-		return `${value}`;
-	};
+	const chartPages = buildChartPages(metrics);
 
-	// Obtener cantidad de clientes y presupuestos
-	useEffect(() => {
-		const fetchMetrics = async () => {
-			try {
-				// Obtener clientes
-				const { data: clientsCount, error: clientsError } = await getClientsCount();
-				if (!clientsError && clientsCount !== null) {
-					setMetrics(prev => ({ ...prev, totalClients: clientsCount }));
-				}
-
-				// Obtener clientes con presupuesto
-				const { data: clientsWithBudget, error: clientsWithBudgetError } = await getClientsWithBudgetCount();
-				if (!clientsWithBudgetError && clientsWithBudget !== null) {
-					setMetrics(prev => ({ ...prev, clientsWithBudget }));
-				}
-
-				// Obtener presupuestos totales
-				const { data: budgetsCount, error: budgetsError } = await getBudgetsCount();
-				if (!budgetsError && budgetsCount !== null) {
-					setMetrics(prev => ({ ...prev, totalBudgets: budgetsCount }));
-				}
-
-				// Obtener presupuestos vendidos
-				const { data: soldBudgetsCount, error: soldError } = await getSoldBudgetsCount();
-				if (!soldError && soldBudgetsCount !== null) {
-					setMetrics(prev => ({ 
-						...prev, 
-						totalSales: soldBudgetsCount,
-						conversionRate: budgetsCount > 0 ? Math.round((soldBudgetsCount / budgetsCount) * 100) : 0
-					}));
-				}
-
-				// Obtener monto total de presupuestos vendidos
-				const { data: soldAmounts, error: soldAmountError } = await getSoldBudgetsTotalAmount();
-				if (!soldAmountError && soldAmounts) {
-					const soldCount = await getSoldBudgetsCount();
-					if (!soldCount.error && soldCount.data > 0) {
-						setMetrics(prev => ({ 
-							...prev, 
-							soldAverageTicket: Math.round(soldAmounts.totalArs / soldCount.data)
-						}));
-					}
-				}
-
-				// Obtener monto total de presupuestos elegidos
-				const { data: chosenAmounts, error: chosenAmountError } = await getChosenBudgetsTotalAmount();
-				if (!chosenAmountError && chosenAmounts) {
-					const chosenCount = await getChosenBudgetsCount();
-					if (!chosenCount.error && chosenCount.data > 0) {
-						setMetrics(prev => ({ 
-							...prev, 
-							chosenAverageTicket: Math.round(chosenAmounts.totalArs / chosenCount.data)
-						}));
-					}
-				}
-
-				// Obtener monto total de presupuestos generales
-				const { data: totalAmounts, error: amountError } = await getBudgetsTotalAmount();
-				if (!amountError && totalAmounts) {
-					setMetrics(prev => ({ 
-						...prev, 
-						totalRevenue: totalAmounts.totalArs
-					}));
-					
-					// Obtener ticket promedio general
-					if (budgetsCount > 0) {
-						setMetrics(prev => ({ 
-							...prev, 
-							totalAverageTicket: Math.round(totalAmounts.totalArs / budgetsCount)
-						}));
-					}
-				}
-			} catch (err) {
-				console.error('Error fetching metrics:', err);
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		fetchMetrics();
-	}, []);
-
-	const monthlyData: MonthlyData[] = [];
-	const locationData: LocationData[] = [];
-	const conversionData: ConversionData[] = [];
 	return (
 		<div className="space-y-6">
 			{/* Header */}
@@ -264,75 +69,37 @@ export function BudgetManagement() {
 
 			{/* Key metrics */}
 			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-				<Card className="p-6 bg-card border-border">
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="text-sm font-medium text-muted-foreground">Clientes totales</p>
-							<p className="text-2xl font-bold text-foreground mt-2">
-							{loading ? '...' : metrics.totalClients}
-						</p>
-						<p className="text-xs text-muted-foreground mt-1">
-							{loading ? 'Cargando...' : metrics.totalClients > 0 ? 'Datos disponibles' : 'Sin datos'}
-						</p>
-						</div>
-						<div className="rounded-lg bg-secondary p-3 text-chart-1">
-							<Users className="h-6 w-6" />
-						</div>
-					</div>
-				</Card>
-
-				<Card className="p-6 bg-card border-border">
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="text-sm font-medium text-muted-foreground">Presupuestos</p>
-							<p className="text-2xl font-bold text-foreground mt-2">
-							{loading ? '...' : metrics.totalBudgets}
-						</p>
-						<p className="text-xs text-muted-foreground mt-1">
-							{loading ? 'Cargando...' : metrics.totalBudgets > 0 ? 'Datos disponibles' : 'Sin datos'}
-						</p>
-						</div>
-						<div className="rounded-lg bg-secondary p-3 text-chart-2">
-							<FileText className="h-6 w-6" />
-						</div>
-					</div>
-				</Card>
-
-				<Card className="p-6 bg-card border-border">
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="text-sm font-medium text-muted-foreground">Ventas cerradas</p>
-							<p className="text-2xl font-bold text-foreground mt-2">
-							{loading ? '...' : metrics.totalSales}
-						</p>
-						<p className="text-xs text-muted-foreground mt-1">
-							{loading ? 'Cargando...' : metrics.totalSales > 0 ? 'Datos disponibles' : 'Sin datos'}
-						</p>
-						</div>
-						<div className="rounded-lg bg-secondary p-3 text-chart-3">
-							<Package className="h-6 w-6" />
-						</div>
-					</div>
-				</Card>
-
-				<Card className="p-6 bg-card border-border">
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="text-sm font-medium text-muted-foreground">Facturación</p>
-							<p className="text-2xl font-bold text-foreground mt-2">
-							{loading ? '...' : metrics.totalRevenue > 0 ? `${(metrics.totalRevenue / 1000000).toFixed(1)}M` : '--'}
-						</p>
-						<p className="text-xs text-muted-foreground mt-1">
-							{loading ? 'Cargando...' : metrics.totalRevenue > 0 ? 'Datos disponibles' : 'Sin datos'}
-						</p>
-						</div>
-						<div className="rounded-lg bg-secondary p-3 text-chart-4">
-							<DollarSign className="h-6 w-6" />
-						</div>
-					</div>
-				</Card>
+				<MetricCard
+					label="Clientes totales"
+					value={metrics.totalClients}
+					icon={Users}
+					loading={loading}
+					status={metrics.totalClients > 0}
+				/>
+				<MetricCard
+					label="Presupuestos"
+					value={metrics.totalBudgets}
+					icon={FileText}
+					loading={loading}
+					status={metrics.totalBudgets > 0}
+				/>
+				<MetricCard
+					label="Ventas cerradas"
+					value={metrics.totalSales}
+					icon={Package}
+					loading={loading}
+					status={metrics.totalSales > 0}
+				/>
+				<MetricCard
+					label="Facturación"
+					value={loading ? '...' : metrics.totalRevenue > 0 ? `${(metrics.totalRevenue / 1000000).toFixed(1)}M` : '--'}
+					icon={DollarSign}
+					loading={false}
+					status={metrics.totalRevenue > 0}
+				/>
 			</div>
 
+			{/* Tabs */}
 			<Tabs defaultValue="overview" className="space-y-4">
 				<TabsList className="bg-card border border-border">
 					<TabsTrigger value="overview">Resumen de Ventas</TabsTrigger>
@@ -340,247 +107,27 @@ export function BudgetManagement() {
 					<TabsTrigger value="conversion">Conversión</TabsTrigger>
 				</TabsList>
 
-				<TabsContent value="overview" className="space-y-4">
-					<Card className="p-6 bg-card border-border">
-						<h3 className="text-lg font-semibold text-foreground mb-6">Resumen de Ventas</h3>
-						
-						{/* Charts Carousel */}
-						<div className="space-y-4">
-							<div className="flex items-center justify-between mb-4">
-								<h4 className="text-sm font-medium text-muted-foreground">
-									Gráficos ({chartPage + 1} / {chartPages.length})
-								</h4>
-								<div className="flex gap-2">
-									<Button
-										variant="ghost"
-										size="sm"
-										onClick={handlePrevChart}
-										className="h-8 w-8 p-0"
-									>
-										<ChevronLeft className="h-4 w-4" />
-									</Button>
-									<Button
-										variant="ghost"
-										size="sm"
-										onClick={handleNextChart}
-										className="h-8 w-8 p-0"
-									>
-										<ChevronRight className="h-4 w-4" />
-									</Button>
-								</div>
-							</div>
+				<OverviewTab
+					metrics={metrics}
+					loading={loading}
+					chartPages={chartPages}
+					chartPage={chartPage}
+					ticketType={ticketType}
+					ticketTypes={ticketTypes}
+					onPrevChart={handlePrevChart}
+					onNextChart={handleNextChart}
+					onSelectChart={(idx) => setChartPage(idx)}
+					onPrevTicket={handlePrevTicket}
+					onNextTicket={handleNextTicket}
+					onSelectTicket={setTicketType}
+					formatChartValue={formatChartValue}
+					getCurrentTicketValue={getCurrentTicketValue}
+					getCurrentTicketLabel={getCurrentTicketLabel}
+				/>
 
-							<div className="grid gap-6 md:grid-cols-2">
-								{currentPage.charts.map((chart, idx) => (
-									<div key={idx} className="flex flex-col items-center p-4 rounded-lg bg-secondary/20">
-										<h5 className="text-sm font-medium text-foreground mb-4">{chart.title}</h5>
-										{chart.data && chart.data.length > 0 ? (
-											<ResponsiveContainer width="100%" height={250}>
-												<PieChart>
-													<Pie
-														data={chart.data}
-														cx="50%"
-														cy="50%"
-														labelLine={false}
-														label={({ name }) => {
-															if (name === 'Vendidos') return `${name}: ${soldPercentage}%`;
-															if (name === 'Pendientes') return `${name}: ${chosenPercentage}%`;
-															if (name === 'Con Presupuesto') return `${name}: ${clientsWithBudgetPercentage}%`;
-															if (name === 'Sin Presupuesto') return `${name}: ${clientsWithoutBudgetPercentage}%`;
-															return name;
-														}}
-														outerRadius={80}
-														fill="#8884d8"
-														dataKey="value"
-													>
-														{chart.data.map((entry, index) => (
-															<Cell key={`cell-${index}`} fill={entry.color} />
-														))}
-													</Pie>
-													<Tooltip
-														formatter={(value) => formatChartValue(value as number)}
-													/>
-													<Legend />
-												</PieChart>
-											</ResponsiveContainer>
-										) : (
-											<div className="h-[250px] flex items-center justify-center text-muted-foreground">
-												<p>Sin datos disponibles</p>
-											</div>
-										)}
-									</div>
-								))}
-							</div>
+				<PerformanceTab metrics={metrics} loading={loading} />
 
-							<div className="flex justify-center gap-1">
-								{chartPages.map((_, idx) => (
-									<button
-										key={idx}
-										onClick={() => setChartPage(idx)}
-										className={`h-2 w-2 rounded-full transition-colors ${
-											chartPage === idx ? 'bg-primary' : 'bg-muted'
-										}`}
-									/>
-								))}
-							</div>
-						</div>
-					</Card>
-
-					<div className="grid gap-4 md:grid-cols-2">
-						<Card className="p-6 bg-card border-border">
-							<h3 className="text-lg font-semibold text-foreground mb-4">Tasa de concreción</h3>
-							<div className="space-y-4">
-								<div className="flex items-center justify-between">
-									<span className="text-sm text-muted-foreground">Presupuestos → Ventas</span>
-									<span className="text-2xl font-bold text-foreground">{metrics.conversionRate > 0 ? `${metrics.conversionRate}%` : '--'}</span>
-								</div>
-								<Progress value={metrics.conversionRate} className="h-3" />
-								<p className="text-xs text-muted-foreground">
-									{metrics.totalBudgets > 0 ? `${metrics.totalSales} de ${metrics.totalBudgets} presupuestos concretados` : 'Sin datos para calcular'}
-								</p>
-							</div>
-						</Card>
-
-						<Card className="p-6 bg-card border-border">
-							<h3 className="text-lg font-semibold text-foreground mb-4">Ticket promedio</h3>
-							<div className="space-y-4">
-								<div className="flex items-center justify-between mb-2">
-									<span className="text-sm text-muted-foreground">{getCurrentTicketLabel()}</span>
-									<div className="flex items-center gap-2">
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={handlePrevTicket}
-											className="h-8 w-8 p-0"
-										>
-											<ChevronLeft className="h-4 w-4" />
-										</Button>
-										<span className="text-xs text-muted-foreground min-w-[60px] text-center">
-											{ticketTypes.findIndex(t => t.id === ticketType) + 1} / {ticketTypes.length}
-										</span>
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={handleNextTicket}
-											className="h-8 w-8 p-0"
-										>
-											<ChevronRight className="h-4 w-4" />
-										</Button>
-									</div>
-								</div>
-								<div className="flex items-center justify-between">
-									<span className="text-sm text-muted-foreground">Por presupuesto</span>
-									<span className="text-2xl font-bold text-foreground">
-										{loading ? '...' : getCurrentTicketValue() > 0 ? `$${(getCurrentTicketValue() / 1000).toFixed(0)}k` : '--'}
-									</span>
-								</div>
-								<Progress value={getCurrentTicketValue() > 0 ? Math.min((getCurrentTicketValue() / 50000) * 100, 100) : 0} className="h-3" />
-								<p className="text-xs text-muted-foreground">
-									{loading ? 'Cargando...' : getCurrentTicketValue() > 0 ? `Basado en ${ticketType === 'sold' ? 'presupuestos vendidos' : ticketType === 'chosen' ? 'presupuestos pendientes' : 'todos los presupuestos'}` : 'Sin datos para calcular'}
-								</p>
-								<div className="flex justify-center gap-1 mt-2">
-									{ticketTypes.map((type, index) => (
-										<button
-											key={type.id}
-											onClick={() => setTicketType(type.id)}
-											className={`h-1 w-8 rounded-full transition-colors ${
-												ticketType === type.id ? 'bg-primary' : 'bg-muted'
-											}`}
-										/>
-									))}
-								</div>
-							</div>
-						</Card>
-					</div>
-				</TabsContent>
-
-				<TabsContent value="performance" className="space-y-4">
-					<Card className="p-6 bg-card border-border">
-						<h3 className="text-lg font-semibold text-foreground mb-6">Rendimiento de Ventas</h3>
-						<div className="text-center py-12">
-							<BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-							<p className="text-muted-foreground">No hay datos de rendimiento disponibles</p>
-							<p className="text-sm text-muted-foreground mt-2">Conecta las fuentes de datos para ver métricas de rendimiento</p>
-						</div>
-					</Card>
-
-					<div className="grid gap-4 md:grid-cols-3">
-						<Card className="p-6 bg-card border-border">
-							<div className="space-y-2">
-								<p className="text-sm text-muted-foreground">Presupuestos del mes</p>
-								<p className="text-3xl font-bold text-foreground">{metrics.totalBudgets || '--'}</p>
-								<p className="text-xs text-muted-foreground">
-									{metrics.totalBudgets > 0 ? 'Datos del mes actual' : 'Sin datos'}
-								</p>
-							</div>
-						</Card>
-
-						<Card className="p-6 bg-card border-border">
-							<div className="space-y-2">
-								<p className="text-sm text-muted-foreground">Ventas cerradas</p>
-								<p className="text-3xl font-bold text-foreground">{metrics.totalSales || '--'}</p>
-								<p className="text-xs text-muted-foreground">
-									{metrics.totalSales > 0 ? 'Ventas del mes actual' : 'Sin datos'}
-								</p>
-							</div>
-						</Card>
-
-						<Card className="p-6 bg-card border-border">
-							<div className="space-y-2">
-								<p className="text-sm text-muted-foreground">Facturación mensual</p>
-								<p className="text-3xl font-bold text-foreground">
-									{metrics.totalRevenue > 0 ? `$${(metrics.totalRevenue / 1000000).toFixed(1)}M` : '--'}
-								</p>
-								<p className="text-xs text-muted-foreground">
-									{metrics.totalRevenue > 0 ? 'Facturación del mes' : 'Sin datos'}
-								</p>
-							</div>
-						</Card>
-					</div>
-				</TabsContent>
-
-				<TabsContent value="conversion" className="space-y-4">
-					<Card className="p-6 bg-card border-border">
-						<h3 className="text-lg font-semibold text-foreground mb-6">Embudo de Conversión</h3>
-						<div className="text-center py-12">
-							<TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-							<p className="text-muted-foreground">No hay datos de conversión disponibles</p>
-							<p className="text-sm text-muted-foreground mt-2">Conecta las fuentes de datos para ver el embudo de conversión</p>
-						</div>
-					</Card>
-
-					<div className="grid gap-4 md:grid-cols-3">
-						<Card className="p-6 bg-card border-border">
-							<div className="space-y-2">
-								<p className="text-sm text-muted-foreground">Tasa de aceptación</p>
-								<p className="text-3xl font-bold text-foreground">{metrics.conversionRate > 0 ? `${metrics.conversionRate}%` : '--'}</p>
-								<p className="text-xs text-muted-foreground">
-									{metrics.totalBudgets > 0 ? 'Presupuestos aceptados' : 'Sin datos'}
-								</p>
-							</div>
-						</Card>
-
-						<Card className="p-6 bg-card border-border">
-							<div className="space-y-2">
-								<p className="text-sm text-muted-foreground">Tasa de finalización</p>
-								<p className="text-3xl font-bold text-foreground">--</p>
-								<p className="text-xs text-muted-foreground">
-									Obras completadas vs aceptadas
-								</p>
-							</div>
-						</Card>
-
-						<Card className="p-6 bg-card border-border">
-							<div className="space-y-2">
-								<p className="text-sm text-muted-foreground">Conversión total</p>
-								<p className="text-3xl font-bold text-foreground">{metrics.conversionRate > 0 ? `${metrics.conversionRate}%` : '--'}</p>
-								<p className="text-xs text-muted-foreground">
-									{metrics.totalBudgets > 0 ? 'Del presupuesto a la venta final' : 'Sin datos'}
-								</p>
-							</div>
-						</Card>
-					</div>
-				</TabsContent>
+				<ConversionTab metrics={metrics} loading={loading} />
 			</Tabs>
 		</div>
 	);

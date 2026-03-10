@@ -35,7 +35,7 @@ import { BalanceDetailsModal } from './balance-details-modal';
 import { DollarUpdateModal } from '@/components/ui/dollar-update-modal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { formatCurrency, formatCurrencyUSD } from './formats';
+import { formatCurrency, formatCurrencyUSD } from '../../helpers/format-prices.tsx/formats';
 
 interface ClientBalancesProps {
 	clientId: string;

@@ -28,6 +28,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import { Bell } from 'lucide-react';
+import { validateDate } from '@/helpers/calendar/validateDate';
 
 interface EventFormModalProps {
 	onSave: (data: any) => void;
@@ -67,19 +68,11 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (!formData.date) {
+		const dateError = validateDate(formData.date);
+		if (dateError) {
 			toast({
-				title: 'Error',
-				description: 'La fecha es requerida',
-				variant: 'destructive',
-			});
-			return;
-		}
-
-		if (isBefore(startOfDay(formData.date), startOfDay(new Date()))) {
-			toast({
-				title: 'Error',
-				description: 'No se pueden crear eventos en fechas pasadas',
+				title: 'Error en la fecha',
+				description: dateError,
 				variant: 'destructive',
 			});
 			return;
@@ -87,10 +80,19 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 
 		onSave({
 			...formData,
-			date: format(formData.date, 'dd-MM-yyyy'),
+			date: format(formData.date!, 'dd-MM-yyyy'),
 		});
 		
 		setIsOpen(false);
+		resetForm();
+
+		toast({
+			title: 'Evento creado',
+			description: 'El evento se ha creado correctamente',
+		});
+	};
+
+	const resetForm = () => {
 		setFormData({
 			title: '',
 			type: 'produccionOK',
@@ -101,11 +103,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 			description: '',
 			remember: true,
 		});
-
-		toast({
-			title: 'Evento creado',
-			description: 'El evento se ha creado correctamente',
-		});
+		setIsOpen(false);
 	};
 
 	return (
@@ -238,16 +236,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 							type="button"
 							variant="outline"
 							onClick={() => {
-								setFormData({
-									title: '',
-									type: 'produccionOK',
-									date: undefined,
-									client: '',
-									location: '',
-									address: '',
-									description: '',
-									remember: true,
-								});
+								resetForm();
 								setIsOpen(false);
 							}}
 						>

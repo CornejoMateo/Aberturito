@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '../supabase-client';
+import { ChecklistItem } from './checklists';
 
 export type Work = {
   id: string;
@@ -16,6 +17,12 @@ export type Work = {
     name: string;
     last_name: string;
   } | null;
+};
+
+export type WorkWithProgress = Work & {
+    tasks: ChecklistItem[];
+    progress: number;
+    hasNotes: boolean;
 };
 
 const TABLE = 'works';

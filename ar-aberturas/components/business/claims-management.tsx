@@ -33,7 +33,6 @@ import {
 	AlertTriangle,
 	Search,
 	Plus,
-	Eye,
 	Edit,
 	Trash2,
 	CheckCircle,
@@ -54,11 +53,11 @@ import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { useToast } from '@/components/ui/use-toast';
 import { ClaimsAddDialog } from '@/utils/claims/claims-add-dialog';
 import { cn } from '@/lib/utils';
-import { userAgent } from 'next/server';
 import { useAuth } from '@/components/provider/auth-provider';
 import { ClaimImagesGallery } from '@/utils/claims/claim-images-gallery';
-
-type FilterType = 'todos' | 'pendientes' | 'resueltos' | 'diario';
+import { FilterType } from '@/constants/claims/filters';
+import { paginateAndFilter } from '@/helpers/clients/pagination';
+import { ClaimsStats } from '@/utils/claims/claim-stats';
 
 export function ClaimsManagement() {
 	const { toast } = useToast();
@@ -199,44 +198,40 @@ export function ClaimsManagement() {
 		}
 	};
 
-	const filteredClaims = useMemo(() => {
-		return claims.filter((claim) => {
-			// Filter by status
+	const { filteredData, paginatedData, totalPages, totalItems } = useMemo(() => {
+		return paginateAndFilter(
+			claims,
+			searchTerm,
+			currentPage,
+			itemsPerPage,
+			(claim: Claim, search: string) => {
+
 			const matchesFilter =
-				filterType === 'todos' && !claim.daily||
+				(filterType === 'todos' && !claim.daily) ||
 				(filterType === 'pendientes' && !claim.resolved && !claim.daily) ||
 				(filterType === 'resueltos' && claim.resolved && !claim.daily) ||
-				(filterType === 'diario' && claim.daily === true);
+				(filterType === 'diario' && claim.daily) || false;
 
-			// Filter by search term
 			const matchesSearch =
-				searchTerm === '' ||
-				claim.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				claim.attend?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				claim.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				claim.work_zone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				claim.work_locality?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				claim.work_address?.toLowerCase().includes(searchTerm.toLowerCase());
+				search === '' ||
+				claim.description?.toLowerCase().includes(search) ||
+				claim.attend?.toLowerCase().includes(search) ||
+				claim.client_name?.toLowerCase().includes(search) ||
+				claim.work_zone?.toLowerCase().includes(search) ||
+				claim.work_locality?.toLowerCase().includes(search) ||
+				claim.work_address?.toLowerCase().includes(search) || false;
 
 			return matchesFilter && matchesSearch;
-		});
-	}, [claims, filterType, searchTerm]);
+			}
+		);
+	}, [claims, searchTerm, currentPage, itemsPerPage, filterType]);
 
-	const totalPages = Math.ceil(filteredClaims.length / itemsPerPage);
-
-	const currentItems = useMemo(() => {
-		const startIndex = (currentPage - 1) * itemsPerPage;
-		return filteredClaims.slice(startIndex, startIndex + itemsPerPage);
-	}, [filteredClaims, currentPage, itemsPerPage]);
 
 	useEffect(() => {
 		setCurrentPage(1);
 	}, [searchTerm, filterType]);
 
 	const dailyCount = claims.filter((c) => c.daily).length;
-	const claimsCount = claims.length - dailyCount;
-	const pendingCount = claims.filter((c) => !c.resolved && !c.daily).length;
-	const resolvedCount = claims.filter((c) => c.resolved && !c.daily).length;
 
 	function formatDate(date: string): string {
 		const [year, month, day] = date.split('-');
@@ -402,49 +397,7 @@ export function ClaimsManagement() {
 			)}
 
 			{/* Stats */}
-			<div className="grid gap-4 md:grid-cols-3">
-				<Card className="p-6 bg-card border-border">
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="text-sm font-medium text-muted-foreground">{filterType !== 'diario' ? 'Total reclamos' : 'Total actividades diarias'}</p>
-							<p className="text-2xl font-bold text-foreground mt-2">{filterType !== 'diario' ? claimsCount : dailyCount}</p>
-						</div>
-						<div className="rounded-lg bg-secondary p-3 text-chart-1">
-							<FileText className="h-6 w-6" />
-						</div>
-					</div>
-				</Card>
-
-				{filterType !== 'diario' && (
-					<>
-						<Card className="p-6 bg-card border-border">
-							<div className="flex items-center justify-between">
-								<div>
-									<p className="text-sm font-medium text-muted-foreground">Pendientes</p>
-									<p className="text-2xl font-bold text-foreground mt-2">{pendingCount}</p>
-								</div>
-								<div className="rounded-lg bg-orange-500/10 p-3 text-orange-500">
-									<Clock className="h-6 w-6" />
-								</div>
-							</div>
-						</Card>
-					
-
-						<Card className="p-6 bg-card border-border">
-							<div className="flex items-center justify-between">
-								<div>
-									<p className="text-sm font-medium text-muted-foreground">Resueltos</p>
-									<p className="text-2xl font-bold text-foreground mt-2">{resolvedCount}</p>
-								</div>
-								<div className="rounded-lg bg-green-500/10 p-3 text-green-500">
-									<CheckCircle className="h-6 w-6" />
-								</div>
-							</div>
-						</Card>
-					</>
-				)}
-			</div>
-			
+			<ClaimsStats claims={claims} filterType={filterType} />
 
 			{/* Filters and Search */}
 			<Card className="p-4 bg-card border-border">
@@ -530,7 +483,7 @@ export function ClaimsManagement() {
 										{filterType === 'diario' ? 'Cargando actividades diarias...' : 'Cargando reclamos...'}
 									</TableCell>
 								</TableRow>
-							) : currentItems.length === 0 ? (
+							) : paginatedData.length === 0 ? (
 								<TableRow>
 									<TableCell colSpan={11} className="text-center py-8">
 										<div className="flex flex-col items-center gap-2">
@@ -542,7 +495,7 @@ export function ClaimsManagement() {
 									</TableCell>
 								</TableRow>
 							) : (
-								currentItems.map((claim) => (
+								paginatedData.map((claim: Claim) => (
 									<TableRow key={claim.id} className={cn(claim.resolved && 'bg-green-300')}>
 										<TableCell className="text-center">
 											<Badge variant={claim.resolved ? 'default' : 'secondary'}>
@@ -647,11 +600,11 @@ export function ClaimsManagement() {
 			</Card>
 
 			{/* Pagination */}
-			{filteredClaims.length > itemsPerPage && (
+			{totalItems > itemsPerPage && (
 				<div className="flex items-center justify-between px-2">
 					<div className="text-sm text-muted-foreground">
-						Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, filteredClaims.length)}-
-						{Math.min(currentPage * itemsPerPage, filteredClaims.length)} de {filteredClaims.length}{' '}
+						Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}-
+						{Math.min(currentPage * itemsPerPage, totalItems)} de {totalItems}{' '}
 						{filterType === 'diario' ? 'actividades diarias' : 'reclamos'}
 					</div>
 

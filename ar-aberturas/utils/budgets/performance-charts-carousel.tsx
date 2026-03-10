@@ -44,12 +44,12 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
         { month: 'Dic', presupuestos: 0, vendidos: 0 },
       ];
 
-  // Date for the average ticket chart (default to 0 if no data)
-  const ticketData = [
-    { name: 'Vendidos', valor: metrics.soldAverageTicket },
-    { name: 'Pendientes', valor: metrics.chosenAverageTicket },
-    { name: 'General', valor: metrics.totalAverageTicket },
-  ];
+  // Data for the average ticket chart (default to 0 if no data)
+  const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const averagePerDayData = monthlyBudgetData.map((item, idx) => ({
+    month: item.month,
+    promedio: item.presupuestos > 0 ? (item.presupuestos / daysInMonth[idx]).toFixed(2) : 0,
+  }));
 
   const charts: Chart[] = [
     {
@@ -91,17 +91,17 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
         ),
     },
     {
-      title: 'Ticket Promedio por Tipo',
-      description: 'Monto promedio de presupuestos según su estado',
+      title: 'Promedio de Presupuestos por Día',
+      description: 'Promedio diario de presupuestos realizados cada mes',
       render: () =>
-        ticketData.some(item => item.valor > 0) ? (
+        metrics.totalBudgets > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={ticketData}>
+            <BarChart data={averagePerDayData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" />
+              <XAxis dataKey="month" />
               <YAxis />
-              <Tooltip formatter={(value) => `$${formatChartValue(value as number)}`} />
-              <Bar dataKey="valor" fill="#06b6d4" name="Monto Promedio" radius={[8, 8, 0, 0]} />
+              <Tooltip formatter={(value) => `${Number(value).toFixed(2)} presupuestos/día`} />
+              <Bar dataKey="promedio" fill="#f59e0b" name="Promedio por Día" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         ) : (

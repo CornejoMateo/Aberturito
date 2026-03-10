@@ -6,6 +6,7 @@ export type Budget = {
   created_at: string;
   folder_budget_id?: string | null;
   accepted?: boolean | null;
+  sold?: boolean | null;
   pdf_url?: string | null;
   pdf_path?: string | null;
   number?: string | null;
@@ -59,6 +60,7 @@ export async function getBudgetsByFolderBudgetIds(
 				amount_ars,
 				amount_usd,
 				accepted,
+				sold,
 				pdf_url,
 				pdf_path,
 				number,
@@ -93,6 +95,7 @@ export async function getBudgetsByFolderBudgetIds(
 				amount_ars: b.amount_ars,
 				amount_usd: b.amount_usd,
 				accepted: b.accepted,
+				sold: b.sold,
 				pdf_url: b.pdf_url,
 				pdf_path: b.pdf_path,
 				number: b.number,

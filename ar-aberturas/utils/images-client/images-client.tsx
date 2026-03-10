@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Upload, Trash2, X, ChevronLeft, ChevronRight, Download, Loader2 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { getSupabaseClient } from '@/lib/supabase-client';
+import { translateError } from '@/lib/error-translator';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -33,6 +34,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+	CLIENT_FILE_TYPES,
+	MAX_FILE_SIZE_CLIENT,
+	validateFileForUpload,
+	formatFileSize,
+	isVideo,
+	formatDate,
+} from '@/utils/file-upload-utils';
 
 interface ClientImagesGalleryProps {
 	client: Client;
@@ -84,7 +93,7 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 				toast({
 					variant: 'destructive',
 					title: 'Error al cargar archivos',
-					description: 'No se pudieron cargar los archivos del cliente.',
+					description: translateError(error),
 				});
 				setFiles([]);
 				return;
@@ -134,38 +143,13 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 
 		const file = selectedFiles[0]; // only handle single file upload
 
-		// Validate file type (images and videos)
-		const validTypes = [
-			'image/jpeg',
-			'image/jpg',
-			'image/png',
-			'image/gif',
-			'image/webp',
-			'video/mp4',
-			'video/webm',
-			'video/ogg',
-			'video/quicktime',
-		];
-
-		if (!validTypes.includes(file.type)) {
+		// Validate file type and size
+		const validation = validateFileForUpload(file, CLIENT_FILE_TYPES, MAX_FILE_SIZE_CLIENT);
+		if (!validation.isValid) {
 			toast({
 				variant: 'destructive',
-				title: 'Tipo de archivo no válido',
-				description: `El archivo ${file.name} no es una imagen o video válido.`,
-			});
-			if (fileInputRef.current) {
-				fileInputRef.current.value = '';
-			}
-			return;
-		}
-
-		// Validate file size (max 50MB)
-		const maxSize = 50 * 1024 * 1024;
-		if (file.size > maxSize) {
-			toast({
-				variant: 'destructive',
-				title: 'Archivo muy grande',
-				description: `El archivo ${file.name} excede el tamaño máximo de 50MB.`,
+				title: 'Archivo no válido',
+				description: validation.error,
 			});
 			if (fileInputRef.current) {
 				fileInputRef.current.value = '';
@@ -197,7 +181,7 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 				toast({
 					variant: 'destructive',
 					title: 'Error al subir archivo',
-					description: 'Ocurrió un error al subir el archivo.',
+					description: translateError(error),
 				});
 			} else {
 				toast({
@@ -212,7 +196,7 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 			toast({
 				variant: 'destructive',
 				title: 'Error al subir archivo',
-				description: 'Ocurrió un error inesperado.',
+				description: translateError(error),
 			});
 		} finally {
 			setIsUploading(false);
@@ -240,7 +224,7 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 				toast({
 					variant: 'destructive',
 					title: 'Error al eliminar archivo',
-					description: 'No se pudo eliminar el archivo.',
+					description: translateError(error),
 				});
 			} else {
 				toast({
@@ -259,37 +243,14 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 			console.error('Error deleting file:', error);
 			toast({
 				variant: 'destructive',
-				title: 'Error',
-				description: 'Ocurrió un error inesperado.',
+				title: 'Error al eliminar archivo',
+				description: translateError(error),
 			});
 		} finally {
 			setFileToDelete(null);
 		}
 	};
 
-	const isVideo = (mimetype: string) => {
-		return mimetype.startsWith('video/');
-	};
-
-	const formatFileSize = (bytes: number) => {
-		if (bytes === 0) return '0 Bytes';
-		const k = 1024;
-		const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-		const i = Math.floor(Math.log(bytes) / Math.log(k));
-		return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-	};
-
-	const formatDate = (dateString: string) => {
-		if (!dateString) return '';
-		const date = new Date(dateString);
-		return date.toLocaleDateString('es-AR', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit',
-		});
-	};
 
 	const handlePrevious = () => {
 		if (selectedFileIndex !== null && selectedFileIndex > 0) {
@@ -504,7 +465,14 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 
 			{/* Upload Dialog */}
 			<Dialog open={isUploadDialogOpen} onOpenChange={(open) => !open && handleCloseUploadDialog()}>
-				<DialogContent className="sm:max-w-[500px]">
+				<DialogContent
+					className="
+						w-[95vw]
+						max-w-lg
+						max-h-[95vh]
+						overflow-auto
+					"
+				>
 					<DialogHeader>
 						<DialogTitle>Subir archivo</DialogTitle>
 						<DialogDescription>

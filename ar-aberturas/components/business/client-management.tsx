@@ -93,6 +93,10 @@ export function ClientManagement() {
 		}
 	};
 
+	const handleClientUpdated = async () => {
+		await refresh();
+	};
+
 	const handleUpdateClient = async (updatedClient: Client) => {
 		try {
 			await updateClient(updatedClient.id, updatedClient);
@@ -432,6 +436,7 @@ export function ClientManagement() {
 				isOpen={isViewDialogOpen}
 				onClose={() => setIsViewDialogOpen(false)}
 				onEdit={handleEditFromView}
+				onClientUpdated={handleClientUpdated}
 			/>
 		</div>
 	);

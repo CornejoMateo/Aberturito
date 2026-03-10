@@ -51,3 +51,33 @@ export const vidrioChecklistNames = [
 	'Colocar vidrio',
 	'Sellar'
 ]
+
+export const checklistTypes = {
+	PVC: 'PVC',
+	Aluminio: 'Aluminio',
+	Persiana: 'Persiana',
+	Porton: 'Porton',
+	Mampara: 'Mampara',
+	Vidrio: 'Vidrio',
+} as const;
+
+export type ChecklistType = typeof checklistTypes[keyof typeof checklistTypes];
+
+export const getItemsForChecklistType = (type: keyof typeof checklistTypes) => {
+	switch (type) {
+		case 'PVC':
+			return pvcChecklistItems;
+		case 'Aluminio':
+			return aluminioChecklistNames;
+		case 'Persiana':
+			return persianasChecklistNames;
+		case 'Porton':
+			return portonesChecklistNames;
+		case 'Mampara':
+			return mamparasChecklistNames;
+		case 'Vidrio':
+			return vidrioChecklistNames;
+		default:
+			return [];
+	}
+};

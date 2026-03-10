@@ -118,32 +118,37 @@ export async function getBudgetsByFolderBudgetIds(
 
 export async function createBudget(
 	budget: Omit<Budget, 'id' | 'created_at' | 'pdf_url' | 'pdf_path'>,
-	pdfFile: File,
+	pdfFile: File | null,
 	clientId: string
 ): Promise<{ data: Budget | null; error: any }> {
 	const supabase = getSupabaseClient();
+	let payload: any = { ...budget };
+	let publicUrl: string | null = null;
+	let filePath: string | null = null;
 
-	const fileName = `budget_${budget.type}_${budget.number}_${pdfFile.name}`;
-	const filePath = `${clientId}/${fileName}`;
+	if (pdfFile) {
+		const fileName = `budget_${budget.type}_${budget.number}_${pdfFile.name}`;
+		filePath = `${clientId}/${fileName}`;
 
-	// Load the PDF file to Supabase Storage
-	const { data: uploadData, error: uploadError } = await supabase.storage
-		.from('clients')
-		.upload(filePath, pdfFile);
+		// Load the PDF file to Supabase Storage
+		const { data: uploadData, error: uploadError } = await supabase.storage
+			.from('clients')
+			.upload(filePath, pdfFile);
 
-	if (uploadError) {
-		console.error('Error uploading PDF:', uploadError);
-		return { data: null, error: uploadError };
+		if (uploadError) {
+			console.error('Error uploading PDF:', uploadError);
+			return { data: null, error: uploadError };
+		}
+
+		// Get the public URL of the uploaded PDF
+		const {
+			data: { publicUrl: url },
+		} = supabase.storage.from('clients').getPublicUrl(filePath);
+		publicUrl = url;
 	}
 
-	// Get the public URL of the uploaded PDF
-	const {
-		data: { publicUrl },
-	} = supabase.storage.from('clients').getPublicUrl(filePath);
-
-	// Create the budget in the database
-	const payload = {
-		...budget,
+	payload = {
+		...payload,
 		pdf_url: publicUrl,
 		pdf_path: filePath,
 	};

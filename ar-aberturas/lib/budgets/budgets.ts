@@ -307,6 +307,34 @@ export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string
 	return { data: result, error: null };
 }
 
+export async function getBudgetsByLocation(): Promise<{ data: Array<{ location: string; count: number }> | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from('folder_budgets')
+		.select('works!inner(locality)');
+
+	if (error) return { data: null, error };
+	if (!data) return { data: [], error: null };
+
+	// Group by location
+	const locationMap = new Map<string, number>();
+
+	data.forEach((item: any) => {
+		if (item.works && item.works.locality) {
+			const locality = item.works.locality;
+			locationMap.set(locality, (locationMap.get(locality) || 0) + 1);
+		}
+	});
+
+	// Convert to array and sort by count descending
+	const result = Array.from(locationMap, ([location, count]) => ({
+		location,
+		count
+	})).sort((a, b) => b.count - a.count);
+
+	return { data: result, error: null };
+}
+
 export async function chooseBudgetForClient(
 	budgetId: string,
 	folderBudgetIds: string[]

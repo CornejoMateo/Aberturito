@@ -110,6 +110,30 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
           </div>
         ),
     },
+    {
+      title: 'Cantidad de Presupuestos por Localidad',
+      description: 'Distribución de presupuestos según la localidad',
+      render: () =>
+        metrics.budgetsByLocation && metrics.budgetsByLocation.length > 0 ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={metrics.budgetsByLocation}
+              layout="vertical"
+              margin={{ top: 5, right: 30, left: 150, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis type="number" />
+              <YAxis dataKey="location" type="category" width={140} />
+              <Tooltip formatter={(value) => `${value} presupuestos`} />
+              <Bar dataKey="count" fill="#ec4899" name="Presupuestos" radius={[0, 8, 8, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+            <p>Sin datos disponibles</p>
+          </div>
+        ),
+    },
   ];
 
   const handleNext = () => {

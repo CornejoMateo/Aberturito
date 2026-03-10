@@ -10,6 +10,7 @@ export interface SalesMetrics {
   totalAverageTicket: number;
   clientsWithBudget: number;
   budgetsByMonth: Array<{ month: string; presupuestos: number; vendidos: number }>;
+  budgetsByLocation: Array<{ location: string; count: number }>;
 }
 
 export interface MonthlyData {
@@ -45,4 +46,5 @@ export const DEFAULT_METRICS: SalesMetrics = {
   totalAverageTicket: 0,
   clientsWithBudget: 0,
   budgetsByMonth: [],
+  budgetsByLocation: [],
 };

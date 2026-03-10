@@ -4,15 +4,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from '@/components/ui/table';
 import {
 	Dialog,
 	DialogContent,
@@ -31,13 +22,9 @@ import {
 } from '@/components/ui/pagination';
 import {
 	AlertTriangle,
-	Search,
 	Plus,
-	Edit,
 	Trash2,
 	CheckCircle,
-	Clock,
-	AlertCircle,
 	FileText,
 } from 'lucide-react';
 import {
@@ -52,13 +39,13 @@ import {
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { useToast } from '@/components/ui/use-toast';
 import { ClaimsAddDialog } from '@/utils/claims/claims-add-dialog';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/provider/auth-provider';
 import { ClaimImagesGallery } from '@/utils/claims/claim-images-gallery';
 import { FilterType } from '@/constants/claims/filters';
 import { paginateAndFilter } from '@/helpers/clients/pagination';
 import { ClaimsStats } from '@/utils/claims/claim-stats';
 import { ClaimsFilter } from '@/utils/claims/claims-filter';
+import { ClaimsTable } from '@/utils/claims/claims-table';
 
 export function ClaimsManagement() {
 	const { toast } = useToast();
@@ -124,7 +111,7 @@ export function ClaimsManagement() {
 		}
 	};
 
-	const handleToggleResolved = async (claim: Claim) => {
+	const handleReOpenClaim = async (claim: Claim) => {
 		try {
 			const { error } = await reopenClaim(claim.id);
 			if (error) throw error;
@@ -231,13 +218,6 @@ export function ClaimsManagement() {
 	useEffect(() => {
 		setCurrentPage(1);
 	}, [searchTerm, filterType]);
-
-	const dailyCount = claims.filter((c) => c.daily).length;
-
-	function formatDate(date: string): string {
-		const [year, month, day] = date.split('-');
-		return `${day}-${month}-${year}`;
-	}
 
 	return (
 		<div className="space-y-6">
@@ -406,144 +386,18 @@ export function ClaimsManagement() {
 			{/* Table */}
 			<Card className="bg-card border-border">
 				<div className="overflow-x-auto">
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead className="text-center">Estado</TableHead>
-								<TableHead className="text-center">Fecha</TableHead>
-								<TableHead className="text-center">Cliente</TableHead>
-								<TableHead className="text-center">Núm. de celular</TableHead>
-								<TableHead className="text-center">Zona/Localidad</TableHead>
-								<TableHead className="text-center">Dirección</TableHead>
-								<TableHead className="text-center">Tipo</TableHead>
-								<TableHead className="lg:table-cell text-center">Descripción</TableHead>
-								{user?.role === 'Admin' && (
-									<TableHead className="text-center">Atendido por</TableHead>
-								)}
-								<TableHead className="text-center">Fecha de resolución</TableHead>
-								{user?.role === 'Admin' && <TableHead className="text-center">Acciones</TableHead>}
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{loading ? (
-								<TableRow>
-									<TableCell colSpan={11} className="text-center py-8">
-										{filterType === 'diario' ? 'Cargando actividades diarias...' : 'Cargando reclamos...'}
-									</TableCell>
-								</TableRow>
-							) : paginatedData.length === 0 ? (
-								<TableRow>
-									<TableCell colSpan={11} className="text-center py-8">
-										<div className="flex flex-col items-center gap-2">
-											<AlertCircle className="h-8 w-8 text-muted-foreground" />
-											<p className="text-muted-foreground">
-												{filterType === 'diario' ? 'No se encontraron actividades diarias.' : 'No se encontraron reclamos.'}
-											</p>
-										</div>
-									</TableCell>
-								</TableRow>
-							) : (
-								paginatedData.map((claim: Claim) => (
-									<TableRow key={claim.id} className={cn(claim.resolved && 'bg-green-300')}>
-										<TableCell className="text-center">
-											<Badge variant={claim.resolved ? 'default' : 'secondary'}>
-												{claim.resolved ? (
-													<>
-														<CheckCircle className="h-3 w-3 mr-1" />
-														Resuelto
-													</>
-												) : (
-													<>
-														<Clock className="h-3 w-3 mr-1" />
-														Pendiente
-													</>
-												)}
-											</Badge>
-										</TableCell>
-										<TableCell className="whitespace-nowrap text-center">
-											{formatDate(claim.date || '')}
-										</TableCell>
-										<TableCell className="text-center">{claim.client_name || '-'}</TableCell>
-										<TableCell className="text-center">{claim.client_phone || '-'}</TableCell>
-										<TableCell>
-											<div className="text-sm text-center">
-												<div>{claim.work_zone || '-'}</div>
-												{claim.work_locality && (
-													<div className="text-muted-foreground text-xs">{claim.work_locality}</div>
-												)}
-											</div>
-										</TableCell>
-										<TableCell className="text-center">
-											<div className="max-w-xs truncate">{claim.work_address || '-'}</div>
-										</TableCell>
-										<TableCell className="text-center">
-											<Badge variant="outline">{claim.alum_pvc || '-'}</Badge>
-										</TableCell>
-										<TableCell className="lg:table-cell max-w-xs text-center">
-											<div
-												className="truncate cursor-pointer hover:text-primary transition-colors"
-												onClick={() => {
-													setDescriptionToView(claim.description || '-');
-													setSelectedClaimForImages(claim);
-												}}
-												title="Click para ver descripción completa"
-											>
-												{claim.description || '-'}
-											</div>
-										</TableCell>
-										{user?.role === 'Admin' && (
-											<TableCell className="text-center">{claim.attend || '-'}</TableCell>
-										)}
-										<TableCell className="text-center whitespace-nowrap">
-											{claim.resolved ? formatDate(claim.resolution_date || '') : '-'}
-										</TableCell>
-										{user?.role === 'Admin' && (
-											<TableCell className="text-center">
-												<div className="items-center justify-end gap-2">
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => handleEditClaim(claim)}
-														className="h-8 w-8 p-0"
-													>
-														<Edit className="h-4 w-4" />
-													</Button>
-													{!claim.resolved && (
-														<Button
-															variant="ghost"
-															size="sm"
-															onClick={() => handleResolveClaim(claim)}
-															className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-														>
-															<CheckCircle className="h-4 w-4" />
-														</Button>
-													)}
-													{claim.resolved && (
-														<Button
-															variant="ghost"
-															size="sm"
-															onClick={() => handleToggleResolved(claim)}
-															className="h-8 w-8 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-														>
-															<Clock className="h-4 w-4" />
-														</Button>
-													)}
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => handleDeleteClick(claim)}
-														className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-													>
-														<Trash2 className="h-4 w-4" />
-													</Button>
-												</div>
-											</TableCell>
-										)}
-									</TableRow>
-								))
-							)}
-						</TableBody>
-					</Table>
+					<ClaimsTable
+						claims={paginatedData}
+						loading={loading}
+						onEdit={handleEditClaim}
+						onDelete={handleDeleteClick}
+						onResolve={handleResolveClaim}
+						onReOpen={handleReOpenClaim}
+						authorizedUser={!!user && user.role === 'Admin'}
+						filterType={filterType}
+						onViewDescription={(description: string) => setDescriptionToView(description)}
+						onViewImages={(claim: Claim) => setSelectedClaimForImages(claim)}
+					/>
 				</div>
 			</Card>
 

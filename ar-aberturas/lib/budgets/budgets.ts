@@ -250,6 +250,20 @@ export async function deleteBudget(id: string): Promise<{ data: null; error: any
 	return { data: null, error };
 }
 
+export async function getClientsWithBudgetCount(): Promise<{ data: number; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from('folder_budgets')
+		.select('client_id', { count: 'exact' });
+
+	if (error) return { data: 0, error };
+	if (!data) return { data: 0, error: null };
+
+	// Obtener clientes únicos
+	const uniqueClients = new Set(data.map((item: any) => item.client_id).filter(Boolean));
+	return { data: uniqueClients.size, error: null };
+}
+
 export async function chooseBudgetForClient(
 	budgetId: string,
 	folderBudgetIds: string[]

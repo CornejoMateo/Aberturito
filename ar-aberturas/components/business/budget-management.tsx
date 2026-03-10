@@ -18,7 +18,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { getClientsCount } from '@/lib/clients/clients';
-import { getBudgetsCount, getBudgetsTotalAmount, getSoldBudgetsCount, getChosenBudgetsCount, getSoldBudgetsTotalAmount, getChosenBudgetsTotalAmount } from '@/lib/budgets/budgets';
+import { getBudgetsCount, getBudgetsTotalAmount, getSoldBudgetsCount, getChosenBudgetsCount, getSoldBudgetsTotalAmount, getChosenBudgetsTotalAmount, getClientsWithBudgetCount } from '@/lib/budgets/budgets';
 
 // Datos dinámicos - se conectarán con APIs reales
 interface SalesMetrics {
@@ -31,6 +31,7 @@ interface SalesMetrics {
   soldAverageTicket: number;
   chosenAverageTicket: number;
   totalAverageTicket: number;
+  clientsWithBudget: number;
 }
 
 interface MonthlyData {
@@ -66,6 +67,7 @@ export function BudgetManagement() {
 		soldAverageTicket: 0,
 		chosenAverageTicket: 0,
 		totalAverageTicket: 0,
+		clientsWithBudget: 0,
 	});
 
 	const [loading, setLoading] = useState(true);
@@ -103,86 +105,12 @@ export function BudgetManagement() {
 		setTicketType(ticketTypes[prevIndex].id);
 	};
 
-	// Obtener cantidad de clientes y presupuestos
-	useEffect(() => {
-		const fetchMetrics = async () => {
-			try {
-				// Obtener clientes
-				const { data: clientsCount, error: clientsError } = await getClientsCount();
-				if (!clientsError && clientsCount !== null) {
-					setMetrics(prev => ({ ...prev, totalClients: clientsCount }));
-				}
-
-				// Obtener presupuestos totales
-				const { data: budgetsCount, error: budgetsError } = await getBudgetsCount();
-				if (!budgetsError && budgetsCount !== null) {
-					setMetrics(prev => ({ ...prev, totalBudgets: budgetsCount }));
-				}
-
-				// Obtener presupuestos vendidos
-				const { data: soldBudgetsCount, error: soldError } = await getSoldBudgetsCount();
-				if (!soldError && soldBudgetsCount !== null) {
-					setMetrics(prev => ({ 
-						...prev, 
-						totalSales: soldBudgetsCount,
-						conversionRate: budgetsCount > 0 ? Math.round((soldBudgetsCount / budgetsCount) * 100) : 0
-					}));
-				}
-
-				// Obtener monto total de presupuestos vendidos
-				const { data: soldAmounts, error: soldAmountError } = await getSoldBudgetsTotalAmount();
-				if (!soldAmountError && soldAmounts) {
-					const soldCount = await getSoldBudgetsCount();
-					if (!soldCount.error && soldCount.data > 0) {
-						setMetrics(prev => ({ 
-							...prev, 
-							soldAverageTicket: Math.round(soldAmounts.totalArs / soldCount.data)
-						}));
-					}
-				}
-
-				// Obtener monto total de presupuestos elegidos
-				const { data: chosenAmounts, error: chosenAmountError } = await getChosenBudgetsTotalAmount();
-				if (!chosenAmountError && chosenAmounts) {
-					const chosenCount = await getChosenBudgetsCount();
-					if (!chosenCount.error && chosenCount.data > 0) {
-						setMetrics(prev => ({ 
-							...prev, 
-							chosenAverageTicket: Math.round(chosenAmounts.totalArs / chosenCount.data)
-						}));
-					}
-				}
-
-				// Obtener monto total de presupuestos generales
-				const { data: totalAmounts, error: amountError } = await getBudgetsTotalAmount();
-				if (!amountError && totalAmounts) {
-					setMetrics(prev => ({ 
-						...prev, 
-						totalRevenue: totalAmounts.totalArs
-					}));
-					
-					// Obtener ticket promedio general
-					if (budgetsCount > 0) {
-						setMetrics(prev => ({ 
-							...prev, 
-							totalAverageTicket: Math.round(totalAmounts.totalArs / budgetsCount)
-						}));
-					}
-				}
-			} catch (err) {
-				console.error('Error fetching metrics:', err);
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		fetchMetrics();
-	}, []);
-
 	const [chartPage, setChartPage] = useState(0);
 
 	const soldPercentage = metrics.totalBudgets > 0 ? Math.round((metrics.totalSales / metrics.totalBudgets) * 100) : 0;
 	const chosenPercentage = 100 - soldPercentage;
+	const clientsWithBudgetPercentage = metrics.totalClients > 0 ? Math.round((metrics.clientsWithBudget / metrics.totalClients) * 100) : 0;
+	const clientsWithoutBudgetPercentage = 100 - clientsWithBudgetPercentage;
 
 	const chartPages = [
 		{
@@ -206,11 +134,11 @@ export function BudgetManagement() {
 		{
 			charts: [
 				{
-					title: 'Distribución de Monto Vendido',
-					data: [
-						{ name: 'Vendidos', value: metrics.soldAverageTicket > 0 ? Math.round(metrics.totalSales * metrics.soldAverageTicket) : 0, color: '#10b981' },
-								{ name: 'Pendientes', value: metrics.chosenAverageTicket > 0 ? Math.round((metrics.totalBudgets - metrics.totalSales) * metrics.chosenAverageTicket) : 0, color: '#3b82f6' },
-					].filter(item => item.value > 0)
+					title: 'Clientes con Presupuesto',
+					data: metrics.totalClients > 0 ? [
+						{ name: 'Con Presupuesto', value: metrics.clientsWithBudget, color: '#10b981' },
+						{ name: 'Sin Presupuesto', value: metrics.totalClients - metrics.clientsWithBudget, color: '#3b82f6' },
+					] : []
 				},
 				{
 					title: 'Ingresos por Tipo',
@@ -247,6 +175,12 @@ export function BudgetManagement() {
 				const { data: clientsCount, error: clientsError } = await getClientsCount();
 				if (!clientsError && clientsCount !== null) {
 					setMetrics(prev => ({ ...prev, totalClients: clientsCount }));
+				}
+
+				// Obtener clientes con presupuesto
+				const { data: clientsWithBudget, error: clientsWithBudgetError } = await getClientsWithBudgetCount();
+				if (!clientsWithBudgetError && clientsWithBudget !== null) {
+					setMetrics(prev => ({ ...prev, clientsWithBudget }));
 				}
 
 				// Obtener presupuestos totales
@@ -451,6 +385,8 @@ export function BudgetManagement() {
 														label={({ name }) => {
 															if (name === 'Vendidos') return `${name}: ${soldPercentage}%`;
 															if (name === 'Pendientes') return `${name}: ${chosenPercentage}%`;
+															if (name === 'Con Presupuesto') return `${name}: ${clientsWithBudgetPercentage}%`;
+															if (name === 'Sin Presupuesto') return `${name}: ${clientsWithoutBudgetPercentage}%`;
 															return name;
 														}}
 														outerRadius={80}

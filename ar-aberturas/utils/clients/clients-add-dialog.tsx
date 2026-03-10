@@ -19,6 +19,7 @@ interface ClientsAddDialogProps {
 		email?: string | null;
 		phone_number?: string | null;
 		locality?: string | null;
+		contact_method?: string | null;
 	};
 	onUpdateClient?: (client: any) => Promise<void>;
 }
@@ -38,6 +39,7 @@ export function ClientsAddDialog({
 		email: clientToEdit?.email || '',
 		phone_number: clientToEdit?.phone_number || '',
 		locality: clientToEdit?.locality || '',
+		contact_method: clientToEdit?.contact_method || '',
 	});
 
 	const resetForm = () => {
@@ -47,6 +49,7 @@ export function ClientsAddDialog({
 			email: '',
 			phone_number: '',
 			locality: '',
+			contact_method: '',
 		});
 	}
 
@@ -74,6 +77,7 @@ export function ClientsAddDialog({
 				email: formData.email || null,
 				phone_number: formData.phone_number || null,
 				locality: formData.locality || null,
+				contact_method: formData.contact_method || null,
 			};
 
 			if (clientToEdit && onUpdateClient) {
@@ -162,11 +166,19 @@ export function ClientsAddDialog({
 							<Input id="phone" value={formData.phone_number} onChange={handleInputChange} className="bg-background" />
 						</div>
 					</div>
-					<div className="grid gap-2">
-						<Label htmlFor="locality" className="text-foreground">
-							Localidad
-						</Label>
-						<Input id="locality" value={formData.locality} onChange={handleInputChange} className="bg-background" />
+					<div className="grid grid-cols-2 gap-4">
+						<div className="grid gap-2">
+							<Label htmlFor="locality" className="text-foreground">
+								Localidad
+							</Label>
+							<Input id="locality" value={formData.locality} onChange={handleInputChange} className="bg-background" />
+						</div>
+						<div className="grid gap-2">
+							<Label htmlFor="contact_method" className="text-foreground">
+								Medio de contacto
+							</Label>
+							<Input id="contact_method" value={formData.contact_method} onChange={handleInputChange} className="bg-background" />
+						</div>
 					</div>
 
 					<DialogFooter>

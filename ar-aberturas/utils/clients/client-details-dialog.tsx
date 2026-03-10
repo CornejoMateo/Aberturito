@@ -187,11 +187,6 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientU
           setClientData(client);
           setCover(client.cover || '');
         }
-        // Reset loaded flags when client changes
-        setWorksLoaded(false);
-        setBudgetsLoaded(false);
-        setWorks([]);
-        setBudgets([]);
       };
       
       loadFreshClientData();

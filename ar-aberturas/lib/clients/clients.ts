@@ -18,6 +18,7 @@ export type Client = {
 	email?: string | null;
 	images?: ClientFileMetadata[] | null; // array JSON
 	cover?: string | null;
+	contact_method?: string | null;
 };
 
 const TABLE = 'clients';
@@ -34,7 +35,7 @@ export async function listClients(): Promise<{ data: Client[] | null; error: any
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('name, last_name, id, phone_number, locality, email, images')
+		.select('name, last_name, id, phone_number, locality, email, images, contact_method')
 		.order('created_at', { ascending: false });
 	return { data, error };
 }

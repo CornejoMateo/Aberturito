@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { SalesMetrics } from '../types';
+import { SalesMetrics } from './types';
 
 interface PerformanceChartsCarouselProps {
   metrics: SalesMetrics;
@@ -26,7 +26,7 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
     return `${value}`;
   };
 
-  // Datos de presupuestos por mes (datos reales de la BD)
+  // Dates for the monthly budgets chart (default to 0 if no data)
   const monthlyBudgetData = metrics.budgetsByMonth && metrics.budgetsByMonth.length > 0
     ? metrics.budgetsByMonth
     : [
@@ -44,7 +44,7 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
         { month: 'Dic', presupuestos: 0, vendidos: 0 },
       ];
 
-  // Datos para el gráfico de ticket promedio por tipo
+  // Date for the average ticket chart (default to 0 if no data)
   const ticketData = [
     { name: 'Vendidos', valor: metrics.soldAverageTicket },
     { name: 'Pendientes', valor: metrics.chosenAverageTicket },

@@ -259,7 +259,7 @@ export async function getClientsWithBudgetCount(): Promise<{ data: number; error
 	if (error) return { data: 0, error };
 	if (!data) return { data: 0, error: null };
 
-	// Obtener clientes únicos
+	// Obtain unique client IDs from the folder_budgets table and count them
 	const uniqueClients = new Set(data.map((item: any) => item.client_id).filter(Boolean));
 	return { data: uniqueClients.size, error: null };
 }
@@ -273,16 +273,16 @@ export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
 
-	// Agrupar por mes
+	// Group by month and count presupuestos and vendidos
 	const monthMap = new Map<string, { presupuestos: number; vendidos: number }>();
 	const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
-	// Inicializar todos los meses
+	// Inizialize monthMap with all months to ensure they appear in the result even if they have 0 presupuestos/vendidos
 	months.forEach(month => {
 		monthMap.set(month, { presupuestos: 0, vendidos: 0 });
 	});
 
-	// Contar presupuestos por mes
+	// Contact data and populate monthMap
 	data.forEach((budget: any) => {
 		if (budget.created_at) {
 			const date = new Date(budget.created_at);
@@ -298,7 +298,7 @@ export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string
 		}
 	});
 
-	// Convertir a array ordenado
+	// Convert monthMap to an array and ensure all months are included in the result
 	const result = months.map(month => ({
 		month,
 		...monthMap.get(month)!

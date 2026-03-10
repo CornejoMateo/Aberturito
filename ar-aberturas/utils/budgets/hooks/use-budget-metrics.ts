@@ -21,25 +21,25 @@ export const useBudgetMetrics = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        // Obtener clientes
+        // Obtain total clients
         const { data: clientsCount, error: clientsError } = await getClientsCount();
         if (!clientsError && clientsCount !== null) {
           setMetrics(prev => ({ ...prev, totalClients: clientsCount }));
         }
 
-        // Obtener clientes con presupuesto
+        // Obtain clients with budgets
         const { data: clientsWithBudget, error: clientsWithBudgetError } = await getClientsWithBudgetCount();
         if (!clientsWithBudgetError && clientsWithBudget !== null) {
           setMetrics(prev => ({ ...prev, clientsWithBudget }));
         }
 
-        // Obtener presupuestos totales
+        // Obtain total budgets
         const { data: budgetsCount, error: budgetsError } = await getBudgetsCount();
         if (!budgetsError && budgetsCount !== null) {
           setMetrics(prev => ({ ...prev, totalBudgets: budgetsCount }));
         }
 
-        // Obtener presupuestos vendidos
+        // Obtain total amount of all budgets
         const { data: soldBudgetsCount, error: soldError } = await getSoldBudgetsCount();
         if (!soldError && soldBudgetsCount !== null) {
           setMetrics(prev => ({
@@ -49,7 +49,7 @@ export const useBudgetMetrics = () => {
           }));
         }
 
-        // Obtener monto total de presupuestos vendidos
+        // Obtain total amount of sold budgets
         const { data: soldAmounts, error: soldAmountError } = await getSoldBudgetsTotalAmount();
         if (!soldAmountError && soldAmounts) {
           const soldCount = await getSoldBudgetsCount();
@@ -61,7 +61,7 @@ export const useBudgetMetrics = () => {
           }
         }
 
-        // Obtener monto total de presupuestos elegidos
+        // Obtain total amount of chosen budgets
         const { data: chosenAmounts, error: chosenAmountError } = await getChosenBudgetsTotalAmount();
         if (!chosenAmountError && chosenAmounts) {
           const chosenCount = await getChosenBudgetsCount();
@@ -73,7 +73,7 @@ export const useBudgetMetrics = () => {
           }
         }
 
-        // Obtener monto total de presupuestos generales
+        // Obtain total revenue (sum of sold budgets)
         const { data: totalAmounts, error: amountError } = await getBudgetsTotalAmount();
         if (!amountError && totalAmounts) {
           setMetrics(prev => ({
@@ -81,7 +81,7 @@ export const useBudgetMetrics = () => {
             totalRevenue: totalAmounts.totalArs
           }));
 
-          // Obtener ticket promedio general
+          // Obtain total average ticket
           if (budgetsCount > 0) {
             setMetrics(prev => ({
               ...prev,
@@ -90,7 +90,7 @@ export const useBudgetMetrics = () => {
           }
         }
 
-        // Obtener presupuestos por mes
+        // Obtain budgets by month
         const { data: budgetsByMonth, error: budgetsByMonthError } = await getBudgetsByMonth();
         if (!budgetsByMonthError && budgetsByMonth) {
           setMetrics(prev => ({

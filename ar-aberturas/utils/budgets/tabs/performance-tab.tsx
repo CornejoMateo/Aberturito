@@ -13,10 +13,10 @@ interface PerformanceTabProps {
 export function PerformanceTab({ metrics, loading }: PerformanceTabProps) {
   return (
     <TabsContent value="performance" className="space-y-4">
-      {/* Gráficos en Carrusel */}
+      {/* Carousel Graphics */}
       <PerformanceChartsCarousel metrics={metrics} />
 
-      {/* Tarjetas de Métricas */}
+      {/* Metric Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="p-6 bg-card border-border hover:shadow-md transition-shadow">
           <div className="space-y-2">

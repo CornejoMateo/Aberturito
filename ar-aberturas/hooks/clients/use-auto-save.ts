@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from '@/components/ui/use-toast';
-import { translateError } from '../lib/error-translator';
+import { translateError } from '@/lib/error-translator';
 
 interface UseAutoSaveOptions {
   onSave: (value: string) => Promise<{ data?: any; error?: any }>;

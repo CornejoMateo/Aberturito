@@ -221,6 +221,7 @@ export function ClientManagement() {
 										email: selectedClient.email || '',
 										phone_number: selectedClient.phone_number || '',
 										locality: selectedClient.locality || '',
+										contact_method: selectedClient.contact_method || '',
 									}
 								: undefined
 						}

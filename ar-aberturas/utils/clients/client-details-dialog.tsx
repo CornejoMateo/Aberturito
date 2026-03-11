@@ -187,7 +187,6 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientU
           setClientData(client);
           setCover(client.cover || '');
         }
-
       };
       loadFreshClientData();
     } else if (!client) {

@@ -390,11 +390,11 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 									Progreso total: {Math.round(totalProgress)}%
 								</div>
 								<div className="text-base">
-									<b>
-										{checklists.length > 0
-											? 'Listado de checklists:'
-											: 'No hay checklists disponibles'}
-									</b>
+									{checklists.length > 0 ? (
+										<b>Cantidad de checklists: {checklists.length}</b>
+									) : (
+										<b>No hay checklists disponibles</b>
+									)}
 								</div>
 							</div>
 

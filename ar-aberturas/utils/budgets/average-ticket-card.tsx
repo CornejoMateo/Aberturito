@@ -4,22 +4,17 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-interface TicketType {
-  readonly id: 'sold' | 'chosen' | 'total';
-  readonly label: string;
-  readonly description: string;
-}
+import { TicketType, TicketTypeId } from '@/utils/constants/tickets';
 
 interface AverageTicketCardProps {
   loading: boolean;
   ticketValue: number;
   ticketLabel: string;
-  ticketType: 'sold' | 'chosen' | 'total';
+  ticketType: TicketTypeId;
   ticketTypes: readonly TicketType[];
   onPrevTicket: () => void;
   onNextTicket: () => void;
-  onSelectTicket: (type: 'sold' | 'chosen' | 'total') => void;
+  onSelectTicket: (type: TicketTypeId) => void;
 }
 
 export function AverageTicketCard({

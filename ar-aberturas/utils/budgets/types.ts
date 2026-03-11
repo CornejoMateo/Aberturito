@@ -11,6 +11,8 @@ export interface SalesMetrics {
   clientsWithBudget: number;
   budgetsByMonth: Array<{ month: string; presupuestos: number; vendidos: number }>;
   budgetsByLocation: Array<{ location: string; count: number }>;
+  clientsByContactMethod: Array<{ method: string; count: number }>;
+  budgetsByMaterial: Array<{ material: string; count: number }>;
 }
 
 export interface MonthlyData {
@@ -47,4 +49,6 @@ export const DEFAULT_METRICS: SalesMetrics = {
   clientsWithBudget: 0,
   budgetsByMonth: [],
   budgetsByLocation: [],
+  clientsByContactMethod: [],
+  budgetsByMaterial: [],
 };

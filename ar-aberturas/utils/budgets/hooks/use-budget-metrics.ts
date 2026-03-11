@@ -11,7 +11,9 @@ import {
   getChosenBudgetsTotalAmount,
   getClientsWithBudgetCount,
   getBudgetsByMonth,
-  getBudgetsByLocation
+  getBudgetsByLocation,
+  getClientsByContactMethod,
+  getBudgetsByMaterial
 } from '@/lib/budgets/budgets';
 import { SalesMetrics, DEFAULT_METRICS } from '../types';
 
@@ -106,6 +108,24 @@ export const useBudgetMetrics = () => {
           setMetrics(prev => ({
             ...prev,
             budgetsByLocation
+          }));
+        }
+
+        // Obtain clients by contact method
+        const { data: clientsByContactMethod, error: clientsByContactMethodError } = await getClientsByContactMethod();
+        if (!clientsByContactMethodError && clientsByContactMethod) {
+          setMetrics(prev => ({
+            ...prev,
+            clientsByContactMethod
+          }));
+        }
+
+        // Obtain budgets by material
+        const { data: budgetsByMaterial, error: budgetsByMaterialError } = await getBudgetsByMaterial();
+        if (!budgetsByMaterialError && budgetsByMaterial) {
+          setMetrics(prev => ({
+            ...prev,
+            budgetsByMaterial
           }));
         }
       } catch (err) {

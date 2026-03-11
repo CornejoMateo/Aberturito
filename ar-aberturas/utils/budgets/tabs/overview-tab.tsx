@@ -7,26 +7,21 @@ import { ConversionRateCard } from '../conversion-rate-card';
 import { AverageTicketCard } from '../average-ticket-card';
 import { SalesMetrics } from '../types';
 import { calculateChartPercentages } from '../calculations';
-
-interface TicketType {
-  readonly id: 'sold' | 'chosen' | 'total';
-  readonly label: string;
-  readonly description: string;
-}
+import { TicketType, TicketTypeId } from '@/utils/constants/tickets';
 
 interface OverviewTabProps {
   metrics: SalesMetrics;
   loading: boolean;
   chartPages: any[];
   chartPage: number;
-  ticketType: 'sold' | 'chosen' | 'total';
+  ticketType: TicketTypeId;
   ticketTypes: readonly TicketType[];
   onPrevChart: () => void;
   onNextChart: () => void;
   onSelectChart: (index: number) => void;
   onPrevTicket: () => void;
   onNextTicket: () => void;
-  onSelectTicket: (type: 'sold' | 'chosen' | 'total') => void;
+  onSelectTicket: (type: TicketTypeId) => void;
   formatChartValue: (value: number) => string;
   getCurrentTicketValue: () => number;
   getCurrentTicketLabel: () => string;

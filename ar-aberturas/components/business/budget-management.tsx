@@ -8,16 +8,12 @@ import { buildChartPages, formatChartValue } from '@/utils/budgets/calculations'
 import { MetricCard } from '@/utils/budgets/metric-card';
 import { OverviewTab } from '@/utils/budgets/tabs/overview-tab';
 import { PerformanceTab } from '@/utils/budgets/tabs/performance-tab';
-
-const ticketTypes = [
-	{ id: 'sold', label: 'Vendidos', description: 'Presupuestos vendidos' },
-	{ id: 'chosen', label: 'Pendientes', description: 'Presupuestos pendientes' },
-	{ id: 'total', label: 'General', description: 'Todos los presupuestos' }
-] as const;
+import { SourcesAndMaterialsTab } from '@/utils/budgets/tabs/sources-and-materials-tab';
+import { TICKET_TYPES, DEFAULT_TICKET_TYPE } from '@/utils/constants/tickets';
 
 export function BudgetManagement() {
 	const { metrics, loading } = useBudgetMetrics();
-	const [ticketType, setTicketType] = useState<'sold' | 'chosen' | 'total'>('sold');
+	const [ticketType, setTicketType] = useState(DEFAULT_TICKET_TYPE);
 	const [chartPage, setChartPage] = useState(0);
 
 	const getCurrentTicketValue = () => {
@@ -30,20 +26,20 @@ export function BudgetManagement() {
 	};
 
 	const getCurrentTicketLabel = () => {
-		const current = ticketTypes.find(t => t.id === ticketType);
+		const current = TICKET_TYPES.find(t => t.id === ticketType);
 		return current?.description || '';
 	};
 
 	const handleNextTicket = () => {
-		const currentIndex = ticketTypes.findIndex(t => t.id === ticketType);
-		const nextIndex = (currentIndex + 1) % ticketTypes.length;
-		setTicketType(ticketTypes[nextIndex].id);
+		const currentIndex = TICKET_TYPES.findIndex(t => t.id === ticketType);
+		const nextIndex = (currentIndex + 1) % TICKET_TYPES.length;
+		setTicketType(TICKET_TYPES[nextIndex].id);
 	};
 
 	const handlePrevTicket = () => {
-		const currentIndex = ticketTypes.findIndex(t => t.id === ticketType);
-		const prevIndex = currentIndex === 0 ? ticketTypes.length - 1 : currentIndex - 1;
-		setTicketType(ticketTypes[prevIndex].id);
+		const currentIndex = TICKET_TYPES.findIndex(t => t.id === ticketType);
+		const prevIndex = currentIndex === 0 ? TICKET_TYPES.length - 1 : currentIndex - 1;
+		setTicketType(TICKET_TYPES[prevIndex].id);
 	};
 
 	const handleNextChart = () => {
@@ -103,6 +99,7 @@ export function BudgetManagement() {
 				<TabsList className="bg-card border border-border">
 					<TabsTrigger value="overview">Resumen de Ventas</TabsTrigger>
 					<TabsTrigger value="performance">Rendimiento</TabsTrigger>
+					<TabsTrigger value="sources">Fuentes y Materiales</TabsTrigger>
 				</TabsList>
 
 				<OverviewTab
@@ -111,7 +108,7 @@ export function BudgetManagement() {
 					chartPages={chartPages}
 					chartPage={chartPage}
 					ticketType={ticketType}
-					ticketTypes={ticketTypes}
+					ticketTypes={TICKET_TYPES}
 					onPrevChart={handlePrevChart}
 					onNextChart={handleNextChart}
 					onSelectChart={(idx) => setChartPage(idx)}
@@ -124,6 +121,8 @@ export function BudgetManagement() {
 				/>
 
 				<PerformanceTab metrics={metrics} loading={loading} />
+
+				<SourcesAndMaterialsTab metrics={metrics} loading={loading} />
 			</Tabs>
 		</div>
 	);

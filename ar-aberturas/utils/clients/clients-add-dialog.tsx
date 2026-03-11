@@ -7,6 +7,8 @@ import { createClient } from '@/lib/clients/clients';
 import { createClientFolder } from '@/lib/clients/clients';
 import { useToast } from '@/components/ui/use-toast';
 import { translateError } from '@/lib/error-translator';
+import { CONTACT_METHODS } from '@/constants/budgets/contact-methods';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ClientsAddDialogProps {
 	open: boolean;
@@ -64,6 +66,13 @@ export function ClientsAddDialog({
 		setFormData((prev) => ({
 			...prev,
 			[id === 'clientName' ? 'name' : id === 'clientLastName' ? 'last_name' : id === 'phone' ? 'phone_number' : id]: value,
+		}));
+	};
+
+	const handleContactMethodChange = (value: string) => {
+		setFormData((prev) => ({
+			...prev,
+			contact_method: value,
 		}));
 	};
 
@@ -175,9 +184,20 @@ export function ClientsAddDialog({
 						</div>
 						<div className="grid gap-2">
 							<Label htmlFor="contact_method" className="text-foreground">
-								Medio de contacto
+								Método de contacto
 							</Label>
-							<Input id="contact_method" value={formData.contact_method} onChange={handleInputChange} className="bg-background" />
+							<Select value={formData.contact_method} onValueChange={handleContactMethodChange}>
+								<SelectTrigger className="bg-background">
+									<SelectValue placeholder="Seleccionar método" />
+								</SelectTrigger>
+								<SelectContent>
+									{CONTACT_METHODS.map((method) => (
+										<SelectItem key={method.value} value={method.value}>
+											{method.label}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
 						</div>
 					</div>
 

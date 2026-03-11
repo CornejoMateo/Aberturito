@@ -20,18 +20,19 @@ import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { Work } from '@/lib/works/works';
-import { createBudget, chooseBudgetForClient, Budget, getBudgetsByFolderBudgetIds, deleteBudget, updateBudget } from '@/lib/budgets/budgets';
-import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId, deleteFolderBudgetWithBudgets } from '@/lib/budgets/folder_budgets';
+import { createBudget, getBudgetsByFolderBudgetIds, deleteBudget, updateBudget } from '@/lib/budgets/budgets';
+import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId, deleteFolderBudgetWithBudgets, deleteFolderBudget } from '@/lib/budgets/folder_budgets';
 import { getSupabaseClient } from '@/lib/supabase-client';
-import { CheckCircle, FileText, Plus, ChevronDown, Trash2, Download, X, TrendingUp } from 'lucide-react';
+import { CheckCircle, FileText, Plus, ChevronDown, Trash2, TrendingUp } from 'lucide-react';
 import { BudgetWithWork } from '@/lib/works/balances';
 import { ClientBudgetsDollarUpdateModal } from '@/components/ui/client-budgets-dollar-update-modal';
+import { translateError } from '@/lib/error-translator';
+import { checklistTypes } from '@/lib/works/checklists.constants';
+import { de } from 'date-fns/locale';
 
 type BudgetFolderVM = FolderBudget & {
 	budgets: BudgetWithWork[];
 };
-
-const DEFAULT_TYPES = ['PVC', 'Aluminio', 'Otros'] as const;
 
 function normalizeType(type: string | null | undefined): string {
 	const t = (type ?? '').trim();
@@ -51,7 +52,8 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 	const [isLoading, setIsLoading] = useState(false);
 	const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
 
-	// Realtime hook for folder_budgets
+	const DEFAULT_TYPES = [...Object.values(checklistTypes), 'Otros'];
+
 	const {
 		data: folderBudgets,
 		loading: loadingFolders,
@@ -126,6 +128,11 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 
 	const [isClientBudgetsUpdateModalOpen, setIsClientBudgetsUpdateModalOpen] = useState(false);
 
+	const [budgetDetailModal, setBudgetDetailModal] = useState<{
+		open: boolean;
+		budget: BudgetWithWork | null;
+	}>({ open: false, budget: null });
+
 	const chosenBudgetIds = useMemo(() => {
 		const chosen = budgets.filter((b) => !!b.accepted);
 		return chosen.map(b => b.id);
@@ -193,7 +200,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 				toast({
 					variant: 'destructive',
 					title: 'No se pudo cambiar el estado',
-					description: 'Intente nuevamente.',
+					description: translateError(error),
 				});
 				return;
 			}
@@ -202,6 +209,38 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 				title: budget.accepted ? 'Presupuesto deseleccionado' : 'Presupuesto elegido',
 				description: budget.accepted ? 'El presupuesto ya no será considerado como elegido.' : 'El presupuesto ahora es el elegido para este cliente.',
 			});
+			refresh();
+		} finally {
+			setIsLoading(false);
+		}
+	}
+
+	async function handleToggleSold(budgetId: string) {
+		try {
+			setIsLoading(true);
+			const budget = budgets.find(b => b.id === budgetId);
+			if (!budget) return;
+
+			const { error } = await updateBudget(budgetId, {
+				sold: !budget.sold
+			});
+			
+			if (error) {
+				toast({
+					variant: 'destructive',
+					title: 'No se pudo cambiar el estado de venta',
+					description: translateError(error),
+				});
+				return;
+			}
+			
+			toast({ 
+				title: budget.sold ? 'Presupuesto marcado como no vendido' : 'Presupuesto marcado como vendido',
+				description: budget.sold ? 'El presupuesto ya no está marcado como vendido.' : 'El presupuesto ahora está marcado como vendido.',
+			});
+			
+			// Close modal and refresh data immediately
+			closeBudgetDetailModal();
 			refresh();
 		} finally {
 			setIsLoading(false);
@@ -308,6 +347,14 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 		setPdfPreview({ open: false, budget: null, pdfUrl: null });
 	}
 
+	function handleOpenBudgetDetail(budget: BudgetWithWork) {
+		setBudgetDetailModal({ open: true, budget });
+	}
+
+	function closeBudgetDetailModal() {
+		setBudgetDetailModal({ open: false, budget: null });
+	}
+
 	function resetForm() {
 		setFormType('PVC');
 		setFormVersion('');
@@ -318,7 +365,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 		setFormPdf(null);
 	}
 
-	const handleClientBudgetsUpdate = async (newUsdRate: number) => {
+	const handleClientBudgetsUpdate = async (newUsdRate: number) => {	
 		try {
 			const response = await fetch('/api/budget-dollar-rate', {
 				method: 'POST',
@@ -351,14 +398,6 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 	};
 
 	async function handleCreateBudget() {
-		if (!formPdf) {
-			toast({
-				variant: 'destructive',
-				title: 'Falta el PDF',
-				description: 'Adjuntá el PDF del presupuesto para crearlo.',
-			});
-			return;
-		}
 
 		try {
 			setIsLoading(true);
@@ -366,6 +405,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 			const work_id = formWorkId === 'none' ? null : formWorkId;
 			const existingFolder = folderBudgets.find((f) => (f.work_id ?? null) === work_id);
 			let folderId = existingFolder?.id;
+			let newFolder = false;
 
 			if (!folderId) {
 				const { data: folder, error: folderError } = await createFolderBudget({
@@ -374,14 +414,16 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 				});
 
 				if (folderError || !folder) {
+					const errorMessage = folderError ? translateError(folderError) : 'Error desconocido al crear la carpeta';
 					toast({
 						variant: 'destructive',
-						title: 'No se pudo crear la carpeta',
+						title: 'No se pudo crear la carpeta.' + errorMessage,
 						description: 'Intente nuevamente.',
 					});
 					return;
 				}
 				folderId = folder.id;
+				newFolder = true;
 			}
 
 			const parsedAmount = formAmount.trim() ? Number(formAmount) : null;
@@ -406,11 +448,15 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 			);
 
 			if (createError) {
+				console.error('Error creando presupuesto:', createError);
 				toast({
 					variant: 'destructive',
 					title: 'No se pudo crear el presupuesto',
-					description: 'Intente nuevamente.',
+					description: translateError(createError) || 'Intente nuevamente.',
 				});
+				if (newFolder && folderId) {
+					await deleteFolderBudget(folderId); // remove empty folder budget
+				}
 				return;
 			}
 
@@ -470,9 +516,11 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 										<SelectValue placeholder="Seleccionar tipo" />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="PVC">PVC</SelectItem>
-										<SelectItem value="Aluminio">Aluminio</SelectItem>
-										<SelectItem value="Otros">Otros</SelectItem>
+										{DEFAULT_TYPES.map((t) => (
+											<SelectItem key={t} value={t}>
+												{t}
+											</SelectItem>
+										))}
 									</SelectContent>
 								</Select>
 							</div>
@@ -510,7 +558,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 
 							<div className="grid grid-cols-2 gap-4">
 								<div className="grid gap-2">
-									<Label>Número de presupuesto *</Label>
+									<Label>Número de presupuesto</Label>
 									<Input
 										type="text"
 										value={formNumber}
@@ -519,7 +567,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 									/>
 								</div>
 								<div className="grid gap-2">
-									<Label>Monto ARS *</Label>
+									<Label>Monto ARS</Label>
 									<Input
 										type="number"
 										value={formAmount}
@@ -528,7 +576,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 									/>
 								</div>
 								<div className="grid gap-2">
-									<Label>Monto USD *</Label>
+									<Label>Monto USD</Label>
 									<Input
 										type="number"
 										value={formAmountUsd}
@@ -584,7 +632,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 					const chosenCountInFolder = folderBudgetsList.filter((b) => !!b.accepted).length;
 
 					const budgetsByType = new Map<string, BudgetWithWork[]>();
-					for (const t of DEFAULT_TYPES) budgetsByType.set(t, []);
+
 					for (const b of folderBudgetsList) {
 						const typeKey = normalizeType(b.type);
 						const prev = budgetsByType.get(typeKey) ?? [];
@@ -662,9 +710,10 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 																	<Card
 																		key={b.id}
 																		className={cn(
-																			'min-w-[260px] max-w-[260px] p-4 border-border relative',
+																			'min-w-[260px] max-w-[260px] p-4 border-border relative cursor-pointer hover:shadow-md transition-shadow',
 																			isChosen && 'border-primary bg-primary/5'
 																		)}
+																		onClick={() => handleOpenBudgetDetail(b)}
 																	>
 																		<div className="absolute top-2 right-2 flex items-center gap-2">
 																			{isChosen ? (
@@ -675,7 +724,10 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 																			<Button
 																				variant="ghost"
 																				size="sm"
-																				onClick={() => handleDeleteBudget(b.id)}
+																				onClick={(e) => {
+																					e.stopPropagation();
+																					handleDeleteBudget(b.id);
+																				}}
 																				disabled={isLoading}
 																				className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
 																			>	
@@ -709,31 +761,42 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 																			) : null}
 																		</div>
 
-																			<div className="flex flex-wrap gap-2">
+																			<div className="flex flex-wrap gap-2 mb-3">
 																				{b.pdf_path ? (
 																					<Button
 																						variant="outline"
 																						size="sm"
-																						onClick={() => handleViewPdf(b)}
+																						onClick={(e) => {
+																							e.stopPropagation();
+																							handleViewPdf(b);
+																						}}
 																						className="gap-2"
 																					>
 																						<FileText className="h-4 w-4" /> Ver PDF
 																					</Button>
 																				) : (
-																					<Badge variant="secondary">Borrador</Badge>
+																					<Badge variant="secondary">Sin PDF</Badge>
 																				)}
 
 																				<Button
 																					variant={isChosen ? 'secondary' : 'default'}
 																					size="sm"
 																					disabled={isLoading}
-																					onClick={() => handleChooseBudget(b.id)}
+																					onClick={(e) => {
+																						e.stopPropagation();
+																						handleChooseBudget(b.id);
+																					}}
 																					className="gap-2"
 																				>
 																					<CheckCircle className="h-4 w-4" />
-																					{isChosen ? 'Elegido' : chosenBudgetIds.length > 0 ? 'Agregar a elegidos' : 'Elegir'}
+																					{isChosen ? 'Elegido' : 'Elegir'}
 																				</Button>
 																			</div>
+																		{b.sold && (
+																			<div className="absolute bottom-0 left-0 right-0 bg-green-500 text-white text-xs font-semibold py-1 text-center rounded-b-lg">
+																				VENDIDO
+																			</div>
+																		)}
 																	</Card>
 																);
 															})}
@@ -800,6 +863,132 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 			clientId={clientId}
 			onUpdateConfirmed={handleClientBudgetsUpdate}
 		/>
+
+		<Dialog open={budgetDetailModal.open} onOpenChange={closeBudgetDetailModal}>
+			<DialogContent className="max-w-2xl">
+				<DialogHeader>
+					<DialogTitle className="flex items-center gap-2">
+						<FileText className="h-5 w-5" />
+						Detalles del Presupuesto
+					</DialogTitle>
+					<DialogDescription>
+						Información completa del presupuesto seleccionado
+					</DialogDescription>
+				</DialogHeader>
+				{budgetDetailModal.budget && (
+					<div className="space-y-4">
+						<div className="grid grid-cols-2 gap-4">
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground">Tipo</Label>
+								<p className="text-sm font-semibold">{budgetDetailModal.budget.type}</p>
+							</div>
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground">Variante</Label>
+								<p className="text-sm font-semibold">{budgetDetailModal.budget.version || 'Sin variante'}</p>
+							</div>
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground">Número</Label>
+								<p className="text-sm font-semibold">#{budgetDetailModal.budget.number || 'Sin número'}</p>
+							</div>
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground">Estado</Label>
+								<div className="flex items-center gap-2">
+									{budgetDetailModal.budget.accepted ? (
+										<Badge className="gap-1">
+											<CheckCircle className="h-3.5 w-3.5" /> Elegido
+										</Badge>
+									) : (
+										<Badge variant="secondary">No elegido</Badge>
+									)}
+									{budgetDetailModal.budget.sold ? (
+										<Badge className="gap-1 bg-green-500 hover:bg-green-600">
+											<CheckCircle className="h-3.5 w-3.5" /> Vendido
+										</Badge>
+									) : (
+										<Badge variant="outline">No vendido</Badge>
+									)}
+								</div>
+							</div>
+						</div>
+
+						<div className="grid grid-cols-2 gap-4">
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground">Monto ARS</Label>
+								<p className="text-sm font-semibold">
+									{typeof budgetDetailModal.budget.amount_ars === 'number'
+										? `$${budgetDetailModal.budget.amount_ars.toLocaleString('es-AR')} ARS`
+										: 'Monto ARS no cargado'}
+								</p>
+							</div>
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground">Monto USD</Label>
+								<p className="text-sm font-semibold">
+									{typeof budgetDetailModal.budget.amount_usd === 'number'
+										? `$${budgetDetailModal.budget.amount_usd.toLocaleString('es-AR')} USD`
+										: 'Monto USD no cargado'}
+								</p>
+							</div>
+						</div>
+
+						<div>
+							<Label className="text-sm font-medium text-muted-foreground">Obra</Label>
+							<p className="text-sm font-semibold">
+								{budgetDetailModal.budget.folder_budget?.work
+									? `${budgetDetailModal.budget.folder_budget.work.address} - ${budgetDetailModal.budget.folder_budget.work.locality}`
+									: 'Sin obra asignada'}
+							</p>
+						</div>
+
+						<div>
+							<Label className="text-sm font-medium text-muted-foreground">PDF</Label>
+							<div className="flex items-center gap-2 mt-1">
+								{budgetDetailModal.budget.pdf_path ? (
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => handleViewPdf(budgetDetailModal.budget!)}
+										className="gap-2"
+									>
+										<FileText className="h-10 w-10" /> Ver PDF
+									</Button>
+								) : (
+									<Badge variant="secondary">Borrador - Sin PDF</Badge>
+								)}
+							</div>
+						</div>
+
+						<div className="flex justify-end gap-2 pt-4 border-t">
+							<Button variant="outline" onClick={closeBudgetDetailModal}>
+								Cerrar
+							</Button>
+							<Button
+								variant={budgetDetailModal.budget.sold ? "secondary" : "default"}
+								onClick={() => {
+									handleToggleSold(budgetDetailModal.budget!.id);
+								}}
+								className="gap-2"
+								disabled={isLoading}
+							>
+								<CheckCircle className="h-4 w-4" />
+								{budgetDetailModal.budget.sold ? 'Marcar como no vendido' : 'Marcar como vendido'}
+							</Button>
+							{!budgetDetailModal.budget.accepted && (
+								<Button
+									onClick={() => {
+										handleChooseBudget(budgetDetailModal.budget!.id);
+										closeBudgetDetailModal();
+									}}
+									className="gap-2"
+								>
+									<CheckCircle className="h-4 w-4" />
+									Elegir
+								</Button>
+							)}
+						</div>
+					</div>
+				)}
+			</DialogContent>
+		</Dialog>
 	</>
 );
 }

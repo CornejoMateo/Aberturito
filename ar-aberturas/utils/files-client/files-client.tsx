@@ -9,9 +9,10 @@ import {
 	ClientFile,
 } from '@/lib/clients/clients';
 import { Button } from '@/components/ui/button';
-import { Upload, Trash2, X, ChevronLeft, ChevronRight, Download, Loader2 } from 'lucide-react';
+import { Upload, Trash2, X, ChevronLeft, ChevronRight, Download, Loader2, FileText } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { getSupabaseClient } from '@/lib/supabase-client';
+import { translateError } from '@/lib/error-translator';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -33,8 +34,19 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+	CLIENT_FILE_TYPES,
+	MAX_FILE_SIZE_CLIENT,
+	validateFileForUpload,
+	formatFileSize,
+	isVideo,
+	isImage,
+	isDocument,
+	getFileExtension,
+	formatDate,
+} from '@/utils/file-upload-utils';
 
-interface ClientImagesGalleryProps {
+interface ClientFilesProps {
 	client: Client;
 }
 
@@ -42,7 +54,7 @@ type FileWithUrl = ClientFile & {
 	url: string;
 };
 
-export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
+export function ClientImagesGallery({ client }: ClientFilesProps) {
 	const [files, setFiles] = useState<FileWithUrl[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isUploading, setIsUploading] = useState(false);
@@ -84,7 +96,7 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 				toast({
 					variant: 'destructive',
 					title: 'Error al cargar archivos',
-					description: 'No se pudieron cargar los archivos del cliente.',
+					description: translateError(error),
 				});
 				setFiles([]);
 				return;
@@ -134,38 +146,13 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 
 		const file = selectedFiles[0]; // only handle single file upload
 
-		// Validate file type (images and videos)
-		const validTypes = [
-			'image/jpeg',
-			'image/jpg',
-			'image/png',
-			'image/gif',
-			'image/webp',
-			'video/mp4',
-			'video/webm',
-			'video/ogg',
-			'video/quicktime',
-		];
-
-		if (!validTypes.includes(file.type)) {
+		// Validate file type and size
+		const validation = validateFileForUpload(file, CLIENT_FILE_TYPES, MAX_FILE_SIZE_CLIENT);
+		if (!validation.isValid) {
 			toast({
 				variant: 'destructive',
-				title: 'Tipo de archivo no válido',
-				description: `El archivo ${file.name} no es una imagen o video válido.`,
-			});
-			if (fileInputRef.current) {
-				fileInputRef.current.value = '';
-			}
-			return;
-		}
-
-		// Validate file size (max 50MB)
-		const maxSize = 50 * 1024 * 1024;
-		if (file.size > maxSize) {
-			toast({
-				variant: 'destructive',
-				title: 'Archivo muy grande',
-				description: `El archivo ${file.name} excede el tamaño máximo de 50MB.`,
+				title: 'Archivo no válido',
+				description: validation.error,
 			});
 			if (fileInputRef.current) {
 				fileInputRef.current.value = '';
@@ -197,7 +184,7 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 				toast({
 					variant: 'destructive',
 					title: 'Error al subir archivo',
-					description: 'Ocurrió un error al subir el archivo.',
+					description: translateError(error),
 				});
 			} else {
 				toast({
@@ -212,7 +199,7 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 			toast({
 				variant: 'destructive',
 				title: 'Error al subir archivo',
-				description: 'Ocurrió un error inesperado.',
+				description: translateError(error),
 			});
 		} finally {
 			setIsUploading(false);
@@ -240,7 +227,7 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 				toast({
 					variant: 'destructive',
 					title: 'Error al eliminar archivo',
-					description: 'No se pudo eliminar el archivo.',
+					description: translateError(error),
 				});
 			} else {
 				toast({
@@ -259,37 +246,14 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 			console.error('Error deleting file:', error);
 			toast({
 				variant: 'destructive',
-				title: 'Error',
-				description: 'Ocurrió un error inesperado.',
+				title: 'Error al eliminar archivo',
+				description: translateError(error),
 			});
 		} finally {
 			setFileToDelete(null);
 		}
 	};
 
-	const isVideo = (mimetype: string) => {
-		return mimetype.startsWith('video/');
-	};
-
-	const formatFileSize = (bytes: number) => {
-		if (bytes === 0) return '0 Bytes';
-		const k = 1024;
-		const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-		const i = Math.floor(Math.log(bytes) / Math.log(k));
-		return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-	};
-
-	const formatDate = (dateString: string) => {
-		if (!dateString) return '';
-		const date = new Date(dateString);
-		return date.toLocaleDateString('es-AR', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit',
-		});
-	};
 
 	const handlePrevious = () => {
 		if (selectedFileIndex !== null && selectedFileIndex > 0) {
@@ -319,7 +283,7 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 					<input
 						ref={fileInputRef}
 						type="file"
-						accept="image/*,video/*"
+						accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip"
 						className="hidden"
 						onChange={handleFileSelect}
 						disabled={isUploading}
@@ -344,15 +308,6 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 				<div className="flex-1 flex items-center justify-center">
 					<div className="text-center">
 						<p className="text-sm text-muted-foreground mb-4">No hay archivos para este cliente</p>
-						<Button
-							size="sm"
-							variant="outline"
-							onClick={() => fileInputRef.current?.click()}
-							disabled={isUploading}
-						>
-							<Upload className="h-4 w-4 mr-2" />
-							Subir primer archivo
-						</Button>
 					</div>
 				</div>
 			) : (
@@ -378,11 +333,18 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 											</div>
 										</div>
 									</div>
-								) : (
+								) : isImage(file.mimetype) ? (
 									<img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+								) : (
+									<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 p-4">
+										<FileText className="h-16 w-16 text-primary mb-2" />
+										<p className="text-xs font-medium text-center text-foreground">
+											{getFileExtension(file.name)}
+										</p>
+									</div>
 								)}
 
-								<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+								<div className="absolute top-2 right-2">
 									<Button
 										size="icon"
 										variant="destructive"
@@ -453,12 +415,32 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 								className="max-w-full max-h-full object-contain"
 								autoPlay
 							/>
-						) : (
+						) : isImage(files[selectedFileIndex].mimetype) ? (
 							<img
 								src={files[selectedFileIndex].url}
 								alt={files[selectedFileIndex].display_name || files[selectedFileIndex].name}
 								className="max-w-full max-h-full object-contain"
 							/>
+						) : (
+							<div className="flex flex-col items-center justify-center p-8 bg-card rounded-lg border">
+								<FileText className="h-24 w-24 text-primary mb-4" />
+								<p className="text-lg font-semibold text-foreground mb-2">
+									{getFileExtension(files[selectedFileIndex].name)}
+								</p>
+								<p className="text-sm text-muted-foreground mb-6 text-center max-w-md">
+									Este tipo de archivo no se puede previsualizar. Usa el botón de descarga para abrirlo.
+								</p>
+								<a
+									href={files[selectedFileIndex].url}
+									download={files[selectedFileIndex].display_name || files[selectedFileIndex].name}
+									className="inline-flex items-center gap-2"
+								>
+									<Button>
+										<Download className="h-4 w-4 mr-2" />
+										Descargar archivo
+									</Button>
+								</a>
+							</div>
 						)}
 
 						<div className="mt-4 text-white text-center px-4 max-w-xl">
@@ -504,7 +486,14 @@ export function ClientImagesGallery({ client }: ClientImagesGalleryProps) {
 
 			{/* Upload Dialog */}
 			<Dialog open={isUploadDialogOpen} onOpenChange={(open) => !open && handleCloseUploadDialog()}>
-				<DialogContent className="sm:max-w-[500px]">
+				<DialogContent
+					className="
+						w-[95vw]
+						max-w-lg
+						max-h-[95vh]
+						overflow-auto
+					"
+				>
 					<DialogHeader>
 						<DialogTitle>Subir archivo</DialogTitle>
 						<DialogDescription>

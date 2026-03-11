@@ -45,7 +45,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import { formatCurrency, formatCurrencyUSD } from './formats';
+import { formatCurrency, formatCurrencyUSD } from '../../helpers/format-prices.tsx/formats';
 
 interface BalanceDetailsModalProps {
 	balance: BalanceWithBudget | null;

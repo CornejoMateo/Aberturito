@@ -108,16 +108,16 @@ const navigation = [
 		disabled: false,
 	},
 	{
-		name: 'Presupuestos',
+		name: 'Reportes de Presupuestos',
 		href: '/budgets',
 		icon: FileText,
-		disabled: true,
+		disabled: false,
 	},
 	{
 		name: 'Reportes',
 		href: '/reports',
 		icon: BarChart3,
-		disabled: true,
+		disabled: false,
 	},
 ];
 
@@ -204,10 +204,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	// Definición de permisos por rol
 	const allowedByRole = useMemo(() => {
 		return {
-			Admin: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Obras', 'Calendario', 'Reportes', 'Ajustes y Diario'],
+			Admin: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Reportes de Presupuestos', 'Obras', 'Calendario', 'Reportes', 'Ajustes y Diario'],
 			Fabrica: ['Perfiles', 'Accesorios', 'Herrajes', 'Insumos'],
-			Ventas: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Presupuestos', 'Calendario'],
-			Marketing: ['Panel', 'Calendario', 'Clientes', 'Reportes', 'Presupuestos'],
+			Ventas: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Reportes de Presupuestos', 'Calendario'],
+			Marketing: ['Panel', 'Calendario', 'Clientes', 'Reportes', 'Reportes de Presupuestos'],
 			Colocador: ['Obras', 'Ajustes y Diario', 'Clientes'],
 		} as Record<string, string[]>;
 	}, []);

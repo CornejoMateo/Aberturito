@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '../supabase-client';
+import { ChecklistItem } from './checklists';
 
 export type Work = {
   id: string;
@@ -16,6 +17,12 @@ export type Work = {
     name: string;
     last_name: string;
   } | null;
+};
+
+export type WorkWithProgress = Work & {
+    tasks: ChecklistItem[];
+    progress: number;
+    hasNotes: boolean;
 };
 
 const TABLE = 'works';
@@ -130,6 +137,31 @@ export async function getWorksByClientId(
     return { data, error: null };
   } catch (error) {
     console.error('Error inesperado en getWorksByClientId:', {
+      error,
+      message: error instanceof Error ? error.message : 'Error desconocido'
+    });
+    return { 
+      data: null, 
+      error: error instanceof Error ? error.message : 'Error desconocido' 
+    };
+  }
+}
+
+export async function getWorksInProgressCount(): Promise<{ data: number | null; error: any }> {
+  try {
+    const supabase = getSupabaseClient();
+    const { count, error } = await supabase
+      .from('works')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'in_progress');
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return { data: count ?? 0, error: null };
+  } catch (error) {
+    console.error('Error inesperado en getWorksInProgressCount:', {
       error,
       message: error instanceof Error ? error.message : 'Error desconocido'
     });

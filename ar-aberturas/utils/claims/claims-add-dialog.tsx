@@ -4,22 +4,11 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogDescription,
-	DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
 import React, { useState, useEffect } from 'react';
 import { createClaim, updateClaim, Claim } from '@/lib/claims/claims';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
+import { ClaimsForm } from './claims-form';
 
 interface ClaimsAddDialogProps {
 	open: boolean;
@@ -36,7 +25,6 @@ export function ClaimsAddDialog({
 	claimToEdit,
 	mode = 'reclamo',
 }: ClaimsAddDialogProps) {
-	const { toast } = useToast();
 	const [isLoading, setIsLoading] = useState(false);
 	const [formData, setFormData] = useState({
 		client_name: claimToEdit?.client_name || '',
@@ -64,17 +52,7 @@ export function ClaimsAddDialog({
 				date: claimToEdit.date || new Date().toISOString().split('T')[0],
 			});
 		} else if (!claimToEdit && open) {
-			setFormData({
-				client_name: '',
-				client_phone: '',
-				work_zone: '',
-				work_locality: '',
-				work_address: '',
-				alum_pvc: '',
-				attend: '',
-				description: '',
-				date: new Date().toISOString().split('T')[0],
-			});
+			resetForm();
 		}
 	}, [open, claimToEdit]);
 
@@ -90,13 +68,6 @@ export function ClaimsAddDialog({
 		setFormData((prev) => ({
 			...prev,
 			[field]: value,
-		}));
-	};
-
-	const handleCheckboxChange = (checked: boolean) => {
-		setFormData((prev) => ({
-			...prev,
-			daily: checked,
 		}));
 	};
 
@@ -123,7 +94,10 @@ export function ClaimsAddDialog({
 				if (error) throw error;
 				toast({
 					title: mode === 'reclamo' ? 'Reclamo actualizado' : 'Actividad actualizada',
-					description: mode === 'reclamo' ? 'El reclamo ha sido actualizado correctamente.' : 'La actividad diaria ha sido actualizada correctamente.',
+					description:
+						mode === 'reclamo'
+							? 'El reclamo ha sido actualizado correctamente.'
+							: 'La actividad diaria ha sido actualizada correctamente.',
 				});
 			} else {
 				// Create new claim
@@ -131,23 +105,16 @@ export function ClaimsAddDialog({
 				if (error) throw error;
 				toast({
 					title: mode === 'reclamo' ? 'Reclamo creado' : 'Actividad creada',
-					description: mode === 'reclamo' ? 'El reclamo ha sido creado correctamente.' : 'La actividad diaria ha sido creada correctamente.',
+					description:
+						mode === 'reclamo'
+							? 'El reclamo ha sido creado correctamente.'
+							: 'La actividad diaria ha sido creada correctamente.',
 				});
 			}
 
 			onClaimAdded?.();
 			onOpenChange(false);
-			setFormData({
-				client_name: '',
-				client_phone: '',
-				work_zone: '',
-				work_locality: '',
-				work_address: '',
-				alum_pvc: '',
-				attend: '',
-				description: '',
-				date: new Date().toISOString().split('T')[0],
-			});
+			resetForm();
 		} catch (error) {
 			console.error('Error al procesar el reclamo:', error);
 			toast({
@@ -162,162 +129,53 @@ export function ClaimsAddDialog({
 		}
 	};
 
+	const resetForm = () => {
+		setFormData({
+			client_name: '',
+			client_phone: '',
+			work_zone: '',
+			work_locality: '',
+			work_address: '',
+			alum_pvc: '',
+			attend: '',
+			description: '',
+			date: new Date().toISOString().split('T')[0],
+		});
+	};
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="bg-card max-w-2xl">
 				<DialogHeader>
 					<DialogTitle className="text-foreground">
-						{claimToEdit ? (mode === 'reclamo' ? 'Editar reclamo' : 'Editar actividad') : (mode === 'reclamo' ? 'Registrar nuevo reclamo': 'Registrar nueva actividad')}
+						{claimToEdit
+							? mode === 'reclamo'
+								? 'Editar reclamo'
+								: 'Editar actividad'
+							: mode === 'reclamo'
+								? 'Registrar nuevo reclamo'
+								: 'Registrar nueva actividad'}
 					</DialogTitle>
 					<DialogDescription className="text-muted-foreground">
 						{claimToEdit
-							? (mode === 'reclamo' ? 'Actualice los datos del reclamo' : 'Actualice los datos de la actividad diaria')
-							: (mode === 'reclamo' ? 'Complete los datos del reclamo para agregarlo al sistema' : 'Complete los datos de la actividad diaria para agregarla al sistema')}
+							? mode === 'reclamo'
+								? 'Actualice los datos del reclamo'
+								: 'Actualice los datos de la actividad diaria'
+							: mode === 'reclamo'
+								? 'Complete los datos del reclamo para agregarlo al sistema'
+								: 'Complete los datos de la actividad diaria para agregarla al sistema'}
 					</DialogDescription>
 				</DialogHeader>
 
-				<form onSubmit={handleSubmit} className="grid gap-4 py-4">
-					<div className="grid grid-cols-2 gap-4">
-						<div className="grid gap-2">
-							<Label htmlFor="client_name" className="text-foreground">
-								Apellido y Nombre del cliente
-							</Label>
-							<Input
-								id="client_name"
-								value={formData.client_name}
-								onChange={handleInputChange}
-								className="bg-background"
-							/>
-						</div>
-						<div className="grid gap-2">
-							<Label htmlFor="client_phone" className="text-foreground">
-								Teléfono del cliente
-							</Label>
-							<Input
-								id="client_phone"
-								type="tel"
-								value={formData.client_phone}
-								onChange={handleInputChange}
-								className="bg-background"
-							/>
-						</div>
-					</div>
-
-					<div className="grid grid-cols-2 gap-4">
-						<div className="grid gap-2">
-							<Label htmlFor="work_locality" className="text-foreground">
-								Localidad de obra
-							</Label>
-							<Input
-								id="work_locality"
-								value={formData.work_locality}
-								onChange={handleInputChange}
-								placeholder="Localidad"
-								className="bg-background"
-							/>
-						</div>
-						<div className="grid gap-2">
-							<Label htmlFor="work_zone" className="text-foreground">
-								Zona de obra
-							</Label>
-							<Input
-								id="work_zone"
-								value={formData.work_zone}
-								onChange={handleInputChange}
-								placeholder="Zona"
-								className="bg-background"
-							/>
-						</div>
-					</div>
-
-					<div className="grid gap-2">
-						<Label htmlFor="work_address" className="text-foreground">
-							Dirección de obra
-						</Label>
-						<Input
-							id="work_address"
-							value={formData.work_address}
-							onChange={handleInputChange}
-							placeholder="Dirección completa"
-							className="bg-background"
-						/>
-					</div>
-
-					<div className="grid grid-cols-2 gap-4">
-						<div className="grid gap-2">
-							<Label htmlFor="alum_pvc" className="text-foreground">
-								Tipo
-							</Label>
-							<Select
-								value={formData.alum_pvc}
-								onValueChange={(value) => handleSelectChange('alum_pvc', value)}
-							>
-								<SelectTrigger className="bg-background">
-									<SelectValue placeholder="Seleccionar tipo" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="Aluminio">Aluminio</SelectItem>
-									<SelectItem value="PVC">PVC</SelectItem>
-									<SelectItem value="Persiana">Persiana</SelectItem>
-									<SelectItem value="Mampara">Mampara</SelectItem>
-									<SelectItem value="Portón">Portón</SelectItem>
-									<SelectItem value="Vidrio">Vidrio</SelectItem>
-									<SelectItem value="Otros">Otros</SelectItem>
-								</SelectContent>
-							</Select>
-						</div>
-
-						<div className="grid gap-2">
-							<Label htmlFor="date" className="text-foreground">
-								Fecha
-							</Label>
-							<Input
-								id="date"
-								type="date"
-								value={formData.date}
-								onChange={handleInputChange}
-								className="bg-background"
-							/>
-						</div>
-					</div>
-
-					{claimToEdit && (
-						<div className="grid gap-2">
-							<Label htmlFor="attend" className="text-foreground">
-								Atendido por
-							</Label>
-							<Input
-								id="attend"
-								value={formData.attend}
-								onChange={handleInputChange}
-								placeholder="Nombre del responsable"
-								className="bg-background"
-							/>
-						</div>
-					)}
-
-					<div className="grid gap-2">
-						<Label htmlFor="description" className="text-foreground">
-							Descripción
-						</Label>
-						<Textarea
-							id="description"
-							value={formData.description}
-							onChange={handleInputChange}
-							placeholder="Describa el reclamo/actividad..."
-							className="bg-background min-h-[100px]"
-						/>
-					</div>
-
-					<DialogFooter>
-						<Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
-							Cancelar
-						</Button>
-						<Button type="submit" disabled={isLoading}>
-							{isLoading ? 'Guardando...' : claimToEdit ? 'Actualizar' : 'Guardar'}
-						</Button>
-					</DialogFooter>
-				</form>
+				<ClaimsForm
+					formData={formData}
+					isLoading={isLoading}
+					claimToEdit={claimToEdit}
+					onInputChange={handleInputChange}
+					onSelectChange={handleSelectChange}
+					onSubmit={handleSubmit}
+					onCancel={() => onOpenChange(false)}
+				/>
 			</DialogContent>
 		</Dialog>
 	);

@@ -10,89 +10,63 @@ import { EmailLink } from '@/components/ui/email-link';
 import { WhatsAppLink } from '@/components/ui/whatsapp-link';
 import { useState, useEffect } from 'react';
 import { WorkForm } from '@/utils/works/work-form';
-import { createWork, getWorksByClientId, Work, deleteWork } from '@/lib/works/works';
+import { Work } from '@/lib/works/works';
 import { WorksList } from '@/utils/works/works-list';
-import { updateClient } from '@/lib/clients/clients';
+import { getClientById, updateClient } from '@/lib/clients/clients';
 import { ClientBalances } from '@/utils/balances/client-balances';
 import { BalanceForm } from '@/utils/balances/balance-form';
-import { createBalance, BudgetWithWork } from '@/lib/works/balances';
+import { createBalance } from '@/lib/works/balances';
 import { toast } from '@/components/ui/use-toast';
 import { ClientBudgetsTab } from '@/utils/budgets/client-budgets-tab';
-import { getFolderBudgetsByClientId } from '@/lib/budgets/folder_budgets';
-import { getBudgetsByFolderBudgetIds } from '@/lib/budgets/budgets';
-import { ClientImagesGallery } from '@/utils/images-client/images-client';
+import { ClientImagesGallery } from '@/utils/files-client/files-client';
 import { useAuth } from '@/components/provider/auth-provider';
+import { useAutoSave } from '@/hooks/clients/use-auto-save';
+import { translateError } from '@/lib/error-translator';
+import { useClientWorks } from '@/hooks/clients/use-client-works';
+import { useClientBudgets } from '@/hooks/clients/use-client-budgets';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
   isOpen: boolean;
   onClose: () => void;
   onEdit: () => void;
+  onClientUpdated?: () => void;
 }
 
-export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientDetailsDialogProps) {
+export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientUpdated }: ClientDetailsDialogProps) {
   const [isWorkFormOpen, setIsWorkFormOpen] = useState(false);
   const [isBalanceFormOpen, setIsBalanceFormOpen] = useState(false);
-  const [works, setWorks] = useState<Work[]>([]);
-  const [budgets, setBudgets] = useState<BudgetWithWork[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [clientData, setClientData] = useState<Client | null>(null);
-  const [cover, setCover] = useState('');
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [isSavingCover, setIsSavingCover] = useState(false);
   const [balancesKey, setBalancesKey] = useState(0);
-  const [worksLoaded, setWorksLoaded] = useState(false);
-  const [budgetsLoaded, setBudgetsLoaded] = useState(false);
   const { user } = useAuth();
-  
-  // function to load works when the works tab is opened for the first time
-  const loadWorks = async (force = false) => {
-    if (!client || (!force && worksLoaded)) return;
-    
-    try {
-      setIsLoading(true);
-      const { data, error } = await getWorksByClientId(client.id);
+
+  // Auto-save hook for cover field
+  const { isSaving, hasUnsavedChanges, value: cover, handleChange, handleKeyDown, setValue: setCover } = useAutoSave({
+    onSave: async (value: string) => {
+      if (!client) return { error: 'No client selected' };
       
-      if (error) {
-        console.error('Error al cargar obras:', error);
-        setWorks([]);
-      } else {
-        setWorks(data || []);
-        setWorksLoaded(true);
-      }
-    } catch (error) {
-      console.error('Error inesperado al cargar obras:', error);
-      setWorks([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // function to load budgets when the budgets tab is opened for the first time
-  const loadBudgets = async (force = false) => {
-    if (!client || (!force && budgetsLoaded)) return;
-    
-    try {
-      const { data: folderBudgets } = await getFolderBudgetsByClientId(client.id);
+      const { data, error } = await updateClient(client.id, { cover: value });
       
-      if (folderBudgets && folderBudgets.length > 0) {
-        const folderBudgetIds = folderBudgets.map((f) => f.id);
-        const { data: budgetsData } = await getBudgetsByFolderBudgetIds(folderBudgetIds);
+      if (!error && data) {
+        setClientData(data);
         
-        if (budgetsData) {
-          setBudgets(budgetsData);
-          setBudgetsLoaded(true);
+        // Notify parent component to refresh its data
+        if (onClientUpdated) {
+          onClientUpdated();
         }
-      } else {
-        setBudgets([]);
-        setBudgetsLoaded(true);
       }
-    } catch (error) {
-      console.error('Error al cargar presupuestos:', error);
-      setBudgets([]);
-    }
-  };
+      
+      return { data, error };
+    },
+    successMessage: 'Información guardada',
+    errorMessage: 'Error al guardar información',
+  });
+  
+  const { works, isLoading, loadWorks, create, remove, update } =
+    useClientWorks(client?.id);
+
+  const { budgets, loadBudgets } =
+    useClientBudgets(client?.id);
   
   const handleTabChange = (value: string) => {
     if (value === 'works') {
@@ -103,130 +77,138 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
   };
   
   const handleWorkDelete = async (workId: string) => {
-    if (!client) return;
-    
     try {
-      setIsDeleting(true);
-      const { error } = await deleteWork(workId);
-      
-      if (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error al eliminar la obra',
-          description: 'Hubo un problema al eliminar la obra. Intente nuevamente.',
-        });
-        return;
-      }
-      
+      await remove(workId);
+
       toast({
         title: 'Obra eliminada',
         description: 'La obra se ha eliminado exitosamente.',
       });
 
-      // Refresh the works list
-      await loadWorks(true);
     } catch (error) {
-      console.error('Error inesperado al eliminar la obra:', error);
-    } finally {
-      setIsDeleting(false);
+      const errorMessage = translateError(error);
+      toast({
+        variant: 'destructive',
+        title: 'Error al eliminar la obra',
+        description: errorMessage || 'Hubo un problema al eliminar la obra.',
+      });
     }
   };
 
-  const handleWorkCreated = async (workData: Omit<Work, 'id' | 'created_at' | 'client_id'>) => {
-    if (!client) return;
-    
+  const handleWorkCreated = async (
+    workData: Omit<Work, 'id' | 'created_at' | 'client_id'>
+  ) => {
     try {
-      setIsLoading(true);
-      const { data: newWork, error } = await createWork({
-        ...workData,
-        client_id: client.id
-      });
-      
-      if (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error al crear la obra',
-          description: 'Hubo un problema al crear la obra. Intente nuevamente.',
-        });
-        return;
-      }
-      
+      await create(workData);
+
       toast({
         title: 'Obra creada',
         description: 'La obra se ha creado exitosamente.',
       });
-      // reload the list of works
-      await loadWorks(true);
-      
+
       setIsWorkFormOpen(false);
+
     } catch (error) {
-      console.error('Error inesperado al crear la obra:', error);
-    } finally {
-      setIsLoading(false);
+      const errorMessage = translateError(error);
+      toast({
+        variant: 'destructive',
+        title: 'Error al crear la obra',
+        description: errorMessage || 'Hubo un problema al crear la obra.',
+      });
     }
   };
 
-  const handleBalanceCreated = async (balanceData: any) => {    
+  const handleWorkUpdate = async (
+    workId: string,
+    updates: Partial<Work>
+  ): Promise<Work> => {
     try {
-      setIsLoading(true);
-      const { data, error } = await createBalance(balanceData);
-      
-      if (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error al crear balance',
-          description: 'Hubo un problema al crear el balance. Intente nuevamente.',
-        });
-        return;
-      }
-      
+      const updatedWork = await update(workId, updates);
+      toast({
+        title: 'Obra actualizada',
+        description: 'La obra se actualizó correctamente.',
+      });
+      return updatedWork as Work;
+
+    } catch (error) {
+      const errorMessage = translateError(error);
+
+      toast({
+        variant: 'destructive',
+        title: 'Error al actualizar la obra',
+        description:
+          errorMessage || 'Hubo un problema al actualizar la obra.',
+      });
+      throw error;
+    }
+  };
+
+  const handleBalanceCreated = async (balanceData: any) => {
+    try {
+      await createBalance(balanceData);
+
       toast({
         title: 'Saldo creado',
-        description: 'El Saldo se ha creado exitosamente.',
+        description: 'El saldo se ha creado exitosamente.',
       });
+
       setIsBalanceFormOpen(false);
-      setBalancesKey(prev => prev + 1);
-      await loadBudgets(true);
+      await loadBudgets();
+
     } catch (error) {
-      console.error('Error inesperado al crear Saldo:', error);
-    } finally {
-      setIsLoading(false);
+      const errorMessage = translateError(error);
+      toast({
+        variant: 'destructive',
+        title: 'Error al crear el saldo',
+        description: errorMessage || 'Hubo un problema al crear el saldo.',
+      });
     }
   };
   
-  // Update local client data when client prop changes
+  // Update local client data when client prop changes or dialog opens
   useEffect(() => {
-    if (client) {
-      setClientData(client);
-      setCover(client.cover || '');
-      setHasUnsavedChanges(false);
-      // Reset loaded flags when client changes
-      setWorksLoaded(false);
-      setBudgetsLoaded(false);
-      setWorks([]);
-      setBudgets([]);
+    if (client && isOpen) {
+      // Load fresh data when dialog opens
+      const loadFreshClientData = async () => {
+        try {
+          const { data: freshClientData, error } = await getClientById(client.id);
+          if (error) {
+            console.error('Error loading fresh client data:', error);
+            // Fallback to prop data if fresh data fails
+            setClientData(client);
+            setCover(client.cover || '');
+          } else if (freshClientData) {
+            setClientData(freshClientData);
+            setCover(freshClientData.cover || '');
+          }
+        } catch (error) {
+          console.error('Error loading fresh client data:', error);
+          // Fallback to prop data if fresh data fails
+          setClientData(client);
+          setCover(client.cover || '');
+        }
+      };
+      loadFreshClientData();
+    } else if (!client) {
+      setClientData(null);
+      setCover('');
     }
-  }, [client]);
+  }, [client, isOpen]);
 
-  const handleCoverChange = (value: string) => {
-    setCover(value);
-    setHasUnsavedChanges(true);
-  };
-
-  const handleSaveCover = async () => {
-    if (!client) return;
-    
-    try {
-      setIsSavingCover(true);
-      await updateClient(client.id, { cover });
-      setClientData(prev => prev ? { ...prev, cover } : null);
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      console.error('Error updating cover:', error);
-    } finally {
-      setIsSavingCover(false);
+  // Reset all states when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      resetForm();
     }
-  };
+  }, [isOpen]);
+
+  const resetForm = () => {
+      setClientData(null);
+      setCover('');
+      setIsWorkFormOpen(false);
+      setIsBalanceFormOpen(false);
+      setBalancesKey(0);
+  }
 
   if (!clientData) return null;
 
@@ -291,19 +273,24 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium text-xs">Información adicional</h4>
-                        <Button
-                          size="sm"
-                          onClick={handleSaveCover}
-                          disabled={!hasUnsavedChanges || isSavingCover}
-                        >
-                          {isSavingCover ? 'Guardando...' : 'Guardar'}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          {hasUnsavedChanges && (
+                            <span className="text-xs text-muted-foreground">
+                              {isSaving ? 'Guardando...' : 'Sin guardar'}
+                            </span>
+                          )}
+                          {isSaving && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                          )}
+                        </div>
                       </div>
                       <Textarea
                         value={cover}
-                        onChange={(e) => handleCoverChange(e.target.value)}
+                        onChange={(e) => handleChange(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         placeholder="Escribe aquí..."
                         className="min-h-[200px] bg-background"
+                        disabled={isSaving}
                       />
                     </div>
                   </div>
@@ -319,6 +306,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                         works={works} 
                         onDelete={handleWorkDelete}
                         onCreateWork={() => setIsWorkFormOpen(true)}
+                        onUpdate={handleWorkUpdate}
                       />
                     ) : (
                       <div className="text-center py-8">
@@ -337,7 +325,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit }: ClientD
                   </div>
                 </TabsContent>
                 <TabsContent value="budgets">
-                  <ClientBudgetsTab clientId={clientData.id} works={works} onBudgetsChange={setBudgets} />
+                  <ClientBudgetsTab clientId={clientData.id} works={works} onBudgetsChange={loadBudgets} />
                 </TabsContent>
                 <TabsContent value="images" className="h-[calc(100%-2.5rem)]">
                   <ClientImagesGallery client={clientData} />

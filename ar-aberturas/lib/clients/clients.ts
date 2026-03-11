@@ -16,17 +16,26 @@ export type Client = {
 	phone_number?: string | null;
 	locality?: string | null;
 	email?: string | null;
-	images?: ClientFileMetadata[] | null; // array JSON
+	files?: ClientFileMetadata[] | null; // array JSON
 	cover?: string | null;
+	contact_method?: string | null;
 };
 
 const TABLE = 'clients';
+
+export async function getClientsCount(): Promise<{ data: number; error: any }> {
+	const supabase = getSupabaseClient();
+	const { count, error } = await supabase
+		.from(TABLE)
+		.select('*', { count: 'exact', head: true });
+	return { data: count || 0, error };
+}
 
 export async function listClients(): Promise<{ data: Client[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('name, last_name, id, phone_number, locality, email, images')
+		.select('name, last_name, id, phone_number, locality, email, files, contact_method')
 		.order('created_at', { ascending: false });
 	return { data, error };
 }
@@ -115,7 +124,7 @@ export async function listClientFiles(
 	const supabase = getSupabaseClient();
 
 	try {
-		// Get client data to access images array
+		// Get client data to access files array
 		const { data: client, error: clientError } = await getClientById(clientId);
 
 		if (clientError || !client) {
@@ -123,32 +132,28 @@ export async function listClientFiles(
 			return { data: [], error: clientError };
 		}
 
-		if (!client.images || client.images.length === 0) {
+		if (!client.files || client.files.length === 0) {
 			return { data: [], error: null };
 		}
 
-		// For each image in the client's images array, get the file metadata from storage
-		const clientFiles: ClientFile[] = await Promise.all(
-			client.images.map(async (imageData: ClientFileMetadata) => {
-				const fileName = imageData.path.split('/').pop() || '';
+		const { data: files } = await supabase
+			.storage
+			.from('clients')
+			.list(clientId);		
 
-				// Try to get file metadata from storage
-				const { data: fileData } = await supabase.storage.from('clients').list(clientId, {
-					search: fileName,
-				});
+		const clientFiles = client.files.map((fileData) => {
+			const fileName = fileData.path.split('/').pop() || '';
 
-				const fileMetadata = fileData?.find((f) => f.name === fileName);
+			const fileMetadata = files?.find((f) => f.name === fileName);
 
-                // return the combined metadata for the client file
-				return {
-					...imageData,
-					name: fileName,
-					id: fileMetadata?.id || fileName,
-					size: fileMetadata?.metadata?.size || 0,
-					mimetype: fileMetadata?.metadata?.mimetype || 'image/jpeg',
-				};
-			})
-		);
+			return {
+				...fileData,
+				name: fileName,
+				id: fileMetadata?.id || fileName,
+				size: fileMetadata?.metadata?.size || 0,
+				mimetype: fileMetadata?.metadata?.mimetype || 'image/jpeg',
+			};
+		});
 
 		return { data: clientFiles, error: null };
 	} catch (err) {
@@ -203,17 +208,17 @@ export async function uploadClientFile(
 			fileMetadata.description = description;
 		}
 
-		// Add file metadata to images array
-		const currentImages = client.images || [];
-		const updatedImages = [...currentImages, fileMetadata];
+		// Add file metadata to files array
+		const currentFiles = client.files || [];
+		const updatedFiles = [...currentFiles, fileMetadata];
 
 		// Update client with new images array
 		const { data: updateData, error: updateError } = await updateClient(clientId, {
-			images: updatedImages,
+			files: updatedFiles,
 		});
 
 		if (updateError) {
-			console.error('Error updating client images:', updateError);
+			console.error('Error updating client files:', updateError);
             // if there's an error updating the client, we should delete the uploaded file to avoid orphan files in storage
 			await supabase.storage.from('clients').remove([filePath]);
 			return { data: null, error: updateError };
@@ -257,14 +262,14 @@ export async function deleteClientFile(
 		}
 
 		// Remove file from images array by comparing paths
-		const currentImages = client.images || [];
-		const updatedImages = currentImages.filter((img) => img.path !== filePath);
+		const currentFiles = client.files || [];
+		const updatedFiles = currentFiles.filter((file) => file.path !== filePath);
 
 		// Update client with new images array
-		const { error: updateError } = await updateClient(clientId, { images: updatedImages });
+		const { error: updateError } = await updateClient(clientId, { files: updatedFiles });
 
 		if (updateError) {
-			console.error('Error updating client images:', updateError);
+			console.error('Error updating client files:', updateError);
 			return { data: null, error: updateError };
 		}
 

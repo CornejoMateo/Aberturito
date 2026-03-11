@@ -7,14 +7,12 @@ import {
 	MapPin,
 	User,
 	FileText,
-	CheckCircle,
-	Clock,
 	ChevronDown,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { typeConfig, statusOptions } from '@/constants/type-config';
 import { Event, updateEvent } from '@/lib/calendar/events';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { Bell } from 'lucide-react';
 
@@ -32,7 +30,6 @@ export function EventDetailsModal({
 	onEventUpdated,
 }: EventDetailsModalProps) {
 	const typeInfo = typeConfig[(event.type ?? 'otros') as keyof typeof typeConfig];
-	const TypeIcon = typeInfo.icon;
 	const { toast } = useToast();
 	const [currentStatus, setCurrentStatus] = useState(event.status || 'Pendiente');
 

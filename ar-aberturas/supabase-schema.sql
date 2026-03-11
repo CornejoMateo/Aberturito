@@ -151,8 +151,9 @@ create table public.clients (
   phone_number character varying null,
   locality character varying null,
   email character varying null,
-  images jsonb null,
+  files jsonb null,
   cover text null,
+  contact_method text null,
   constraint clients_pkey primary key (id)
 ) TABLESPACE pg_default;
 

@@ -20,7 +20,7 @@ import { toast } from '@/components/ui/use-toast';
 import { ClientBudgetsTab } from '@/utils/budgets/client-budgets-tab';
 import { ClientImagesGallery } from '@/utils/images-client/images-client';
 import { useAuth } from '@/components/provider/auth-provider';
-import { useAutoSave } from '@/hooks/use-auto-save';
+import { useAutoSave } from '@/hooks/clients/use-auto-save';
 import { translateError } from '@/lib/error-translator';
 import { useClientWorks } from '@/hooks/clients/use-client-works';
 import { useClientBudgets } from '@/hooks/clients/use-client-budgets';
@@ -188,7 +188,6 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientU
           setCover(client.cover || '');
         }
       };
-      
       loadFreshClientData();
     } else if (!client) {
       setClientData(null);

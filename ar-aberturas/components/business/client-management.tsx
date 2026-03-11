@@ -277,13 +277,13 @@ export function ClientManagement() {
 														.map((n) => n[0])
 														.join('')
 														.toUpperCase()
-														.slice(0, 2)}
+														.slice(0, 1)}
 													{client.name
 														?.split(' ')
 														.map((n) => n[0])
 														.join('')
 														.toUpperCase()
-														.slice(0, 2)}
+														.slice(0, 1)}
 												</span>
 											</div>
 											<div>

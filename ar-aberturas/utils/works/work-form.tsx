@@ -13,11 +13,11 @@ interface WorkFormProps {
   onCancel: () => void;
 }
 
-export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
+export function WorkForm({ onSubmit, onCancel }: WorkFormProps) {
   const [formData, setFormData] = useState<Omit<Work, 'id' | 'created_at' | 'client_id'>>({
     locality: '',
     address: '',
-    status: 'Pendiente',
+    status: 'pending',
     architect: '',
   });
 
@@ -65,11 +65,11 @@ export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
           <Label htmlFor="status">Estado</Label>
           <Select
             name="status"
-            value={formData.status || 'Sin empezar'}
+            value={formData.status || 'pending'}
             onValueChange={(value) => 
               setFormData(prev => ({
                 ...prev,
-                status: value as 'Pendiente' | 'En progreso' | 'Completada'
+                status: value as 'pending' | 'in_progress' | 'completed'
               }))
             }
             required

@@ -47,7 +47,7 @@ export function useClientWorks(clientId?: string) {
 		if (error) throw error;
 
 		setWorks((prev) =>
-			prev.map((work) => (work.id === workId ? { ...work, ...data, ...updates } as Work : work))
+			prev.map((work) => (work.id === workId ? ({ ...work, ...data, ...updates } as Work) : work))
 		);
 
 		return data;

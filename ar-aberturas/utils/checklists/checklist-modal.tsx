@@ -15,17 +15,14 @@ import {
 } from '@/components/ui/select';
 import { Plus, Trash2, Loader2, CheckCircle } from 'lucide-react';
 import {
-	pvcChecklistItems,
-	aluminioChecklistNames,
-	mamparasChecklistNames,
-	vidrioChecklistNames,
-	persianasChecklistNames,
-	portonesChecklistNames,
+	checklistTypes,
+	ChecklistType
 } from '@/lib/works/checklists.constants';
 import { Checklist } from '@/lib/works/checklists';
 import { toast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { translateError } from '@/lib/error-translator';
+import { useChecklistModal } from '@/hooks/clients/use-checklist-modal';
 
 type ChecklistModalProps = {
 	workId: string;
@@ -38,7 +35,7 @@ type ChecklistModalProps = {
 		description?: string | null;
 		width?: number | null;
 		height?: number | null;
-		type_opening?: 'PVC' | 'Aluminio' | 'Persiana' | 'Mampara' | 'Porton' | 'Vidrio' | null;
+		type_opening?: ChecklistType | null;
 		items: Array<{ name: string; completed: boolean }>;
 	}) => Promise<void>;
 	onUpdate?: (
@@ -48,15 +45,13 @@ type ChecklistModalProps = {
 			description?: string | null;
 			width?: number | null;
 			height?: number | null;
-			type_opening?: 'PVC' | 'Aluminio' | 'Persiana' | 'Mampara' | 'Porton' | 'Vidrio' | null;
+			type_opening?: ChecklistType | null;
 			items: Array<{ name: string; done: boolean }>;
 		}
 	) => void;
 };
 
 export function ChecklistModal({
-	workId,
-	existingChecklists,
 	open,
 	onOpenChange,
 	checklistToEdit,
@@ -73,47 +68,7 @@ export function ChecklistModal({
 	const modalOpen = isControlled ? open : isOpen;
 	const setModalOpen = isControlled ? onOpenChange || (() => {}) : setIsOpen;
 
-	const [checklist, setChecklist] = useState<{
-		name?: string | null;
-		description?: string | null;
-		type_opening?: 'PVC' | 'Aluminio' | 'Persiana' | 'Mampara' | 'Porton' | 'Vidrio' | null;
-		width?: number | null;
-		height?: number | null;
-		items: Array<{ name: string; completed: boolean }>;
-	}>({
-		name: null,
-		description: null,
-		width: null,
-		height: null,
-		items: [],
-		type_opening: null,
-	});
-
-	// Initialize from checklist to edit
-	useEffect(() => {
-		if (checklistToEdit && modalOpen) {
-			const editChecklist = {
-				name: checklistToEdit.name || null,
-				description: checklistToEdit.description || null,
-				width: checklistToEdit.width || null,
-				height: checklistToEdit.height || null,
-				type_opening:
-					(checklistToEdit.type_opening as
-						| 'PVC'
-						| 'Aluminio'
-						| 'Persiana'
-						| 'Mampara'
-						| 'Porton'
-						| 'Vidrio'
-						| null) || null,
-				items: (checklistToEdit.items || []).map((item) => ({
-					name: item.name,
-					completed: item.done || false,
-				})),
-			};
-			setChecklist(editChecklist);
-		}
-	}, [checklistToEdit, modalOpen]);
+	const types = Object.values(checklistTypes);
 
 	// Reset when modal opens/closes
 	useEffect(() => {
@@ -126,66 +81,20 @@ export function ChecklistModal({
 		}
 	}, [modalOpen, isEditMode]);
 
-	const resetForm = () => {
-		setChecklist({
-			name: null,
-			description: null,
-			width: null,
-			height: null,
-			items: [],
-			type_opening: null,
-		});
-		setError(null);
-	};
-
-	const addChecklistItem = (itemText: string) => {
-		if (itemText.trim()) {
-			setChecklist((prev) => ({
-				...prev,
-				items: [...prev.items, { name: itemText.trim(), completed: false }],
-			}));
+	useEffect(() => {
+		if (isEditMode && checklistToEdit) {
+			initializeChecklist(checklistToEdit);
 		}
-	};
+	}, [checklistToEdit, isEditMode]);
 
-	const removeChecklistItem = (itemIndex: number) => {
-		setChecklist((prev) => ({
-			...prev,
-			items: prev.items.filter((_, i) => i !== itemIndex),
-		}));
-	};
-
-	const updateChecklistField = (field: string, value: any) => {
-		setChecklist((prev) => ({
-			...prev,
-			[field]: value === '' ? null : value,
-		}));
-
-		if (field === 'type_opening') {
-			const defaultItems =
-				value === 'PVC'
-					? pvcChecklistItems
-					: value === 'Aluminio'
-						? aluminioChecklistNames
-						: value === 'Mampara'
-							? mamparasChecklistNames
-							: value === 'Vidrio'
-								? vidrioChecklistNames
-								: value === 'Persiana'
-									? persianasChecklistNames
-									: value === 'Porton'
-										? portonesChecklistNames
-										: [];
-
-			setChecklist((prev) => ({
-				...prev,
-				[field]: value === '' ? null : value,
-				items: defaultItems.map((itemName) => ({
-					name: itemName,
-					completed: false,
-				})),
-			}));
-		}
-	};
+	const {
+		checklist,
+		resetForm,
+		updateField,
+		addItem,
+		removeItem,
+		initializeChecklist,
+	} = useChecklistModal();
 
 	const handleSaveAndNext = async () => {
 		setIsCreating(true);
@@ -269,7 +178,7 @@ export function ChecklistModal({
 								<Input
 									placeholder="Identificador"
 									value={checklist.name || ''}
-									onChange={(e) => updateChecklistField('name', e.target.value)}
+									onChange={(e) => updateField('name', e.target.value)}
 									className="text-center border-0 shadow-none focus-visible:ring-1 bg-muted/30"
 								/>
 							</div>
@@ -283,7 +192,7 @@ export function ChecklistModal({
 										id="description"
 										placeholder="Descripción (opcional)"
 										value={checklist.description || ''}
-										onChange={(e) => updateChecklistField('description', e.target.value)}
+										onChange={(e) => updateField('description', e.target.value)}
 										className="h-10"
 									/>
 								</div>
@@ -293,18 +202,17 @@ export function ChecklistModal({
 									</Label>
 									<Select
 										value={checklist.type_opening || ''}
-										onValueChange={(value) => updateChecklistField('type_opening', value)}
+										onValueChange={(value) => updateField('type_opening', value)}
 									>
 										<SelectTrigger id="opening-type" className="h-10">
 											<SelectValue placeholder="Seleccionar tipo" />
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem value="PVC">PVC</SelectItem>
-											<SelectItem value="Aluminio">Aluminio</SelectItem>
-											<SelectItem value="Mampara">Mampara</SelectItem>
-											<SelectItem value="Vidrio">Vidrio</SelectItem>
-											<SelectItem value="Persiana">Persiana</SelectItem>
-											<SelectItem value="Porton">Portón</SelectItem>
+											{types.map((type) => (
+												<SelectItem key={type} value={type}>
+													{type}
+												</SelectItem>
+											))}
 										</SelectContent>
 									</Select>
 								</div>
@@ -321,7 +229,7 @@ export function ChecklistModal({
 										placeholder="Ancho"
 										value={checklist.width || ''}
 										onChange={(e) =>
-											updateChecklistField('width', parseFloat(e.target.value) || null)
+											updateField('width', parseFloat(e.target.value) || null)
 										}
 										className="h-10"
 									/>
@@ -336,7 +244,7 @@ export function ChecklistModal({
 										placeholder="Alto"
 										value={checklist.height || ''}
 										onChange={(e) =>
-											updateChecklistField('height', parseFloat(e.target.value) || null)
+											updateField('height', parseFloat(e.target.value) || null)
 										}
 										className="h-10"
 									/>
@@ -361,7 +269,7 @@ export function ChecklistModal({
 												type="button"
 												variant="ghost"
 												size="sm"
-												onClick={() => removeChecklistItem(itemIndex)}
+												onClick={() => removeItem(itemIndex)}
 												className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
 											>
 												<Trash2 className="h-4 w-4" />
@@ -377,7 +285,7 @@ export function ChecklistModal({
 											if (e.key === 'Enter') {
 												e.preventDefault();
 												const target = e.target as HTMLInputElement;
-												addChecklistItem(target.value);
+												addItem(target.value);
 												target.value = '';
 											}
 										}}
@@ -388,7 +296,7 @@ export function ChecklistModal({
 										onClick={(e) => {
 											const input = e.currentTarget.parentElement?.querySelector('input');
 											if (input) {
-												addChecklistItem(input.value);
+												addItem(input.value);
 												input.value = '';
 											}
 										}}

@@ -180,7 +180,7 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 			toast({
 				variant: 'destructive',
 				title: 'Error al subir imagen',
-				description: translateError('Ocurrió un error inesperado.'),
+				description: translateError(error instanceof Error ? error.message : 'Ocurrió un error inesperado.'),
 			});
 		} finally {
 			setIsUploading(false);
@@ -199,10 +199,11 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 				.remove([filePath]);
 
 			if (error) {
+				const errorMessage = translateError(error.message);
 				toast({
 					variant: 'destructive',
 					title: 'Error al eliminar imagen',
-					description: translateError('No se pudo eliminar la imagen.'),
+					description: errorMessage,
 				});
 			} else {
 				toast({
@@ -213,16 +214,16 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 			}
 		} catch (error) {
 			console.error('Error deleting image:', error);
+			const errorMessage = error instanceof Error ? error.message : 'Ocurrió un error inesperado.';
 			toast({
 				variant: 'destructive',
 				title: 'Error',
-				description: translateError('Ocurrió un error inesperado.'),
+				description: translateError(errorMessage),
 			});
 		} finally {
 			setImageToDelete(null);
 		}
 	};
-
 
 	const handlePrevious = () => {
 		if (selectedImageIndex !== null && selectedImageIndex > 0) {

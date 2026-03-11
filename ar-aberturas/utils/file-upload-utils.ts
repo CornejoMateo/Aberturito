@@ -20,8 +20,21 @@ export const VIDEO_TYPES = [
 	'video/quicktime',
 ] as const;
 
-// All supported file types for clients (images + videos)
-export const CLIENT_FILE_TYPES = [...IMAGE_TYPES, ...VIDEO_TYPES] as const;
+// Document file types (for clients)
+export const DOCUMENT_TYPES = [
+	'application/pdf',
+	'application/vnd.ms-excel',
+	'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+	'text/csv',
+	'application/msword',
+	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+	'text/plain',
+	'application/zip',
+	'application/x-zip-compressed',
+] as const;
+
+// All supported file types for clients (images + videos + documents)
+export const CLIENT_FILE_TYPES = [...IMAGE_TYPES, ...VIDEO_TYPES, ...DOCUMENT_TYPES] as const;
 
 // Only image types for claims
 export const CLAIM_FILE_TYPES = IMAGE_TYPES;
@@ -83,10 +96,32 @@ export const validateFileForUpload = (
 };
 
 /**
+ * Checks if a mimetype is an image
+ */
+export const isImage = (mimetype: string): boolean => {
+	return mimetype.startsWith('image/');
+};
+
+/**
  * Checks if a mimetype is a video
  */
 export const isVideo = (mimetype: string): boolean => {
 	return mimetype.startsWith('video/');
+};
+
+/**
+ * Checks if a mimetype is a document
+ */
+export const isDocument = (mimetype: string): boolean => {
+	return !isImage(mimetype) && !isVideo(mimetype);
+};
+
+/**
+ * Gets a file extension from filename
+ */
+export const getFileExtension = (filename: string): string => {
+	const parts = filename.split('.');
+	return parts.length > 1 ? parts[parts.length - 1].toUpperCase() : 'FILE';
 };
 
 /**

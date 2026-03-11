@@ -72,9 +72,9 @@ export function ChartsCarousel({
                     labelLine={false}
                     label={({ name }) => {
                       if (percentageLabels[name]) {
-                        return `${name}: ${percentageLabels[name]}%`;
+                        return `${percentageLabels[name]}%`;
                       }
-                      return name;
+                      return;
                     }}
                     outerRadius={80}
                     fill="#8884d8"

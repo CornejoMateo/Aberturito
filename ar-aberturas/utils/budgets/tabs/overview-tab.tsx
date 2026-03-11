@@ -62,8 +62,8 @@ export function OverviewTab({
           percentageLabels={{
             'Vendidos': percentages.soldPercentage,
             'Pendientes': percentages.chosenPercentage,
-            'Con Presupuesto': percentages.clientsWithBudgetPercentage,
-            'Sin Presupuesto': percentages.clientsWithoutBudgetPercentage,
+            'Con presupuesto': percentages.clientsWithBudgetPercentage,
+            'Sin presupuesto': percentages.clientsWithoutBudgetPercentage,
           }}
         />
       </Card>

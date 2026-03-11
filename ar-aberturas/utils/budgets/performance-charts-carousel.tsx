@@ -91,7 +91,7 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
         ),
     },
     {
-      title: 'Promedio de Presupuestos por Día',
+      title: 'Promedio de presupuestos por día',
       description: 'Promedio diario de presupuestos realizados cada mes',
       render: () =>
         metrics.totalBudgets > 0 ? (
@@ -111,7 +111,7 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
         ),
     },
     {
-      title: 'Cantidad de Presupuestos por Localidad',
+      title: 'Cantidad de presupuestos por localidad',
       description: 'Distribución de presupuestos según la localidad',
       render: () =>
         metrics.budgetsByLocation && metrics.budgetsByLocation.length > 0 ? (

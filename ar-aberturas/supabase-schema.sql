@@ -153,6 +153,7 @@ create table public.clients (
   email character varying null,
   images jsonb null,
   cover text null,
+  contact_method text null,
   constraint clients_pkey primary key (id)
 ) TABLESPACE pg_default;
 

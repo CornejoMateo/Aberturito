@@ -13,11 +13,11 @@ interface WorkFormProps {
   onCancel: () => void;
 }
 
-export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
+export function WorkForm({ onSubmit, onCancel }: WorkFormProps) {
   const [formData, setFormData] = useState<Omit<Work, 'id' | 'created_at' | 'client_id'>>({
     locality: '',
     address: '',
-    status: 'Sin empezar',
+    status: 'pending',
     architect: '',
   });
 
@@ -65,11 +65,11 @@ export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
           <Label htmlFor="status">Estado</Label>
           <Select
             name="status"
-            value={formData.status || 'Sin empezar'}
+            value={formData.status || 'pending'}
             onValueChange={(value) => 
               setFormData(prev => ({
                 ...prev,
-                status: value as 'Sin empezar' | 'En progreso' | 'Finalizado'
+                status: value as 'pending' | 'in_progress' | 'completed'
               }))
             }
             required
@@ -78,9 +78,9 @@ export function WorkForm({ clientId, onSubmit, onCancel }: WorkFormProps) {
               <SelectValue placeholder="Seleccionar estado" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Sin empezar">Sin empezar</SelectItem>
-              <SelectItem value="En progreso">En progreso</SelectItem>
-              <SelectItem value="Finalizado">Finalizado</SelectItem>
+              <SelectItem value="pending">Pendiente</SelectItem>
+              <SelectItem value="in_progress">En progreso</SelectItem>
+              <SelectItem value="completed">Finalizada</SelectItem>
             </SelectContent>
           </Select>
         </div>

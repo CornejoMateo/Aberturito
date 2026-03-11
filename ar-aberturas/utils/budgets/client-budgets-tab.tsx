@@ -20,19 +20,19 @@ import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { Work } from '@/lib/works/works';
-import { createBudget, chooseBudgetForClient, Budget, getBudgetsByFolderBudgetIds, deleteBudget, updateBudget } from '@/lib/budgets/budgets';
-import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId, deleteFolderBudgetWithBudgets } from '@/lib/budgets/folder_budgets';
+import { createBudget, getBudgetsByFolderBudgetIds, deleteBudget, updateBudget } from '@/lib/budgets/budgets';
+import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId, deleteFolderBudgetWithBudgets, deleteFolderBudget } from '@/lib/budgets/folder_budgets';
 import { getSupabaseClient } from '@/lib/supabase-client';
-import { CheckCircle, FileText, Plus, ChevronDown, Trash2, Download, X, TrendingUp } from 'lucide-react';
+import { CheckCircle, FileText, Plus, ChevronDown, Trash2, TrendingUp } from 'lucide-react';
 import { BudgetWithWork } from '@/lib/works/balances';
 import { ClientBudgetsDollarUpdateModal } from '@/components/ui/client-budgets-dollar-update-modal';
 import { translateError } from '@/lib/error-translator';
+import { checklistTypes } from '@/lib/works/checklists.constants';
+import { de } from 'date-fns/locale';
 
 type BudgetFolderVM = FolderBudget & {
 	budgets: BudgetWithWork[];
 };
-
-const DEFAULT_TYPES = ['PVC', 'Aluminio', 'Otros'] as const;
 
 function normalizeType(type: string | null | undefined): string {
 	const t = (type ?? '').trim();
@@ -52,7 +52,8 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 	const [isLoading, setIsLoading] = useState(false);
 	const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
 
-	// Realtime hook for folder_budgets
+	const DEFAULT_TYPES = [...Object.values(checklistTypes), 'Otros'];
+
 	const {
 		data: folderBudgets,
 		loading: loadingFolders,
@@ -364,7 +365,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 		setFormPdf(null);
 	}
 
-	const handleClientBudgetsUpdate = async (newUsdRate: number) => {
+	const handleClientBudgetsUpdate = async (newUsdRate: number) => {	
 		try {
 			const response = await fetch('/api/budget-dollar-rate', {
 				method: 'POST',
@@ -397,14 +398,6 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 	};
 
 	async function handleCreateBudget() {
-		if (!formPdf) {
-			toast({
-				variant: 'destructive',
-				title: 'Falta el PDF',
-				description: 'Adjuntá el PDF del presupuesto para crearlo.',
-			});
-			return;
-		}
 
 		try {
 			setIsLoading(true);
@@ -412,6 +405,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 			const work_id = formWorkId === 'none' ? null : formWorkId;
 			const existingFolder = folderBudgets.find((f) => (f.work_id ?? null) === work_id);
 			let folderId = existingFolder?.id;
+			let newFolder = false;
 
 			if (!folderId) {
 				const { data: folder, error: folderError } = await createFolderBudget({
@@ -420,14 +414,16 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 				});
 
 				if (folderError || !folder) {
+					const errorMessage = folderError ? translateError(folderError) : 'Error desconocido al crear la carpeta';
 					toast({
 						variant: 'destructive',
-						title: 'No se pudo crear la carpeta',
+						title: 'No se pudo crear la carpeta.' + errorMessage,
 						description: 'Intente nuevamente.',
 					});
 					return;
 				}
 				folderId = folder.id;
+				newFolder = true;
 			}
 
 			const parsedAmount = formAmount.trim() ? Number(formAmount) : null;
@@ -452,11 +448,15 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 			);
 
 			if (createError) {
+				console.error('Error creando presupuesto:', createError);
 				toast({
 					variant: 'destructive',
 					title: 'No se pudo crear el presupuesto',
-					description: 'Intente nuevamente.',
+					description: translateError(createError) || 'Intente nuevamente.',
 				});
+				if (newFolder && folderId) {
+					await deleteFolderBudget(folderId); // remove empty folder budget
+				}
 				return;
 			}
 
@@ -516,9 +516,11 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 										<SelectValue placeholder="Seleccionar tipo" />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="PVC">PVC</SelectItem>
-										<SelectItem value="Aluminio">Aluminio</SelectItem>
-										<SelectItem value="Otros">Otros</SelectItem>
+										{DEFAULT_TYPES.map((t) => (
+											<SelectItem key={t} value={t}>
+												{t}
+											</SelectItem>
+										))}
 									</SelectContent>
 								</Select>
 							</div>
@@ -556,7 +558,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 
 							<div className="grid grid-cols-2 gap-4">
 								<div className="grid gap-2">
-									<Label>Número de presupuesto *</Label>
+									<Label>Número de presupuesto</Label>
 									<Input
 										type="text"
 										value={formNumber}
@@ -565,7 +567,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 									/>
 								</div>
 								<div className="grid gap-2">
-									<Label>Monto ARS *</Label>
+									<Label>Monto ARS</Label>
 									<Input
 										type="number"
 										value={formAmount}
@@ -574,7 +576,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 									/>
 								</div>
 								<div className="grid gap-2">
-									<Label>Monto USD *</Label>
+									<Label>Monto USD</Label>
 									<Input
 										type="number"
 										value={formAmountUsd}
@@ -630,7 +632,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 					const chosenCountInFolder = folderBudgetsList.filter((b) => !!b.accepted).length;
 
 					const budgetsByType = new Map<string, BudgetWithWork[]>();
-					for (const t of DEFAULT_TYPES) budgetsByType.set(t, []);
+
 					for (const b of folderBudgetsList) {
 						const typeKey = normalizeType(b.type);
 						const prev = budgetsByType.get(typeKey) ?? [];
@@ -773,7 +775,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 																						<FileText className="h-4 w-4" /> Ver PDF
 																					</Button>
 																				) : (
-																					<Badge variant="secondary">Borrador</Badge>
+																					<Badge variant="secondary">Sin PDF</Badge>
 																				)}
 
 																				<Button

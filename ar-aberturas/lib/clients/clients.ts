@@ -18,6 +18,7 @@ export type Client = {
 	email?: string | null;
 	images?: ClientFileMetadata[] | null; // array JSON
 	cover?: string | null;
+	contact_method?: string | null;
 };
 
 const TABLE = 'clients';
@@ -34,7 +35,7 @@ export async function listClients(): Promise<{ data: Client[] | null; error: any
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('name, last_name, id, phone_number, locality, email, images')
+		.select('name, last_name, id, phone_number, locality, email, images, contact_method')
 		.order('created_at', { ascending: false });
 	return { data, error };
 }
@@ -135,28 +136,24 @@ export async function listClientFiles(
 			return { data: [], error: null };
 		}
 
-		// For each image in the client's images array, get the file metadata from storage
-		const clientFiles: ClientFile[] = await Promise.all(
-			client.images.map(async (imageData: ClientFileMetadata) => {
-				const fileName = imageData.path.split('/').pop() || '';
+		const { data: files } = await supabase
+			.storage
+			.from('clients')
+			.list(clientId);		
 
-				// Try to get file metadata from storage
-				const { data: fileData } = await supabase.storage.from('clients').list(clientId, {
-					search: fileName,
-				});
+		const clientFiles = client.images.map((imageData) => {
+			const fileName = imageData.path.split('/').pop() || '';
 
-				const fileMetadata = fileData?.find((f) => f.name === fileName);
+			const fileMetadata = files?.find((f) => f.name === fileName);
 
-                // return the combined metadata for the client file
-				return {
-					...imageData,
-					name: fileName,
-					id: fileMetadata?.id || fileName,
-					size: fileMetadata?.metadata?.size || 0,
-					mimetype: fileMetadata?.metadata?.mimetype || 'image/jpeg',
-				};
-			})
-		);
+			return {
+				...imageData,
+				name: fileName,
+				id: fileMetadata?.id || fileName,
+				size: fileMetadata?.metadata?.size || 0,
+				mimetype: fileMetadata?.metadata?.mimetype || 'image/jpeg',
+			};
+		});
 
 		return { data: clientFiles, error: null };
 	} catch (err) {

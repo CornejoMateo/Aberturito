@@ -31,14 +31,14 @@ export const buildChartPages = (metrics: any) => [
   {
     charts: [
       {
-        title: 'Distribución de Presupuestos',
+        title: 'Distribución de presupuestos',
         data: metrics.totalBudgets > 0 ? [
           { name: 'Vendidos', value: metrics.totalSales, color: '#10b981' },
           { name: 'Pendientes', value: metrics.totalBudgets - metrics.totalSales, color: '#3b82f6' },
         ] : []
       },
       {
-        title: 'Total de Presupuestos',
+        title: 'Total de presupuestos',
         data: [
           { name: 'Totales', value: metrics.totalBudgets, color: '#8b5cf6' },
           { name: 'Procesados', value: metrics.totalSales, color: '#f59e0b' },
@@ -49,14 +49,14 @@ export const buildChartPages = (metrics: any) => [
   {
     charts: [
       {
-        title: 'Clientes con Presupuesto',
+        title: 'Clientes con presupuesto',
         data: metrics.totalClients > 0 ? [
           { name: 'Con Presupuesto', value: metrics.clientsWithBudget, color: '#10b981' },
           { name: 'Sin Presupuesto', value: metrics.totalClients - metrics.clientsWithBudget, color: '#3b82f6' },
         ] : []
       },
       {
-        title: 'Ingresos por Tipo',
+        title: 'Ingresos por tipo',
         data: [
           { name: 'De Ventas', value: metrics.soldAverageTicket > 0 ? Math.round(metrics.totalSales * metrics.soldAverageTicket) : 0, color: '#06b6d4' },
           { name: 'Total', value: metrics.totalRevenue, color: '#ec4899' },

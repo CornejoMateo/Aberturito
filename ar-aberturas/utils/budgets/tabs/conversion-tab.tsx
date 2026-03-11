@@ -14,7 +14,7 @@ export function ConversionTab({ metrics, loading }: ConversionTabProps) {
   return (
     <TabsContent value="conversion" className="space-y-4">
       <Card className="p-6 bg-card border-border">
-        <h3 className="text-lg font-semibold text-foreground mb-6">Embudo de Conversión</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-6">Embudo de conversión</h3>
         <div className="text-center py-12">
           <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground">No hay datos de conversión disponibles</p>

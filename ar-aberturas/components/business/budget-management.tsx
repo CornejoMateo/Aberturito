@@ -97,9 +97,9 @@ export function BudgetManagement() {
 			{/* Tabs */}
 			<Tabs defaultValue="overview" className="space-y-4">
 				<TabsList className="bg-card border border-border">
-					<TabsTrigger value="overview">Resumen de Ventas</TabsTrigger>
+					<TabsTrigger value="overview">Resumen de ventas</TabsTrigger>
 					<TabsTrigger value="performance">Rendimiento</TabsTrigger>
-					<TabsTrigger value="sources">Fuentes y Materiales</TabsTrigger>
+					<TabsTrigger value="sources">Fuentes y materiales</TabsTrigger>
 				</TabsList>
 
 				<OverviewTab

@@ -53,7 +53,7 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
 
   const charts: Chart[] = [
     {
-      title: 'Presupuestos Realizados por Mes',
+      title: 'Presupuestos realizados por mes',
       description: 'Evolución de presupuestos y ventas a lo largo del año',
       render: () =>
         metrics.totalBudgets > 0 ? (

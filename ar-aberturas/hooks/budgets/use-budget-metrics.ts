@@ -15,7 +15,7 @@ import {
   getClientsByContactMethod,
   getBudgetsByMaterial
 } from '@/lib/budgets/budgets';
-import { SalesMetrics, DEFAULT_METRICS } from '../types';
+import { SalesMetrics, DEFAULT_METRICS } from '@/lib/budgets/types';
 
 export const useBudgetMetrics = () => {
   const [metrics, setMetrics] = useState<SalesMetrics>(DEFAULT_METRICS);

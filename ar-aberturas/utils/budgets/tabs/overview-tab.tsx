@@ -50,7 +50,7 @@ export function OverviewTab({
   return (
     <TabsContent value="overview" className="space-y-4">
       <Card className="p-6 bg-card border-border">
-        <h3 className="text-lg font-semibold text-foreground mb-6">Resumen de Ventas</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-6">Resumen de ventas</h3>
         <ChartsCarousel
           chartPages={chartPages}
           currentPage={currentPage}

@@ -4,6 +4,8 @@ import { Card } from '@/components/ui/card';
 import { TabsContent } from '@/components/ui/tabs';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { SalesMetrics } from '../../../lib/budgets/types';
+import { CONTACT_METHODS } from '@/constants/budgets/contact-methods';
+import { COLORS } from '@/constants/budgets/colors';
 
 interface SourcesAndMaterialsTabProps {
   metrics: SalesMetrics;
@@ -11,23 +13,16 @@ interface SourcesAndMaterialsTabProps {
 }
 
 export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterialsTabProps) {
-  // Get labels for contact methods
-  const contactMethodLabels: Record<string, string> = {
-    'CLIENTE': 'Cliente',
-    'CONTACTO_REHAU': 'Contacto Rehau',
-    'GMAIL': 'Gmail',
-    'INSTAGRAM': 'Instagram',
-    'REFERIDO': 'Referido',
-    'SHOWROOM': 'Showroom',
-    'WHATSAPP': 'WhatsApp',
-  };
+
+  const contactMethodLabels: Record<string, string> = CONTACT_METHODS.reduce((acc, method) => {
+    acc[method.value] = method.label;
+    return acc;
+  }, {} as Record<string, string>);
 
   const formatContactMethodData = metrics.clientsByContactMethod.map(item => ({
     ...item,
     method: contactMethodLabels[item.method] || item.method
   }));
-
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
 
   return (
     <TabsContent value="sources" className="space-y-4">
@@ -35,7 +30,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
       <div className="grid gap-4 md:grid-cols-2">
         {/* Contact Method Chart */}
         <Card className="p-6 bg-card border-border">
-          <h3 className="text-lg font-semibold text-foreground mb-6">Clientes por Medio de Contacto</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-6">Clientes por medio de contacto</h3>
           {formatContactMethodData && formatContactMethodData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -66,7 +61,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 
         {/* Material Distribution Chart */}
         <Card className="p-6 bg-card border-border">
-          <h3 className="text-lg font-semibold text-foreground mb-6">Distribución de Presupuestos por Material</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-6">Distribución de presupuestos por material</h3>
           {metrics.budgetsByMaterial && metrics.budgetsByMaterial.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={metrics.budgetsByMaterial}>
@@ -89,7 +84,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="p-6 bg-card border-border hover:shadow-md transition-shadow">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">Medio de Contacto Principal</p>
+            <p className="text-sm font-medium text-muted-foreground">Medio de Contacto principal</p>
             <p className="text-3xl font-bold text-foreground">
               {formatContactMethodData && formatContactMethodData.length > 0
                 ? formatContactMethodData[0].method
@@ -105,7 +100,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 
         <Card className="p-6 bg-card border-border hover:shadow-md transition-shadow">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">Material Más Utilizado</p>
+            <p className="text-sm font-medium text-muted-foreground">Material más utilizado</p>
             <p className="text-3xl font-bold text-foreground">
               {metrics.budgetsByMaterial && metrics.budgetsByMaterial.length > 0
                 ? metrics.budgetsByMaterial[0].material

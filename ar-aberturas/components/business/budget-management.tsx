@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Users, FileText, Package, DollarSign } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useBudgetMetrics } from '@/utils/budgets/hooks/use-budget-metrics';
+import { useBudgetMetrics } from '@/hooks/budgets/use-budget-metrics';
 import { buildChartPages, formatChartValue } from '@/utils/budgets/calculations';
 import { MetricCard } from '@/utils/budgets/metric-card';
 import { OverviewTab } from '@/utils/budgets/tabs/overview-tab';

@@ -3,7 +3,7 @@
 import { Card } from '@/components/ui/card';
 import { TabsContent } from '@/components/ui/tabs';
 import { TrendingUp } from 'lucide-react';
-import { SalesMetrics } from '../types';
+import { SalesMetrics } from '../../../lib/budgets/types';
 
 interface ConversionTabProps {
   metrics: SalesMetrics;

@@ -9,7 +9,7 @@ import { MetricCard } from '@/utils/budgets/metric-card';
 import { OverviewTab } from '@/utils/budgets/tabs/overview-tab';
 import { PerformanceTab } from '@/utils/budgets/tabs/performance-tab';
 import { SourcesAndMaterialsTab } from '@/utils/budgets/tabs/sources-and-materials-tab';
-import { TICKET_TYPES, DEFAULT_TICKET_TYPE } from '@/utils/constants/tickets';
+import { TICKET_TYPES, DEFAULT_TICKET_TYPE } from '@/constants/budgets/tickets';
 
 export function BudgetManagement() {
 	const { metrics, loading } = useBudgetMetrics();

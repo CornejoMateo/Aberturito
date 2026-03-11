@@ -3,7 +3,7 @@
 import { Card } from '@/components/ui/card';
 import { TabsContent } from '@/components/ui/tabs';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { SalesMetrics } from '../types';
+import { SalesMetrics } from '../../../lib/budgets/types';
 
 interface SourcesAndMaterialsTabProps {
   metrics: SalesMetrics;

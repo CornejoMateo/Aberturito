@@ -5,9 +5,9 @@ import { TabsContent } from '@/components/ui/tabs';
 import { ChartsCarousel } from '../charts-carousel';
 import { ConversionRateCard } from '../conversion-rate-card';
 import { AverageTicketCard } from '../average-ticket-card';
-import { SalesMetrics } from '../types';
+import { SalesMetrics } from '../../../lib/budgets/types';
 import { calculateChartPercentages } from '../calculations';
-import { TicketType, TicketTypeId } from '@/utils/constants/tickets';
+import { TicketType, TicketTypeId } from '@/constants/budgets/tickets';
 
 interface OverviewTabProps {
   metrics: SalesMetrics;

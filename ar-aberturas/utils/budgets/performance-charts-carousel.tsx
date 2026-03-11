@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { SalesMetrics } from './types';
+import { SalesMetrics } from '../../lib/budgets/types';
 
 interface PerformanceChartsCarouselProps {
   metrics: SalesMetrics;

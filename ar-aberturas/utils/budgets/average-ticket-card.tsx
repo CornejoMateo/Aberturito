@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { TicketType, TicketTypeId } from '@/utils/constants/tickets';
+import { TicketType, TicketTypeId } from '@/constants/budgets/tickets';
 
 interface AverageTicketCardProps {
   loading: boolean;

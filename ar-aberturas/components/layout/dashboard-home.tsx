@@ -1,10 +1,46 @@
 import { Card } from '@/components/ui/card';
 import { useLoadEvents } from '@/hooks/use-load-events';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { getClientsCount } from '@/lib/clients/clients';
+import { getWorksInProgressCount } from '@/lib/works/works';
+import { getSoldBudgetsCount } from '@/lib/budgets/budgets';
 
 export function DashboardHome() {
 	const { events, isLoading } = useLoadEvents();
 	const overdueEvents = events.filter((event) => event.is_overdue === true);
+	const [totalClients, setTotalClients] = useState(0);
+	const [worksInProgress, setWorksInProgress] = useState(0);
+	const [soldBudgets, setSoldBudgets] = useState(0);
+
+	useEffect(() => {
+		let isMounted = true;
+
+		const fetchCounts = async () => {
+			const [clientsResult, worksResult, budgetsResult] = await Promise.all([
+				getClientsCount(),
+				getWorksInProgressCount(),
+				getSoldBudgetsCount(),
+			]);
+
+			if (!isMounted) return;
+
+			if (!clientsResult.error && clientsResult.data !== null) {
+				setTotalClients(clientsResult.data);
+			}
+			if (!worksResult.error && worksResult.data !== null) {
+				setWorksInProgress(worksResult.data);
+			}
+			if (!budgetsResult.error && budgetsResult.data !== null) {
+				setSoldBudgets(budgetsResult.data);
+			}
+		};
+
+		fetchCounts();
+
+		return () => {
+			isMounted = false;
+		};
+	}, []);
 
 	const [displayedCount, setDisplayedCount] = useState(5);
 
@@ -77,7 +113,7 @@ export function DashboardHome() {
 						<div className="flex items-center justify-between">
 							<div>
 								<p className="text-sm font-medium text-muted-foreground">Clientes activos</p>
-								<p className="text-2xl font-bold text-foreground mt-2">0</p>
+								<p className="text-2xl font-bold text-foreground mt-2">{totalClients}</p>
 							</div>
 						</div>
 					</Card>
@@ -85,8 +121,8 @@ export function DashboardHome() {
 					<Card className="p-6">
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="text-sm font-medium text-muted-foreground">Presupuestos</p>
-								<p className="text-2xl font-bold text-foreground mt-2">0</p>
+								<p className="text-sm font-medium text-muted-foreground">Presupuestos vendidos</p>
+								<p className="text-2xl font-bold text-foreground mt-2">{soldBudgets}</p>
 							</div>
 						</div>
 					</Card>
@@ -95,7 +131,7 @@ export function DashboardHome() {
 						<div className="flex items-center justify-between">
 							<div>
 								<p className="text-sm font-medium text-muted-foreground">Obras en curso</p>
-								<p className="text-2xl font-bold text-foreground mt-2">0</p>
+								<p className="text-2xl font-bold text-foreground mt-2">{worksInProgress}</p>
 							</div>
 						</div>
 					</Card>

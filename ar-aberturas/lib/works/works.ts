@@ -146,3 +146,28 @@ export async function getWorksByClientId(
     };
   }
 }
+
+export async function getWorksInProgressCount(): Promise<{ data: number | null; error: any }> {
+  try {
+    const supabase = getSupabaseClient();
+    const { count, error } = await supabase
+      .from('works')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'in_progress');
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return { data: count ?? 0, error: null };
+  } catch (error) {
+    console.error('Error inesperado en getWorksInProgressCount:', {
+      error,
+      message: error instanceof Error ? error.message : 'Error desconocido'
+    });
+    return { 
+      data: null, 
+      error: error instanceof Error ? error.message : 'Error desconocido' 
+    };
+  }
+}

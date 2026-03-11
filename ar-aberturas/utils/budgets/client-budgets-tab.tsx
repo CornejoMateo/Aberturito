@@ -412,9 +412,10 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 				});
 
 				if (folderError || !folder) {
+					const errorMessage = folderError ? translateError(folderError) : 'Error desconocido al crear la carpeta';
 					toast({
 						variant: 'destructive',
-						title: 'No se pudo crear la carpeta',
+						title: 'No se pudo crear la carpeta.' + errorMessage,
 						description: 'Intente nuevamente.',
 					});
 					return;
@@ -448,7 +449,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 				toast({
 					variant: 'destructive',
 					title: 'No se pudo crear el presupuesto',
-					description: createError.message || translateError(createError) || 'Intente nuevamente.',
+					description: translateError(createError) || 'Intente nuevamente.',
 				});
 				return;
 			}

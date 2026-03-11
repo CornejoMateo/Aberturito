@@ -127,7 +127,8 @@ export async function createBudget(
 	let filePath: string | null = null;
 
 	if (pdfFile) {
-		const fileName = `budget_${budget.type}_${budget.number}_${pdfFile.name}`;
+		const sanitizedName = pdfFile.name.replace(/\s+/g, '_');
+		const fileName = `budget_${budget.type}_${budget.number}_${sanitizedName}`;
 		filePath = `${clientId}/${fileName}`;
 
 		// Load the PDF file to Supabase Storage

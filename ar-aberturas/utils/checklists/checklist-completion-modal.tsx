@@ -57,6 +57,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 
 	const {
 		clientData,
+		clientId,
 		workData,
 		checklists: fetchedChecklists,
 		loading,
@@ -416,6 +417,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 										onAddEntry={handleAddChecklistEntry}
 										onEdit={handleEditChecklist}
 										onDelete={setChecklistToDelete}
+										clientId={clientId}
 									/>
 								))}
 							</div>

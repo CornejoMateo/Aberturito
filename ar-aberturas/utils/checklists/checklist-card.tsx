@@ -3,10 +3,21 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Edit, Trash2, CheckCircle2, AlertCircle, Loader2, Upload } from 'lucide-react';
 import { Checklist } from '@/lib/works/checklists';
 import { ChecklistItem } from '@/lib/works/checklists';
 import { calculateProgress } from '@/helpers/checklists/progress';
+import { useFileUpload } from '@/hooks/use-file-upload';
+import { CLIENT_FILE_TYPES } from '@/utils/file-upload-utils';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 interface ChecklistCardProps {
 	checklist: Checklist;
@@ -22,6 +33,7 @@ interface ChecklistCardProps {
 	onEdit: (checklist: Checklist) => void;
 	onDelete: (checklist: Checklist) => void;
 	onAddEntry: (checklist: Checklist, type: 'claim' | 'daily') => void;
+	clientId?: string | null;
 }
 
 export function ChecklistCard({
@@ -38,7 +50,25 @@ export function ChecklistCard({
 	onEdit,
 	onDelete,
 	onAddEntry,
+	clientId,
 }: ChecklistCardProps) {
+	const {
+		isUploadDialogOpen,
+		selectedFile,
+		displayName,
+		description,
+		isUploading,
+		fileInputRef,
+		setDisplayName,
+		setDescription,
+		handleFileSelect,
+		handleUploadSubmit,
+		handleCloseUploadDialog,
+		triggerFileUpload,
+	} = useFileUpload({
+		clientId: clientId || '',
+	});
+
 	return (
 		<Card key={checklist.id} className="border-2 shadow-sm">
 			<CardHeader className="pb-4 space-y-4">
@@ -131,26 +161,46 @@ export function ChecklistCard({
 						disabled={loading}
 					/>
 					{user?.role === 'Admin' && (
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							onClick={() => onAddEntry(checklist, 'claim')}
-							disabled={!checklist.notes?.trim() || addingClaim[checklist.id] || loading}
-							className="w-full mt-2"
-						>
-							{addingClaim[checklist.id] ? (
-								<>
-									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-									Creando reclamo...
-								</>
-							) : (
-								<>
-									<AlertCircle className="mr-2 h-4 w-4" />
-									Agregar como reclamo
-								</>
-							)}
-						</Button>
+						<div className="flex flex-col sm:flex-row gap-2">
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								onClick={() => onAddEntry(checklist, 'claim')}
+								disabled={!checklist.notes?.trim() || addingClaim[checklist.id] || loading}
+								className="gap-2 justify-center"
+							>
+								{addingClaim[checklist.id] ? (
+									<>
+										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+										Creando reclamo...
+									</>
+								) : (
+									<>
+										<AlertCircle className="mr-2 h-4 w-4" />
+										Agregar como reclamo
+									</>
+								)}
+							</Button>
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								onClick={triggerFileUpload}
+								disabled={!clientId || loading}
+								className="gap-2"
+							>
+								<Upload className="mr-2 h-4 w-4" />
+								Agregar archivo
+							</Button>
+							<input
+								ref={fileInputRef}
+								type="file"
+								onChange={handleFileSelect}
+								accept={CLIENT_FILE_TYPES.join(',')}
+								className="hidden"
+							/>
+						</div>
 					)}
 				</div>
 			</CardHeader>
@@ -238,6 +288,74 @@ export function ChecklistCard({
 					</Button>
 				)}
 			</CardContent>
+
+			<Dialog open={isUploadDialogOpen} onOpenChange={handleCloseUploadDialog}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Agregar archivo</DialogTitle>
+						<DialogDescription>
+							Completa los datos del archivo para subirlo
+						</DialogDescription>
+					</DialogHeader>
+
+					<div className="space-y-4 py-4">
+						<div className="space-y-2">
+							<Label htmlFor="file-name">Nombre del archivo</Label>
+							<Input
+								id="file-name"
+								value={displayName}
+								onChange={(e) => setDisplayName(e.target.value)}
+								placeholder="Nombre descriptivo"
+								disabled={isUploading}
+							/>
+						</div>
+
+						<div className="space-y-2">
+							<Label htmlFor="file-description">Descripción (opcional)</Label>
+							<Textarea
+								id="file-description"
+								value={description}
+								onChange={(e) => setDescription(e.target.value)}
+								placeholder="Descripción del archivo"
+								disabled={isUploading}
+								rows={3}
+							/>
+						</div>
+
+						{selectedFile && (
+							<div className="text-sm text-muted-foreground">
+								<p>Archivo: {selectedFile.name}</p>
+								<p>Tamaño: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+							</div>
+						)}
+					</div>
+
+					<DialogFooter>
+						<Button 
+							type="button" 
+							variant="outline" 
+							onClick={handleCloseUploadDialog}
+							disabled={isUploading}
+						>
+							Cancelar
+						</Button>
+						<Button 
+							type="button" 
+							onClick={handleUploadSubmit}
+							disabled={isUploading || !displayName.trim()}
+						>
+							{isUploading ? (
+								<>
+									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									Subiendo...
+								</>
+							) : (
+								'Guardar'
+							)}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</Card>
 	);
 }

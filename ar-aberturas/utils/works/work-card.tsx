@@ -18,7 +18,6 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { statusConfig } from '@/constants/type-config';
 import { WorkWithProgress } from '@/lib/works/works';
-import { on } from 'events';
 
 interface WorkCardProps {
 	work: WorkWithProgress;
@@ -98,7 +97,7 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp,  onOpenCheck
 							</Button>
 						</ChecklistCompletionModal>
 
-						{user?.role === 'Admin' && (
+						{(user?.role === 'Admin' || user?.role === 'Ventas') && (
 							<Button variant="outline" size="sm" onClick={() => {onOpenChecklist(work)}}>
 								<List className="mr-2 h-4 w-4" />
 								Agregar checklists

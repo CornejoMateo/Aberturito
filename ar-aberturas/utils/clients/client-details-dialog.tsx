@@ -18,7 +18,7 @@ import { BalanceForm } from '@/utils/balances/balance-form';
 import { createBalance } from '@/lib/works/balances';
 import { toast } from '@/components/ui/use-toast';
 import { ClientBudgetsTab } from '@/utils/budgets/client-budgets-tab';
-import { ClientImagesGallery } from '@/utils/images-client/images-client';
+import { ClientImagesGallery } from '@/utils/files-client/files-client';
 import { useAuth } from '@/components/provider/auth-provider';
 import { useAutoSave } from '@/hooks/clients/use-auto-save';
 import { translateError } from '@/lib/error-translator';
@@ -195,6 +195,21 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientU
       setCover('');
     }
   }, [client, isOpen]);
+
+  // Reset all states when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      resetForm();
+    }
+  }, [isOpen]);
+
+  const resetForm = () => {
+      setClientData(null);
+      setCover('');
+      setIsWorkFormOpen(false);
+      setIsBalanceFormOpen(false);
+      setBalancesKey(0);
+  }
 
   if (!clientData) return null;
 

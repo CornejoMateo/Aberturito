@@ -276,7 +276,7 @@ export function ClientManagement() {
 														.map((n) => n[0])
 														.join('')
 														.toUpperCase()
-														.slice(0, 1)}
+														.slice(0, 2)}
 													{client.name
 														?.split(' ')
 														.map((n) => n[0])

@@ -1,85 +1,57 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import {
-	BarChart3,
-	Download,
-	TrendingUp,
-	Users,
-	FileText,
-	Package,
-	DollarSign,
-} from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { getClientsCount } from '@/lib/clients/clients';
-
-// Datos dinámicos - se conectarán con APIs reales
-interface SalesMetrics {
-  totalClients: number;
-  totalBudgets: number;
-  totalSales: number;
-  totalRevenue: number;
-  conversionRate: number;
-  averageTicket: number;
-}
-
-interface MonthlyData {
-  month: string;
-  clients: number;
-  budgets: number;
-  sales: number;
-  revenue: number;
-}
-
-interface LocationData {
-  location: string;
-  clients: number;
-  percentage: number;
-}
-
-interface ConversionData {
-  category: string;
-  value: number;
-  total: number;
-  percentage: number;
-}
+import { useState } from 'react';
+import { Users, FileText, Package, DollarSign } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useBudgetMetrics } from '@/hooks/budgets/use-budget-metrics';
+import { buildChartPages, formatChartValue } from '@/utils/budgets/calculations';
+import { MetricCard } from '@/utils/budgets/metric-card';
+import { OverviewTab } from '@/utils/budgets/tabs/overview-tab';
+import { PerformanceTab } from '@/utils/budgets/tabs/performance-tab';
+import { SourcesAndMaterialsTab } from '@/utils/budgets/tabs/sources-and-materials-tab';
+import { TICKET_TYPES, DEFAULT_TICKET_TYPE } from '@/constants/budgets/tickets';
 
 export function BudgetManagement() {
-	// Placeholder para datos dinámicos
-	const [metrics, setMetrics] = useState<SalesMetrics>({
-		totalClients: 0,
-		totalBudgets: 0,
-		totalSales: 0,
-		totalRevenue: 0,
-		conversionRate: 0,
-		averageTicket: 0,
-	});
+	const { metrics, loading } = useBudgetMetrics();
+	const [ticketType, setTicketType] = useState(DEFAULT_TICKET_TYPE);
+	const [chartPage, setChartPage] = useState(0);
 
-	const [loading, setLoading] = useState(true);
+	const getCurrentTicketValue = () => {
+		switch (ticketType) {
+			case 'sold': return metrics.soldAverageTicket;
+			case 'chosen': return metrics.chosenAverageTicket;
+			case 'total': return metrics.totalAverageTicket;
+			default: return 0;
+		}
+	};
 
-	// Obtener cantidad de clientes
-	useEffect(() => {
-		const fetchClientsCount = async () => {
-			try {
-				const { data: clientsCount, error } = await getClientsCount();
-				if (!error && clientsCount !== null) {
-					setMetrics(prev => ({ ...prev, totalClients: clientsCount }));
-				}
-			} catch (err) {
-				console.error('Error fetching clients count:', err);
-			} finally {
-				setLoading(false);
-			}
-		};
+	const getCurrentTicketLabel = () => {
+		const current = TICKET_TYPES.find(t => t.id === ticketType);
+		return current?.description || '';
+	};
 
-		fetchClientsCount();
-	}, []);
+	const handleNextTicket = () => {
+		const currentIndex = TICKET_TYPES.findIndex(t => t.id === ticketType);
+		const nextIndex = (currentIndex + 1) % TICKET_TYPES.length;
+		setTicketType(TICKET_TYPES[nextIndex].id);
+	};
 
-	const monthlyData: MonthlyData[] = [];
-	const locationData: LocationData[] = [];
-	const conversionData: ConversionData[] = [];
+	const handlePrevTicket = () => {
+		const currentIndex = TICKET_TYPES.findIndex(t => t.id === ticketType);
+		const prevIndex = currentIndex === 0 ? TICKET_TYPES.length - 1 : currentIndex - 1;
+		setTicketType(TICKET_TYPES[prevIndex].id);
+	};
+
+	const handleNextChart = () => {
+		setChartPage((prev) => (prev + 1) % chartPages.length);
+	};
+
+	const handlePrevChart = () => {
+		setChartPage((prev) => (prev - 1 + chartPages.length) % chartPages.length);
+	};
+
+	const chartPages = buildChartPages(metrics);
+
 	return (
 		<div className="space-y-6">
 			{/* Header */}
@@ -92,208 +64,65 @@ export function BudgetManagement() {
 
 			{/* Key metrics */}
 			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-				<Card className="p-6 bg-card border-border">
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="text-sm font-medium text-muted-foreground">Clientes totales</p>
-							<p className="text-2xl font-bold text-foreground mt-2">
-							{loading ? '...' : metrics.totalClients}
-						</p>
-						<p className="text-xs text-muted-foreground mt-1">
-							{loading ? 'Cargando...' : metrics.totalClients > 0 ? 'Datos disponibles' : 'Sin datos'}
-						</p>
-						</div>
-						<div className="rounded-lg bg-secondary p-3 text-chart-1">
-							<Users className="h-6 w-6" />
-						</div>
-					</div>
-				</Card>
-
-				<Card className="p-6 bg-card border-border">
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="text-sm font-medium text-muted-foreground">Presupuestos</p>
-							<p className="text-2xl font-bold text-foreground mt-2">{metrics.totalBudgets || '--'}</p>
-							<p className="text-xs text-muted-foreground mt-1">
-							{metrics.totalBudgets > 0 ? 'Datos disponibles' : 'Sin datos'}
-						</p>
-						</div>
-						<div className="rounded-lg bg-secondary p-3 text-chart-2">
-							<FileText className="h-6 w-6" />
-						</div>
-					</div>
-				</Card>
-
-				<Card className="p-6 bg-card border-border">
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="text-sm font-medium text-muted-foreground">Ventas cerradas</p>
-							<p className="text-2xl font-bold text-foreground mt-2">{metrics.totalSales || '--'}</p>
-							<p className="text-xs text-muted-foreground mt-1">
-							{metrics.totalSales > 0 ? 'Datos disponibles' : 'Sin datos'}
-						</p>
-						</div>
-						<div className="rounded-lg bg-secondary p-3 text-chart-3">
-							<Package className="h-6 w-6" />
-						</div>
-					</div>
-				</Card>
-
-				<Card className="p-6 bg-card border-border">
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="text-sm font-medium text-muted-foreground">Facturación</p>
-							<p className="text-2xl font-bold text-foreground mt-2">
-							{metrics.totalRevenue > 0 ? `$${(metrics.totalRevenue / 1000000).toFixed(1)}M` : '--'}
-						</p>
-							<p className="text-xs text-muted-foreground mt-1">
-							{metrics.totalRevenue > 0 ? 'Datos disponibles' : 'Sin datos'}
-						</p>
-						</div>
-						<div className="rounded-lg bg-secondary p-3 text-chart-4">
-							<DollarSign className="h-6 w-6" />
-						</div>
-					</div>
-				</Card>
+				<MetricCard
+					label="Clientes totales"
+					value={metrics.totalClients}
+					icon={Users}
+					loading={loading}
+					status={metrics.totalClients > 0}
+				/>
+				<MetricCard
+					label="Presupuestos"
+					value={metrics.totalBudgets}
+					icon={FileText}
+					loading={loading}
+					status={metrics.totalBudgets > 0}
+				/>
+				<MetricCard
+					label="Ventas cerradas"
+					value={metrics.totalSales}
+					icon={Package}
+					loading={loading}
+					status={metrics.totalSales > 0}
+				/>
+				<MetricCard
+					label="Facturación"
+					value={loading ? '...' : metrics.totalRevenue > 0 ? `${(metrics.totalRevenue / 1000000).toFixed(1)}M` : '--'}
+					icon={DollarSign}
+					loading={false}
+					status={metrics.totalRevenue > 0}
+				/>
 			</div>
 
+			{/* Tabs */}
 			<Tabs defaultValue="overview" className="space-y-4">
 				<TabsList className="bg-card border border-border">
-					<TabsTrigger value="overview">Resumen de Ventas</TabsTrigger>
+					<TabsTrigger value="overview">Resumen de ventas</TabsTrigger>
 					<TabsTrigger value="performance">Rendimiento</TabsTrigger>
-					<TabsTrigger value="conversion">Conversión</TabsTrigger>
+					<TabsTrigger value="sources">Fuentes y materiales</TabsTrigger>
 				</TabsList>
 
-				<TabsContent value="overview" className="space-y-4">
-					<Card className="p-6 bg-card border-border">
-						<h3 className="text-lg font-semibold text-foreground mb-6">Resumen de Ventas</h3>
-						<div className="text-center py-12">
-							<FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-							<p className="text-muted-foreground">No hay datos disponibles para mostrar</p>
-							<p className="text-sm text-muted-foreground mt-2">Conecta las fuentes de datos para ver el resumen de ventas</p>
-						</div>
-					</Card>
+				<OverviewTab
+					metrics={metrics}
+					loading={loading}
+					chartPages={chartPages}
+					chartPage={chartPage}
+					ticketType={ticketType}
+					ticketTypes={TICKET_TYPES}
+					onPrevChart={handlePrevChart}
+					onNextChart={handleNextChart}
+					onSelectChart={(idx) => setChartPage(idx)}
+					onPrevTicket={handlePrevTicket}
+					onNextTicket={handleNextTicket}
+					onSelectTicket={setTicketType}
+					formatChartValue={formatChartValue}
+					getCurrentTicketValue={getCurrentTicketValue}
+					getCurrentTicketLabel={getCurrentTicketLabel}
+				/>
 
-					<div className="grid gap-4 md:grid-cols-2">
-						<Card className="p-6 bg-card border-border">
-							<h3 className="text-lg font-semibold text-foreground mb-4">Tasa de conversión</h3>
-							<div className="space-y-4">
-								<div className="flex items-center justify-between">
-									<span className="text-sm text-muted-foreground">Presupuestos → Ventas</span>
-									<span className="text-2xl font-bold text-foreground">{metrics.conversionRate > 0 ? `${metrics.conversionRate}%` : '--'}</span>
-								</div>
-								<Progress value={metrics.conversionRate} className="h-3" />
-								<p className="text-xs text-muted-foreground">
-									{metrics.totalBudgets > 0 ? `${metrics.totalSales} de ${metrics.totalBudgets} presupuestos convertidos` : 'Sin datos para calcular'}
-								</p>
-							</div>
-						</Card>
+				<PerformanceTab metrics={metrics} loading={loading} />
 
-						<Card className="p-6 bg-card border-border">
-							<h3 className="text-lg font-semibold text-foreground mb-4">Ticket promedio</h3>
-							<div className="space-y-4">
-								<div className="flex items-center justify-between">
-									<span className="text-sm text-muted-foreground">Por venta</span>
-									<span className="text-2xl font-bold text-foreground">
-										{metrics.averageTicket > 0 ? `$${(metrics.averageTicket / 1000).toFixed(0)}k` : '--'}
-									</span>
-								</div>
-								<Progress value={metrics.averageTicket > 0 ? Math.min((metrics.averageTicket / 50000) * 100, 100) : 0} className="h-3" />
-								<p className="text-xs text-muted-foreground">
-									{metrics.totalSales > 0 ? `Basado en ${metrics.totalSales} ventas` : 'Sin datos para calcular'}
-								</p>
-							</div>
-						</Card>
-					</div>
-				</TabsContent>
-
-				<TabsContent value="performance" className="space-y-4">
-					<Card className="p-6 bg-card border-border">
-						<h3 className="text-lg font-semibold text-foreground mb-6">Rendimiento de Ventas</h3>
-						<div className="text-center py-12">
-							<BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-							<p className="text-muted-foreground">No hay datos de rendimiento disponibles</p>
-							<p className="text-sm text-muted-foreground mt-2">Conecta las fuentes de datos para ver métricas de rendimiento</p>
-						</div>
-					</Card>
-
-					<div className="grid gap-4 md:grid-cols-3">
-						<Card className="p-6 bg-card border-border">
-							<div className="space-y-2">
-								<p className="text-sm text-muted-foreground">Presupuestos del mes</p>
-								<p className="text-3xl font-bold text-foreground">{metrics.totalBudgets || '--'}</p>
-								<p className="text-xs text-muted-foreground">
-									{metrics.totalBudgets > 0 ? 'Datos del mes actual' : 'Sin datos'}
-								</p>
-							</div>
-						</Card>
-
-						<Card className="p-6 bg-card border-border">
-							<div className="space-y-2">
-								<p className="text-sm text-muted-foreground">Ventas cerradas</p>
-								<p className="text-3xl font-bold text-foreground">{metrics.totalSales || '--'}</p>
-								<p className="text-xs text-muted-foreground">
-									{metrics.totalSales > 0 ? 'Ventas del mes actual' : 'Sin datos'}
-								</p>
-							</div>
-						</Card>
-
-						<Card className="p-6 bg-card border-border">
-							<div className="space-y-2">
-								<p className="text-sm text-muted-foreground">Facturación mensual</p>
-								<p className="text-3xl font-bold text-foreground">
-									{metrics.totalRevenue > 0 ? `$${(metrics.totalRevenue / 1000000).toFixed(1)}M` : '--'}
-								</p>
-								<p className="text-xs text-muted-foreground">
-									{metrics.totalRevenue > 0 ? 'Facturación del mes' : 'Sin datos'}
-								</p>
-							</div>
-						</Card>
-					</div>
-				</TabsContent>
-
-				<TabsContent value="conversion" className="space-y-4">
-					<Card className="p-6 bg-card border-border">
-						<h3 className="text-lg font-semibold text-foreground mb-6">Embudo de Conversión</h3>
-						<div className="text-center py-12">
-							<TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-							<p className="text-muted-foreground">No hay datos de conversión disponibles</p>
-							<p className="text-sm text-muted-foreground mt-2">Conecta las fuentes de datos para ver el embudo de conversión</p>
-						</div>
-					</Card>
-
-					<div className="grid gap-4 md:grid-cols-3">
-						<Card className="p-6 bg-card border-border">
-							<div className="space-y-2">
-								<p className="text-sm text-muted-foreground">Tasa de aceptación</p>
-								<p className="text-3xl font-bold text-foreground">{metrics.conversionRate > 0 ? `${metrics.conversionRate}%` : '--'}</p>
-								<p className="text-xs text-muted-foreground">
-									{metrics.totalBudgets > 0 ? 'Presupuestos aceptados' : 'Sin datos'}
-								</p>
-							</div>
-						</Card>
-
-						<Card className="p-6 bg-card border-border">
-							<div className="space-y-2">
-								<p className="text-sm text-muted-foreground">Tasa de finalización</p>
-								<p className="text-3xl font-bold text-foreground">--</p>
-								<p className="text-xs text-muted-foreground">
-									Obras completadas vs aceptadas
-								</p>
-							</div>
-						</Card>
-
-						<Card className="p-6 bg-card border-border">
-							<div className="space-y-2">
-								<p className="text-sm text-muted-foreground">Conversión total</p>
-								<p className="text-3xl font-bold text-foreground">{metrics.conversionRate > 0 ? `${metrics.conversionRate}%` : '--'}</p>
-								<p className="text-xs text-muted-foreground">
-									{metrics.totalBudgets > 0 ? 'Del presupuesto a la venta final' : 'Sin datos'}
-								</p>
-							</div>
-						</Card>
-					</div>
-				</TabsContent>
+				<SourcesAndMaterialsTab metrics={metrics} loading={loading} />
 			</Tabs>
 		</div>
 	);

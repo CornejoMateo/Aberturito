@@ -21,13 +21,14 @@ import { cn } from '@/lib/utils';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { Work } from '@/lib/works/works';
 import { createBudget, getBudgetsByFolderBudgetIds, deleteBudget, updateBudget } from '@/lib/budgets/budgets';
-import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId, deleteFolderBudgetWithBudgets } from '@/lib/budgets/folder_budgets';
+import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId, deleteFolderBudgetWithBudgets, deleteFolderBudget } from '@/lib/budgets/folder_budgets';
 import { getSupabaseClient } from '@/lib/supabase-client';
 import { CheckCircle, FileText, Plus, ChevronDown, Trash2, TrendingUp } from 'lucide-react';
 import { BudgetWithWork } from '@/lib/works/balances';
 import { ClientBudgetsDollarUpdateModal } from '@/components/ui/client-budgets-dollar-update-modal';
 import { translateError } from '@/lib/error-translator';
 import { checklistTypes } from '@/lib/works/checklists.constants';
+import { de } from 'date-fns/locale';
 
 type BudgetFolderVM = FolderBudget & {
 	budgets: BudgetWithWork[];
@@ -364,7 +365,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 		setFormPdf(null);
 	}
 
-	const handleClientBudgetsUpdate = async (newUsdRate: number) => {
+	const handleClientBudgetsUpdate = async (newUsdRate: number) => {	
 		try {
 			const response = await fetch('/api/budget-dollar-rate', {
 				method: 'POST',
@@ -404,6 +405,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 			const work_id = formWorkId === 'none' ? null : formWorkId;
 			const existingFolder = folderBudgets.find((f) => (f.work_id ?? null) === work_id);
 			let folderId = existingFolder?.id;
+			let newFolder = false;
 
 			if (!folderId) {
 				const { data: folder, error: folderError } = await createFolderBudget({
@@ -421,6 +423,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 					return;
 				}
 				folderId = folder.id;
+				newFolder = true;
 			}
 
 			const parsedAmount = formAmount.trim() ? Number(formAmount) : null;
@@ -451,6 +454,9 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 					title: 'No se pudo crear el presupuesto',
 					description: translateError(createError) || 'Intente nuevamente.',
 				});
+				if (newFolder && folderId) {
+					await deleteFolderBudget(folderId); // remove empty folder budget
+				}
 				return;
 			}
 
@@ -552,7 +558,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 
 							<div className="grid grid-cols-2 gap-4">
 								<div className="grid gap-2">
-									<Label>Número de presupuesto *</Label>
+									<Label>Número de presupuesto</Label>
 									<Input
 										type="text"
 										value={formNumber}
@@ -561,7 +567,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 									/>
 								</div>
 								<div className="grid gap-2">
-									<Label>Monto ARS *</Label>
+									<Label>Monto ARS</Label>
 									<Input
 										type="number"
 										value={formAmount}
@@ -570,7 +576,7 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 									/>
 								</div>
 								<div className="grid gap-2">
-									<Label>Monto USD *</Label>
+									<Label>Monto USD</Label>
 									<Input
 										type="number"
 										value={formAmountUsd}

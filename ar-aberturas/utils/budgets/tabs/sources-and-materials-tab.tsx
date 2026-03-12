@@ -20,8 +20,8 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
   }, {} as Record<string, string>);
 
   const formatContactMethodData = metrics.clientsByContactMethod.map(item => ({
-    ...item,
-    method: contactMethodLabels[item.method] || item.method
+    name: `${contactMethodLabels[item.method] || item.method}: ${item.count}`,
+    value: item.count,
   }));
 
   return (
@@ -37,18 +37,17 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
                 <Pie
                   data={formatContactMethodData}
                   cx="50%"
-                  cy="50%"
+                  cy="45%"
                   labelLine={false}
-                  label={({ method, count }) => `${method}: ${count}`}
                   outerRadius={80}
                   fill="#8884d8"
-                  dataKey="count"
+                  dataKey="value"
                 >
                   {formatContactMethodData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `${value} clientes`} />
+                <Tooltip formatter={(value) => `${value}`} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -87,12 +86,12 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
             <p className="text-sm font-medium text-muted-foreground">Medio de Contacto principal</p>
             <p className="text-3xl font-bold text-foreground">
               {formatContactMethodData && formatContactMethodData.length > 0
-                ? formatContactMethodData[0].method
+                ? formatContactMethodData[0].name.split(':')[0]
                 : '--'}
             </p>
             <p className="text-xs text-muted-foreground">
               {formatContactMethodData && formatContactMethodData.length > 0
-                ? `${formatContactMethodData[0].count} clientes`
+                ? `${formatContactMethodData[0].value} clientes`
                 : 'Sin datos'}
             </p>
           </div>

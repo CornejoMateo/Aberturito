@@ -160,8 +160,8 @@ export function ChecklistCard({
 						className="text-sm"
 						disabled={loading}
 					/>
-					{user?.role === 'Admin' && (
-						<div className="flex flex-col sm:flex-row gap-2">
+					<div className='flex items-center gap-2'>
+						{user?.role === 'Admin' && (
 							<Button
 								type="button"
 								variant="outline"
@@ -182,26 +182,26 @@ export function ChecklistCard({
 									</>
 								)}
 							</Button>
-							<Button
-								type="button"
-								variant="outline"
-								size="sm"
-								onClick={triggerFileUpload}
-								disabled={!clientId || loading}
-								className="gap-2"
-							>
-								<Upload className="mr-2 h-4 w-4" />
-								Agregar archivo
-							</Button>
-							<input
-								ref={fileInputRef}
-								type="file"
-								onChange={handleFileSelect}
-								accept={CLIENT_FILE_TYPES.join(',')}
-								className="hidden"
-							/>
-						</div>
-					)}
+						)}
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={triggerFileUpload}
+							disabled={!clientId || loading}
+							className="gap-2 justify-center"
+						>
+							<Upload className="mr-2 h-4 w-4" />
+							Agregar archivo
+						</Button>
+						<input
+							ref={fileInputRef}
+							type="file"
+							onChange={handleFileSelect}
+							accept={CLIENT_FILE_TYPES.join(',')}
+							className="hidden"
+						/>
+					</div>
 				</div>
 			</CardHeader>
 

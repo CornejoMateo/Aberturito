@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { ChecklistModal } from '@/utils/checklists/checklist-modal';
 import { createChecklist, getChecklistsByWorkId } from '@/lib/works/checklists';
+import { updateWorkGeneralNote } from '@/lib/works/works';
 import { type StatusFilter } from '@/constants/type-config';
 import { EmailNotificationModal } from '@/components/ui/email-notification-modal';
 import { WhatsAppNotificationModal } from '@/components/ui/whatsapp-notification-modal';
@@ -115,6 +116,18 @@ export function WorksOpenings() {
 		reload();
 	};
 
+	const handleUpdateGeneralNote = async (workId: string, note: string) => {
+		const { error } = await updateWorkGeneralNote(workId, note.trim() || null);
+		
+		if (error) {
+			console.error('Error al actualizar nota general:', error);
+			throw error;
+		}
+
+		// Recargar los datos para actualizar la UI
+		reload();
+	};
+
 	return (
 		<div className="space-y-6">
 			{/* Header */}
@@ -156,6 +169,7 @@ export function WorksOpenings() {
 							onOpenEmail={openEmail}
 							onOpenWhatsApp={openWhatsApp}
 							onOpenChecklist={openChecklist}
+							onUpdateGeneralNote={handleUpdateGeneralNote}
 						/>
 					);
 				})}

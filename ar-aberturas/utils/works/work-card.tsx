@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { AddressLink } from '@/components/ui/address-link';
+import { PostItNote } from '@/components/ui/post-it-note';
+import { PostItModal } from '@/components/ui/post-it-modal';
 import { ChecklistCompletionModal } from '@/utils/checklists/checklist-completion-modal';
 import {
 	CheckCircle2,
@@ -13,11 +15,13 @@ import {
 	Clock,
 	MessageCircle,
 	StickyNote,
+	Edit3,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { statusConfig } from '@/constants/type-config';
 import { WorkWithProgress } from '@/lib/works/works';
+import { useState } from 'react';
 
 interface WorkCardProps {
 	work: WorkWithProgress;
@@ -25,9 +29,13 @@ interface WorkCardProps {
 	onOpenEmail: (work: WorkWithProgress) => void;
 	onOpenWhatsApp: (work: WorkWithProgress) => void;
 	onOpenChecklist: (work: WorkWithProgress) => void;
+	onUpdateGeneralNote?: (workId: string, note: string) => Promise<void>;
 }
 
-export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp,  onOpenChecklist}: WorkCardProps) {
+export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp, onOpenChecklist, onUpdateGeneralNote }: WorkCardProps) {
+	const [isPostItModalOpen, setIsPostItModalOpen] = useState(false);
+	const [isUpdatingNote, setIsUpdatingNote] = useState(false);
+	
 	const statusInfo = statusConfig.find((s) => s.value === work.status);
 
 	const StatusIcon = statusInfo?.icon || Clock;
@@ -35,8 +43,22 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp,  onOpenCheck
 	const statusColor = statusInfo?.color || 'text-gray-400 bg-gray-400/10';
 
 	const canSendNotifications = user?.role === 'Admin' || user?.role === 'Ventas';
+	const canEditNotes = user?.role === 'Admin' || user?.role === 'Ventas';
 
-	return (
+	const handleSaveGeneralNote = async (note: string) => {
+		if (!onUpdateGeneralNote) return;
+		
+		setIsUpdatingNote(true);
+		try {
+			await onUpdateGeneralNote(work.id, note);
+		} catch (error) {
+			console.error('Error al guardar la nota general:', error);
+		} finally {
+			setIsUpdatingNote(false);
+		}
+	};
+
+	const cardContent = (
 		<Card key={work.id} className="bg-card border-border">
 			<div className="p-6">
 				<div className="flex items-start justify-between gap-4">
@@ -87,6 +109,13 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp,  onOpenCheck
 							</div>
 							<Progress value={work.progress} className="h-2" />
 						</div>
+
+						{/* Post-it para desktop - solo visible en pantallas grandes */}
+						{work.general_note && (
+							<div className="hidden md:block">
+								<PostItNote note={work.general_note} />
+							</div>
+						)}
 					</div>
 
 					<div className="flex flex-col gap-2">
@@ -101,6 +130,18 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp,  onOpenCheck
 							<Button variant="outline" size="sm" onClick={() => {onOpenChecklist(work)}}>
 								<List className="mr-2 h-4 w-4" />
 								Agregar checklists
+							</Button>
+						)}
+
+						{canEditNotes && (
+							<Button 
+								variant="outline" 
+								size="sm" 
+								onClick={() => setIsPostItModalOpen(true)}
+								className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+							>
+								<StickyNote className="mr-2 h-4 w-4" />
+								{work.general_note ? 'Editar nota' : 'Agregar nota'}
 							</Button>
 						)}
 
@@ -138,9 +179,34 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp,  onOpenCheck
 								Notas
 							</Badge>
 						)}
+
+						{work.general_note && (
+							<Badge
+								variant="secondary"
+								className="gap-1 justify-center bg-yellow-100 text-yellow-800 border-yellow-300"
+								title="Hay una nota general para esta obra"
+							>
+								<StickyNote className="h-3.5 w-3.5" />
+								Nota general
+							</Badge>
+						)}
 					</div>
 				</div>
 			</div>
 		</Card>
+	);
+
+	// Modal para agregar/editar nota general
+	return (
+		<>
+			{cardContent}
+			<PostItModal
+				isOpen={isPostItModalOpen}
+				onOpenChange={setIsPostItModalOpen}
+				initialNote={work.general_note}
+				onSave={handleSaveGeneralNote}
+				isLoading={isUpdatingNote}
+			/>
+		</>
 	);
 }

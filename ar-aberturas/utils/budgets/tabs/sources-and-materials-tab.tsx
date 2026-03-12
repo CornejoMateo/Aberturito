@@ -47,7 +47,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `${value} clientes`} />
+                <Tooltip formatter={(value) => `${value}`} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>

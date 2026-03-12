@@ -20,12 +20,6 @@ interface Chart {
 export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarouselProps) {
   const [currentChart, setCurrentChart] = useState(0);
 
-  const formatChartValue = (value: number): string => {
-    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
-    return `${value}`;
-  };
-
   // Dates for the monthly budgets chart (default to 0 if no data)
   const monthlyBudgetData = metrics.budgetsByMonth && metrics.budgetsByMonth.length > 0
     ? metrics.budgetsByMonth

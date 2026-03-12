@@ -73,7 +73,7 @@ export function AverageTicketCard({
                   ticketType === 'sold'
                     ? 'presupuestos vendidos'
                     : ticketType === 'chosen'
-                      ? 'presupuestos pendientes'
+                      ? 'presupuestos elegidos'
                       : 'todos los presupuestos'
                 }`
               : 'Sin datos para calcular'}

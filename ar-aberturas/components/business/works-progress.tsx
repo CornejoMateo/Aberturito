@@ -120,11 +120,11 @@ export function WorksOpenings() {
 		const { error } = await updateWorkGeneralNote(workId, note.trim() || null);
 		
 		if (error) {
-			console.error('Error al actualizar nota general:', error);
+			console.error('Error updating general note:', error);
 			throw error;
 		}
 
-		// Recargar los datos para actualizar la UI
+		// Reload data to update the UI
 		reload();
 	};
 

@@ -434,7 +434,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 								</div>
 							</div>
 
-							{/* Post-it para mobile - visible solo en pantallas pequeñas */}
+							{/* Post-it for mobile - visible only on small screens */}
 							{workData?.general_note && (
 								<div className="md:hidden">
 									<div className="flex items-center justify-between mb-2">
@@ -539,7 +539,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 				onSave={async () => {}}
 			/>
 
-			{/* PostIt Modal para mobile */}
+			{/* PostIt Modal for mobile */}
 			<PostItModal
 				isOpen={isPostItModalOpen}
 				onOpenChange={setIsPostItModalOpen}

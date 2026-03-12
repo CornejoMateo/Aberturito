@@ -1,7 +1,7 @@
 import { StickyNote, Edit3, AlertTriangle } from 'lucide-react';
 
 export const POST_IT_CONSTANTS = {
-	// Colores y estilos
+	// Colors 
 	COLORS: {
 		YELLOW: 'bg-yellow-100 border-yellow-300 text-yellow-900',
 		PINK: 'bg-pink-100 border-pink-300 text-pink-900',
@@ -9,11 +9,11 @@ export const POST_IT_CONSTANTS = {
 		GREEN: 'bg-green-100 border-green-300 text-green-900',
 	},
 	
-	// Configuración por defecto
+	// Default configuration
 	DEFAULT_COLOR: 'YELLOW',
 	MAX_LENGTH: 500,
 	
-	// Textos
+	// Texts
 	LABELS: {
 		ADD_NOTE: 'Agregar nota general',
 		EDIT_NOTE: 'Editar nota general',
@@ -27,19 +27,19 @@ export const POST_IT_CONSTANTS = {
 		CONFIRM_DELETE: '¿Estás seguro de que quieres eliminar esta nota?',
 	},
 	
-	// Iconos
+	// Icons
 	ICONS: {
 		STICKY_NOTE: StickyNote,
 		EDIT: Edit3,
 		ALERT: AlertTriangle,
 	},
 	
-	// Breakpoints para responsive
+	// Breakpoints for responsive
 	BREAKPOINTS: {
 		MOBILE: '768px', // md breakpoint
 	},
 	
-	// Clases CSS
+	// CSS classes
 	CLASSES: {
 		POST_IT_CONTAINER: 'relative p-4 rounded-lg border-2 shadow-sm transition-all duration-200 hover:shadow-md',
 		POST_IT_MOBILE: 'p-3 rounded-lg border shadow-sm',

@@ -110,7 +110,7 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp, onOpenCheckl
 							<Progress value={work.progress} className="h-2" />
 						</div>
 
-						{/* Post-it para desktop - solo visible en pantallas grandes */}
+						{/* Post-it to show on desktop - only visible on large screens */}
 						{work.general_note && (
 							<div className="hidden md:block">
 								<PostItNote note={work.general_note} />
@@ -196,7 +196,7 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp, onOpenCheckl
 		</Card>
 	);
 
-	// Modal para agregar/editar nota general
+	// Modal to add/edit general note
 	return (
 		<>
 			{cardContent}

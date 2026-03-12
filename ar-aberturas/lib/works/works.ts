@@ -11,7 +11,6 @@ export type Work = {
   client_last_name?: string | null;
   status?: string | null;
   architect?: string | null;
-  notes?: string[] | null;
   general_note?: string | null;
   balance_id?: string | null;
   clients?: {

@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Client } from '@/lib/clients/clients';
 import {
 	listClientFiles,
-	uploadClientFile,
 	deleteClientFile,
 	ClientFile,
 } from '@/lib/clients/clients';
@@ -13,6 +12,7 @@ import { Upload, Trash2, X, ChevronLeft, ChevronRight, Download, Loader2, FileTe
 import { toast } from '@/components/ui/use-toast';
 import { getSupabaseClient } from '@/lib/supabase-client';
 import { translateError } from '@/lib/error-translator';
+import { useFileUpload } from '@/hooks/use-file-upload';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -57,14 +57,8 @@ type FileWithUrl = ClientFile & {
 export function ClientImagesGallery({ client }: ClientFilesProps) {
 	const [files, setFiles] = useState<FileWithUrl[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
-	const [isUploading, setIsUploading] = useState(false);
 	const [selectedFileIndex, setSelectedFileIndex] = useState<number | null>(null);
 	const [fileToDelete, setFileToDelete] = useState<FileWithUrl | null>(null);
-	const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-	const [selectedFile, setSelectedFile] = useState<File | null>(null);
-	const [displayName, setDisplayName] = useState('');
-	const [description, setDescription] = useState('');
-	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		loadFiles();
@@ -140,82 +134,22 @@ export function ClientImagesGallery({ client }: ClientFilesProps) {
 		}
 	};
 
-	const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const selectedFiles = e.target.files;
-		if (!selectedFiles || selectedFiles.length === 0) return;
-
-		const file = selectedFiles[0]; // only handle single file upload
-
-		// Validate file type and size
-		const validation = validateFileForUpload(file, CLIENT_FILE_TYPES, MAX_FILE_SIZE_CLIENT);
-		if (!validation.isValid) {
-			toast({
-				variant: 'destructive',
-				title: 'Archivo no válido',
-				description: validation.error,
-			});
-			if (fileInputRef.current) {
-				fileInputRef.current.value = '';
-			}
-			return;
-		}
-
-		// Open dialog with file info
-		setSelectedFile(file);
-		setDisplayName(file.name.replace(/\.[^/.]+$/, '')); // Remove extension
-		setDescription('');
-		setIsUploadDialogOpen(true);
-	};
-
-	const handleUploadSubmit = async () => {
-		if (!selectedFile) return;
-
-		setIsUploading(true);
-
-		try {
-			const { error } = await uploadClientFile(
-				client.id,
-				selectedFile,
-				displayName.trim() || undefined,
-				description.trim() || undefined
-			);
-
-			if (error) {
-				toast({
-					variant: 'destructive',
-					title: 'Error al subir archivo',
-					description: translateError(error),
-				});
-			} else {
-				toast({
-					title: 'Archivo subido',
-					description: 'El archivo se subió exitosamente.',
-				});
-				await loadFiles();
-				handleCloseUploadDialog();
-			}
-		} catch (error) {
-			console.error('Error uploading file:', error);
-			toast({
-				variant: 'destructive',
-				title: 'Error al subir archivo',
-				description: translateError(error),
-			});
-		} finally {
-			setIsUploading(false);
-		}
-	};
-
-    // when closing the upload dialog, reset all related states and clear file input
-	const handleCloseUploadDialog = () => {
-		setIsUploadDialogOpen(false);
-		setSelectedFile(null);
-		setDisplayName('');
-		setDescription('');
-		if (fileInputRef.current) {
-			fileInputRef.current.value = '';
-		}
-	};
+	const {
+		isUploadDialogOpen,
+		selectedFile,
+		displayName,
+		description,
+		isUploading,
+		fileInputRef,
+		setDisplayName,
+		setDescription,
+		handleFileSelect,
+		handleUploadSubmit,
+		handleCloseUploadDialog,
+	} = useFileUpload({
+		clientId: client.id,
+		onUploadSuccess: loadFiles,
+	});
 
 	const handleDeleteFile = async () => {
 		if (!fileToDelete) return;
@@ -253,7 +187,6 @@ export function ClientImagesGallery({ client }: ClientFilesProps) {
 			setFileToDelete(null);
 		}
 	};
-
 
 	const handlePrevious = () => {
 		if (selectedFileIndex !== null && selectedFileIndex > 0) {

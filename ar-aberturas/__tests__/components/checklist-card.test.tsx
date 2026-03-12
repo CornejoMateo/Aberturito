@@ -2,6 +2,24 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { ChecklistCard } from '@/utils/checklists/checklist-card';
 import { Checklist } from '@/lib/works/checklists';
 
+// Mock the useFileUpload hook
+jest.mock('@/hooks/use-file-upload', () => ({
+	useFileUpload: jest.fn(() => ({
+		isUploadDialogOpen: false,
+		selectedFile: null,
+		displayName: '',
+		description: '',
+		isUploading: false,
+		fileInputRef: { current: null },
+		setDisplayName: jest.fn(),
+		setDescription: jest.fn(),
+		handleFileSelect: jest.fn(),
+		handleUploadSubmit: jest.fn(),
+		handleCloseUploadDialog: jest.fn(),
+		triggerFileUpload: jest.fn(),
+	})),
+}));
+
 const mockChecklist: Checklist = {
 	id: '1',
 	work_id: '1',
@@ -32,6 +50,7 @@ const defaultProps = {
 	onEdit: jest.fn(),
 	onDelete: jest.fn(),
 	onAddEntry: jest.fn(),
+	clientId: 'client-123',
 };
 
 describe('ChecklistCard', () => {
@@ -214,5 +233,35 @@ describe('ChecklistCard', () => {
 		render(<ChecklistCard {...props} />);
 		
 		expect(screen.getByText('Abertura 3')).toBeInTheDocument();
+	});
+
+	it('should show "Agregar archivo" button', () => {
+		const props = { ...defaultProps, user: { role: 'User' } };
+		render(<ChecklistCard {...props} />);
+		
+		expect(screen.getByText('Agregar archivo')).toBeInTheDocument();
+	});
+
+	it('should disable "Agregar archivo" button when clientId is not provided', () => {
+		const props = { ...defaultProps, clientId: null };
+		render(<ChecklistCard {...props} />);
+		
+		const uploadButton = screen.getByText('Agregar archivo');
+		expect(uploadButton).toBeDisabled();
+	});
+
+	it('should disable "Agregar archivo" button when loading', () => {
+		const props = { ...defaultProps, loading: true };
+		render(<ChecklistCard {...props} />);
+		
+		const uploadButton = screen.getByText('Agregar archivo');
+		expect(uploadButton).toBeDisabled();
+	});
+
+	it('should enable "Agregar archivo" button when clientId is provided and not loading', () => {
+		render(<ChecklistCard {...defaultProps} />);
+		
+		const uploadButton = screen.getByText('Agregar archivo');
+		expect(uploadButton).not.toBeDisabled();
 	});
 });

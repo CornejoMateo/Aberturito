@@ -416,6 +416,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 										onAddEntry={handleAddChecklistEntry}
 										onEdit={handleEditChecklist}
 										onDelete={setChecklistToDelete}
+										clientId={clientData?.id}
 									/>
 								))}
 							</div>

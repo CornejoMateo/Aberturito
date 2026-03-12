@@ -51,6 +51,7 @@ const mockChecklists = [
 
 const defaultMockData = {
 	clientData: { name: 'John Doe', phone_number: '1234567890' },
+	clientId: 'client-123',
 	workData: { id: '1', locality: 'Buenos Aires', address: 'Street 123' },
 	checklists: mockChecklists,
 	loading: false,

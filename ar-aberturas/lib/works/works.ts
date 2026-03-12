@@ -193,7 +193,7 @@ export async function updateWorkGeneralNote(
       return { data: null, error };
     }
 
-    // Mapear los datos para incluir los nombres de los clientes
+    // Map client data
     if (data && data.clients) {
       data.client_name = data.clients.name;
       data.client_last_name = data.clients.last_name;

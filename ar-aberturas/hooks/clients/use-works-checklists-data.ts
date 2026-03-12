@@ -9,6 +9,7 @@ export function useWorkChecklistData(workId: string) {
 		id: string;
 		locality: string;
 		address: string;
+		general_note?: string | null;
 	} | null>(null);
 	const [checklists, setChecklists] = useState<Checklist[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -24,6 +25,7 @@ export function useWorkChecklistData(workId: string) {
 					id: work.id,
 					locality: work.locality || '',
 					address: work.address || '',
+					general_note: work.general_note || null,
 				});
 
 				if (work.client_id) {

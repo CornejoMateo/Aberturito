@@ -21,7 +21,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import { Checklist, editChecklist, deleteChecklist } from '@/lib/works/checklists';
+import { updateWorkGeneralNote } from '@/lib/works/works';
 import { ChecklistPDFButton } from '@/components/ui/checklist-pdf-button';
+import { PostItNote } from '@/components/ui/post-it-note';
+import { PostItModal } from '@/components/ui/post-it-modal';
 import { ChecklistModal } from './checklist-modal';
 import { useAuth } from '@/components/provider/auth-provider';
 import { toast } from '@/components/ui/use-toast';
@@ -44,6 +47,8 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 	const [checklistToDelete, setChecklistToDelete] = useState<Checklist | null>(null);
 	const [checklistToEdit, setChecklistToEdit] = useState<Checklist | null>(null);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+	const [isPostItModalOpen, setIsPostItModalOpen] = useState(false);
+	const [isUpdatingNote, setIsUpdatingNote] = useState(false);
 	const notesDebounceTimersRef = useRef<Record<string, number>>({});
 
 	const { user } = useAuth();
@@ -348,6 +353,37 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 		}
 	};
 
+	const handleSaveGeneralNote = async (note: string) => {
+		if (!workData) return;
+		
+		setIsUpdatingNote(true);
+		try {
+			const { error } = await updateWorkGeneralNote(workData.id, note.trim() || null);
+			
+			if (error) {
+				throw error;
+			}
+
+			// Reload data to update the UI
+			reload();
+			
+			toast({
+				title: 'Nota general actualizada',
+				description: translateError(error) || 'La nota general se ha guardado correctamente.',	
+			});
+		} catch (error) {
+			console.error('Error al guardar la nota general:', error);
+			const errorMessage = translateError(error);
+			toast({
+				title: 'Error al guardar nota',
+				description: errorMessage || 'No se pudo guardar la nota general. Por favor, intenta nuevamente.',
+				variant: 'destructive',
+			});
+		} finally {
+			setIsUpdatingNote(false);
+		}
+	};
+
 	useEffect(() => {
 		return () => {
 			Object.values(notesDebounceTimersRef.current).forEach((timerId) => {
@@ -397,6 +433,26 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 									)}
 								</div>
 							</div>
+
+							{/* Post-it for mobile - visible only on small screens */}
+							{workData?.general_note && (
+								<div className="md:hidden">
+									<div className="flex items-center justify-between mb-2">
+										<h3 className="text-sm font-medium text-foreground">Nota general de la obra</h3>
+										{(user?.role === 'Admin' || user?.role === 'Ventas') && (
+											<Button
+												variant="ghost"
+												size="sm"
+												onClick={() => setIsPostItModalOpen(true)}
+												className="h-8 px-2 text-xs"
+											>
+												Editar
+											</Button>
+										)}
+									</div>
+									<PostItNote note={workData.general_note} isMobile={true} />
+								</div>
+							)}
 
 							{/* Checklists */}
 							<div className="space-y-8">
@@ -482,6 +538,15 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 				checklistToEdit={checklistToEdit}
 				onUpdate={handleUpdateChecklist}
 				onSave={async () => {}}
+			/>
+
+			{/* PostIt Modal for mobile */}
+			<PostItModal
+				isOpen={isPostItModalOpen}
+				onOpenChange={setIsPostItModalOpen}
+				initialNote={workData?.general_note}
+				onSave={handleSaveGeneralNote}
+				isLoading={isUpdatingNote}
 			/>
 		</>
 	);

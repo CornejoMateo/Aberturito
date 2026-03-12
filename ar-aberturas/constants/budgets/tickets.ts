@@ -8,7 +8,7 @@ export interface TicketType {
 
 export const TICKET_TYPES = [
 	{ id: 'sold', label: 'Vendidos', description: 'Presupuestos vendidos' },
-	{ id: 'chosen', label: 'Pendientes', description: 'Presupuestos pendientes' },
+	{ id: 'chosen', label: 'Elegidos', description: 'Presupuestos elegidos' },
 	{ id: 'total', label: 'General', description: 'Todos los presupuestos' }
 ] as const;
 

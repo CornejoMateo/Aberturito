@@ -48,7 +48,7 @@ export async function listWorks(): Promise<{ data: Work[] | null; error: any }> 
       return { data: null, error };
     }
 
-    // Mapear los datos para incluir los nombres de los clientes
+    // mapping date to include client names
     const worksWithClientNames = data.map(work => ({
       ...work,
       client_name: work.clients?.name || null,

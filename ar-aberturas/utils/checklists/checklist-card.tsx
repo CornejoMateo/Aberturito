@@ -160,48 +160,49 @@ export function ChecklistCard({
 						className="text-sm"
 						disabled={loading}
 					/>
-					<div className='flex items-center gap-2'>
-						{user?.role === 'Admin' && (
-							<Button
-								type="button"
-								variant="outline"
-								size="sm"
-								onClick={() => onAddEntry(checklist, 'claim')}
-								disabled={!checklist.notes?.trim() || addingClaim[checklist.id] || loading}
-								className="gap-2 justify-center"
-							>
-								{addingClaim[checklist.id] ? (
-									<>
-										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-										Creando reclamo...
-									</>
-								) : (
-									<>
-										<AlertCircle className="mr-2 h-4 w-4" />
-										Agregar como reclamo
-									</>
-								)}
-							</Button>
-						)}
+				</div>
+				<div className="flex flex-wrap gap-2">
+					{user?.role === 'Admin' && (
 						<Button
-							type="button"
 							variant="outline"
 							size="sm"
-							onClick={triggerFileUpload}
-							disabled={!clientId || loading}
-							className="gap-2 justify-center"
+							onClick={() => onAddEntry(checklist, 'claim')}
+							disabled={!checklist.notes?.trim() || addingClaim[checklist.id] || loading}
+							className="gap-2 justify-center w-full sm:w-auto"
 						>
-							<Upload className="mr-2 h-4 w-4" />
-							Agregar archivo
+							{addingClaim[checklist.id] ? (
+								<>
+									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									Creando reclamo...
+								</>
+							) : (
+								<>
+									<AlertCircle className="mr-2 h-4 w-4" />
+									Agregar como reclamo
+								</>
+							)}
 						</Button>
-						<input
-							ref={fileInputRef}
-							type="file"
-							onChange={handleFileSelect}
-							accept={CLIENT_FILE_TYPES.join(',')}
-							className="hidden"
-						/>
-					</div>
+					)}
+
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						onClick={triggerFileUpload}
+						disabled={!clientId || loading}
+						className="gap-2 justify-center w-full sm:w-auto"
+					>
+						<Upload className="mr-2 h-4 w-4" />
+						Agregar archivo
+					</Button>
+
+					<input
+						ref={fileInputRef}
+						type="file"
+						onChange={handleFileSelect}
+						accept={CLIENT_FILE_TYPES.join(',')}
+						className="hidden"
+					/>
 				</div>
 			</CardHeader>
 

@@ -364,12 +364,12 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 				throw error;
 			}
 
-			// Recargar los datos para actualizar la UI
+			// Reload data to update the UI
 			reload();
 			
 			toast({
 				title: 'Nota general actualizada',
-				description: 'La nota general se ha guardado correctamente.',
+				description: translateError(error) || 'La nota general se ha guardado correctamente.',	
 			});
 		} catch (error) {
 			console.error('Error al guardar la nota general:', error);

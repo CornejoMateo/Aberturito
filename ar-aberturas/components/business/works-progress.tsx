@@ -25,6 +25,7 @@ import { useNotifications } from '@/hooks/clients/use-notifications';
 import { StatsCardsWorks } from '@/utils/works/stats-cards-works';
 import { useChecklistModal } from '@/hooks/clients/use-checklist-modal';
 import { WorkCard } from '@/utils/works/work-card';
+import { translateError } from '@/lib/error-translator';
 
 export function WorksOpenings() {
 	const [searchQuery, setSearchQuery] = useState('');
@@ -110,8 +111,13 @@ export function WorksOpenings() {
 			})),
 			progress: checklist.items.length > 0 ? 0 : 100,
 		});
+		
 
-		if (error) throw error;
+		if (error) {
+			const errorMessage = translateError(error);
+			console.error('Error creating checklist:', errorMessage);
+			throw error;
+		}
 
 		reload();
 	};
@@ -120,7 +126,8 @@ export function WorksOpenings() {
 		const { error } = await updateWorkGeneralNote(workId, note.trim() || null);
 		
 		if (error) {
-			console.error('Error updating general note:', error);
+			const errorMessage = translateError(error);
+			console.error('Error updating general note:', errorMessage);
 			throw error;
 		}
 

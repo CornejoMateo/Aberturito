@@ -22,6 +22,7 @@ import { es } from 'date-fns/locale';
 import { statusConfig } from '@/constants/type-config';
 import { WorkWithProgress } from '@/lib/works/works';
 import { useState } from 'react';
+import { translateError } from '@/lib/error-translator';
 
 interface WorkCardProps {
 	work: WorkWithProgress;
@@ -42,8 +43,8 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp, onOpenCheckl
 	const statusLabel = statusInfo?.label || 'Pendiente';
 	const statusColor = statusInfo?.color || 'text-gray-400 bg-gray-400/10';
 
-	const canSendNotifications = user?.role === 'Admin' || user?.role === 'Ventas';
-	const canEditNotes = user?.role === 'Admin' || user?.role === 'Ventas';
+	const canSendNotifications = user?.role === 'Admin' || user?.role === 'Ventas' || user?.role === 'Colocador';
+	const canEditNotes = user?.role === 'Admin' || user?.role === 'Ventas' || user?.role === 'Colocador';
 
 	const handleSaveGeneralNote = async (note: string) => {
 		if (!onUpdateGeneralNote) return;
@@ -52,7 +53,8 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp, onOpenCheckl
 		try {
 			await onUpdateGeneralNote(work.id, note);
 		} catch (error) {
-			console.error('Error al guardar la nota general:', error);
+			const errorMessage = translateError(error);
+			console.error('Error al guardar la nota general:', errorMessage);
 		} finally {
 			setIsUpdatingNote(false);
 		}

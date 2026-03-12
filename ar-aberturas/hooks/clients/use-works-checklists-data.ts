@@ -4,8 +4,7 @@ import { getWorkById } from '@/lib/works/works';
 import { getClientById } from '@/lib/clients/clients';
 
 export function useWorkChecklistData(workId: string) {
-	const [clientData, setClientData] = useState<{ name: string; phone_number: string } | null>(null);
-	const [clientId, setClientId] = useState<string | null>(null);
+	const [clientData, setClientData] = useState<{ id: string; name: string; phone_number: string } | null>(null);
 	const [workData, setWorkData] = useState<{
 		id: string;
 		locality: string;
@@ -28,11 +27,10 @@ export function useWorkChecklistData(workId: string) {
 				});
 
 				if (work.client_id) {
-					setClientId(work.client_id);
 					const { data: client } = await getClientById(work.client_id);
 					if (client) {
 						const clientName = [client.name, client.last_name].filter(Boolean).join(' ');
-						setClientData({ name: clientName || '', phone_number: client.phone_number || '' });
+						setClientData({ id: work.client_id ,name: clientName || '', phone_number: client.phone_number || '' });
 					}
 				}
 			}
@@ -53,7 +51,6 @@ export function useWorkChecklistData(workId: string) {
 
 	return {
 		clientData,
-		clientId,
 		workData,
 		checklists,
 		loading,

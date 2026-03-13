@@ -11,7 +11,7 @@ export type Work = {
   client_last_name?: string | null;
   status?: string | null;
   architect?: string | null;
-  notes?: string[] | null;
+  general_note?: string | null;
   balance_id?: string | null;
   clients?: {
     name: string;
@@ -48,7 +48,7 @@ export async function listWorks(): Promise<{ data: Work[] | null; error: any }> 
       return { data: null, error };
     }
 
-    // Mapear los datos para incluir los nombres de los clientes
+    // mapping date to include client names
     const worksWithClientNames = data.map(work => ({
       ...work,
       client_name: work.clients?.name || null,
@@ -162,6 +162,46 @@ export async function getWorksInProgressCount(): Promise<{ data: number | null; 
     return { data: count ?? 0, error: null };
   } catch (error) {
     console.error('Error inesperado en getWorksInProgressCount:', {
+      error,
+      message: error instanceof Error ? error.message : 'Error desconocido'
+    });
+    return { 
+      data: null, 
+      error: error instanceof Error ? error.message : 'Error desconocido' 
+    };
+  }
+}
+
+export async function updateWorkGeneralNote(
+  id: string, 
+  generalNote: string | null
+): Promise<{ data: Work | null; error: any }> {
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('works')
+      .update({ general_note: generalNote })
+      .eq('id', id)
+      .select(`
+        *,
+        clients:client_id (name, last_name)
+      `)
+      .single();
+
+    if (error) {
+      console.error('Error al actualizar nota general:', error);
+      return { data: null, error };
+    }
+
+    // Map client data
+    if (data && data.clients) {
+      data.client_name = data.clients.name;
+      data.client_last_name = data.clients.last_name;
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error inesperado en updateWorkGeneralNote:', {
       error,
       message: error instanceof Error ? error.message : 'Error desconocido'
     });

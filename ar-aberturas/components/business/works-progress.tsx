@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { ChecklistModal } from '@/utils/checklists/checklist-modal';
 import { createChecklist, getChecklistsByWorkId } from '@/lib/works/checklists';
+import { updateWorkGeneralNote } from '@/lib/works/works';
 import { type StatusFilter } from '@/constants/type-config';
 import { EmailNotificationModal } from '@/components/ui/email-notification-modal';
 import { WhatsAppNotificationModal } from '@/components/ui/whatsapp-notification-modal';
@@ -24,6 +25,7 @@ import { useNotifications } from '@/hooks/clients/use-notifications';
 import { StatsCardsWorks } from '@/utils/works/stats-cards-works';
 import { useChecklistModal } from '@/hooks/clients/use-checklist-modal';
 import { WorkCard } from '@/utils/works/work-card';
+import { translateError } from '@/lib/error-translator';
 
 export function WorksOpenings() {
 	const [searchQuery, setSearchQuery] = useState('');
@@ -109,9 +111,27 @@ export function WorksOpenings() {
 			})),
 			progress: checklist.items.length > 0 ? 0 : 100,
 		});
+		
 
-		if (error) throw error;
+		if (error) {
+			const errorMessage = translateError(error);
+			console.error('Error creating checklist:', errorMessage);
+			throw error;
+		}
 
+		reload();
+	};
+
+	const handleUpdateGeneralNote = async (workId: string, note: string) => {
+		const { error } = await updateWorkGeneralNote(workId, note.trim() || null);
+		
+		if (error) {
+			const errorMessage = translateError(error);
+			console.error('Error updating general note:', errorMessage);
+			throw error;
+		}
+
+		// Reload data to update the UI
 		reload();
 	};
 
@@ -156,6 +176,7 @@ export function WorksOpenings() {
 							onOpenEmail={openEmail}
 							onOpenWhatsApp={openWhatsApp}
 							onOpenChecklist={openChecklist}
+							onUpdateGeneralNote={handleUpdateGeneralNote}
 						/>
 					);
 				})}

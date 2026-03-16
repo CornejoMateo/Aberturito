@@ -61,6 +61,12 @@ export const translateError = (error: any): string => {
 	if (errorMessage.includes('invalid file type')) {
 		return 'Tipo de archivo no permitido.';
 	}
+	if (
+		errorMessage.includes('The resource already exists') ||
+		errorMessage.includes('the resource already exists')
+	) {
+		return 'Ya existe un archivo con ese nombre. Intenta nuevamente o usa otro archivo.';
+	}
 	
 	// Return original message if no translation found
 	return errorMessage || 'Ocurrió un error inesperado.';

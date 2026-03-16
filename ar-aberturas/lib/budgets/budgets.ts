@@ -209,14 +209,25 @@ export async function createBudget(
 	let filePath: string | null = null;
 
 	if (pdfFile) {
-		const sanitizedName = pdfFile.name.replace(/\s+/g, '_');
-		const fileName = `budget_${budget.type}_${budget.number}_${sanitizedName}`;
+		const sanitizePart = (value: string | null | undefined, fallback: string) => {
+			const cleaned = (value ?? '')
+				.trim()
+				.replace(/\s+/g, '_')
+				.replace(/[^a-zA-Z0-9._-]/g, '');
+			return cleaned || fallback;
+		};
+
+		const sanitizedName = sanitizePart(pdfFile.name, 'archivo.pdf');
+		const typePart = sanitizePart(budget.type, 'sin_tipo');
+		const numberPart = sanitizePart(budget.number, 'sin_numero');
+		const uniqueSuffix = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+		const fileName = `budget_${typePart}_${numberPart}_${uniqueSuffix}_${sanitizedName}`;
 		filePath = `${clientId}/${fileName}`;
 
 		// Load the PDF file to Supabase Storage
-		const { data: uploadData, error: uploadError } = await supabase.storage
+		const { error: uploadError } = await supabase.storage
 			.from('clients')
-			.upload(filePath, pdfFile);
+			.upload(filePath, pdfFile, { upsert: false });
 
 		if (uploadError) {
 			console.error('Error uploading PDF:', uploadError);

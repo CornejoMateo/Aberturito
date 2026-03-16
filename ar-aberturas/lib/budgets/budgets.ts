@@ -404,6 +404,33 @@ export async function getBudgetsByMaterial(): Promise<{ data: Array<{ material: 
 	return { data: result, error: null };
 }
 
+export async function getSoldBudgetsByMaterial(): Promise<{ data: Array<{ material: string; count: number }> | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('type')
+		.eq('sold', true);
+
+	if (error) return { data: null, error };
+	if (!data) return { data: [], error: null };
+
+	// Group by material type
+	const materialMap = new Map<string, number>();
+
+	data.forEach((item: any) => {
+		const material = item.type || 'Sin especificar';
+		materialMap.set(material, (materialMap.get(material) || 0) + 1);
+	});
+
+	// Convert to array and sort by count descending
+	const result = Array.from(materialMap, ([material, count]) => ({
+		material,
+		count
+	})).sort((a, b) => b.count - a.count);
+
+	return { data: result, error: null };
+}
+
 export async function chooseBudgetForClient(
 	budgetId: string,
 	folderBudgetIds: string[]

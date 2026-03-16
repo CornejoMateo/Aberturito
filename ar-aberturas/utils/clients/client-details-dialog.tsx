@@ -325,7 +325,12 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientU
                   </div>
                 </TabsContent>
                 <TabsContent value="budgets">
-                  <ClientBudgetsTab clientId={clientData.id} works={works} onBudgetsChange={loadBudgets} />
+                  <ClientBudgetsTab 
+                    clientId={clientData.id} 
+                    works={works} 
+                    loadWorks={loadWorks}
+                    onBudgetsChange={loadBudgets}
+                    />
                 </TabsContent>
                 <TabsContent value="images" className="h-[calc(100%-2.5rem)]">
                   <ClientImagesGallery client={clientData} />

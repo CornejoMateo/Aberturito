@@ -10,10 +10,14 @@ import {
 
 interface UseFileUploadOptions {
 	clientId: string;
+	checklistId?: string | null;
+	claimId?: string | null;
+	checklistName?: string;
+	checklistDescription?: string;
 	onUploadSuccess?: () => void;
 }
 
-export function useFileUpload({ clientId, onUploadSuccess }: UseFileUploadOptions) {
+export function useFileUpload({ clientId, checklistId, checklistName, checklistDescription, claimId, onUploadSuccess }: UseFileUploadOptions) {
 	const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [displayName, setDisplayName] = useState('');
@@ -41,8 +45,8 @@ export function useFileUpload({ clientId, onUploadSuccess }: UseFileUploadOption
 		}
 
 		setSelectedFile(file);
-		setDisplayName(file.name.replace(/\.[^/.]+$/, ''));
-		setDescription('');
+		setDisplayName(checklistName || file.name.replace(/\.[^/.]+$/, ''));
+		setDescription(checklistDescription || '');
 		setIsUploadDialogOpen(true);
 	};
 
@@ -56,7 +60,9 @@ export function useFileUpload({ clientId, onUploadSuccess }: UseFileUploadOption
 				clientId,
 				selectedFile,
 				displayName.trim() || null,
-				description.trim() || null
+				description.trim() || null,
+				checklistId || null,
+				claimId || null
 			);
 
 			if (error) {

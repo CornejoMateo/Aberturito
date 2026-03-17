@@ -3,12 +3,15 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, CheckCircle2, AlertCircle, Loader2, Upload } from 'lucide-react';
+import { Edit, Trash2, CheckCircle2, AlertCircle, Loader2, Upload, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Checklist } from '@/lib/works/checklists';
 import { ChecklistItem } from '@/lib/works/checklists';
 import { calculateProgress } from '@/helpers/checklists/progress';
 import { useFileUpload } from '@/hooks/use-file-upload';
 import { CLIENT_FILE_TYPES } from '@/utils/file-upload-utils';
+import { useEffect, useState } from 'react';
+import { toast } from '@/components/ui/use-toast';
+import { translateError } from '@/lib/error-translator';
 import {
 	Dialog,
 	DialogContent,
@@ -18,6 +21,8 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { useChecklistImages } from '@/hooks/checklists/use-checklist-images';
+import { ChecklistImages } from '@/utils/checklists/checklist-images';
 
 interface ChecklistCardProps {
 	checklist: Checklist;
@@ -52,6 +57,7 @@ export function ChecklistCard({
 	onAddEntry,
 	clientId,
 }: ChecklistCardProps) {
+
 	const {
 		isUploadDialogOpen,
 		selectedFile,
@@ -67,7 +73,16 @@ export function ChecklistCard({
 		triggerFileUpload,
 	} = useFileUpload({
 		clientId: clientId || '',
+		checklistId: checklist.id,
+		checklistName: checklist.name || '',
+		checklistDescription: checklist.description || '',
+		onUploadSuccess: () => reload(),
 	});
+
+	const {
+		loading: isLoadingImages,
+		reload,
+	} = useChecklistImages(checklist.id);
 
 	return (
 		<Card key={checklist.id} className="border-2 shadow-sm">
@@ -288,6 +303,9 @@ export function ChecklistCard({
 						)}
 					</Button>
 				)}
+
+				<ChecklistImages checklistId={checklist.id} />
+
 			</CardContent>
 
 			<Dialog open={isUploadDialogOpen} onOpenChange={handleCloseUploadDialog}>
@@ -357,6 +375,7 @@ export function ChecklistCard({
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+
 		</Card>
 	);
 }

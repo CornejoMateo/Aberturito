@@ -938,13 +938,27 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 							</div>
 						</div>
 
-						<div>
-							<Label className="text-sm font-medium text-muted-foreground">Obra</Label>
-							<p className="text-sm font-semibold">
-								{budgetDetailModal.budget.folder_budget?.work
-									? `${budgetDetailModal.budget.folder_budget.work.address} - ${budgetDetailModal.budget.folder_budget.work.locality}`
-									: 'Sin obra asignada'}
-							</p>
+						<div className="grid grid-cols-2 gap-4">
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground">Obra</Label>
+								<p className="text-sm font-semibold">
+									{budgetDetailModal.budget.folder_budget?.work
+										? `${budgetDetailModal.budget.folder_budget.work.address} - ${budgetDetailModal.budget.folder_budget.work.locality}`
+										: 'Sin obra asignada'}
+								</p>
+							</div>
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground mt-2">Fecha de emisión</Label>
+								<p className="text-sm font-semibold">
+									{budgetDetailModal.budget.created_at
+										? new Date(budgetDetailModal.budget.created_at).toLocaleDateString('es-AR', {
+												day: '2-digit',
+												month: '2-digit',
+												year: '2-digit',
+											})
+										: 'Fecha no disponible'}
+								</p>
+							</div>
 						</div>
 
 						<div>

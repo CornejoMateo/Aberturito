@@ -139,6 +139,7 @@ export async function getBudgetsByFolderBudgetIds(
 		.select(
 			`
 				id,
+				created_at,
 				amount_ars,
 				amount_usd,
 				accepted,
@@ -174,6 +175,7 @@ export async function getBudgetsByFolderBudgetIds(
 
 			return {
 				id: b.id,
+				created_at: b.created_at,
 				amount_ars: b.amount_ars,
 				amount_usd: b.amount_usd,
 				accepted: b.accepted,

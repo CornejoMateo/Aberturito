@@ -365,7 +365,7 @@ export function ClaimImagesGallery({
 
 			{/* Image Viewer Modal */}
 			{selectedImageIndex !== null && images[selectedImageIndex] && (
-				<div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
+				<div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center overflow-y-auto">
 					<Button
 						size="icon"
 						variant="ghost"
@@ -397,7 +397,7 @@ export function ClaimImagesGallery({
 						</Button>
 					)}
 
-					<div className="max-w-[80vw] max-h-[80vh] flex flex-col items-center overflow-auto">
+					<div className="max-w-[80vw] max-h-[80vh] flex flex-col items-center">
 						<img
 							src={images[selectedImageIndex].url}
 							alt={images[selectedImageIndex].name}
@@ -407,6 +407,9 @@ export function ClaimImagesGallery({
 						<div className="mt-4 text-white text-center px-4 max-w-xl">
 							<p className="text-sm text-white/70 mt-2">
 								{selectedImageIndex + 1} de {images.length}
+							</p>
+							<p className="text-sm text-white/70 mt-2">
+								{images[selectedImageIndex].title && ` ${images[selectedImageIndex].title}`}
 							</p>
 						</div>
 					</div>

@@ -64,6 +64,8 @@ export function OverviewTab({
             'Pendientes': percentages.chosenPercentage,
             'Con presupuesto': percentages.clientsWithBudgetPercentage,
             'Sin presupuesto': percentages.clientsWithoutBudgetPercentage,
+            'De ventas': percentages.soldPercentage > 0 ? Math.round((metrics.totalSales * metrics.soldAverageTicket) / metrics.totalRevenue * 100) : 0,
+            'Totales': 100 - percentages.soldPercentage,
           }}
         />
       </Card>

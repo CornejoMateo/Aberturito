@@ -15,6 +15,7 @@ export type Balance = {
 export type BalanceWithBudget = Balance & {
 	budget?: {
 		id: string;
+		created_at: string;
 		amount_ars: number;
 		amount_usd: number;
 		folder_budget: {
@@ -29,6 +30,7 @@ export type BalanceWithBudget = Balance & {
 
 export type BudgetWithWork = {
 	id: string;
+	created_at: string;
 	amount_ars: number;
 	amount_usd: number;
 	accepted?: boolean | null;

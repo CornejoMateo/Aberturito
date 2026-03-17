@@ -28,7 +28,6 @@ import { BudgetWithWork } from '@/lib/works/balances';
 import { ClientBudgetsDollarUpdateModal } from '@/components/ui/client-budgets-dollar-update-modal';
 import { translateError } from '@/lib/error-translator';
 import { checklistTypes } from '@/lib/works/checklists.constants';
-import { de } from 'date-fns/locale';
 
 type BudgetFolderVM = FolderBudget & {
 	budgets: BudgetWithWork[];
@@ -47,8 +46,13 @@ function workLabel(folder: FolderBudget): string {
 	return parts.length > 0 ? parts.join(' - ') : 'Obra';
 }
 
-export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { clientId: string; works: Work[]; onBudgetsChange: (budgets: BudgetWithWork[]) => void;
- }) {
+interface ClientBudgetsTabProps {
+	clientId: string;
+	works: Work[];
+	loadWorks: () => void;
+	onBudgetsChange: (budgets: BudgetWithWork[]) => void;
+}
+export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }: ClientBudgetsTabProps) {
 	const [isLoading, setIsLoading] = useState(false);
 	const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
 
@@ -87,6 +91,10 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 	useEffect(() => {
 		onBudgetsChange(budgets);
 	}, [budgets, onBudgetsChange]);
+
+	useEffect(() => {
+		loadWorks();
+	}, []);
 
 	// Refresh budgets when folder IDs change
 	useEffect(() => {
@@ -930,13 +938,27 @@ export function ClientBudgetsTab({ clientId, works, onBudgetsChange, }: { client
 							</div>
 						</div>
 
-						<div>
-							<Label className="text-sm font-medium text-muted-foreground">Obra</Label>
-							<p className="text-sm font-semibold">
-								{budgetDetailModal.budget.folder_budget?.work
-									? `${budgetDetailModal.budget.folder_budget.work.address} - ${budgetDetailModal.budget.folder_budget.work.locality}`
-									: 'Sin obra asignada'}
-							</p>
+						<div className="grid grid-cols-2 gap-4">
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground">Obra</Label>
+								<p className="text-sm font-semibold">
+									{budgetDetailModal.budget.folder_budget?.work
+										? `${budgetDetailModal.budget.folder_budget.work.address} - ${budgetDetailModal.budget.folder_budget.work.locality}`
+										: 'Sin obra asignada'}
+								</p>
+							</div>
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground mt-2">Fecha de emisión</Label>
+								<p className="text-sm font-semibold">
+									{budgetDetailModal.budget.created_at
+										? new Date(budgetDetailModal.budget.created_at).toLocaleDateString('es-AR', {
+												day: '2-digit',
+												month: '2-digit',
+												year: '2-digit',
+											})
+										: 'Fecha no disponible'}
+								</p>
+							</div>
 						</div>
 
 						<div>

@@ -37,7 +37,7 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 	});
 
 	const budgetsAccepted = useMemo(() => {
-		return budgets.filter((b) => b.accepted);
+		return budgets.filter((b) => b.accepted || b.sold);
 	}, [budgets]);
 
 	const handleSubmit = async (e: React.FormEvent) => {

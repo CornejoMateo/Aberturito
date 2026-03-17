@@ -13,7 +13,8 @@ import {
   getBudgetsByMonth,
   getBudgetsByLocation,
   getClientsByContactMethod,
-  getBudgetsByMaterial
+  getBudgetsByMaterial,
+  getSoldBudgetsByMaterial
 } from '@/lib/budgets/budgets';
 import { SalesMetrics, DEFAULT_METRICS } from '@/lib/budgets/types';
 
@@ -126,6 +127,15 @@ export const useBudgetMetrics = () => {
           setMetrics(prev => ({
             ...prev,
             budgetsByMaterial
+          }));
+        }
+
+        // Obtain sold budgets by material
+        const { data: soldBudgetsByMaterial, error: soldBudgetsByMaterialError } = await getSoldBudgetsByMaterial();
+        if (!soldBudgetsByMaterialError && soldBudgetsByMaterial) {
+          setMetrics(prev => ({
+            ...prev,
+            soldBudgetsByMaterial
           }));
         }
       } catch (err) {

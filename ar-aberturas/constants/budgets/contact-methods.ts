@@ -6,6 +6,7 @@ export const CONTACT_METHODS = [
   { value: 'REFERIDO', label: 'Referido' },
   { value: 'SHOWROOM', label: 'Showroom' },
   { value: 'WHATSAPP', label: 'WhatsApp' },
+  { value: 'OTRO', label: 'Otro' },
 ] as const;
 
 export const DEFAULT_CONTACT_METHOD = 'WHATSAPP';

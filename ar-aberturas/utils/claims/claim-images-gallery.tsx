@@ -40,9 +40,20 @@ interface ClaimImage {
 interface ClaimImagesGalleryProps {
 	claimId: string;
 	clientId?: string | null;
+	claimDescription?: string | null;
+	workLocality?: string | null;
+	workZone?: string | null;
+	workAddress?: string | null;
 }
 
-export function ClaimImagesGallery({ claimId, clientId }: ClaimImagesGalleryProps) {
+export function ClaimImagesGallery({
+	claimId,
+	clientId,
+	claimDescription,
+	workLocality,
+	workZone,
+	workAddress,
+}: ClaimImagesGalleryProps) {
 	const [images, setImages] = useState<ClaimImage[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isUploading, setIsUploading] = useState(false);
@@ -168,11 +179,16 @@ export function ClaimImagesGallery({ claimId, clientId }: ClaimImagesGalleryProp
 				return;
 			}
 
+			const locationParts = [workLocality, workZone, workAddress]
+				.map((part) => part?.trim())
+				.filter((part): part is string => Boolean(part));
+			const uploadTitle = locationParts.join(' - ') || file.name;
+
 			const { error } = await uploadClientFile(
 				clientId,
 				file,
-				file.name,
-				null,
+				uploadTitle,
+				claimDescription || null,
 				null,
 				claimId
 			);

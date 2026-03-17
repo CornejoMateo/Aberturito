@@ -184,6 +184,10 @@ export function ClaimsManagement() {
 								<ClaimImagesGallery
 									claimId={selectedClaimForImages.id}
 									clientId={selectedClaimForImages.client_id ?? null}
+									claimDescription={selectedClaimForImages.description ?? null}
+									workLocality={selectedClaimForImages.work_locality ?? null}
+									workZone={selectedClaimForImages.work_zone ?? null}
+									workAddress={selectedClaimForImages.work_address ?? null}
 								/>
 							</div>
 						)}

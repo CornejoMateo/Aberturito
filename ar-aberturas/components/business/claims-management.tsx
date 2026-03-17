@@ -181,7 +181,10 @@ export function ClaimsManagement() {
 						
 						{selectedClaimForImages && (
 							<div className="border-t pt-6">
-								<ClaimImagesGallery claimId={selectedClaimForImages.id} />
+								<ClaimImagesGallery
+									claimId={selectedClaimForImages.id}
+									clientId={selectedClaimForImages.client_id ?? null}
+								/>
 							</div>
 						)}
 					</div>

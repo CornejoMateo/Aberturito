@@ -3,6 +3,7 @@ import { getSupabaseClient } from '../supabase-client';
 export type Claim = {
 	id: string;
 	created_at?: string;
+	client_id?: string | null;
 	client_name?: string | null;
 	client_phone?: string | null;
 	work_zone?: string | null;
@@ -19,32 +20,73 @@ export type Claim = {
 
 const TABLE = 'claims';
 
+type ClaimRowWithClient = Claim & {
+	clients?: {
+		name?: string | null;
+		last_name?: string | null;
+		phone_number?: string | null;
+	} | null;
+};
+
+// function to map claim row with client data to claim with client_name and client_phone
+function mapClaim(row: ClaimRowWithClient): Claim {
+	const firstName = row.clients?.name?.trim() || '';
+	const lastName = row.clients?.last_name?.trim() || '';
+	const fullName = `${firstName} ${lastName}`.trim();
+
+	return {
+		...row,
+		client_name: row.client_name || fullName || null,
+		client_phone: row.client_phone || row.clients?.phone_number || null,
+	};
+}
+
 export async function listClaims(): Promise<{ data: Claim[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('*')
+		.select('*, clients:client_id(name, last_name, phone_number)')
 		.order('date', { ascending: false })
 		.order('created_at', { ascending: false });
-	return { data, error };
+
+	if (error || !data) {
+		return { data: data as Claim[] | null, error };
+	}
+
+	return { data: (data as ClaimRowWithClient[]).map(mapClaim), error: null };
 }
 
 export async function getClaimById(id: string): Promise<{ data: Claim | null; error: any }> {
 	const supabase = getSupabaseClient();
-	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
-	return { data, error };
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('*, clients:client_id(name, last_name, phone_number)')
+		.eq('id', id)
+		.single();
+
+	if (error || !data) {
+		return { data: data as Claim | null, error };
+	}
+
+	return { data: mapClaim(data as ClaimRowWithClient), error: null };
 }
 
 export async function getClaimsByClientName(
 	clientName: string
 ): Promise<{ data: Claim[] | null; error: any }> {
-	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('*')
-		.ilike('client_name', `%${clientName}%`)
-		.order('created_at', { ascending: false });
-	return { data, error };
+	const { data, error } = await listClaims();
+
+	if (error || !data) {
+		return { data, error };
+	}
+
+	const normalizedSearch = clientName.trim().toLowerCase();
+
+	const filteredClaims = data.filter((claim) =>
+		(claim.client_name || '').toLowerCase().includes(normalizedSearch)
+	);
+
+	return { data: filteredClaims, error: null };
 }
 
 export async function getClaimsByWorkZone(

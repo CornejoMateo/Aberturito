@@ -7,6 +7,11 @@ import { toast } from '@/components/ui/use-toast';
 import { getSupabaseClient } from '@/lib/supabase-client';
 import { translateError } from '@/lib/error-translator';
 import {
+	deleteClientFile,
+	getClientFilesByClaim,
+	uploadClientFile,
+} from '@/lib/clients/files';
+import {
 	AlertDialog,
 	AlertDialogAction,
 	AlertDialogCancel,
@@ -26,6 +31,7 @@ import {
 interface ClaimImage {
 	id: string;
 	name: string;
+	title: string | null;
 	url: string;
 	size: number;
 	uploaded_at: string;
@@ -33,9 +39,10 @@ interface ClaimImage {
 
 interface ClaimImagesGalleryProps {
 	claimId: string;
+	clientId?: string | null;
 }
 
-export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
+export function ClaimImagesGallery({ claimId, clientId }: ClaimImagesGalleryProps) {
 	const [images, setImages] = useState<ClaimImage[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isUploading, setIsUploading] = useState(false);
@@ -66,10 +73,7 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 				}
 			});
 
-			const supabase = getSupabaseClient();
-			const { data, error } = await supabase.storage
-				.from('claims')
-				.list(`${claimId}/images`);
+			const { data, error } = await getClientFilesByClaim(claimId);
 
 			if (error) {
 				console.error('Error loading images:', error);
@@ -83,28 +87,35 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 			}
 
 			// Download images from storage and create object URLs
+			const supabase = getSupabaseClient();
 			const imagesWithUrls = await Promise.all(
 				data.map(async (file) => {
 					try {
-						const { data: blob, error: downloadError } = await supabase.storage
-							.from('claims')
-							.download(`${claimId}/images/${file.name}`);
-
-						if (downloadError || !blob) {
-							console.error('Error downloading image:', file.name, downloadError);
+						if (!file.path) {
 							return null;
 						}
 
+						const { data: blob, error: downloadError } = await supabase.storage
+							.from('clients')
+							.download(file.path);
+
+						if (downloadError || !blob) {
+							console.error('Error downloading image:', file.path, downloadError);
+							return null;
+						}
+
+						const name = file.path.split('/').pop() || 'archivo sin nombre';
 						const url = URL.createObjectURL(blob);
 						return {
 							id: file.id,
-							name: file.name,
+							name,
+							title: file.title,
 							url,
-							size: file.metadata?.size || 0,
-							uploaded_at: file.created_at || new Date().toISOString(),
+							size: blob.size,
+							uploaded_at: file.uploaded_at || new Date().toISOString(),
 						};
 					} catch (err) {
-						console.error('Error processing image:', file.name, err);
+						console.error('Error processing image:', file.path, err);
 						return null;
 					}
 				})
@@ -148,16 +159,23 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 		setIsUploading(true);
 
 		try {
-			const supabase = getSupabaseClient();
-			const fileName = `${Date.now()}-${file.name}`;
-			const filePath = `${claimId}/images/${fileName}`;
-
-			const { error } = await supabase.storage
-				.from('claims')
-				.upload(filePath, file, {
-					contentType: file.type,
-					upsert: true,
+			if (!clientId) {
+				toast({
+					variant: 'destructive',
+					title: 'No se puede subir imagen',
+					description: 'Este reclamo no tiene cliente asociado para guardar el archivo.',
 				});
+				return;
+			}
+
+			const { error } = await uploadClientFile(
+				clientId,
+				file,
+				file.name,
+				null,
+				null,
+				claimId
+			);
 
 			if (error) {
 				toast({
@@ -191,12 +209,7 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 		if (!imageToDelete) return;
 
 		try {
-			const supabase = getSupabaseClient();
-			const filePath = `${claimId}/images/${imageToDelete.name}`;
-
-			const { error } = await supabase.storage
-				.from('claims')
-				.remove([filePath]);
+			const { error } = await deleteClientFile(imageToDelete.id);
 
 			if (error) {
 				const errorMessage = translateError(error.message);
@@ -303,6 +316,9 @@ export function ClaimImagesGallery({ claimId }: ClaimImagesGalleryProps) {
 							</div>
 
 							<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+								{image.title && (
+									<p className="text-white text-xs truncate">{image.title}</p>
+								)}
 								<p className="text-white text-xs truncate">{formatFileSize(image.size)}</p>
 							</div>
 						</div>

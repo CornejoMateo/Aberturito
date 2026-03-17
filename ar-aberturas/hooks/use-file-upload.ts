@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { uploadClientFile } from '@/lib/clients/clients';
+import { uploadClientFile } from '@/lib/clients/files';
 import { toast } from '@/components/ui/use-toast';
 import { translateError } from '@/lib/error-translator';
 import {
@@ -55,8 +55,8 @@ export function useFileUpload({ clientId, onUploadSuccess }: UseFileUploadOption
 			const { error } = await uploadClientFile(
 				clientId,
 				selectedFile,
-				displayName.trim() || undefined,
-				description.trim() || undefined
+				displayName.trim() || null,
+				description.trim() || null
 			);
 
 			if (error) {

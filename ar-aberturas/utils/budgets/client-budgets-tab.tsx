@@ -20,12 +20,13 @@ import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { Work } from '@/lib/works/works';
-import { createBudget, getBudgetsByFolderBudgetIds, deleteBudget, updateBudget } from '@/lib/budgets/budgets';
+import { createBudget, getBudgetsByFolderBudgetIds, deleteBudget, updateBudget, editBudget } from '@/lib/budgets/budgets';
 import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId, deleteFolderBudgetWithBudgets, deleteFolderBudget } from '@/lib/budgets/folder_budgets';
 import { getSupabaseClient } from '@/lib/supabase-client';
-import { CheckCircle, FileText, Plus, ChevronDown, Trash2, TrendingUp } from 'lucide-react';
+import { CheckCircle, FileText, Plus, ChevronDown, Trash2, TrendingUp, Edit } from 'lucide-react';
 import { BudgetWithWork } from '@/lib/works/balances';
 import { ClientBudgetsDollarUpdateModal } from '@/components/ui/client-budgets-dollar-update-modal';
+import { BudgetFormModal } from '@/components/ui/budget-form-modal';
 import { translateError } from '@/lib/error-translator';
 import { checklistTypes } from '@/lib/works/checklists.constants';
 
@@ -140,6 +141,16 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 		open: boolean;
 		budget: BudgetWithWork | null;
 	}>({ open: false, budget: null });
+
+	const [editModalOpen, setEditModalOpen] = useState(false);
+	const [editingBudget, setEditingBudget] = useState<BudgetWithWork | null>(null);
+
+	// Clear editing budget when modal closes
+	useEffect(() => {
+		if (!editModalOpen) {
+			setEditingBudget(null);
+		}
+	}, [editModalOpen]);
 
 	const chosenBudgetIds = useMemo(() => {
 		const chosen = budgets.filter((b) => !!b.accepted);
@@ -361,6 +372,57 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 
 	function closeBudgetDetailModal() {
 		setBudgetDetailModal({ open: false, budget: null });
+	}
+
+	function handleEditBudget(budget: BudgetWithWork) {
+		setEditingBudget(budget); // Save the budget data
+		closeBudgetDetailModal();
+		setEditModalOpen(true);
+	}
+
+	async function handleEditBudgetSubmit(formData: any) {
+		if (!editingBudget) return;
+
+		try {
+			setIsLoading(true);
+
+			const parsedAmount = formData.amount.trim() ? Number(formData.amount) : null;
+			const parsedAmountUsd = formData.amountUsd.trim() ? Number(formData.amountUsd) : null;
+
+			const number = formData.number.trim() || null;
+			const amount = parsedAmount !== null && !Number.isNaN(parsedAmount) ? parsedAmount : null;
+			const amountUsd = parsedAmountUsd !== null && !Number.isNaN(parsedAmountUsd) ? parsedAmountUsd : null;
+
+			const { error } = await editBudget(
+				editingBudget.id,
+				{
+					type: formData.type,
+					version: formData.version.trim() || null,
+					number: number,
+					amount_ars: amount,
+					amount_usd: amountUsd,
+				},
+				formData.pdf,
+				clientId
+			);
+
+			if (error) {
+				console.error('Error editando presupuesto:', error);
+				toast({
+					variant: 'destructive',
+					title: 'No se pudo editar el presupuesto',
+					description: translateError(error) || 'Intente nuevamente.',
+				});
+				return;
+			}
+
+			toast({ title: 'Presupuesto actualizado' });
+			setEditModalOpen(false);
+			setEditingBudget(null); // Clear editing budget
+			refresh();
+		} finally {
+			setIsLoading(false);
+		}
 	}
 
 	function resetForm() {
@@ -984,6 +1046,15 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 								Cerrar
 							</Button>
 							<Button
+								variant="outline"
+								onClick={() => handleEditBudget(budgetDetailModal.budget!)}
+								className="gap-2"
+								disabled={isLoading}
+							>
+								<Edit className="h-4 w-4" />
+								Editar
+							</Button>
+							<Button
 								variant={budgetDetailModal.budget.sold ? "secondary" : "default"}
 								onClick={() => {
 									handleToggleSold(budgetDetailModal.budget!.id);
@@ -1011,6 +1082,16 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 				)}
 			</DialogContent>
 		</Dialog>
+
+		<BudgetFormModal
+			isOpen={editModalOpen}
+			onOpenChange={setEditModalOpen}
+			mode="edit"
+			works={works}
+			budget={editingBudget}
+			onSubmit={handleEditBudgetSubmit}
+			isLoading={isLoading}
+		/>
 	</>
-);
+	);
 }

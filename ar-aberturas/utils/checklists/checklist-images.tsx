@@ -48,17 +48,17 @@ export function ChecklistImages({ checklistId }: Props) {
 								className="w-full h-full object-cover"
 							/>
 
-							<div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+							<div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center">
 								<Button
 									size="icon"
 									variant="ghost"
-									className="h-8 w-8 bg-white/20 hover:bg-white/40"
+									className="h-8 w-8"
 									onClick={(e) => {
 										e.stopPropagation();
 										setImageToDelete(image.id);
 									}}
 								>
-									<Trash2 className="h-4 w-4 text-white" />
+									<Trash2 className="h-4 w-4 text-red-400" />
 								</Button>
 							</div>
 						</div>

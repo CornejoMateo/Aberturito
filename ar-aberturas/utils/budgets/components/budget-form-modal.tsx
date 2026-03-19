@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Work } from '@/lib/works/works';
 import { BudgetWithWork } from '@/lib/works/balances';
-import { DEFAULT_TYPES, FORM_DEFAULTS } from '@/utils/budgets/constants';
+import { DEFAULT_TYPES, FORM_DEFAULTS } from '@/constants/budgets/constants';
 import { BudgetFormData } from '@/utils/budgets/types';
 
 interface BudgetFormModalProps {

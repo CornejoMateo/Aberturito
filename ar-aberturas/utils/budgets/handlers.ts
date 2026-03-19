@@ -14,7 +14,7 @@ import {
 	deleteFolderBudget 
 } from '@/lib/budgets/folder_budgets';
 import { translateError } from '@/lib/error-translator';
-import { TOAST_MESSAGES } from './constants';
+import { TOAST_MESSAGES } from '../../constants/budgets/constants';
 import { parseAmount } from './utils';
 
 export interface BudgetHandlers {

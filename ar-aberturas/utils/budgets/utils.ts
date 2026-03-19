@@ -1,6 +1,6 @@
 import { FolderBudget } from '@/lib/budgets/folder_budgets';
 import { BudgetWithWork } from '@/lib/works/balances';
-import { DEFAULT_TYPES } from './constants';
+import { DEFAULT_TYPES } from '../../constants/budgets/constants';
 
 export function normalizeType(type: string | null | undefined): string {
 	const t = (type ?? '').trim();

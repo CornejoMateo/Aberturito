@@ -12,7 +12,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { Work } from '@/lib/works/works';
-import { DEFAULT_TYPES, BUDGET_VARIANTS } from '../constants';
+import { DEFAULT_TYPES, BUDGET_VARIANTS } from '../../../constants/budgets/constants';
 
 interface CreateBudgetModalProps {
 	isOpen: boolean;

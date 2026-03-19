@@ -13,18 +13,9 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { Work } from '@/lib/works/works';
-import { checklistTypes } from '@/lib/works/checklists.constants';
 import { BudgetWithWork } from '@/lib/works/balances';
-
-interface BudgetFormData {
-	type: string;
-	version: string;
-	number: string;
-	amount: string;
-	amountUsd: string;
-	workId: string;
-	pdf: File | null;
-}
+import { DEFAULT_TYPES, FORM_DEFAULTS } from '@/utils/budgets/constants';
+import { BudgetFormData } from '@/utils/budgets/types';
 
 interface BudgetFormModalProps {
 	isOpen: boolean;
@@ -36,8 +27,6 @@ interface BudgetFormModalProps {
 	isLoading: boolean;
 }
 
-const DEFAULT_TYPES = [...Object.values(checklistTypes), 'Otros'];
-
 export function BudgetFormModal({
 	isOpen,
 	onOpenChange,
@@ -48,14 +37,18 @@ export function BudgetFormModal({
 	isLoading,
 }: BudgetFormModalProps) {
 	const [formData, setFormData] = useState<BudgetFormData>({
-		type: 'PVC',
-		version: '',
-		number: '',
-		amount: '',
-		amountUsd: '',
-		workId: 'none',
+		type: FORM_DEFAULTS.type,
+		version: FORM_DEFAULTS.version,
+		number: FORM_DEFAULTS.number,
+		amount: FORM_DEFAULTS.amount,
+		amountUsd: FORM_DEFAULTS.amountUsd,
+		workId: FORM_DEFAULTS.workId,
 		pdf: null,
 	});
+
+	const resetForm = (data?: Partial<BudgetFormData>) => {
+		setFormData({ ...FORM_DEFAULTS, ...data, pdf: data?.pdf ?? null });
+	};
 
 	// Reset form when modal opens or budget changes
 	useEffect(() => {
@@ -64,43 +57,23 @@ export function BudgetFormModal({
 		if (isOpen && mode === 'edit' && budget) {
 			console.log('Loading budget data:', budget);
 			setFormData({
-				type: budget.type || 'PVC',
-				version: budget.version || '',
-				number: budget.number || '',
-				amount: budget.amount_ars?.toString() || '',
-				amountUsd: budget.amount_usd?.toString() || '',
-				workId: budget.folder_budget?.work_id || 'none',
+				type: budget.type || FORM_DEFAULTS.type,
+				version: budget.version || FORM_DEFAULTS.version,
+				number: budget.number || FORM_DEFAULTS.number,
+				amount: budget.amount_ars?.toString() || FORM_DEFAULTS.amount,
+				amountUsd: budget.amount_usd?.toString() || FORM_DEFAULTS.amountUsd,
+				workId: budget.folder_budget?.work_id || FORM_DEFAULTS.workId,
 				pdf: null,
 			});
 		} else if (isOpen) {
 			console.log('Loading empty form for create mode');
-			setFormData({
-				type: 'PVC',
-				version: '',
-				number: '',
-				amount: '',
-				amountUsd: '',
-				workId: 'none',
-				pdf: null,
-			});
+			resetForm();
 		}
 	}, [isOpen, mode, budget]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		await onSubmit(formData);
-	};
-
-	const resetForm = () => {
-		setFormData({
-			type: 'PVC',
-			version: '',
-			number: '',
-			amount: '',
-			amountUsd: '',
-			workId: 'none',
-			pdf: null,
-		});
 	};
 
 	const handleClose = () => {
@@ -128,7 +101,7 @@ export function BudgetFormModal({
 								<SelectValue placeholder="Seleccionar tipo" />
 							</SelectTrigger>
 							<SelectContent>
-								{DEFAULT_TYPES.map((t) => (
+								{DEFAULT_TYPES.map((t: string) => (
 									<SelectItem key={t} value={t}>
 										{t}
 									</SelectItem>

@@ -1,93 +1,61 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { toast } from '@/components/ui/use-toast';
-import { cn } from '@/lib/utils';
-import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
+import { TrendingUp, Plus } from 'lucide-react';
 import { Work } from '@/lib/works/works';
-import { createBudget, getBudgetsByFolderBudgetIds, deleteBudget, updateBudget, editBudget } from '@/lib/budgets/budgets';
-import { createFolderBudget, FolderBudget, getFolderBudgetsByClientId, deleteFolderBudgetWithBudgets, deleteFolderBudget } from '@/lib/budgets/folder_budgets';
-import { getSupabaseClient } from '@/lib/supabase-client';
-import { CheckCircle, FileText, Plus, ChevronDown, Trash2, TrendingUp, Edit } from 'lucide-react';
 import { BudgetWithWork } from '@/lib/works/balances';
 import { ClientBudgetsDollarUpdateModal } from '@/components/ui/client-budgets-dollar-update-modal';
 import { BudgetFormModal } from '@/components/ui/budget-form-modal';
-import { translateError } from '@/lib/error-translator';
-import { checklistTypes } from '@/lib/works/checklists.constants';
+import { useClientBudgetsState } from './hooks/useClientBudgetsState';
+import { budgetHandlers } from './handlers';
+import { FolderCard } from './components/FolderCard';
+import { BudgetDetailModal } from './components/BudgetDetailModal';
+import { CreateBudgetModal } from './components/CreateBudgetModal';
+import { PdfPreviewModal } from './components/PdfPreviewModal';
+import { ClientBudgetsTabProps } from './types';
 
-type BudgetFolderVM = FolderBudget & {
-	budgets: BudgetWithWork[];
-};
-
-function normalizeType(type: string | null | undefined): string {
-	const t = (type ?? '').trim();
-	if (!t) return 'Otros';
-	return t;
-}
-
-function workLabel(folder: FolderBudget): string {
-	const w = folder.works;
-	if (!w) return 'Sin obra';
-	const parts = [w.address, w.locality].filter(Boolean);
-	return parts.length > 0 ? parts.join(' - ') : 'Obra';
-}
-
-interface ClientBudgetsTabProps {
-	clientId: string;
-	works: Work[];
-	loadWorks: () => void;
-	onBudgetsChange: (budgets: BudgetWithWork[]) => void;
-}
 export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }: ClientBudgetsTabProps) {
-	const [isLoading, setIsLoading] = useState(false);
-	const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
-
-	const DEFAULT_TYPES = [...Object.values(checklistTypes), 'Otros'];
-
 	const {
-		data: folderBudgets,
-		loading: loadingFolders,
-		refresh: refreshFolders,
-	} = useOptimizedRealtime<FolderBudget>(
-		'folder_budgets',
-		async () => {
-			const { data } = await getFolderBudgetsByClientId(clientId);
-			return data ?? [];
-		},
-		`folder_budgets_${clientId}`
-	);
-
-	const folderBudgetIds = useMemo(() => folderBudgets.map((f) => f.id), [folderBudgets]);
-
-	// Realtime hook for budgets
-	const {
-		data: budgets,
-		loading: loadingBudgets,
-		refresh: refreshBudgets,
-	} = useOptimizedRealtime<BudgetWithWork>(
-		'budgets',
-		async () => {
-			if (folderBudgetIds.length === 0) return [];
-			const { data } = await getBudgetsByFolderBudgetIds(folderBudgetIds);
-			return data ?? [];
-		},
-		`budgets_${clientId}`
-	);
+		// State
+		isLoading,
+		setIsLoading,
+		openFolders,
+		setOpenFolders,
+		isCreateOpen,
+		setIsCreateOpen,
+		formData,
+		updateFormData,
+		resetFormData,
+		deleteBudgetConfirm,
+		setDeleteBudgetConfirm,
+		deleteFolderConfirm,
+		setDeleteFolderConfirm,
+		pdfPreview,
+		setPdfPreview,
+		isClientBudgetsUpdateModalOpen,
+		setIsClientBudgetsUpdateModalOpen,
+		budgetDetailModal,
+		setBudgetDetailModal,
+		editModalOpen,
+		setEditModalOpen,
+		editingBudget,
+		setEditingBudget,
+		
+		// Data
+		folderBudgets,
+		loadingFolders,
+		budgets,
+		loadingBudgets,
+		orderedFolders,
+		chosenBudgetIds,
+		
+		// Actions
+		refresh,
+	} = useClientBudgetsState(clientId);
 
 	useEffect(() => {
 		onBudgetsChange(budgets);
@@ -97,1001 +65,209 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 		loadWorks();
 	}, []);
 
-	// Refresh budgets when folder IDs change
-	useEffect(() => {
-		if (folderBudgetIds.length > 0) {
-			refreshBudgets();
-		}
-	}, [folderBudgetIds.length, refreshBudgets]);
-
-	const refresh = () => {
-		refreshFolders();
-		refreshBudgets();
+	// Event handlers
+	const handleChooseBudget = (budgetId: string) => {
+		budgetHandlers.handleChooseBudget(budgetId, budgets, refresh, setIsLoading);
 	};
 
-	const [isCreateOpen, setIsCreateOpen] = useState(false);
-	const [formType, setFormType] = useState<string>('PVC');
-	const [formVersion, setFormVersion] = useState<string>('');
-	const [formNumber, setFormNumber] = useState<string>('');
-	const [formAmount, setFormAmount] = useState<string>('');
-	const [formAmountUsd, setFormAmountUsd] = useState<string>('');
-	const [formWorkId, setFormWorkId] = useState<string>('none');
-	const [formPdf, setFormPdf] = useState<File | null>(null);
-
-	const [deleteBudgetConfirm, setDeleteBudgetConfirm] = useState<{
-		open: boolean;
-		budgetId: string | null;
-	}>({ open: false, budgetId: null });
-
-	const [deleteFolderConfirm, setDeleteFolderConfirm] = useState<{
-		open: boolean;
-		folderId: string | null;
-		budgetCount: number;
-	}>({ open: false, folderId: null, budgetCount: 0 });
-
-	const [pdfPreview, setPdfPreview] = useState<{
-		open: boolean;
-		budget: BudgetWithWork | null;
-		pdfUrl: string | null;
-	}>({ open: false, budget: null, pdfUrl: null });
-
-	const [isClientBudgetsUpdateModalOpen, setIsClientBudgetsUpdateModalOpen] = useState(false);
-
-	const [budgetDetailModal, setBudgetDetailModal] = useState<{
-		open: boolean;
-		budget: BudgetWithWork | null;
-	}>({ open: false, budget: null });
-
-	const [editModalOpen, setEditModalOpen] = useState(false);
-	const [editingBudget, setEditingBudget] = useState<BudgetWithWork | null>(null);
-
-	// Clear editing budget when modal closes
-	useEffect(() => {
-		if (!editModalOpen) {
-			setEditingBudget(null);
-		}
-	}, [editModalOpen]);
-
-	const chosenBudgetIds = useMemo(() => {
-		const chosen = budgets.filter((b) => !!b.accepted);
-		return chosen.map(b => b.id);
-	}, [budgets]);
-
-	const budgetsByFolderId = useMemo(() => {
-		const map = new Map<string, BudgetWithWork[]>();
-
-		for (const budget of budgets) {
-			// validate folder_budget and folder_budget.id
-			if (!budget || !budget.folder_budget || !budget.folder_budget.id) {
-				console.warn('Budget sin folder_budget válido:', budget);
-				continue;
-			}
-
-			const folderId = budget.folder_budget.id;
-
-			if (!map.has(folderId)) {
-				map.set(folderId, []);
-			}
-
-			map.get(folderId)!.push(budget);
-		}
-
-		return map;
-	}, [budgets]);
-
-	const foldersVM: BudgetFolderVM[] = useMemo(() => {
-		return folderBudgets.map((f) => ({
-			...f,
-			budgets: budgetsByFolderId.get(f.id) ?? [],
-		}));
-	}, [folderBudgets, budgetsByFolderId]);
-
-	const orderedFolders = useMemo(() => {
-		return [...foldersVM].sort((a, b) => {
-			const aNone = !a.work_id;
-			const bNone = !b.work_id;
-			if (aNone !== bNone) return aNone ? 1 : -1;
-			return workLabel(a).localeCompare(workLabel(b));
-		});
-	}, [foldersVM]);
-
-	useEffect(() => {
-		setOpenFolders((prev) => {
-			const next: Record<string, boolean> = { ...prev };
-			for (const f of orderedFolders) {
-				if (next[f.id] === undefined) next[f.id] = true;
-			}
-			return next;
-		});
-	}, [orderedFolders]);
-
-	async function handleChooseBudget(budgetId: string) {
-		try {
-			setIsLoading(true);
-			const budget = budgets.find(b => b.id === budgetId);
-			if (!budget) return;
-
-			const { error } = await updateBudget(budgetId, {
-				accepted: !budget.accepted
-			});
-			
-			if (error) {
-				toast({
-					variant: 'destructive',
-					title: 'No se pudo cambiar el estado',
-					description: translateError(error),
-				});
-				return;
-			}
-			
-			toast({ 
-				title: budget.accepted ? 'Presupuesto deseleccionado' : 'Presupuesto elegido',
-				description: budget.accepted ? 'El presupuesto ya no será considerado como elegido.' : 'El presupuesto ahora es el elegido para este cliente.',
-			});
-			refresh();
-		} finally {
-			setIsLoading(false);
-		}
-	}
-
-	async function handleToggleSold(budgetId: string) {
-		try {
-			setIsLoading(true);
-			const budget = budgets.find(b => b.id === budgetId);
-			if (!budget) return;
-
-			const { error } = await updateBudget(budgetId, {
-				sold: !budget.sold
-			});
-			
-			if (error) {
-				toast({
-					variant: 'destructive',
-					title: 'No se pudo cambiar el estado de venta',
-					description: translateError(error),
-				});
-				return;
-			}
-			
-			toast({ 
-				title: budget.sold ? 'Presupuesto marcado como no vendido' : 'Presupuesto marcado como vendido',
-				description: budget.sold ? 'El presupuesto ya no está marcado como vendido.' : 'El presupuesto ahora está marcado como vendido.',
-			});
-			
-			// Close modal and refresh data immediately
-			closeBudgetDetailModal();
-			refresh();
-		} finally {
-			setIsLoading(false);
-		}
-	}
-
-	async function handleDeleteBudget(budgetId: string) {
-		setDeleteBudgetConfirm({ open: true, budgetId });
-	}
-
-	async function confirmDeleteBudget() {
-		if (!deleteBudgetConfirm.budgetId) {
-			return;
-		}
-
-		try {
-			setIsLoading(true);
-			const budgetIdString = String(deleteBudgetConfirm.budgetId);
-			const { error } = await deleteBudget(budgetIdString);
-			if (error && error !== null) {
-				toast({
-					variant: 'destructive',
-					title: 'No se pudo eliminar el presupuesto',
-					description: 'Intente nuevamente.',
-				});
-				return;
-			}
-			toast({ title: 'Presupuesto eliminado' });
-			refresh();
-		} finally {
-			setIsLoading(false);
-			setDeleteBudgetConfirm({ open: false, budgetId: null });
-		}
-	}
-
-	async function handleDeleteFolder(folderId: string) {
-		const budgetCount = budgetsByFolderId.get(folderId)?.length || 0;
-		setDeleteFolderConfirm({ 
-			open: true, 
-			folderId, 
-			budgetCount 
-		});
-	}
-
-	async function confirmDeleteFolder() {
-		if (!deleteFolderConfirm.folderId) {
-			return;
-		}
-
-		try {
-			setIsLoading(true);
-			const folderIdString = String(deleteFolderConfirm.folderId);
-			const { error } = await deleteFolderBudgetWithBudgets(folderIdString);
-			if (error && error !== null) {
-				toast({
-					variant: 'destructive',
-					title: 'No se pudo eliminar la carpeta',
-					description: 'Intente nuevamente.',
-				});
-				return;
-			}
-			toast({ title: 'Carpeta eliminada' });
-			refresh();
-		} finally {
-			setIsLoading(false);
-			setDeleteFolderConfirm({ 
-				open: false, 
-				folderId: null, 
-				budgetCount: 0 
-			});
-		}
-	}
-
-	async function handleViewPdf(budget: BudgetWithWork) {
-		if (!budget.pdf_path) return;
-
-		try {
-			setIsLoading(true);
-			const supabase = getSupabaseClient();
-			const { data, error } = await supabase.storage
-				.from('clients')
-				.download(budget.pdf_path);
-
-			if (error) {
-				toast({
-					variant: 'destructive',
-					title: 'No se pudo cargar el PDF',
-					description: 'Intente nuevamente.',
-				});
-				return;
-			}
-
-			const url = URL.createObjectURL(data);
-			setPdfPreview({ open: true, budget, pdfUrl: url });
-		} finally {
-			setIsLoading(false);
-		}
-	}
-
-	function closePdfPreview() {
-		if (pdfPreview.pdfUrl) {
-			URL.revokeObjectURL(pdfPreview.pdfUrl);
-		}
-		setPdfPreview({ open: false, budget: null, pdfUrl: null });
-	}
-
-	function handleOpenBudgetDetail(budget: BudgetWithWork) {
-		setBudgetDetailModal({ open: true, budget });
-	}
-
-	function closeBudgetDetailModal() {
-		setBudgetDetailModal({ open: false, budget: null });
-	}
-
-	function handleEditBudget(budget: BudgetWithWork) {
-		setEditingBudget(budget); // Save the budget data
-		closeBudgetDetailModal();
-		setEditModalOpen(true);
-	}
-
-	async function handleEditBudgetSubmit(formData: any) {
-		if (!editingBudget) return;
-
-		try {
-			setIsLoading(true);
-
-			const parsedAmount = formData.amount.trim() ? Number(formData.amount) : null;
-			const parsedAmountUsd = formData.amountUsd.trim() ? Number(formData.amountUsd) : null;
-
-			const number = formData.number.trim() || null;
-			const amount = parsedAmount !== null && !Number.isNaN(parsedAmount) ? parsedAmount : null;
-			const amountUsd = parsedAmountUsd !== null && !Number.isNaN(parsedAmountUsd) ? parsedAmountUsd : null;
-
-			const { error } = await editBudget(
-				editingBudget.id,
-				{
-					type: formData.type,
-					version: formData.version.trim() || null,
-					number: number,
-					amount_ars: amount,
-					amount_usd: amountUsd,
-				},
-				formData.pdf,
-				clientId
-			);
-
-			if (error) {
-				console.error('Error editando presupuesto:', error);
-				toast({
-					variant: 'destructive',
-					title: 'No se pudo editar el presupuesto',
-					description: translateError(error) || 'Intente nuevamente.',
-				});
-				return;
-			}
-
-			toast({ title: 'Presupuesto actualizado' });
-			setEditModalOpen(false);
-			setEditingBudget(null); // Clear editing budget
-			refresh();
-		} finally {
-			setIsLoading(false);
-		}
-	}
-
-	function resetForm() {
-		setFormType('PVC');
-		setFormVersion('');
-		setFormNumber('');
-		setFormAmount('');
-		setFormAmountUsd('');
-		setFormWorkId('none');
-		setFormPdf(null);
-	}
-
-	const handleClientBudgetsUpdate = async (newUsdRate: number) => {	
-		try {
-			const response = await fetch('/api/budget-dollar-rate', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					clientId,
-					newUsdRate,
-				}),
-			});
-
-			const result = await response.json();
-
-			if (!response.ok || !result.success) {
-				throw new Error(result.error || 'Error al actualizar el tipo de cambio');
-			}
-
-			// Refresh budgets list
-			refresh();
-			
-			toast({
-				title: 'Presupuestos actualizados',
-				description: `${result.data.updatedCount} presupuesto(s) se actualizaron con el nuevo tipo de cambio.`,
-			});
-		} catch (error) {
-			console.error('Error al actualizar presupuestos del cliente:', error);
-			throw error;
-		}
+	const handleToggleSold = (budgetId: string) => {
+		budgetHandlers.handleToggleSold(budgetId, budgets, refresh, setIsLoading, () => setBudgetDetailModal({ open: false, budget: null }));
 	};
 
-	async function handleCreateBudget() {
+	const handleDeleteBudget = (budgetId: string) => {
+		budgetHandlers.handleDeleteBudget(budgetId, setDeleteBudgetConfirm);
+	};
 
-		try {
-			setIsLoading(true);
+	const confirmDeleteBudget = () => {
+		budgetHandlers.confirmDeleteBudget(deleteBudgetConfirm, refresh, setIsLoading, setDeleteBudgetConfirm);
+	};
 
-			const work_id = formWorkId === 'none' ? null : formWorkId;
-			const existingFolder = folderBudgets.find((f) => (f.work_id ?? null) === work_id);
-			let folderId = existingFolder?.id;
-			let newFolder = false;
+	const handleDeleteFolder = (folderId: string) => {
+		budgetHandlers.handleDeleteFolder(folderId, budgetsByFolderId, setDeleteFolderConfirm);
+	};
 
-			if (!folderId) {
-				const { data: folder, error: folderError } = await createFolderBudget({
-					client_id: clientId,
-					work_id,
-				});
+	const confirmDeleteFolder = () => {
+		budgetHandlers.confirmDeleteFolder(deleteFolderConfirm, refresh, setIsLoading, setDeleteFolderConfirm);
+	};
 
-				if (folderError || !folder) {
-					const errorMessage = folderError ? translateError(folderError) : 'Error desconocido al crear la carpeta';
-					toast({
-						variant: 'destructive',
-						title: 'No se pudo crear la carpeta.' + errorMessage,
-						description: 'Intente nuevamente.',
-					});
-					return;
-				}
-				folderId = folder.id;
-				newFolder = true;
-			}
+	const handleViewPdf = (budget: BudgetWithWork) => {
+		budgetHandlers.handleViewPdf(budget, setPdfPreview, setIsLoading);
+	};
 
-			const parsedAmount = formAmount.trim() ? Number(formAmount) : null;
-			const parsedAmountUsd = formAmountUsd.trim() ? Number(formAmountUsd) : null;
-		   
-			const number = formNumber.trim() || null;
-			const amount = parsedAmount !== null && !Number.isNaN(parsedAmount) ? parsedAmount : null;
-			const amountUsd = parsedAmountUsd !== null && !Number.isNaN(parsedAmountUsd) ? parsedAmountUsd : null;
+	const closePdfPreview = () => {
+		budgetHandlers.closePdfPreview(pdfPreview, setPdfPreview);
+	};
 
-			const { error: createError } = await createBudget(
-				{
-					folder_budget_id: folderId,
-					accepted: false,
-					type: formType,
-					version: formVersion.trim() || null,
-					number: number,
-					amount_ars: amount,
-					amount_usd: amountUsd,
-				},
-				formPdf,
-				clientId
-			);
+	const handleOpenBudgetDetail = (budget: BudgetWithWork) => {
+		budgetHandlers.handleOpenBudgetDetail(budget, setBudgetDetailModal);
+	};
 
-			if (createError) {
-				console.error('Error creando presupuesto:', createError);
-				toast({
-					variant: 'destructive',
-					title: 'No se pudo crear el presupuesto',
-					description: translateError(createError) || 'Intente nuevamente.',
-				});
-				if (newFolder && folderId) {
-					await deleteFolderBudget(folderId); // remove empty folder budget
-				}
-				return;
-			}
+	const closeBudgetDetailModal = () => {
+		budgetHandlers.closeBudgetDetailModal(setBudgetDetailModal);
+	};
 
-			toast({ title: 'Presupuesto creado' });
-			setIsCreateOpen(false);
-			resetForm();
-			refresh();
-		} finally {
-			setIsLoading(false);
+	const handleEditBudget = (budget: BudgetWithWork) => {
+		budgetHandlers.handleEditBudget(budget, setEditingBudget, closeBudgetDetailModal, setEditModalOpen);
+	};
+
+	const handleEditBudgetSubmit = async (formData: any) => {
+		await budgetHandlers.handleEditBudgetSubmit(formData, editingBudget, clientId, setIsLoading, setEditModalOpen, setEditingBudget, refresh);
+	};
+
+	const handleClientBudgetsUpdate = async (newUsdRate: number) => {
+		await budgetHandlers.handleClientBudgetsUpdate(newUsdRate, clientId, refresh);
+	};
+
+	const handleCreateBudget = async () => {
+		await budgetHandlers.handleCreateBudget(formData, folderBudgets, clientId, setIsCreateOpen, resetFormData, refresh, setIsLoading);
+	};
+
+	const handleCancelCreate = () => {
+		setIsCreateOpen(false);
+		resetFormData();
+	};
+
+	// Helper function to get budgets by folder ID (needed for folder delete)
+	const budgetsByFolderId = new Map<string, BudgetWithWork[]>();
+	for (const budget of budgets) {
+		if (!budget || !budget.folder_budget || !budget.folder_budget.id) {
+			continue;
 		}
+		const folderId = budget.folder_budget.id;
+		if (!budgetsByFolderId.has(folderId)) {
+			budgetsByFolderId.set(folderId, []);
+		}
+		budgetsByFolderId.get(folderId)!.push(budget);
 	}
 
 	return (
 		<>
 			<div className="space-y-4">
-			<div className="flex items-center justify-between gap-2">
-				<div className="min-w-0">
-					{chosenBudgetIds.length > 0 ? (
-						<div className="mt-1">	
-							<Badge variant="secondary">{chosenBudgetIds.length} presupuesto(s) elegido(s)</Badge>
-						</div>
-					) : (
-						<div className="mt-1">	
-						</div>
-					)}
-				</div>
+				<div className="flex items-center justify-between gap-2">
+					<div className="min-w-0">
+						{chosenBudgetIds.length > 0 ? (
+							<div className="mt-1">	
+								<Badge variant="secondary">{chosenBudgetIds.length} presupuesto(s) elegido(s)</Badge>
+							</div>
+						) : (
+							<div className="mt-1">	
+							</div>
+						)}
+					</div>
 
-				<div className="flex gap-2">
-				{budgets.filter(b => b.amount_usd && b.amount_usd > 0).length > 0 && (
-					<Button
-						size="sm"
-						variant="outline"
-						className="gap-2"
-						disabled={isLoading}
-						onClick={() => setIsClientBudgetsUpdateModalOpen(true)}
-					>
-						<TrendingUp className="h-4 w-4" />
-						Actualizar Precios
-					</Button>
-				)}
-				<Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-					<DialogTrigger asChild>
-						<Button size="sm" className="gap-2" disabled={isLoading}>
+					<div className="flex gap-2">
+						{budgets.filter(b => b.amount_usd && b.amount_usd > 0).length > 0 && (
+							<Button
+								size="sm"
+								variant="outline"
+								className="gap-2"
+								disabled={isLoading}
+								onClick={() => setIsClientBudgetsUpdateModalOpen(true)}
+							>
+								<TrendingUp className="h-4 w-4" />
+								Actualizar Precios
+							</Button>
+						)}
+						<Button size="sm" className="gap-2" disabled={isLoading} onClick={() => setIsCreateOpen(true)}>
 							<Plus className="h-4 w-4" />
 							Nuevo presupuesto
 						</Button>
-					</DialogTrigger>
-					<DialogContent className="max-w-2xl">
-						<DialogHeader>
-							<DialogTitle>Nuevo presupuesto</DialogTitle>
-						</DialogHeader>
-						<div className="grid gap-4">
-							<div className="grid gap-2">
-								<Label>Tipo</Label>
-								<Select value={formType} onValueChange={setFormType}>
-									<SelectTrigger className="w-full">
-										<SelectValue placeholder="Seleccionar tipo" />
-									</SelectTrigger>
-									<SelectContent>
-										{DEFAULT_TYPES.map((t) => (
-											<SelectItem key={t} value={t}>
-												{t}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
-
-							<div className="grid gap-2">
-								<Label>Variante</Label>
-								<Select value={formVersion} onValueChange={setFormVersion}>
-									<SelectTrigger className="w-full">
-										<SelectValue placeholder="Seleccionar variante" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="Mínimo">Mínimo</SelectItem>
-										<SelectItem value="Estándar">Estándar</SelectItem>
-										<SelectItem value="Óptimo">Óptimo</SelectItem>
-									</SelectContent>
-								</Select>
-							</div>
-
-							<div className="grid gap-2">
-								<Label>Obra</Label>
-								<Select value={formWorkId} onValueChange={setFormWorkId}>
-									<SelectTrigger className="w-full">
-										<SelectValue placeholder="Seleccionar obra" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="none">Sin obra</SelectItem>
-										{works.map((w) => (
-											<SelectItem key={w.id} value={w.id}>
-												{[w.address, w.locality].filter(Boolean).join(' - ') || `Obra ${w.id}`}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
-
-							<div className="grid grid-cols-2 gap-4">
-								<div className="grid gap-2">
-									<Label>Número de presupuesto</Label>
-									<Input
-										type="text"
-										value={formNumber}
-										onChange={(e) => setFormNumber(e.target.value)}
-										placeholder="Ej: 123 o 1-2-A"
-									/>
-								</div>
-								<div className="grid gap-2">
-									<Label>Monto ARS</Label>
-									<Input
-										type="number"
-										value={formAmount}
-										onChange={(e) => setFormAmount(e.target.value)}
-										placeholder="0"
-									/>
-								</div>
-								<div className="grid gap-2">
-									<Label>Monto USD</Label>
-									<Input
-										type="number"
-										value={formAmountUsd}
-										onChange={(e) => setFormAmountUsd(e.target.value)}
-										placeholder="0"
-									/>
-								</div>
-							</div>
-
-							<div className="grid gap-2">
-								<Label>PDF</Label>
-								<Input
-									type="file"
-									accept="application/pdf"
-									onChange={(e) => setFormPdf(e.target.files?.[0] ?? null)}
-								/>
-							</div>
-						</div>
-
-						<div className="flex justify-end gap-2">
-							<Button
-								variant="outline"
-								onClick={() => {
-									setIsCreateOpen(false);
-									resetForm();
-								}}
-							>
-								Cancelar
-							</Button>
-							<Button onClick={handleCreateBudget} disabled={isLoading}>
-								Crear
-							</Button>
-						</div>
-					</DialogContent>
-				</Dialog>
-				</div>
-			</div>
-
-		{(loadingFolders || loadingBudgets) && folderBudgets.length === 0 ? (
-				<p className="text-sm text-muted-foreground text-center py-6">Cargando presupuestos...</p>
-			) : folderBudgets.length === 0 ? (
-				<Card className="p-6">
-					<div className="text-center space-y-2">
-						<p className="text-sm text-muted-foreground">Este cliente todavía no tiene presupuestos.</p>
 					</div>
-				</Card>
-			) : null}
+				</div>
 
-			<div className="space-y-3">
-				{orderedFolders.map((folder) => {
-					const open = !!openFolders[folder.id];
-					const folderBudgetsList = folder.budgets;
-					const chosenCountInFolder = folderBudgetsList.filter((b) => !!b.accepted).length;
+				{(loadingFolders || loadingBudgets) && folderBudgets.length === 0 ? (
+					<p className="text-sm text-muted-foreground text-center py-6">Cargando presupuestos...</p>
+				) : folderBudgets.length === 0 ? (
+					<Card className="p-6">
+						<div className="text-center space-y-2">
+							<p className="text-sm text-muted-foreground">Este cliente todavía no tiene presupuestos.</p>
+						</div>
+					</Card>
+				) : null}
 
-					const budgetsByType = new Map<string, BudgetWithWork[]>();
-
-					for (const b of folderBudgetsList) {
-						const typeKey = normalizeType(b.type);
-						const prev = budgetsByType.get(typeKey) ?? [];
-						prev.push(b);
-						budgetsByType.set(typeKey, prev);
-					}
-
-					const orderedTypeKeys = Array.from(budgetsByType.keys()).sort((a, b) => {
-						const ai = DEFAULT_TYPES.includes(a as any) ? DEFAULT_TYPES.indexOf(a as any) : Number.MAX_SAFE_INTEGER;
-						const bi = DEFAULT_TYPES.includes(b as any) ? DEFAULT_TYPES.indexOf(b as any) : Number.MAX_SAFE_INTEGER;
-						if (ai !== bi) return ai - bi;
-						return a.localeCompare(b);
-					});
-
-					return (
-						<Collapsible
+				<div className="space-y-3">
+					{orderedFolders.map((folder) => (
+						<FolderCard
 							key={folder.id}
-							open={open}
-							onOpenChange={(v) => setOpenFolders((prev) => ({ ...prev, [folder.id]: v }))}
-						>
-							<Card className="border-border">
-								<div className="flex items-center justify-between gap-2 p-4">
-									<CollapsibleTrigger asChild>
-										<button className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left">
-											<div className="min-w-0">
-												<p className="font-semibold text-foreground truncate">{workLabel(folder)}</p>
-												<p className="text-xs text-muted-foreground">{folderBudgetsList.length} presupuesto(s)</p>
-											</div>
-											<div className="flex items-center gap-2">
-												{chosenCountInFolder > 0 ? (
-													<Badge className="gap-1">
-														<CheckCircle className="h-3.5 w-3.5" /> {chosenCountInFolder} elegido(s)
-													</Badge>
-												) : (
-													<Badge variant="secondary">Opciones</Badge>
-												)}
-												<ChevronDown
-													className={cn('h-4 w-4 text-muted-foreground transition-transform', open && 'rotate-180')}
-												/>
-											</div>
-										</button>
-									</CollapsibleTrigger>
-									<Button
-										variant="ghost"
-										size="sm"
-										onClick={(e) => {
-											e.stopPropagation();
-											handleDeleteFolder(folder.id);
-										}}
-										disabled={isLoading}
-										className="text-destructive hover:text-destructive hover:bg-destructive/10"
-									>
-										<Trash2 className="h-4 w-4" />
-									</Button>
-								</div>
-
-								<CollapsibleContent>
-									<div className="px-4 pb-4 space-y-4">
-										{orderedTypeKeys.map((typeKey) => {
-											const list = budgetsByType.get(typeKey) ?? [];
-											return (
-												<div key={typeKey} className="space-y-2">
-													<div className="flex items-center justify-between">
-														<p className="text-sm font-semibold text-foreground">{typeKey}</p>
-														<p className="text-xs text-muted-foreground">{list.length} opción(es)</p>
-													</div>
-
-													{list.length === 0 ? (
-														<p className="text-sm text-muted-foreground">Sin presupuestos en este tipo.</p>
-													) : (
-														<div className="flex gap-3 overflow-x-auto pb-2">
-															{list.map((b) => {
-																const isChosen = !!b.accepted;
-																return (
-																	<Card
-																		key={b.id}
-																		className={cn(
-																			'min-w-[260px] max-w-[260px] p-4 border-border relative cursor-pointer hover:shadow-md transition-shadow',
-																			isChosen && 'border-primary bg-primary/5'
-																		)}
-																		onClick={() => handleOpenBudgetDetail(b)}
-																	>
-																		<div className="absolute top-2 right-2 flex items-center gap-2">
-																			{isChosen ? (
-																				<Badge className="gap-1 shrink-0">
-																					<CheckCircle className="h-3.5 w-3.5" /> Elegido
-																				</Badge>
-																			) : null}
-																			<Button
-																				variant="ghost"
-																				size="sm"
-																				onClick={(e) => {
-																					e.stopPropagation();
-																					handleDeleteBudget(b.id);
-																				}}
-																				disabled={isLoading}
-																				className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
-																			>	
-																				<Trash2 className="h-4 w-4" />
-																			</Button>
-																		</div>
-																		<div className="flex items-start justify-between gap-2">
-																			<div className="min-w-0">
-																				<p className="font-semibold text-foreground truncate">
-																					{b.version || 'Sin variante'}
-																				</p>
-																				<p className="text-xs text-muted-foreground truncate">{workLabel(folder)}</p>
-																			</div>
-																		</div>
-
-																		<div className="mt-3 space-y-2">
-																			<div className="space-y-1">
-																				<p className="text-sm font-semibold text-foreground">
-																					{typeof b.amount_ars === 'number'
-																						? `$${b.amount_ars.toLocaleString('es-AR')} ARS`
-																						: 'Monto ARS no cargado'}
-																				</p>
-																				<p className="text-sm font-semibold text-foreground">
-																					{typeof b.amount_usd === 'number'
-																						? `$${b.amount_usd.toLocaleString('es-AR')} USD`
-																						: 'Monto USD no cargado'}
-																				</p>
-																			</div>
-																			{b.number ? (
-																				<Badge variant="outline">#{b.number}</Badge>
-																			) : null}
-																		</div>
-
-																			<div className="flex flex-wrap gap-2 mb-3">
-																				{b.pdf_path ? (
-																					<Button
-																						variant="outline"
-																						size="sm"
-																						onClick={(e) => {
-																							e.stopPropagation();
-																							handleViewPdf(b);
-																						}}
-																						className="gap-2"
-																					>
-																						<FileText className="h-4 w-4" /> Ver PDF
-																					</Button>
-																				) : (
-																					<Badge variant="secondary">Sin PDF</Badge>
-																				)}
-
-																				<Button
-																					variant={isChosen ? 'secondary' : 'default'}
-																					size="sm"
-																					disabled={isLoading}
-																					onClick={(e) => {
-																						e.stopPropagation();
-																						handleChooseBudget(b.id);
-																					}}
-																					className="gap-2"
-																				>
-																					<CheckCircle className="h-4 w-4" />
-																					{isChosen ? 'Elegido' : 'Elegir'}
-																				</Button>
-																			</div>
-																		{b.sold && (
-																			<div className="absolute bottom-0 left-0 right-0 bg-green-500 text-white text-xs font-semibold py-1 text-center rounded-b-lg">
-																				VENDIDO
-																			</div>
-																		)}
-																	</Card>
-																);
-															})}
-														</div>
-													)}
-												</div>
-											);
-										})}
-									</div>
-								</CollapsibleContent>
-							</Card>
-						</Collapsible>
-					);
-				})}
-			</div>
-		</div>
-
-		<ConfirmDialog
-			open={deleteBudgetConfirm.open}
-			onOpenChange={(open) => setDeleteBudgetConfirm({ ...deleteBudgetConfirm, open })}
-			title="Eliminar presupuesto"
-			description="¿Estás seguro de que quieres eliminar este presupuesto? Esta acción no se puede deshacer."
-			onConfirm={confirmDeleteBudget}
-			isLoading={isLoading}
-		/>
-
-		<ConfirmDialog
-			open={deleteFolderConfirm.open}
-			onOpenChange={(open) => setDeleteFolderConfirm({ ...deleteFolderConfirm, open })}
-			title="Eliminar carpeta"
-			description={`¿Estás seguro de que quieres eliminar esta carpeta y sus ${deleteFolderConfirm.budgetCount} presupuesto(s)? Esta acción no se puede deshacer.`}
-			onConfirm={confirmDeleteFolder}
-			isLoading={isLoading}
-		/>
-
-		<Dialog open={pdfPreview.open} onOpenChange={closePdfPreview}>
-			<DialogContent className="max-w-4xl max-h-[90vh]">
-				<DialogHeader>
-					<DialogTitle>
-						Vista previa - Presupuesto {pdfPreview.budget?.type} #{pdfPreview.budget?.number || 'sin número'}
-					</DialogTitle>
-					<DialogDescription>
-						{pdfPreview.budget?.version || 'Sin variante'} - {pdfPreview.budget?.folder_budget.work
-  ? `${pdfPreview.budget.folder_budget.work.address} - ${pdfPreview.budget.folder_budget.work.locality}`
-  : 'Sin obra'}
-					</DialogDescription>
-				</DialogHeader>
-				<div className="flex-1 min-h-[600px]">
-					{pdfPreview.pdfUrl && (
-						<iframe
-							src={pdfPreview.pdfUrl}
-							className="w-full h-full min-h-[600px] border rounded"
-							title="Vista previa del PDF"
+							folder={folder}
+							isOpen={!!openFolders[folder.id]}
+							onToggle={(open) => setOpenFolders(prev => ({ ...prev, [folder.id]: open }))}
+							isLoading={isLoading}
+							onChooseBudget={handleChooseBudget}
+							onDeleteBudget={handleDeleteBudget}
+							onDeleteFolder={handleDeleteFolder}
+							onViewPdf={handleViewPdf}
+							onOpenDetail={handleOpenBudgetDetail}
 						/>
-					)}
+					))}
 				</div>
-			</DialogContent>
-		</Dialog>
+			</div>
 
-		<ClientBudgetsDollarUpdateModal
-			isOpen={isClientBudgetsUpdateModalOpen}
-			onOpenChange={setIsClientBudgetsUpdateModalOpen}
-			budgets={budgets}
-			clientId={clientId}
-			onUpdateConfirmed={handleClientBudgetsUpdate}
-		/>
+			<ConfirmDialog
+				open={deleteBudgetConfirm.open}
+				onOpenChange={(open) => setDeleteBudgetConfirm({ ...deleteBudgetConfirm, open })}
+				title="Eliminar presupuesto"
+				description="¿Estás seguro de que quieres eliminar este presupuesto? Esta acción no se puede deshacer."
+				onConfirm={confirmDeleteBudget}
+				isLoading={isLoading}
+			/>
 
-		<Dialog open={budgetDetailModal.open} onOpenChange={closeBudgetDetailModal}>
-			<DialogContent className="max-w-2xl">
-				<DialogHeader>
-					<DialogTitle className="flex items-center gap-2">
-						<FileText className="h-5 w-5" />
-						Detalles del Presupuesto
-					</DialogTitle>
-					<DialogDescription>
-						Información completa del presupuesto seleccionado
-					</DialogDescription>
-				</DialogHeader>
-				{budgetDetailModal.budget && (
-					<div className="space-y-4">
-						<div className="grid grid-cols-2 gap-4">
-							<div>
-								<Label className="text-sm font-medium text-muted-foreground">Tipo</Label>
-								<p className="text-sm font-semibold">{budgetDetailModal.budget.type}</p>
-							</div>
-							<div>
-								<Label className="text-sm font-medium text-muted-foreground">Variante</Label>
-								<p className="text-sm font-semibold">{budgetDetailModal.budget.version || 'Sin variante'}</p>
-							</div>
-							<div>
-								<Label className="text-sm font-medium text-muted-foreground">Número</Label>
-								<p className="text-sm font-semibold">#{budgetDetailModal.budget.number || 'Sin número'}</p>
-							</div>
-							<div>
-								<Label className="text-sm font-medium text-muted-foreground">Estado</Label>
-								<div className="flex items-center gap-2">
-									{budgetDetailModal.budget.accepted ? (
-										<Badge className="gap-1">
-											<CheckCircle className="h-3.5 w-3.5" /> Elegido
-										</Badge>
-									) : (
-										<Badge variant="secondary">No elegido</Badge>
-									)}
-									{budgetDetailModal.budget.sold ? (
-										<Badge className="gap-1 bg-green-500 hover:bg-green-600">
-											<CheckCircle className="h-3.5 w-3.5" /> Vendido
-										</Badge>
-									) : (
-										<Badge variant="outline">No vendido</Badge>
-									)}
-								</div>
-							</div>
-						</div>
+			<ConfirmDialog
+				open={deleteFolderConfirm.open}
+				onOpenChange={(open) => setDeleteFolderConfirm({ ...deleteFolderConfirm, open })}
+				title="Eliminar carpeta"
+				description={`¿Estás seguro de que quieres eliminar esta carpeta y sus ${deleteFolderConfirm.budgetCount} presupuesto(s)? Esta acción no se puede deshacer.`}
+				onConfirm={confirmDeleteFolder}
+				isLoading={isLoading}
+			/>
 
-						<div className="grid grid-cols-2 gap-4">
-							<div>
-								<Label className="text-sm font-medium text-muted-foreground">Monto ARS</Label>
-								<p className="text-sm font-semibold">
-									{typeof budgetDetailModal.budget.amount_ars === 'number'
-										? `$${budgetDetailModal.budget.amount_ars.toLocaleString('es-AR')} ARS`
-										: 'Monto ARS no cargado'}
-								</p>
-							</div>
-							<div>
-								<Label className="text-sm font-medium text-muted-foreground">Monto USD</Label>
-								<p className="text-sm font-semibold">
-									{typeof budgetDetailModal.budget.amount_usd === 'number'
-										? `$${budgetDetailModal.budget.amount_usd.toLocaleString('es-AR')} USD`
-										: 'Monto USD no cargado'}
-								</p>
-							</div>
-						</div>
+			<PdfPreviewModal
+				isOpen={pdfPreview.open}
+				onOpenChange={closePdfPreview}
+				budget={pdfPreview.budget}
+				pdfUrl={pdfPreview.pdfUrl}
+			/>
 
-						<div className="grid grid-cols-2 gap-4">
-							<div>
-								<Label className="text-sm font-medium text-muted-foreground">Obra</Label>
-								<p className="text-sm font-semibold">
-									{budgetDetailModal.budget.folder_budget?.work
-										? `${budgetDetailModal.budget.folder_budget.work.address} - ${budgetDetailModal.budget.folder_budget.work.locality}`
-										: 'Sin obra asignada'}
-								</p>
-							</div>
-							<div>
-								<Label className="text-sm font-medium text-muted-foreground mt-2">Fecha de emisión</Label>
-								<p className="text-sm font-semibold">
-									{budgetDetailModal.budget.created_at
-										? new Date(budgetDetailModal.budget.created_at).toLocaleDateString('es-AR', {
-												day: '2-digit',
-												month: '2-digit',
-												year: '2-digit',
-											})
-										: 'Fecha no disponible'}
-								</p>
-							</div>
-						</div>
+			<ClientBudgetsDollarUpdateModal
+				isOpen={isClientBudgetsUpdateModalOpen}
+				onOpenChange={setIsClientBudgetsUpdateModalOpen}
+				budgets={budgets}
+				clientId={clientId}
+				onUpdateConfirmed={handleClientBudgetsUpdate}
+			/>
 
-						<div>
-							<Label className="text-sm font-medium text-muted-foreground">PDF</Label>
-							<div className="flex items-center gap-2 mt-1">
-								{budgetDetailModal.budget.pdf_path ? (
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => handleViewPdf(budgetDetailModal.budget!)}
-										className="gap-2"
-									>
-										<FileText className="h-10 w-10" /> Ver PDF
-									</Button>
-								) : (
-									<Badge variant="secondary">Borrador - Sin PDF</Badge>
-								)}
-							</div>
-						</div>
+			<BudgetDetailModal
+				isOpen={budgetDetailModal.open}
+				onOpenChange={closeBudgetDetailModal}
+				budget={budgetDetailModal.budget}
+				isLoading={isLoading}
+				onEdit={handleEditBudget}
+				onToggleSold={handleToggleSold}
+				onChooseBudget={handleChooseBudget}
+				onViewPdf={handleViewPdf}
+				onClose={closeBudgetDetailModal}
+			/>
 
-						<div className="flex justify-end gap-2 pt-4 border-t">
-							<Button variant="outline" onClick={closeBudgetDetailModal}>
-								Cerrar
-							</Button>
-							<Button
-								variant="outline"
-								onClick={() => handleEditBudget(budgetDetailModal.budget!)}
-								className="gap-2"
-								disabled={isLoading}
-							>
-								<Edit className="h-4 w-4" />
-								Editar
-							</Button>
-							<Button
-								variant={budgetDetailModal.budget.sold ? "secondary" : "default"}
-								onClick={() => {
-									handleToggleSold(budgetDetailModal.budget!.id);
-								}}
-								className="gap-2"
-								disabled={isLoading}
-							>
-								<CheckCircle className="h-4 w-4" />
-								{budgetDetailModal.budget.sold ? 'Marcar como no vendido' : 'Marcar como vendido'}
-							</Button>
-							{!budgetDetailModal.budget.accepted && (
-								<Button
-									onClick={() => {
-										handleChooseBudget(budgetDetailModal.budget!.id);
-										closeBudgetDetailModal();
-									}}
-									className="gap-2"
-								>
-									<CheckCircle className="h-4 w-4" />
-									Elegir
-								</Button>
-							)}
-						</div>
-					</div>
-				)}
-			</DialogContent>
-		</Dialog>
+			<CreateBudgetModal
+				isOpen={isCreateOpen}
+				onOpenChange={setIsCreateOpen}
+				formData={formData}
+				works={works}
+				isLoading={isLoading}
+				onUpdateFormData={updateFormData}
+				onCreateBudget={handleCreateBudget}
+				onCancel={handleCancelCreate}
+			/>
 
-		<BudgetFormModal
-			isOpen={editModalOpen}
-			onOpenChange={setEditModalOpen}
-			mode="edit"
-			works={works}
-			budget={editingBudget}
-			onSubmit={handleEditBudgetSubmit}
-			isLoading={isLoading}
-		/>
-	</>
+			<BudgetFormModal
+				isOpen={editModalOpen}
+				onOpenChange={setEditModalOpen}
+				mode="edit"
+				works={works}
+				budget={editingBudget}
+				onSubmit={handleEditBudgetSubmit}
+				isLoading={isLoading}
+			/>
+		</>
 	);
 }

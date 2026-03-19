@@ -28,7 +28,7 @@ export function ChecklistImages({ checklistId }: Props) {
 
 	return (
 		<div className="space-y-3 mt-6 pt-6 border-t">
-			<h4 className="font-medium text-sm text-muted-foreground">Fotos de la checklist</h4>
+			<h4 className="font-medium text-sm text-muted-foreground">Archivos de la checklist</h4>
 
 			{loading ? (
 				<div className="flex justify-center py-8">

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -8,7 +9,6 @@ import { Checklist } from '@/lib/works/checklists';
 import { ChecklistItem } from '@/lib/works/checklists';
 import { calculateProgress } from '@/helpers/checklists/progress';
 import { useFileUpload } from '@/hooks/use-file-upload';
-import { useChecklistImages } from '@/hooks/checklists/use-checklist-images';
 import { ChecklistImages } from '@/utils/checklists/checklist-images';
 import { UploadFileDialog } from '@/components/ui/upload-file-dialog';
 
@@ -45,6 +45,8 @@ export function ChecklistCard({
 	onAddEntry,
 	clientId,
 }: ChecklistCardProps) {
+	const [imagesRefreshKey, setImagesRefreshKey] = useState(0);
+
 	const {
 		isUploadDialogOpen,
 		selectedFile,
@@ -64,10 +66,8 @@ export function ChecklistCard({
 		checklistId: checklist.id,
 		getDefaultDisplayName: (file) => checklist.name || file.name.replace(/\.[^/.]+$/, ''),
 		getDefaultDescription: () => checklist.description || '',
-		onUploadSuccess: () => reload(),
+		onUploadSuccess: () => setImagesRefreshKey((prev) => prev + 1),
 	});
-
-	const { reload } = useChecklistImages(checklist.id);
 
 	return (
 		<Card key={checklist.id} className="border-2 shadow-sm">
@@ -289,7 +289,7 @@ export function ChecklistCard({
 					</Button>
 				)}
 
-				<ChecklistImages checklistId={checklist.id} />
+				<ChecklistImages key={`${checklist.id}-${imagesRefreshKey}`} checklistId={checklist.id} />
 			</CardContent>
 
 			<UploadFileDialog

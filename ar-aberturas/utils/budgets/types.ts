@@ -43,6 +43,7 @@ export interface BudgetFormData {
 	amountUsd: string;
 	workId: string;
 	pdf: File | null;
+	created_at: string;
 }
 
 export interface ClientBudgetsTabState {

@@ -44,6 +44,7 @@ export function BudgetFormModal({
 		amountUsd: FORM_DEFAULTS.amountUsd,
 		workId: FORM_DEFAULTS.workId,
 		pdf: null,
+		created_at: FORM_DEFAULTS.created_at,
 	});
 
 	const resetForm = (data?: Partial<BudgetFormData>) => {
@@ -64,6 +65,7 @@ export function BudgetFormModal({
 				amountUsd: budget.amount_usd?.toString() || FORM_DEFAULTS.amountUsd,
 				workId: budget.folder_budget?.work_id || FORM_DEFAULTS.workId,
 				pdf: null,
+				created_at: budget.created_at ? new Date(budget.created_at).toISOString().split('T')[0] : FORM_DEFAULTS.created_at,
 			});
 		} else if (isOpen) {
 			console.log('Loading empty form for create mode');
@@ -145,6 +147,15 @@ export function BudgetFormModal({
 								))}
 							</SelectContent>
 						</Select>
+					</div>
+
+					<div className="grid gap-2">
+						<Label>Fecha de Creación</Label>
+						<Input
+							type="date"
+							value={formData.created_at}
+							onChange={(e) => setFormData((prev: BudgetFormData) => ({ ...prev, created_at: e.target.value }))}
+						/>
 					</div>
 
 					<div className="grid grid-cols-2 gap-4">

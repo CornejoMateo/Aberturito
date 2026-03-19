@@ -201,7 +201,7 @@ export async function getBudgetsByFolderBudgetIds(
 }
 
 export async function createBudget(
-	budget: Omit<Budget, 'id' | 'created_at' | 'pdf_url' | 'pdf_path'>,
+	budget: Omit<Budget, 'id' | 'pdf_url' | 'pdf_path'>,
 	pdfFile: File | null,
 	clientId: string
 ): Promise<{ data: Budget | null; error: any }> {
@@ -265,7 +265,7 @@ export async function updateBudget(
 
 export async function editBudget(
 	id: string,
-	changes: Partial<Omit<Budget, 'id' | 'created_at'>>,
+	changes: Partial<Omit<Budget, 'id'>>,
 	pdfFile: File | null,
 	clientId: string
 ): Promise<{ data: Budget | null; error: any }> {

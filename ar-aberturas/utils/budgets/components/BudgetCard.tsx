@@ -7,7 +7,7 @@ import { CheckCircle, FileText, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BudgetWithWork } from '@/lib/works/balances';
 import { BudgetFolderVM } from '../types';
-import { formatCurrency, workLabel } from '../utils';
+import { formatCurrency, workLabel, formatDate } from '../utils';
 import { budgetHandlers } from '../handlers';
 
 interface BudgetCardProps {
@@ -79,6 +79,11 @@ export function BudgetCard({
 				{budget.number ? (
 					<Badge variant="outline">#{budget.number}</Badge>
 				) : null}
+				{budget.created_at && (
+					<p className="text-xs text-muted-foreground">
+						{formatDate(budget.created_at)}
+					</p>
+				)}
 			</div>
 
 			<div className="flex flex-wrap gap-2 mb-3">

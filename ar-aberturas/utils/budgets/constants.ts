@@ -17,6 +17,11 @@ export const FORM_DEFAULTS = {
 	amount: '',
 	amountUsd: '',
 	workId: 'none',
+	created_at: new Date().toLocaleDateString('es-AR', { 
+		year: 'numeric', 
+		month: '2-digit', 
+		day: '2-digit' 
+	}).split('/').reverse().join('-'), // YYYY-MM-DD format using local date
 } as const;
 
 export const TOAST_MESSAGES = {

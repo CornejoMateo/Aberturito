@@ -4,7 +4,7 @@ import { Work } from '@/lib/works/works';
 import { BudgetWithWork } from '@/lib/works/balances';
 import { 
 	createBudget, 
-	updateBudget, 
+	updateBudget,
 	deleteBudget, 
 	editBudget 
 } from '@/lib/budgets/budgets';
@@ -227,6 +227,7 @@ export const budgetHandlers: BudgetHandlers = {
 					number: number,
 					amount_ars: amount,
 					amount_usd: amountUsd,
+					created_at: formData.created_at ? new Date(formData.created_at + 'T00:00:00').toISOString() : editingBudget.created_at,
 				},
 				formData.pdf,
 				clientId
@@ -323,6 +324,7 @@ export const budgetHandlers: BudgetHandlers = {
 					number: number,
 					amount_ars: amount,
 					amount_usd: amountUsd,
+					created_at: formData.created_at ? new Date(formData.created_at + 'T00:00:00').toISOString() : new Date().toISOString(),
 				},
 				formData.pdf,
 				clientId

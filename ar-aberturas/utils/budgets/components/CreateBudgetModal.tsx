@@ -25,6 +25,7 @@ interface CreateBudgetModalProps {
 		amountUsd: string;
 		workId: string;
 		pdf: File | null;
+		created_at: string;
 	};
 	works: Work[];
 	isLoading: boolean;
@@ -97,6 +98,15 @@ export function CreateBudgetModal({
 								))}
 							</SelectContent>
 						</Select>
+					</div>
+
+					<div className="grid gap-2">
+						<Label>Fecha de Creación</Label>
+						<Input
+							type="date"
+							value={formData.created_at}
+							onChange={(e) => onUpdateFormData({ created_at: e.target.value })}
+						/>
 					</div>
 
 					<div className="grid grid-cols-2 gap-4">

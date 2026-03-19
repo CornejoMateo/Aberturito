@@ -2,13 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Client } from '@/lib/clients/clients';
-import {
-	deleteClientFile,
-	ClientFileRecord,
- 	listClientFiles,
-} from '@/lib/clients/files';
+import { deleteClientFile, ClientFileRecord, listClientFiles } from '@/lib/clients/files';
 import { Button } from '@/components/ui/button';
-import { Upload, Trash2, X, ChevronLeft, ChevronRight, Download, Loader2, FileText } from 'lucide-react';
+import { Upload, Trash2, Loader2, FileText } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { getSupabaseClient } from '@/lib/supabase-client';
 import { translateError } from '@/lib/error-translator';
@@ -23,24 +19,9 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-	formatFileSize,
-	isVideo,
-	isImage,
-	getFileExtension,
-	formatDate,
-} from '@/utils/file-upload-utils';
+import { UploadFileDialog } from '@/components/ui/upload-file-dialog';
+import { FileViewerModal } from '@/components/ui/file-viewer-modal';
+import { formatFileSize, isVideo, isImage, getFileExtension } from '@/utils/file-upload-utils';
 
 interface ClientFilesProps {
 	client: Client;
@@ -159,6 +140,7 @@ export function ClientImagesGallery({ client }: ClientFilesProps) {
 		handleFileSelect,
 		handleUploadSubmit,
 		handleCloseUploadDialog,
+		acceptedFileTypes,
 	} = useFileUpload({
 		clientId: client.id,
 		onUploadSuccess: loadFiles,
@@ -201,18 +183,6 @@ export function ClientImagesGallery({ client }: ClientFilesProps) {
 		}
 	};
 
-	const handlePrevious = () => {
-		if (selectedFileIndex !== null && selectedFileIndex > 0) {
-			setSelectedFileIndex(selectedFileIndex - 1);
-		}
-	};
-
-	const handleNext = () => {
-		if (selectedFileIndex !== null && selectedFileIndex < files.length - 1) {
-			setSelectedFileIndex(selectedFileIndex + 1);
-		}
-	};
-
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center h-full">
@@ -229,7 +199,7 @@ export function ClientImagesGallery({ client }: ClientFilesProps) {
 					<input
 						ref={fileInputRef}
 						type="file"
-						accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip"
+						accept={acceptedFileTypes.join(',')}
 						className="hidden"
 						onChange={handleFileSelect}
 						disabled={isUploading}
@@ -319,94 +289,20 @@ export function ClientImagesGallery({ client }: ClientFilesProps) {
 				</div>
 			)}
 
-			{/* File Viewer Modal */}
-			{selectedFileIndex !== null && files[selectedFileIndex] && (
-				<div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
-					<Button
-						size="icon"
-						variant="ghost"
-						className="absolute top-4 right-4 text-white hover:bg-white/20"
-						onClick={() => setSelectedFileIndex(null)}
-					>
-						<X className="h-6 w-6" />
-					</Button>
-
-					{selectedFileIndex > 0 && (
-						<Button
-							size="icon"
-							variant="ghost"
-							className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20"
-							onClick={handlePrevious}
-						>
-							<ChevronLeft className="h-8 w-8" />
-						</Button>
-					)}
-
-					{selectedFileIndex < files.length - 1 && (
-						<Button
-							size="icon"
-							variant="ghost"
-							className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20"
-							onClick={handleNext}
-						>
-							<ChevronRight className="h-8 w-8" />
-						</Button>
-					)}
-
-					<div className="max-w-[80vw] max-h-[80vh] flex flex-col items-center overflow-auto">
-						{isVideo(files[selectedFileIndex].mimetype) ? (
-							<video
-								src={files[selectedFileIndex].url}
-								controls
-								className="max-w-full max-h-full object-contain"
-								autoPlay
-							/>
-						) : isImage(files[selectedFileIndex].mimetype) ? (
-							<img
-								src={files[selectedFileIndex].url}
-								alt={files[selectedFileIndex].display_name || files[selectedFileIndex].name}
-								className="max-w-full max-h-full object-contain"
-							/>
-						) : (
-							<div className="flex flex-col items-center justify-center p-8 bg-card rounded-lg border">
-								<FileText className="h-24 w-24 text-primary mb-4" />
-								<p className="text-lg font-semibold text-foreground mb-2">
-									{getFileExtension(files[selectedFileIndex].name)}
-								</p>
-								<p className="text-sm text-muted-foreground mb-6 text-center max-w-md">
-									Este tipo de archivo no se puede previsualizar. Usa el botón de descarga para abrirlo.
-								</p>
-								<a
-									href={files[selectedFileIndex].url}
-									download={files[selectedFileIndex].display_name || files[selectedFileIndex].name}
-									className="inline-flex items-center gap-2"
-								>
-									<Button>
-										<Download className="h-4 w-4 mr-2" />
-										Descargar archivo
-									</Button>
-								</a>
-							</div>
-						)}
-
-						<div className="mt-4 text-white text-center px-4 max-w-xl">
-							<p className="font-medium text-lg">
-								{files[selectedFileIndex].display_name || files[selectedFileIndex].name}
-							</p>
-							{files[selectedFileIndex].description && (
-								<p className="text-sm text-white/80 mt-2">{files[selectedFileIndex].description}</p>
-							)}
-							<p className="text-sm text-white/70 mt-2">
-								{formatFileSize(files[selectedFileIndex].size)} •{' '}
-								{formatDate(files[selectedFileIndex].uploaded_at)}
-							</p>
-							<p className="text-xs text-white/50 mt-1">
-								{selectedFileIndex + 1} de {files.length}
-							</p>
-						</div>
-					</div>
-				</div>
-			)}
+			<FileViewerModal
+				files={files.map((file) => ({
+					id: file.id,
+					url: file.url,
+					name: file.name,
+					displayName: file.display_name,
+					description: file.description,
+					mimetype: file.mimetype,
+					size: file.size,
+					uploadedAt: file.uploaded_at,
+				}))}
+				selectedIndex={selectedFileIndex}
+				onSelectedIndexChange={setSelectedFileIndex}
+			/>
 
 			{/* Delete Confirmation Dialog */}
 			<AlertDialog open={!!fileToDelete} onOpenChange={() => setFileToDelete(null)}>
@@ -430,70 +326,20 @@ export function ClientImagesGallery({ client }: ClientFilesProps) {
 				</AlertDialogContent>
 			</AlertDialog>
 
-			{/* Upload Dialog */}
-			<Dialog open={isUploadDialogOpen} onOpenChange={(open) => !open && handleCloseUploadDialog()}>
-				<DialogContent
-					className="
-						w-[95vw]
-						max-w-lg
-						max-h-[95vh]
-						overflow-auto
-					"
-				>
-					<DialogHeader>
-						<DialogTitle>Subir archivo</DialogTitle>
-						<DialogDescription>
-							Completa la información del archivo que deseas subir.
-						</DialogDescription>
-					</DialogHeader>
-					<div className="grid gap-4 py-4">
-						<div className="grid gap-2">
-							<Label htmlFor="file-name">Nombre del archivo *</Label>
-							<Input
-								id="file-name"
-								value={displayName}
-								onChange={(e) => setDisplayName(e.target.value)}
-								disabled={isUploading}
-							/>
-						</div>
-						<div className="grid gap-2">
-							<Label htmlFor="file-description">Descripción (opcional)</Label>
-							<Textarea
-								id="file-description"
-								value={description}
-								onChange={(e) => setDescription(e.target.value)}
-								placeholder="Ej: Vista frontal de la obra terminada"
-								rows={3}
-								disabled={isUploading}
-							/>
-						</div>
-						{selectedFile && (
-							<div className="rounded-lg border p-3 bg-muted/50">
-								<p className="text-sm font-medium mb-1">Archivo seleccionado:</p>
-								<p className="text-sm text-muted-foreground truncate">{selectedFile.name}</p>
-								<p className="text-xs text-muted-foreground mt-1">
-									{formatFileSize(selectedFile.size)}
-								</p>
-							</div>
-						)}
-					</div>
-					<DialogFooter>
-						<Button variant="outline" onClick={handleCloseUploadDialog} disabled={isUploading}>
-							Cancelar
-						</Button>
-						<Button onClick={handleUploadSubmit} disabled={isUploading || !displayName.trim()}>
-							{isUploading ? (
-								<>
-									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-									Subiendo...
-								</>
-							) : (
-								'Subir archivo'
-							)}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+			<UploadFileDialog
+				open={isUploadDialogOpen}
+				onOpenChange={(open) => !open && handleCloseUploadDialog()}
+				displayName={displayName}
+				description={description}
+				selectedFile={selectedFile}
+				isUploading={isUploading}
+				onDisplayNameChange={setDisplayName}
+				onDescriptionChange={setDescription}
+				onSubmit={handleUploadSubmit}
+				title="Subir archivo"
+				descriptionText="Completa la información del archivo que deseas subir."
+				submitText="Subir archivo"
+			/>
 		</div>
 	);
 }

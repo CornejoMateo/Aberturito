@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,14 +19,8 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from '@/components/ui/pagination';
-import {
-	AlertTriangle,
-	Plus,
-	Trash2,
-	CheckCircle,
-	FileText,
-} from 'lucide-react';
-import { Claim} from '@/lib/claims/claims';
+import { AlertTriangle, Plus, Trash2, CheckCircle, FileText } from 'lucide-react';
+import { Claim } from '@/lib/claims/claims';
 import { ClaimsAddDialog } from '@/utils/claims/claims-add-dialog';
 import { ClaimImagesGallery } from '@/utils/claims/claim-images-gallery';
 import { ClaimsStats } from '@/utils/claims/claim-stats';
@@ -37,7 +30,6 @@ import { useClaimsManagement } from '@/hooks/claims/use-claims-management';
 import { useAuth } from '@/components/provider/auth-provider';
 
 export function ClaimsManagement() {
-
 	const {
 		claims,
 		paginatedData,
@@ -90,7 +82,6 @@ export function ClaimsManagement() {
 		confirmResolveClaim,
 		confirmDelete,
 		handleDeleteOldClaims,
-
 	} = useClaimsManagement();
 
 	const { user } = useAuth();
@@ -106,8 +97,8 @@ export function ClaimsManagement() {
 							{filterType === 'diario' ? 'Eliminar actividad diaria' : 'Eliminar reclamo'}
 						</DialogTitle>
 						<DialogDescription>
-							{filterType === 'diario' ? 
-								'¿Estás seguro de que deseas eliminar esta actividad diaria? Esta acción no se puede deshacer.'
+							{filterType === 'diario'
+								? '¿Estás seguro de que deseas eliminar esta actividad diaria? Esta acción no se puede deshacer.'
 								: '¿Estás seguro de que deseas eliminar este reclamo? Esta acción no se puede deshacer.'}
 						</DialogDescription>
 					</DialogHeader>
@@ -129,7 +120,9 @@ export function ClaimsManagement() {
 					<DialogHeader>
 						<DialogTitle className="flex items-center gap-2">
 							<CheckCircle className="h-5 w-5 text-green-600" />
-							{filterType === 'diario' ? 'Marcar actividad diaria como resuelta' : 'Marcar reclamo como resuelto'}
+							{filterType === 'diario'
+								? 'Marcar actividad diaria como resuelta'
+								: 'Marcar reclamo como resuelto'}
 						</DialogTitle>
 						<DialogDescription>
 							{filterType === 'diario'
@@ -142,7 +135,7 @@ export function ClaimsManagement() {
 							value={resolvedBy}
 							onChange={(e) => setResolvedBy(e.target.value)}
 							className="bg-background"
-							placeholder='¿Quien hablo con el cliente?'
+							placeholder="¿Quien hablo con el cliente?"
 						/>
 					</div>
 					<DialogFooter>
@@ -178,7 +171,7 @@ export function ClaimsManagement() {
 						<div>
 							<p className="text-sm text-foreground whitespace-pre-wrap">{descriptionToView}</p>
 						</div>
-						
+
 						{selectedClaimForImages && (
 							<div className="border-t pt-6">
 								<ClaimImagesGallery
@@ -193,10 +186,13 @@ export function ClaimsManagement() {
 						)}
 					</div>
 					<DialogFooter>
-						<Button variant="outline" onClick={() => {
-							setDescriptionToView(null);
-							setSelectedClaimForImages(null);
-						}}>
+						<Button
+							variant="outline"
+							onClick={() => {
+								setDescriptionToView(null);
+								setSelectedClaimForImages(null);
+							}}
+						>
 							Cerrar
 						</Button>
 					</DialogFooter>
@@ -212,7 +208,8 @@ export function ClaimsManagement() {
 							Eliminar reclamos antiguos
 						</DialogTitle>
 						<DialogDescription>
-							¿Estás seguro de que deseas eliminar todos los reclamos y actividades diarias que fueron resueltos hace más de un mes? Esta acción no se puede deshacer.
+							¿Estás seguro de que deseas eliminar todos los reclamos y actividades diarias que
+							fueron resueltos hace más de un mes? Esta acción no se puede deshacer.
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
@@ -230,15 +227,15 @@ export function ClaimsManagement() {
 			{/* Header */}
 			<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 				<div>
-					<h2 className="text-2xl font-bold text-foreground text-balance">Gestión de ajustes y actividades diarias</h2>
+					<h2 className="text-2xl font-bold text-foreground text-balance">
+						Gestión de ajustes y actividades diarias
+					</h2>
 					<p className="text-muted-foreground mt-1">Administración de reclamos y seguimiento</p>
 				</div>
 				{user?.role === 'Admin' && (
 					<Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
 						<Plus className="h-4 w-4" />
-						{filterType === 'diario' ? 'Agregar actividad diaria' : 'Agregar reclamo'
-
-						}
+						{filterType === 'diario' ? 'Agregar actividad diaria' : 'Agregar reclamo'}
 					</Button>
 				)}
 			</div>
@@ -264,7 +261,12 @@ export function ClaimsManagement() {
 			<ClaimsStats claims={claims} filterType={filterType} />
 
 			{/* Filters and Search */}
-			<ClaimsFilter filterType={filterType} setFilterType={setFilterType} searchTerm={searchTerm} setSearchTerm={setSearchTerm}/>
+			<ClaimsFilter
+				filterType={filterType}
+				setFilterType={setFilterType}
+				searchTerm={searchTerm}
+				setSearchTerm={setSearchTerm}
+			/>
 
 			{/* Table */}
 			<Card className="bg-card border-border">
@@ -363,7 +365,6 @@ export function ClaimsManagement() {
 					</div>
 				</Card>
 			)}
-
 		</div>
 	);
 }

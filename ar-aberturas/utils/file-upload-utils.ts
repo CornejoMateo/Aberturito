@@ -13,12 +13,7 @@ export const IMAGE_TYPES = [
 ] as const;
 
 // Video file types (only for clients)
-export const VIDEO_TYPES = [
-	'video/mp4',
-	'video/webm',
-	'video/ogg',
-	'video/quicktime',
-] as const;
+export const VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'] as const;
 
 // Document file types (for clients)
 export const DOCUMENT_TYPES = [
@@ -77,10 +72,10 @@ export const validateFileForUpload = (
 	maxSize: number
 ): { isValid: boolean; error?: string } => {
 	if (!isValidFileType(file, allowedTypes)) {
-		const typeNames = allowedTypes.map(type => type.split('/')[1].toUpperCase()).join(', ');
+		const typeNames = allowedTypes.map((type) => type.split('/')[1].toUpperCase()).join(', ');
 		return {
 			isValid: false,
-			error: `Tipo de archivo no válido. Solo se permiten archivos: ${typeNames}.`
+			error: `Tipo de archivo no válido. Solo se permiten archivos: ${typeNames}.`,
 		};
 	}
 
@@ -88,7 +83,7 @@ export const validateFileForUpload = (
 		const maxSizeMB = Math.round(maxSize / (1024 * 1024));
 		return {
 			isValid: false,
-			error: `El archivo excede el tamaño máximo de ${maxSizeMB}MB.`
+			error: `El archivo excede el tamaño máximo de ${maxSizeMB}MB.`,
 		};
 	}
 
@@ -137,4 +132,16 @@ export const formatDate = (dateString: string): string => {
 		hour: '2-digit',
 		minute: '2-digit',
 	});
+};
+
+// type created for the file viewer modal
+export type FileViewerItem = {
+	id: string;
+	url: string;
+	name: string;
+	displayName?: string | null;
+	description?: string | null;
+	mimetype?: string | null;
+	size?: number | null;
+	uploadedAt?: string | null;
 };

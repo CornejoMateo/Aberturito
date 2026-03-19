@@ -16,9 +16,7 @@ const TABLE = 'clients';
 
 export async function getClientsCount(): Promise<{ data: number; error: any }> {
 	const supabase = getSupabaseClient();
-	const { count, error } = await supabase
-		.from(TABLE)
-		.select('*', { count: 'exact', head: true });
+	const { count, error } = await supabase.from(TABLE).select('*', { count: 'exact', head: true });
 	return { data: count || 0, error };
 }
 

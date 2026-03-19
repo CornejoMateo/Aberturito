@@ -20,6 +20,7 @@ export type Claim = {
 
 const TABLE = 'claims';
 
+// type used for mapping claim row with client data, adding client_name and client_phone to the claim row
 type ClaimRowWithClient = Claim & {
 	clients?: {
 		name?: string | null;
@@ -175,15 +176,15 @@ export async function deleteClaim(id: string): Promise<{ data: null; error: any 
 // method to delete claims that were resolved more than a month ago
 export async function deleteOldClaims(): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
-	
+
 	const oneMonthAgo = new Date();
 	oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-	
+
 	const { error } = await supabase
 		.from(TABLE)
 		.delete()
 		.eq('resolved', true)
 		.lt('resolution_date', oneMonthAgo.toISOString());
-	
+
 	return { data: null, error };
 }

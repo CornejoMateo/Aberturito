@@ -14,7 +14,6 @@ import { useClientBudgetsState } from '../../hooks/budgets/useClientBudgetsState
 import { budgetHandlers } from './handlers';
 import { FolderCard } from './components/FolderCard';
 import { BudgetDetailModal } from './components/BudgetDetailModal';
-import { CreateBudgetModal } from './components/CreateBudgetModal';
 import { PdfPreviewModal } from './components/PdfPreviewModal';
 import { ClientBudgetsTabProps } from './types';
 
@@ -27,9 +26,6 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 		setOpenFolders,
 		isCreateOpen,
 		setIsCreateOpen,
-		formData,
-		updateFormData,
-		resetFormData,
 		deleteBudgetConfirm,
 		setDeleteBudgetConfirm,
 		deleteFolderConfirm,
@@ -118,13 +114,8 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 		await budgetHandlers.handleClientBudgetsUpdate(newUsdRate, clientId, refresh);
 	};
 
-	const handleCreateBudget = async () => {
-		await budgetHandlers.handleCreateBudget(formData, folderBudgets, clientId, setIsCreateOpen, resetFormData, refresh, setIsLoading);
-	};
-
-	const handleCancelCreate = () => {
-		setIsCreateOpen(false);
-		resetFormData();
+	const handleCreateBudgetSubmit = async (formData: any) => {
+		await budgetHandlers.handleCreateBudget(formData, folderBudgets, clientId, setIsCreateOpen, refresh, setIsLoading);
 	};
 
 	// Helper function to get budgets by folder ID (needed for folder delete)
@@ -248,15 +239,14 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 				onClose={closeBudgetDetailModal}
 			/>
 
-			<CreateBudgetModal
+			<BudgetFormModal
 				isOpen={isCreateOpen}
 				onOpenChange={setIsCreateOpen}
-				formData={formData}
+				mode="create"
 				works={works}
+				onSubmit={handleCreateBudgetSubmit}
+				budget={null}
 				isLoading={isLoading}
-				onUpdateFormData={updateFormData}
-				onCreateBudget={handleCreateBudget}
-				onCancel={handleCancelCreate}
 			/>
 
 			<BudgetFormModal

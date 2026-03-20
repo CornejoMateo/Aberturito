@@ -33,8 +33,7 @@ import {
 	createTransaction,
 	deleteTransaction,
 } from '@/lib/works/balance_transactions';
-import { Work } from '@/lib/works/works';
-import { format, set } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
@@ -189,9 +188,10 @@ export function BalanceDetailsModal({
 
 	const totalPaid = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 	const totalPaidUSD = transactions.reduce((sum, t) => sum + (Number(t.usd_amount) || 0), 0);
-	const budgetArs = balance?.budget?.amount_ars || 0;
+	const budgetArsInitial = balance?.budget?.amount_ars || 0;
 	const budgetUsd = balance?.budget?.amount_usd || 0;
-	const remaining = budgetArs - totalPaid;
+	const budgetArsCurrent = budgetUsd * (balance?.usd_current || 1);
+	const remaining = budgetArsCurrent - totalPaid;
 	const remainingUSD = budgetUsd - totalPaidUSD;
 	const work = balance?.budget?.folder_budget?.work;
 
@@ -205,7 +205,7 @@ export function BalanceDetailsModal({
 				{balance && (
 					<div className="space-y-6">
 						{/* Balance Info Header */}
-						<div className="grid grid-cols-2 md:grid-cols-7 gap-4 p-4 bg-muted/50 rounded-lg">
+						<div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
 							<div>
 								<p className="text-xs text-muted-foreground mb-1">Obra</p>
 								<p className="text-sm font-medium">
@@ -240,10 +240,20 @@ export function BalanceDetailsModal({
 							</div>
 
 							<div>
-								<p className="text-xs text-muted-foreground mb-1">Presupuesto</p>
+								<p className="text-xs text-muted-foreground mb-1">Presupuesto inicial</p>
 								<div className="flex flex-col">
 									<p className="text-sm font-bold text-primary">
-										{formatCurrency(budgetUsd * (balance.usd_current || 1))}
+										{formatCurrency(budgetArsInitial)}
+									</p>
+									<p className="text-xs text-muted-foreground">{formatCurrencyUSD(budgetUsd)}</p>
+								</div>
+							</div>
+
+							<div>
+								<p className="text-xs text-muted-foreground mb-1">Presupuesto actual</p>
+								<div className="flex flex-col">
+									<p className="text-sm font-bold text-primary">
+										{formatCurrency(budgetArsCurrent)}
 									</p>
 									<p className="text-xs text-muted-foreground">{formatCurrencyUSD(budgetUsd)}</p>
 								</div>

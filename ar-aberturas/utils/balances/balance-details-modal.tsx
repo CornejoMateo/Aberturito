@@ -33,7 +33,7 @@ import {
 	createTransaction,
 	deleteTransaction,
 } from '@/lib/works/balance_transactions';
-import { format } from 'date-fns';
+import { add, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
@@ -45,6 +45,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { formatCurrency, formatCurrencyUSD } from '../../helpers/format-prices.tsx/formats';
+import { calculateBalanceSummary } from './balance-calculations';
 
 interface BalanceDetailsModalProps {
 	balance: BalanceWithBudget | null;
@@ -188,12 +189,20 @@ export function BalanceDetailsModal({
 
 	const totalPaid = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 	const totalPaidUSD = transactions.reduce((sum, t) => sum + (Number(t.usd_amount) || 0), 0);
-	const budgetArsInitial = balance?.budget?.amount_ars || 0;
-	const budgetUsd = balance?.budget?.amount_usd || 0;
-	const budgetArsCurrent = budgetUsd * (balance?.usd_current || 1);
-	const remaining = budgetArsCurrent - totalPaid;
-	const remainingUSD = budgetUsd - totalPaidUSD;
+	const summary = calculateBalanceSummary({
+		budgetAmountArs: balance?.budget?.amount_ars,
+		budgetAmountUsd: balance?.budget?.amount_usd,
+		usdCurrent: balance?.usd_current,
+		totalPaidArs: totalPaid,
+		totalPaidUsd: totalPaidUSD,
+	});
 	const work = balance?.budget?.folder_budget?.work;
+
+	useEffect(() => {
+		if (balance && isAddingTransaction) {
+			setUsdAmount(transactionAmount && quoteUsd ? (parseFloat(transactionAmount) / parseFloat(quoteUsd)).toFixed(2) : '');
+		}
+	}, [transactionAmount, quoteUsd]);
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -243,9 +252,11 @@ export function BalanceDetailsModal({
 								<p className="text-xs text-muted-foreground mb-1">Presupuesto inicial</p>
 								<div className="flex flex-col">
 									<p className="text-sm font-bold text-primary">
-										{formatCurrency(budgetArsInitial)}
+										{formatCurrency(summary.budgetArsInitial)}
 									</p>
-									<p className="text-xs text-muted-foreground">{formatCurrencyUSD(budgetUsd)}</p>
+									<p className="text-xs text-muted-foreground">
+										{formatCurrencyUSD(summary.budgetUsd)}
+									</p>
 								</div>
 							</div>
 
@@ -253,9 +264,11 @@ export function BalanceDetailsModal({
 								<p className="text-xs text-muted-foreground mb-1">Presupuesto actual</p>
 								<div className="flex flex-col">
 									<p className="text-sm font-bold text-primary">
-										{formatCurrency(budgetArsCurrent)}
+										{formatCurrency(summary.budgetArsCurrent)}
 									</p>
-									<p className="text-xs text-muted-foreground">{formatCurrencyUSD(budgetUsd)}</p>
+									<p className="text-xs text-muted-foreground">
+										{formatCurrencyUSD(summary.budgetUsd)}
+									</p>
 								</div>
 							</div>
 
@@ -275,10 +288,10 @@ export function BalanceDetailsModal({
 								<p className="text-xs text-muted-foreground mb-1">Saldo</p>
 								<div className="flex flex-col">
 									<p className="text-sm font-bold text-orange-600">
-										{formatCurrency(remaining)}
+										{formatCurrency(summary.remainingArs)}
 									</p>
 									<p className="text-xs text-muted-foreground">
-										{formatCurrencyUSD(remainingUSD || 0)}
+										{formatCurrencyUSD(summary.remainingUsd)}
 									</p>
 								</div>
 							</div>

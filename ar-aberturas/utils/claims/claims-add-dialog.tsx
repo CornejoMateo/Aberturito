@@ -7,6 +7,8 @@ import {
 } from '@/components/ui/dialog';
 import React, { useState, useEffect } from 'react';
 import { createClaim, updateClaim, Claim } from '@/lib/claims/claims';
+import { Client, listClients } from '@/lib/clients/clients';
+import { Work, getWorksByClientId } from '@/lib/works/works';
 import { toast } from '@/components/ui/use-toast';
 import { ClaimsForm } from './claims-form';
 
@@ -26,9 +28,12 @@ export function ClaimsAddDialog({
 	mode = 'reclamo',
 }: ClaimsAddDialogProps) {
 	const [isLoading, setIsLoading] = useState(false);
+	const [clients, setClients] = useState<Client[]>([]);
+	const [works, setWorks] = useState<Work[]>([]);
+	const [isLoadingWorks, setIsLoadingWorks] = useState(false);
 	const [formData, setFormData] = useState({
-		client_name: claimToEdit?.client_name || '',
-		client_phone: claimToEdit?.client_phone || '',
+		client_id: claimToEdit?.client_id || null,
+		selected_work_id: '',
 		work_zone: claimToEdit?.work_zone || '',
 		work_locality: claimToEdit?.work_locality || '',
 		work_address: claimToEdit?.work_address || '',
@@ -41,8 +46,8 @@ export function ClaimsAddDialog({
 	useEffect(() => {
 		if (claimToEdit && open) {
 			setFormData({
-				client_name: claimToEdit.client_name || '',
-				client_phone: claimToEdit.client_phone || '',
+				client_id: claimToEdit.client_id || null,
+				selected_work_id: '',
 				work_zone: claimToEdit.work_zone || '',
 				work_locality: claimToEdit.work_locality || '',
 				work_address: claimToEdit.work_address || '',
@@ -56,6 +61,49 @@ export function ClaimsAddDialog({
 		}
 	}, [open, claimToEdit]);
 
+	useEffect(() => {
+		if (!open) return;
+
+		const loadClients = async () => {
+			const { data, error } = await listClients();
+			if (error) {
+				console.error('Error loading clients:', error);
+				setClients([]);
+				return;
+			}
+
+			setClients(data || []);
+		};
+
+		loadClients();
+	}, [open]);
+
+	useEffect(() => {
+		if (!open) return;
+
+		const loadWorksByClient = async () => {
+			if (!formData.client_id) {
+				setWorks([]);
+				return;
+			}
+
+			setIsLoadingWorks(true);
+			const { data, error } = await getWorksByClientId(formData.client_id);
+
+			if (error) {
+				console.error('Error loading works:', error);
+				setWorks([]);
+				setIsLoadingWorks(false);
+				return;
+			}
+
+			setWorks(data || []);
+			setIsLoadingWorks(false);
+		};
+
+		loadWorksByClient();
+	}, [open, formData.client_id]);
+
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
 		const { id, value } = e.target;
 		setFormData((prev) => ({
@@ -65,6 +113,39 @@ export function ClaimsAddDialog({
 	};
 
 	const handleSelectChange = (field: string, value: string) => {
+		if (field === 'selected_work_id') {
+			if (value === '__none__') {
+				setFormData((prev) => ({
+					...prev,
+					selected_work_id: '',
+					work_locality: '',
+					work_address: '',
+				}));
+				return;
+			}
+
+			const selectedWork = works.find((work) => String(work.id) === value);
+			setFormData((prev) => ({
+				...prev,
+				selected_work_id: value,
+				work_locality: selectedWork?.locality || prev.work_locality,
+				work_address: selectedWork?.address || prev.work_address,
+			}));
+			return;
+		}
+
+		if (field === 'client_id') {
+			setFormData((prev) => ({
+				...prev,
+				client_id: value || null,
+				selected_work_id: '',
+				work_locality: '',
+				work_address: '',
+				work_zone: '',
+			}));
+			return;
+		}
+
 		setFormData((prev) => ({
 			...prev,
 			[field]: value,
@@ -75,9 +156,17 @@ export function ClaimsAddDialog({
 		e.preventDefault();
 		setIsLoading(true);
 		try {
+			if (!formData.client_id) {
+				toast({
+					title: 'Seleccioná un cliente',
+					description: 'Debes seleccionar un cliente para guardar el reclamo.',
+					variant: 'destructive',
+				});
+				return;
+			}
+
 			const payload = {
-				client_name: formData.client_name || null,
-				client_phone: formData.client_phone || null,
+				client_id: formData.client_id,
 				work_zone: formData.work_zone || null,
 				work_locality: formData.work_locality || null,
 				work_address: formData.work_address || null,
@@ -131,8 +220,8 @@ export function ClaimsAddDialog({
 
 	const resetForm = () => {
 		setFormData({
-			client_name: '',
-			client_phone: '',
+			client_id: null,
+			selected_work_id: '',
 			work_zone: '',
 			work_locality: '',
 			work_address: '',
@@ -175,6 +264,9 @@ export function ClaimsAddDialog({
 					onSelectChange={handleSelectChange}
 					onSubmit={handleSubmit}
 					onCancel={() => onOpenChange(false)}
+					clients={clients}
+					works={works}
+					isLoadingWorks={isLoadingWorks}
 				/>
 			</DialogContent>
 		</Dialog>

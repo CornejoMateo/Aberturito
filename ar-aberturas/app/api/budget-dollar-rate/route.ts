@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { isBudgetLocked } from '@/constants/budget-status';
 
 interface BudgetDollarRateRequest {
   budgetId?: string;
@@ -52,6 +53,8 @@ export async function POST(req: Request) {
     );
 
     let budgetsToUpdate;
+    let excludedLockedBudgets = 0;
+    let totalBudgets = 0;
 
     if (budgetId) {
       // Single budget update
@@ -73,6 +76,20 @@ export async function POST(req: Request) {
         return NextResponse.json(
           { error: 'Presupuesto no encontrado' },
           { status: 404 }
+        );
+      }
+
+      // Check if budget is locked (sold or accepted)
+      if (isBudgetLocked(existingBudget)) {
+        return NextResponse.json(
+          { 
+            error: 'No se puede actualizar un presupuesto que está marcado como vendido o elegido',
+            budgetStatus: {
+              sold: existingBudget.sold,
+              accepted: existingBudget.accepted
+            }
+          },
+          { status: 403 }
         );
       }
 
@@ -99,7 +116,19 @@ export async function POST(req: Request) {
         );
       }
 
-      budgetsToUpdate = clientBudgets || [];
+      // Filter out locked budgets (sold or accepted)
+      const allBudgets = clientBudgets || [];
+      const lockedBudgets = allBudgets.filter(isBudgetLocked);
+      const updatableBudgets = allBudgets.filter(budget => !isBudgetLocked(budget));
+
+      excludedLockedBudgets = lockedBudgets.length;
+      totalBudgets = allBudgets.length;
+
+      if (lockedBudgets.length > 0) {
+        console.log(`Excluding ${lockedBudgets.length} locked budget(s) from update`);
+      }
+
+      budgetsToUpdate = updatableBudgets;
     } else {
       return NextResponse.json(
         { error: 'No se especificó qué presupuestos actualizar' },
@@ -109,7 +138,16 @@ export async function POST(req: Request) {
 
     if (budgetsToUpdate.length === 0) {
       return NextResponse.json(
-        { error: 'No se encontraron presupuestos con monto USD para actualizar' },
+        { 
+          error: 'No se encontraron presupuestos actualizables con monto USD',
+          details: clientId ? {
+            message: 'Todos los presupuestos del cliente están marcados como vendidos o elegidos, o no tienen monto USD',
+            hint: 'Solo se pueden actualizar presupuestos que no estén vendidos ni elegidos'
+          } : {
+            message: 'El presupuesto no se puede actualizar',
+            hint: 'Verifique que el presupuesto no esté marcado como vendido o elegido'
+          }
+        },
         { status: 404 }
       );
     }
@@ -151,6 +189,10 @@ export async function POST(req: Request) {
         updatedBudgets: successfulUpdates,
         newUsdRate,
         updatedCount: successfulUpdates.length,
+        ...(clientId && {
+          excludedLockedBudgets,
+          totalBudgets
+        })
       },
     });
 

@@ -1,0 +1,174 @@
+import { getSupabaseClient } from '../supabase-client';
+
+const TABLE = 'files_client';
+const BUCKET = 'clients';
+
+export type ClientFileRecord = {
+	id: string;
+	uploaded_at: string;
+	client_id: string | null;
+	path: string | null;
+	title: string | null;
+	description: string | null;
+	checklist_id: string | null;
+	claim_id: string | null;
+};
+
+// get all client files
+export async function listClientFiles(
+	clientId: string
+): Promise<{ data: ClientFileRecord[] | null; error: any }> {
+	const supabase = getSupabaseClient();
+
+	try {
+		if (!clientId) {
+			return { data: [], error: 'Error getting client id:' };
+		}
+
+		const { data: files, error: listError } = await supabase
+			.from(TABLE)
+			.select('*')
+			.eq('client_id', clientId);
+
+		if (listError) {
+			return { data: null, error: listError };
+		}
+
+		return { data: files, error: null };
+	} catch (err) {
+		console.error('Unexpected error listing client files:', err);
+		return { data: null, error: err };
+	}
+}
+
+// get files by claim_id
+export async function getClientFilesByClaim(
+	claimId: string
+): Promise<{ data: ClientFileRecord[] | null; error: any }> {
+	const supabase = getSupabaseClient();
+
+	try {
+		if (!claimId) {
+			return { data: [], error: 'Error getting claim id:' };
+		}
+
+		const { data: files, error: listError } = await supabase
+			.from(TABLE)
+			.select('*')
+			.eq('claim_id', claimId);
+
+		if (listError) {
+			return { data: null, error: listError };
+		}
+
+		return { data: files, error: null };
+	} catch (err) {
+		console.error('Unexpected error listing client files by claim:', err);
+		return { data: null, error: err };
+	}
+}
+
+// get files by checklist_id
+export async function getClientFilesByChecklist(
+	checklistId: string
+): Promise<{ data: ClientFileRecord[] | null; error: any }> {
+	const supabase = getSupabaseClient();
+
+	try {
+		if (!checklistId) {
+			return { data: [], error: 'Error getting checklist id:' };
+		}
+
+		const { data: files, error: listError } = await supabase
+			.from(TABLE)
+			.select('*')
+			.eq('checklist_id', checklistId);
+
+		if (listError) {
+			return { data: null, error: listError };
+		}
+
+		return { data: files, error: null };
+	} catch (err) {
+		console.error('Unexpected error listing client files by checklist:', err);
+		return { data: null, error: err };
+	}
+}
+
+// upload a file for a client
+export async function uploadClientFile(
+	clientId: string,
+	file: File,
+	title: string | null = null,
+	description: string | null = null,
+	checklistId: string | null = null,
+	claimId: string | null = null
+): Promise<{ data: ClientFileRecord | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const fileExt = file.name.split('.').pop();
+	const fileName = `${crypto.randomUUID()}.${fileExt}`;
+	const filePath = `${clientId}/${fileName}`;
+
+	const { error: uploadError } = await supabase.storage.from(BUCKET).upload(filePath, file);
+
+	if (uploadError) {
+		return { data: null, error: uploadError };
+	}
+
+	const { data: fileRecord, error: dbError } = await supabase
+		.from(TABLE)
+		.insert({
+			client_id: clientId,
+			title,
+			description,
+			path: filePath,
+			checklist_id: checklistId,
+			claim_id: claimId,
+		})
+		.select()
+		.single();
+
+	if (dbError) {
+		return { data: null, error: dbError };
+	}
+
+	return { data: fileRecord, error: null };
+}
+
+// delete a client file
+export async function deleteClientFile(fileId: string): Promise<{ success: boolean; error: any }> {
+	const supabase = getSupabaseClient();
+
+	// Get the file record to find the path for deletion
+	const { data: fileRecord, error: fetchError } = await supabase
+		.from(TABLE)
+		.select('path')
+		.eq('id', fileId)
+		.single();
+
+	if (fetchError) {
+		return { success: false, error: fetchError };
+	}
+
+	if (!fileRecord || !fileRecord.path) {
+		return { success: false, error: 'File record not found or missing path' };
+	}
+
+	// Delete the file from storage
+	const { error: deleteStorageError } = await supabase.storage
+		.from(BUCKET)
+		.remove([fileRecord.path]);
+
+	if (deleteStorageError) {
+		return { success: false, error: deleteStorageError };
+	}
+
+	// Delete the file record from the database
+	const { error: deleteDbError } = await supabase.from(TABLE).delete().eq('id', fileId);
+
+	if (deleteDbError) {
+		return { success: false, error: deleteDbError };
+	}
+
+	return { success: true, error: null };
+}

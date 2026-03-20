@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -8,16 +9,8 @@ import { Checklist } from '@/lib/works/checklists';
 import { ChecklistItem } from '@/lib/works/checklists';
 import { calculateProgress } from '@/helpers/checklists/progress';
 import { useFileUpload } from '@/hooks/use-file-upload';
-import { CLIENT_FILE_TYPES } from '@/utils/file-upload-utils';
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import { ChecklistImages } from '@/utils/checklists/checklist-images';
+import { UploadFileDialog } from '@/components/ui/upload-file-dialog';
 
 interface ChecklistCardProps {
 	checklist: Checklist;
@@ -52,6 +45,8 @@ export function ChecklistCard({
 	onAddEntry,
 	clientId,
 }: ChecklistCardProps) {
+	const [imagesRefreshKey, setImagesRefreshKey] = useState(0);
+
 	const {
 		isUploadDialogOpen,
 		selectedFile,
@@ -65,8 +60,13 @@ export function ChecklistCard({
 		handleUploadSubmit,
 		handleCloseUploadDialog,
 		triggerFileUpload,
+		acceptedFileTypes,
 	} = useFileUpload({
 		clientId: clientId || '',
+		checklistId: checklist.id,
+		getDefaultDisplayName: (file) => checklist.name || file.name.replace(/\.[^/.]+$/, ''),
+		getDefaultDescription: () => checklist.description || '',
+		onUploadSuccess: () => setImagesRefreshKey((prev) => prev + 1),
 	});
 
 	return (
@@ -200,7 +200,7 @@ export function ChecklistCard({
 						ref={fileInputRef}
 						type="file"
 						onChange={handleFileSelect}
-						accept={CLIENT_FILE_TYPES.join(',')}
+						accept={acceptedFileTypes.join(',')}
 						className="hidden"
 					/>
 				</div>
@@ -288,75 +288,24 @@ export function ChecklistCard({
 						)}
 					</Button>
 				)}
+
+				<ChecklistImages key={`${checklist.id}-${imagesRefreshKey}`} checklistId={checklist.id} />
 			</CardContent>
 
-			<Dialog open={isUploadDialogOpen} onOpenChange={handleCloseUploadDialog}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Agregar archivo</DialogTitle>
-						<DialogDescription>
-							Completa los datos del archivo para subirlo
-						</DialogDescription>
-					</DialogHeader>
-
-					<div className="space-y-4 py-4">
-						<div className="space-y-2">
-							<Label htmlFor="file-name">Nombre del archivo</Label>
-							<Input
-								id="file-name"
-								value={displayName}
-								onChange={(e) => setDisplayName(e.target.value)}
-								placeholder="Nombre descriptivo"
-								disabled={isUploading}
-							/>
-						</div>
-
-						<div className="space-y-2">
-							<Label htmlFor="file-description">Descripción (opcional)</Label>
-							<Textarea
-								id="file-description"
-								value={description}
-								onChange={(e) => setDescription(e.target.value)}
-								placeholder="Descripción del archivo"
-								disabled={isUploading}
-								rows={3}
-							/>
-						</div>
-
-						{selectedFile && (
-							<div className="text-sm text-muted-foreground">
-								<p>Archivo: {selectedFile.name}</p>
-								<p>Tamaño: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
-							</div>
-						)}
-					</div>
-
-					<DialogFooter>
-						<Button 
-							type="button" 
-							variant="outline" 
-							onClick={handleCloseUploadDialog}
-							disabled={isUploading}
-						>
-							Cancelar
-						</Button>
-						<Button 
-							type="button" 
-							onClick={handleUploadSubmit}
-							disabled={isUploading || !displayName.trim()}
-						>
-							{isUploading ? (
-								<>
-									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-									Subiendo...
-								</>
-							) : (
-								'Guardar'
-							)}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+			<UploadFileDialog
+				open={isUploadDialogOpen}
+				onOpenChange={(open) => !open && handleCloseUploadDialog()}
+				displayName={displayName}
+				description={description}
+				selectedFile={selectedFile}
+				isUploading={isUploading}
+				onDisplayNameChange={setDisplayName}
+				onDescriptionChange={setDescription}
+				onSubmit={handleUploadSubmit}
+				title="Agregar archivo"
+				descriptionText="Completa los datos del archivo para subirlo."
+				submitText="Guardar"
+			/>
 		</Card>
 	);
 }

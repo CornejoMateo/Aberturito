@@ -9,9 +9,15 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Claim } from '@/lib/claims/claims';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Command, CommandInput, CommandList, CommandEmpty, CommandItem } from '@/components/ui/command';
+import { Client } from '@/lib/clients/clients';
+import { Work } from '@/lib/works/works';
+
+const NO_WORK_VALUE = '__none__';
 
 interface ClaimsFormProps {
 	formData: any;
@@ -21,6 +27,9 @@ interface ClaimsFormProps {
 	onSelectChange: (field: string, value: string) => void;
 	onSubmit: (e: React.FormEvent) => void;
 	onCancel: () => void;
+	clients: Client[];
+	works: Work[];
+	isLoadingWorks: boolean;
 }
 
 export function ClaimsForm({
@@ -31,48 +40,116 @@ export function ClaimsForm({
 	onSelectChange,
 	onSubmit,
 	onCancel,
+	clients,
+	works,
+	isLoadingWorks,
 }: ClaimsFormProps) {
+	const [open, setOpen] = useState(false);
+	const [selected, setSelected] = useState<Client | null>(null);
+
+	useEffect(() => {
+		const match = clients.find((client) => client.id === formData.client_id) ?? null;
+		setSelected(match);
+	}, [clients, formData.client_id]);
+
+	const selectedClientLabel = selected
+		? `${selected.name || ''} ${selected.last_name || ''}`.trim() || 'Cliente sin nombre'
+		: 'Seleccionar cliente...';
+
+	const selectedWorkId = String(formData.selected_work_id || '');
+
 	return (
 		<form onSubmit={onSubmit} className="grid gap-4 py-4">
-			<div className="grid grid-cols-2 gap-4">
-				<div className="grid gap-2">
-					<Label htmlFor="client_name" className="text-foreground">
-						Apellido y Nombre del cliente
-					</Label>
-					<Input
-						id="client_name"
-						value={formData.client_name}
-						onChange={onInputChange}
-						className="bg-background"
-					/>
-				</div>
-				<div className="grid gap-2">
-					<Label htmlFor="client_phone" className="text-foreground">
-						Teléfono del cliente
-					</Label>
-					<Input
-						id="client_phone"
-						type="tel"
-						value={formData.client_phone}
-						onChange={onInputChange}
-						className="bg-background"
-					/>
-				</div>
+			<div className="grid gap-2">
+				<Label className="text-foreground">Cliente</Label>
+				<Popover open={open} onOpenChange={setOpen}>
+					<PopoverTrigger asChild>
+						<Button variant="outline" className="w-full justify-start">
+							{selectedClientLabel}
+						</Button>
+					</PopoverTrigger>
+
+					<PopoverContent className="w-full p-0">
+						<Command>
+							<CommandInput placeholder="Buscar cliente..." />
+
+							<CommandList>
+								<CommandEmpty>No encontrado</CommandEmpty>
+
+								{clients.map((client) => {
+									const fullName = `${client.name || ''} ${client.last_name || ''}`.trim() || 'Cliente sin nombre';
+									const searchableValue = `${fullName} ${client.phone_number || ''}`;
+
+									return (
+										<CommandItem
+											key={client.id}
+											value={searchableValue}
+											onSelect={() => {
+												setSelected(client);
+												onSelectChange('client_id', client.id);
+												setOpen(false);
+											}}
+										>
+											{fullName}
+										</CommandItem>
+									);
+								})}
+							</CommandList>
+						</Command>
+					</PopoverContent>
+				</Popover>
+				{formData.client_id && (
+					<p className="text-xs text-muted-foreground">ID cliente: {formData.client_id}</p>
+				)}
+			</div>
+
+			<div className="grid gap-2 w-full">
+				<Label htmlFor="selected_work_id" className="text-foreground">
+					Obra del cliente
+				</Label>
+				<Select
+					value={selectedWorkId}
+					onValueChange={(value) => onSelectChange('selected_work_id', value)}
+					disabled={!formData.client_id || isLoadingWorks}
+				>
+					<SelectTrigger id="selected_work_id" className="bg-background">
+						<SelectValue
+							placeholder={
+								!formData.client_id
+									? 'Primero seleccioná un cliente'
+									: isLoadingWorks
+										? 'Cargando obras...'
+										: works.length === 0
+											? 'Sin obras para este cliente'
+											: 'Seleccionar obra'
+							}
+						/>
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value={NO_WORK_VALUE}>Ninguna</SelectItem>
+						{works.map((work) => (
+							<SelectItem key={work.id} value={String(work.id)}>
+								{work.locality || 'Sin localidad'} - {work.address || 'Sin dirección'}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</div>
+
+			<div className="grid gap-2">
+				<Label htmlFor="locality" className="text-foreground">
+					Localidad de obra
+				</Label>
+				<Input
+					id="locality"
+					value={formData.work_locality}
+					onChange={onInputChange}
+					placeholder="Localidad"
+					className="bg-background"
+				/>
 			</div>
 
 			<div className="grid grid-cols-2 gap-4">
-				<div className="grid gap-2">
-					<Label htmlFor="work_locality" className="text-foreground">
-						Localidad de obra
-					</Label>
-					<Input
-						id="work_locality"
-						value={formData.work_locality}
-						onChange={onInputChange}
-						placeholder="Localidad"
-						className="bg-background"
-					/>
-				</div>
 				<div className="grid gap-2">
 					<Label htmlFor="work_zone" className="text-foreground">
 						Zona de obra
@@ -85,19 +162,18 @@ export function ClaimsForm({
 						className="bg-background"
 					/>
 				</div>
-			</div>
-
-			<div className="grid gap-2">
-				<Label htmlFor="work_address" className="text-foreground">
-					Dirección de obra
-				</Label>
-				<Input
-					id="work_address"
-					value={formData.work_address}
-					onChange={onInputChange}
-					placeholder="Dirección completa"
-					className="bg-background"
-				/>
+				<div className="grid gap-2">
+					<Label htmlFor="work_address" className="text-foreground">
+						Dirección de obra
+					</Label>
+					<Input
+						id="work_address"
+						value={formData.work_address}
+						onChange={onInputChange}
+						placeholder="Dirección completa"
+						className="bg-background"
+					/>
+				</div>
 			</div>
 
 			<div className="grid grid-cols-2 gap-4">

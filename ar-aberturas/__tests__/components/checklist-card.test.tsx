@@ -17,6 +17,7 @@ jest.mock('@/hooks/use-file-upload', () => ({
 		handleUploadSubmit: jest.fn(),
 		handleCloseUploadDialog: jest.fn(),
 		triggerFileUpload: jest.fn(),
+		acceptedFileTypes: ['image/jpeg'],
 	})),
 }));
 

@@ -1,5 +1,5 @@
 import { formatCurrency, formatCurrencyUSD } from '../../helpers/format-prices.tsx/formats';
-import { BalanceSummary } from './balance-calculations';
+import { BalanceSummary } from '../../helpers/balances/balance-calculations';
 
 interface BalanceInformationProps {
 	work?: {

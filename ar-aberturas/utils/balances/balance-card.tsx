@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DollarSign, Trash2, TrendingUp } from 'lucide-react';
 import { formatCurrency, formatCurrencyUSD } from '../../helpers/format-prices.tsx/formats';
-import { BalanceSummary } from './balance-calculations';
+import { BalanceSummary } from '../../helpers/balances/balance-calculations';
 import { BalanceWithBudget } from '@/lib/works/balances';
 
 interface BalanceCardProps {

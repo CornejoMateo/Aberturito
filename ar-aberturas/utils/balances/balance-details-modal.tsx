@@ -23,11 +23,12 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useToast } from '@/components/ui/use-toast';
 import { formatCurrency } from '../../helpers/format-prices.tsx/formats';
-import { calculateBalanceSummary } from './balance-calculations';
+import { calculateBalanceSummary } from '../../helpers/balances/balance-calculations';
 import { parseArsToNumber } from '@/utils/budgets/utils';
 import { AddTransactionSection } from './add-transaction';
 import { TransactionsTable } from './transactions-table';
 import { BalanceInformation } from './balance-information';
+import { translateError } from '@/lib/error-translator';
 
 interface BalanceDetailsModalProps {
 	balance: BalanceWithBudget | null;
@@ -138,7 +139,7 @@ export function BalanceDetailsModal({
 				toast({
 					variant: 'destructive',
 					title: 'Error al eliminar transacción',
-					description: 'Hubo un problema al eliminar la transacción. Intente nuevamente.',
+					description: translateError(error) || 'Hubo un problema al eliminar la transacción. Intente nuevamente.',
 				});
 				return;
 			}
@@ -152,7 +153,11 @@ export function BalanceDetailsModal({
 			await loadTransactions();
 			onTransactionCreated?.();
 		} catch (error) {
-			console.error('Error inesperado al eliminar transacción:', error);
+			toast({
+				variant: 'destructive',
+				title: 'Error inesperado',
+				description: translateError(error) || 'Ocurrió un error inesperado. Intente nuevamente.',
+			});
 		} finally {
 			setIsDeleteDialogOpen(false);
 			setTransactionToDelete(null);

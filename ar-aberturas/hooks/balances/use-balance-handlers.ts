@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { deleteBalance } from '@/lib/works/balances';
 import { BalanceWithTotals } from '@/utils/balances/client-balances';
+import { toast } from '@/components/ui/use-toast';
+import { translateError } from '@/lib/error-translator';
 
 interface UseBalanceHandlersProps {
 	onBalanceDeleted?: () => void;
@@ -28,9 +30,13 @@ export function useBalanceHandlers({ onBalanceDeleted, onRefresh }: UseBalanceHa
 			const { error } = await deleteBalance(balanceToDelete.id);
 
 			if (error) {
-				console.error('Error al eliminar saldo:', error);
-				return;
-			}
+				toast({
+                    variant: 'destructive',
+                    title: 'Error al eliminar saldo',
+                    description: translateError(error) || 'Hubo un problema al eliminar el saldo. Intente nuevamente.',
+                });
+                return;
+            }
 
 			// Refresh the list
 			handleBalanceUpdate();
@@ -40,7 +46,11 @@ export function useBalanceHandlers({ onBalanceDeleted, onRefresh }: UseBalanceHa
 				onBalanceDeleted();
 			}
 		} catch (error) {
-			console.error('Error inesperado al eliminar saldo:', error);
+			toast({
+                variant: 'destructive',
+                title: 'Error inesperado al eliminar saldo',
+                description: translateError(error) || 'Ocurrió un error inesperado al eliminar el saldo. Intente nuevamente.',
+            });
 		} finally {
 			setIsDeleteDialogOpen(false);
 			setBalanceToDelete(null);

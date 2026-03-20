@@ -27,7 +27,7 @@ import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { getTotalByBalanceId } from '@/lib/works/balance_transactions';
 import { BalanceDetailsModal } from './balance-details-modal';
 import { DollarUpdateModal } from '@/components/ui/dollar-update-modal';
-import { calculateBalanceSummary } from './balance-calculations';
+import { calculateBalanceSummary } from '../../helpers/balances/balance-calculations';
 import { BalanceCard } from './balance-card';
 import { useBalanceHandlers } from '@/hooks/balances/use-balance-handlers';
 

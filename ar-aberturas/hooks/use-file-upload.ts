@@ -1,25 +1,44 @@
 import { useState, useRef } from 'react';
-import { uploadClientFile } from '@/lib/clients/clients';
+import { uploadClientFile } from '@/lib/clients/files';
 import { toast } from '@/components/ui/use-toast';
 import { translateError } from '@/lib/error-translator';
 import {
 	CLIENT_FILE_TYPES,
+	MAX_FILE_SIZE_CLAIM,
 	MAX_FILE_SIZE_CLIENT,
 	validateFileForUpload,
 } from '@/utils/file-upload-utils';
 
 interface UseFileUploadOptions {
 	clientId: string;
+	checklistId?: string | null;
+	claimId?: string | null;
+	allowedFileTypes?: readonly string[];
+	maxFileSize?: number;
+	getDefaultDisplayName?: (file: File) => string;
+	getDefaultDescription?: (file: File) => string;
+	beforeUpload?: () => string | null;
 	onUploadSuccess?: () => void;
 }
 
-export function useFileUpload({ clientId, onUploadSuccess }: UseFileUploadOptions) {
+export function useFileUpload({
+	clientId,
+	checklistId,
+	claimId,
+	allowedFileTypes = CLIENT_FILE_TYPES,
+	maxFileSize,
+	getDefaultDisplayName,
+	getDefaultDescription,
+	beforeUpload,
+	onUploadSuccess,
+}: UseFileUploadOptions) {
 	const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [displayName, setDisplayName] = useState('');
 	const [description, setDescription] = useState('');
 	const [isUploading, setIsUploading] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+	const maxUploadSize = maxFileSize ?? (claimId ? MAX_FILE_SIZE_CLAIM : MAX_FILE_SIZE_CLIENT);
 
 	const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const selectedFiles = e.target.files;
@@ -27,7 +46,7 @@ export function useFileUpload({ clientId, onUploadSuccess }: UseFileUploadOption
 
 		const file = selectedFiles[0];
 
-		const validation = validateFileForUpload(file, CLIENT_FILE_TYPES, MAX_FILE_SIZE_CLIENT);
+		const validation = validateFileForUpload(file, allowedFileTypes, maxUploadSize);
 		if (!validation.isValid) {
 			toast({
 				variant: 'destructive',
@@ -41,13 +60,24 @@ export function useFileUpload({ clientId, onUploadSuccess }: UseFileUploadOption
 		}
 
 		setSelectedFile(file);
-		setDisplayName(file.name.replace(/\.[^/.]+$/, ''));
-		setDescription('');
+		setDisplayName(getDefaultDisplayName?.(file) || file.name.replace(/\.[^/.]+$/, ''));
+		setDescription(getDefaultDescription?.(file) || '');
 		setIsUploadDialogOpen(true);
 	};
 
 	const handleUploadSubmit = async () => {
 		if (!selectedFile) return;
+
+		const preUploadError = beforeUpload?.();
+		if (preUploadError) {
+			const error = translateError(preUploadError);
+			toast({
+				variant: 'destructive',
+				title: 'No se puede subir archivo',
+				description: error || preUploadError,
+			});
+			return;
+		}
 
 		setIsUploading(true);
 
@@ -55,8 +85,10 @@ export function useFileUpload({ clientId, onUploadSuccess }: UseFileUploadOption
 			const { error } = await uploadClientFile(
 				clientId,
 				selectedFile,
-				displayName.trim() || undefined,
-				description.trim() || undefined
+				displayName.trim() || null,
+				description.trim() || null,
+				checklistId || null,
+				claimId || null
 			);
 
 			if (error) {
@@ -112,5 +144,6 @@ export function useFileUpload({ clientId, onUploadSuccess }: UseFileUploadOption
 		handleUploadSubmit,
 		handleCloseUploadDialog,
 		triggerFileUpload,
+		acceptedFileTypes: allowedFileTypes,
 	};
 }

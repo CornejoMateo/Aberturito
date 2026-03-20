@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -22,14 +21,15 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from '@/components/ui/pagination';
-import { Plus, DollarSign, Search, Trash2, TrendingUp } from 'lucide-react';
-import { BalanceWithBudget, getBalancesByClientId, deleteBalance } from '@/lib/works/balances';
+import { Plus, Search } from 'lucide-react';
+import { BalanceWithBudget, getBalancesByClientId } from '@/lib/works/balances';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { getTotalByBalanceId } from '@/lib/works/balance_transactions';
 import { BalanceDetailsModal } from './balance-details-modal';
 import { DollarUpdateModal } from '@/components/ui/dollar-update-modal';
-import { formatCurrency, formatCurrencyUSD } from '../../helpers/format-prices.tsx/formats';
 import { calculateBalanceSummary } from './balance-calculations';
+import { BalanceCard } from './balance-card';
+import { useBalanceHandlers } from '@/hooks/balances/use-balance-handlers';
 
 interface ClientBalancesProps {
 	clientId: string;
@@ -51,12 +51,6 @@ export function ClientBalances({
 }: ClientBalancesProps) {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
-	const [selectedBalance, setSelectedBalance] = useState<BalanceWithTotals | null>(null);
-	const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-	const [balanceToDelete, setBalanceToDelete] = useState<BalanceWithTotals | null>(null);
-	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-	const [isDollarUpdateModalOpen, setIsDollarUpdateModalOpen] = useState(false);
-	const [balanceToUpdate, setBalanceToUpdate] = useState<BalanceWithTotals | null>(null);
 	const [balancesWithTotals, setBalancesWithTotals] = useState<BalanceWithTotals[]>([]);
 	const itemsPerPage = 2;
 
@@ -72,6 +66,27 @@ export function ClientBalances({
 		},
 		`balances_${clientId}`
 	);
+
+	const {
+		selectedBalance,
+		isDetailsModalOpen,
+		setIsDetailsModalOpen,
+		balanceToDelete,
+		isDeleteDialogOpen,
+		setIsDeleteDialogOpen,
+		isDollarUpdateModalOpen,
+		setIsDollarUpdateModalOpen,
+		balanceToUpdate,
+		openDetailsModal,
+		openDeleteDialog,
+		openDollarUpdateModal,
+		handleDeleteBalance,
+		handleDollarUpdate,
+		handleBalanceUpdate,
+	} = useBalanceHandlers({
+		onBalanceDeleted,
+		onRefresh: refresh,
+	});
 
 	// Calculate totals whenever rawBalances change
 	useEffect(() => {
@@ -108,70 +123,6 @@ export function ClientBalances({
 
 		fetchTotals();
 	}, [rawBalances]);
-
-	const handleBalanceUpdate = () => {
-		refresh();
-	};
-
-	const handleDeleteBalance = async () => {
-		if (!balanceToDelete) return;
-
-		try {
-			const { error } = await deleteBalance(balanceToDelete.id);
-
-			if (error) {
-				console.error('Error al eliminar saldo:', error);
-				return;
-			}
-
-			// Refresh the list
-			handleBalanceUpdate();
-
-			// Notify parent to reload budgets
-			if (onBalanceDeleted) {
-				onBalanceDeleted();
-			}
-		} catch (error) {
-			console.error('Error inesperado al eliminar saldo:', error);
-		} finally {
-			setIsDeleteDialogOpen(false);
-			setBalanceToDelete(null);
-		}
-	};
-
-	const handleDollarUpdate = async (newUsdRate: number) => {
-		if (!balanceToUpdate) return;
-
-		try {
-			const response = await fetch('/api/dollar-rate', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					balanceId: balanceToUpdate.id,
-					newUsdRate,
-				}),
-			});
-
-			const result = await response.json();
-
-			if (!response.ok || !result.success) {
-				throw new Error(result.error || 'Error al actualizar el tipo de cambio');
-			}
-
-			// Refresh the list
-			handleBalanceUpdate();
-		} catch (error) {
-			console.error('Error al actualizar tipo de dólar:', error);
-			throw error;
-		}
-	};
-
-	const openDollarUpdateModal = (balance: BalanceWithTotals) => {
-		setBalanceToUpdate(balance);
-		setIsDollarUpdateModalOpen(true);
-	};
 
 	// Filter balances based on search term
 	const filteredBalances = useMemo(() => {
@@ -246,130 +197,14 @@ export function ClientBalances({
 						});
 
 						return (
-							<Card
+							<BalanceCard
 								key={balance.id}
-								className="hover:shadow-md transition-shadow cursor-pointer relative"
-								onClick={() => {
-									setSelectedBalance(balance);
-									setIsDetailsModalOpen(true);
-								}}
-							>
-								<Button
-									variant="ghost"
-									size="icon"
-									className="absolute top-2 right-12 h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 z-10"
-									onClick={(e) => {
-										e.stopPropagation();
-										openDollarUpdateModal(balance);
-									}}
-									title="Actualizar precios con dólar actual"
-								>
-									<TrendingUp className="h-4 w-4" />
-								</Button>
-								<Button
-									variant="ghost"
-									size="icon"
-									className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 z-10"
-									onClick={(e) => {
-										e.stopPropagation();
-										setBalanceToDelete(balance);
-										setIsDeleteDialogOpen(true);
-									}}
-								>
-									<Trash2 className="h-4 w-4" />
-								</Button>
-								<CardContent className="pt-6">
-									<div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-										<div className="flex-1 min-w-0">
-											<div className="flex items-center gap-2 mb-3">
-												<DollarSign className="h-4 w-4 text-primary flex-shrink-0" />
-												<span className="font-semibold text-sm">
-													{summary.isDebtor ? 'Deudor' : 'Acreedor'}
-												</span>
-											</div>
-											<div className="text-sm">
-												{balance.budget?.folder_budget?.work ? (
-													<div>
-														<p className="font-medium">
-															{balance.budget.folder_budget.work.locality}
-														</p>
-														<p className="text-muted-foreground text-xs">
-															{balance.budget.folder_budget.work.address}
-														</p>
-													</div>
-												) : (
-													<span className="text-muted-foreground">Sin presupuesto asignado</span>
-												)}
-											</div>
-										</div>
-
-										<div className="flex flex-col gap-3 w-full lg:min-w-[280px] lg:max-w-[340px]">
-											<div className="grid grid-cols-3 gap-2 sm:gap-4">
-												<div className="flex flex-col">
-													<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">
-														Presupuesto
-													</p>
-													<div className="flex flex-col">
-														<p className="text-xs sm:text-sm font-bold text-primary truncate">
-															{formatCurrency(summary.budgetArsCurrent)}
-														</p>
-														{summary.budgetUsd > 0 && (
-															<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
-																{formatCurrencyUSD(summary.budgetUsd)}
-															</p>
-														)}
-													</div>
-												</div>
-												<div className="flex flex-col">
-													<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">
-														Entregado
-													</p>
-													<div className="flex flex-col">
-														<p className="text-xs sm:text-sm font-bold text-green-600 truncate">
-															{formatCurrency(balance.totalPaid || 0)}
-														</p>
-														{balance.contract_date_usd && (
-															<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
-																{formatCurrencyUSD(summary.totalPaidUsd)}
-															</p>
-														)}
-													</div>
-												</div>
-												<div className="flex flex-col">
-													<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">
-														Saldo
-													</p>
-													<div className="flex flex-col">
-														<p className="text-xs sm:text-sm font-bold text-orange-600 truncate">
-															{formatCurrency(summary.remainingArs)}
-														</p>
-														{balance.contract_date_usd && (
-															<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
-																{formatCurrencyUSD(summary.remainingUsd)}
-															</p>
-														)}
-													</div>
-												</div>
-											</div>
-
-											{summary.budgetUsd > 0 && (
-												<div className="w-full">
-													<div className="flex justify-between text-xs text-muted-foreground mb-1">
-														<span>Progreso</span>
-														<span>{summary.progressPercentage}%</span>
-													</div>
-													<div className="w-full bg-secondary rounded-full h-2">
-														<div
-															className="bg-primary rounded-full h-2 transition-all duration-300"
-															style={{ width: `${summary.progressPercentage}%` }}
-														/>
-													</div>
-												</div>
-											)}
-										</div>
-									</div>
-								</CardContent>
-							</Card>
+								balance={balance}
+								summary={summary}
+								onCardClick={() => openDetailsModal(balance)}
+								onDollarUpdate={() => openDollarUpdateModal(balance)}
+								onDeleteClick={() => openDeleteDialog(balance)}
+							/>
 						);
 					})}
 				</div>

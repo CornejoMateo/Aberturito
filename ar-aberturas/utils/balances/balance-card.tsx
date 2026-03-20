@@ -1,0 +1,149 @@
+'use client';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { DollarSign, Trash2, TrendingUp } from 'lucide-react';
+import { formatCurrency, formatCurrencyUSD } from '../../helpers/format-prices.tsx/formats';
+import { BalanceSummary } from './balance-calculations';
+import { BalanceWithBudget } from '@/lib/works/balances';
+
+interface BalanceCardProps {
+	balance: BalanceWithBudget & {
+		totalPaid?: number;
+		totalPaidUSD?: number;
+	};
+	summary: BalanceSummary;
+	onCardClick: () => void;
+	onDollarUpdate: () => void;
+	onDeleteClick: () => void;
+}
+
+export function BalanceCard({
+	balance,
+	summary,
+	onCardClick,
+	onDollarUpdate,
+	onDeleteClick,
+}: BalanceCardProps) {
+	return (
+		<Card
+			className="hover:shadow-md transition-shadow cursor-pointer relative"
+			onClick={onCardClick}
+		>
+			<Button
+				variant="ghost"
+				size="icon"
+				className="absolute top-2 right-12 h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 z-10"
+				onClick={(e) => {
+					e.stopPropagation();
+					onDollarUpdate();
+				}}
+				title="Actualizar precios con dólar actual"
+			>
+				<TrendingUp className="h-4 w-4" />
+			</Button>
+			<Button
+				variant="ghost"
+				size="icon"
+				className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 z-10"
+				onClick={(e) => {
+					e.stopPropagation();
+					onDeleteClick();
+				}}
+			>
+				<Trash2 className="h-4 w-4" />
+			</Button>
+			<CardContent className="pt-6">
+				<div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+					<div className="flex-1 min-w-0">
+						<div className="flex items-center gap-2 mb-3">
+							<DollarSign className="h-4 w-4 text-primary flex-shrink-0" />
+							<span className="font-semibold text-sm">
+								{summary.isDebtor ? 'Deudor' : 'Acreedor'}
+							</span>
+						</div>
+						<div className="text-sm">
+							{balance.budget?.folder_budget?.work ? (
+								<div>
+									<p className="font-medium">
+										{balance.budget.folder_budget.work.locality}
+									</p>
+									<p className="text-muted-foreground text-xs">
+										{balance.budget.folder_budget.work.address}
+									</p>
+								</div>
+							) : (
+								<span className="text-muted-foreground">Sin presupuesto asignado</span>
+							)}
+						</div>
+					</div>
+
+					<div className="flex flex-col gap-3 w-full lg:min-w-[280px] lg:max-w-[340px]">
+						<div className="grid grid-cols-3 gap-2 sm:gap-4">
+							<div className="flex flex-col">
+								<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">
+									Presupuesto
+								</p>
+								<div className="flex flex-col">
+									<p className="text-xs sm:text-sm font-bold text-primary truncate">
+										{formatCurrency(summary.budgetArsCurrent)}
+									</p>
+									{summary.budgetUsd > 0 && (
+										<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
+											{formatCurrencyUSD(summary.budgetUsd)}
+										</p>
+									)}
+								</div>
+							</div>
+							<div className="flex flex-col">
+								<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">
+									Entregado
+								</p>
+								<div className="flex flex-col">
+									<p className="text-xs sm:text-sm font-bold text-green-600 truncate">
+										{formatCurrency(balance.totalPaid || 0)}
+									</p>
+									{balance.contract_date_usd && (
+										<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
+											{formatCurrencyUSD(summary.totalPaidUsd)}
+										</p>
+									)}
+								</div>
+							</div>
+							<div className="flex flex-col">
+								<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">
+									Saldo
+								</p>
+								<div className="flex flex-col">
+									<p className="text-xs sm:text-sm font-bold text-orange-600 truncate">
+										{formatCurrency(summary.remainingArs)}
+									</p>
+									{balance.contract_date_usd && (
+										<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
+											{formatCurrencyUSD(summary.remainingUsd)}
+										</p>
+									)}
+								</div>
+							</div>
+						</div>
+
+						{summary.budgetUsd > 0 && (
+							<div className="w-full">
+								<div className="flex justify-between text-xs text-muted-foreground mb-1">
+									<span>Progreso</span>
+									<span>{summary.progressPercentage}%</span>
+								</div>
+								<div className="w-full bg-secondary rounded-full h-2">
+									<div
+										className="bg-primary rounded-full h-2 transition-all duration-300"
+										style={{ width: `${summary.progressPercentage}%` }}
+									/>
+								</div>
+							</div>
+						)}
+					</div>
+				</div>
+			</CardContent>
+		</Card>
+	);
+}

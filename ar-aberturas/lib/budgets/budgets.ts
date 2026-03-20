@@ -201,7 +201,7 @@ export async function getBudgetsByFolderBudgetIds(
 }
 
 export async function createBudget(
-	budget: Omit<Budget, 'id' | 'created_at' | 'pdf_url' | 'pdf_path'>,
+	budget: Omit<Budget, 'id' | 'pdf_url' | 'pdf_path'>,
 	pdfFile: File | null,
 	clientId: string
 ): Promise<{ data: Budget | null; error: any }> {
@@ -260,6 +260,51 @@ export async function updateBudget(
 ): Promise<{ data: Budget | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).update(changes).eq('id', id).select().single();
+	return { data, error };
+}
+
+export async function editBudget(
+	id: string,
+	changes: Partial<Omit<Budget, 'id'>>,
+	pdfFile: File | null,
+	clientId: string
+): Promise<{ data: Budget | null; error: any }> {
+	const supabase = getSupabaseClient();
+	let payload: any = { ...changes };
+	let publicUrl: string | null = null;
+	let filePath: string | null = null;
+
+	// Handle PDF update if provided
+	if (pdfFile) {
+		const sanitizedName = pdfFile.name.replace(/\s+/g, '_');
+		const fileName = `budget_${changes.type || 'edit'}_${Date.now()}_${sanitizedName}`;
+		filePath = `${clientId}/${fileName}`;
+
+		// Upload the new PDF file to Supabase Storage
+		const { data: uploadData, error: uploadError } = await supabase.storage
+			.from('clients')
+			.upload(filePath, pdfFile);
+
+		if (uploadError) {
+			console.error('Error uploading PDF:', uploadError);
+			return { data: null, error: uploadError };
+		}
+
+		// Get the public URL of the uploaded PDF
+		const {
+			data: { publicUrl: url },
+		} = supabase.storage.from('clients').getPublicUrl(filePath);
+		publicUrl = url;
+
+		payload = {
+			...payload,
+			pdf_url: publicUrl,
+			pdf_path: filePath,
+		};
+	}
+
+	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();
+
 	return { data, error };
 }
 

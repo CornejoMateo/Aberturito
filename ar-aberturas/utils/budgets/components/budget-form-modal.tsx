@@ -16,6 +16,7 @@ import { Work } from '@/lib/works/works';
 import { BudgetWithWork } from '@/lib/works/balances';
 import { BUDGET_VARIANTS, DEFAULT_TYPES, FORM_DEFAULTS } from '@/constants/budgets/constants';
 import { BudgetFormData } from '@/utils/budgets/types';
+import { formatNumber, parseArsToNumber } from '@/utils/budgets/utils';
 
 interface BudgetFormModalProps {
 	isOpen: boolean;
@@ -80,7 +81,12 @@ export function BudgetFormModal({
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		await onSubmit(formData);
+		const dataToSend: BudgetFormData = {
+			...formData,
+			amount: parseArsToNumber(formData.amount).toString(),
+			amountUsd: formData.amountUsd ? parseFloat(formData.amountUsd).toString() : '',
+		};
+		await onSubmit(dataToSend);
 	};
 
 	const handleClose = () => {
@@ -89,9 +95,22 @@ export function BudgetFormModal({
 	};
 
 	useEffect(() => {
-		if(formData.amount && formData.usdRate) {
-			const calculatedUsd = (Number(formData.amount) / Number(formData.usdRate)).toFixed(2);
-			setFormData((prev) => ({ ...prev, amountUsd: calculatedUsd }));
+		if (formData.amount && formData.usdRate) {
+			const normalizedAmount = formData.amount
+			.replace(/\./g, "") // remove thousand separators
+			.replace(",", ".");   // decimal separator to dot for parsing
+
+			const amountNumber = Number(normalizedAmount);
+			const rateNumber = Number(formData.usdRate);
+
+			if (!isNaN(amountNumber) && !isNaN(rateNumber)) {
+			const calculatedUsd = (amountNumber / rateNumber).toFixed(2);
+
+			setFormData((prev) => ({
+				...prev,
+				amountUsd: calculatedUsd,
+			}));
+			}
 		}
 	}, [formData.usdRate, formData.amount]);
 
@@ -187,9 +206,16 @@ export function BudgetFormModal({
 						<div className="grid gap-2">
 							<Label>Monto ARS</Label>
 							<Input
-								type="number"
+								type="text"
 								value={formData.amount}
-								onChange={(e) => setFormData((prev: BudgetFormData) => ({ ...prev, amount: e.target.value }))}
+								onChange={(e) => {
+									const formatted = formatNumber(e.target.value);
+
+									setFormData((prev: BudgetFormData) => ({
+									...prev,
+									amount: formatted,
+									}));
+								}}
 								placeholder="0"
 							/>
 						</div>

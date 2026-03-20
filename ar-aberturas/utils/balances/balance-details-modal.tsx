@@ -33,7 +33,7 @@ import {
 	createTransaction,
 	deleteTransaction,
 } from '@/lib/works/balance_transactions';
-import { add, format } from 'date-fns';
+import { format, set } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/select';
 import { formatCurrency, formatCurrencyUSD } from '../../helpers/format-prices.tsx/formats';
 import { calculateBalanceSummary } from './balance-calculations';
+import { formatNumber, parseArsToNumber } from '@/utils/budgets/utils';
 
 interface BalanceDetailsModalProps {
 	balance: BalanceWithBudget | null;
@@ -108,7 +109,7 @@ export function BalanceDetailsModal({
 			const { data, error } = await createTransaction({
 				balance_id: balance.id,
 				date: format(transactionDate, 'yyyy-MM-dd'),
-				amount: parseFloat(transactionAmount),
+				amount: parseArsToNumber(transactionAmount),
 				payment_method: paymentMethod || null,
 				notes: notes || null,
 				quote_usd: quoteUsd ? parseFloat(quoteUsd) : null,
@@ -199,10 +200,21 @@ export function BalanceDetailsModal({
 	const work = balance?.budget?.folder_budget?.work;
 
 	useEffect(() => {
-		if (balance && isAddingTransaction) {
-			setUsdAmount(transactionAmount && quoteUsd ? (parseFloat(transactionAmount) / parseFloat(quoteUsd)).toFixed(2) : '');
+		if (transactionAmount && quoteUsd && isAddingTransaction) {
+			const normalizedAmount = transactionAmount
+				.replace(/\./g, "") // remove thousand separators
+				.replace(",", ".");   // decimal separator to dot for parsing
+
+			const amountNumber = Number(normalizedAmount);
+			const rateNumber = Number(quoteUsd);
+
+			if (!isNaN(amountNumber) && !isNaN(rateNumber)) {
+			const calculatedUsd = (amountNumber / rateNumber).toFixed(2);
+
+			setUsdAmount(calculatedUsd);
+			}
 		}
-	}, [transactionAmount, quoteUsd]);
+	}, [quoteUsd, transactionAmount]);
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -336,10 +348,12 @@ export function BalanceDetailsModal({
 										<Label htmlFor="transaction-amount">Monto en pesos</Label>
 										<Input
 											id="transaction-amount"
-											type="number"
-											step="0.01"
+											type="text"
 											value={transactionAmount}
-											onChange={(e) => setTransactionAmount(e.target.value)}
+											onChange={(e) => {
+												const formatted = formatNumber(e.target.value);
+												setTransactionAmount(formatted);
+											}}
 										/>
 									</div>
 								</div>

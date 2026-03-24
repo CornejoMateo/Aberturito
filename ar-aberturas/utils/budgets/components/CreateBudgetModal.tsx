@@ -1,6 +1,6 @@
 'use client';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -49,6 +49,9 @@ export function CreateBudgetModal({
 			<DialogContent className="max-w-2xl">
 				<DialogHeader>
 					<DialogTitle>Nuevo presupuesto</DialogTitle>
+					<DialogDescription>
+						Completa los campos para crear un nuevo presupuesto.
+					</DialogDescription>
 				</DialogHeader>
 				<div className="grid gap-4">
 					<div className="grid gap-2">

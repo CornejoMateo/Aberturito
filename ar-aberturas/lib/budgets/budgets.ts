@@ -41,22 +41,6 @@ export async function getBudgetsTotalAmount(): Promise<{ data: { totalArs: numbe
 	return { data: { totalArs, totalUsd }, error: null };
 }
 
-export async function getBudgetsSoldTotalAmount(): Promise<{ data: { totalArs: number; totalUsd: number }; error: any }> {
-	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('amount_ars, amount_usd')
-		.eq('sold', true);
-	
-	if (error) return { data: { totalArs: 0, totalUsd: 0 }, error };
-	if (!data) return { data: { totalArs: 0, totalUsd: 0 }, error: null };
-	
-	const totalArs = data.reduce((sum, budget) => sum + (budget.amount_ars || 0), 0);
-	const totalUsd = data.reduce((sum, budget) => sum + (budget.amount_usd || 0), 0);
-	
-	return { data: { totalArs, totalUsd }, error: null };
-}
-
 export async function getAcceptedBudgetsCount(): Promise<{ data: number; error: any }> {
 	const supabase = getSupabaseClient();
 	const { count, error } = await supabase

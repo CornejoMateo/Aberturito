@@ -18,26 +18,30 @@ export function BudgetManagement() {
 
 	const getCurrentTicketValue = () => {
 		switch (ticketType) {
-			case 'sold': return metrics.soldAverageTicket;
-			case 'chosen': return metrics.chosenAverageTicket;
-			case 'total': return metrics.totalAverageTicket;
-			default: return 0;
+			case 'sold':
+				return metrics.soldAverageTicket;
+			case 'chosen':
+				return metrics.chosenAverageTicket;
+			case 'total':
+				return metrics.totalAverageTicket;
+			default:
+				return 0;
 		}
 	};
 
 	const getCurrentTicketLabel = () => {
-		const current = TICKET_TYPES.find(t => t.id === ticketType);
+		const current = TICKET_TYPES.find((t) => t.id === ticketType);
 		return current?.description || '';
 	};
 
 	const handleNextTicket = () => {
-		const currentIndex = TICKET_TYPES.findIndex(t => t.id === ticketType);
+		const currentIndex = TICKET_TYPES.findIndex((t) => t.id === ticketType);
 		const nextIndex = (currentIndex + 1) % TICKET_TYPES.length;
 		setTicketType(TICKET_TYPES[nextIndex].id);
 	};
 
 	const handlePrevTicket = () => {
-		const currentIndex = TICKET_TYPES.findIndex(t => t.id === ticketType);
+		const currentIndex = TICKET_TYPES.findIndex((t) => t.id === ticketType);
 		const prevIndex = currentIndex === 0 ? TICKET_TYPES.length - 1 : currentIndex - 1;
 		setTicketType(TICKET_TYPES[prevIndex].id);
 	};
@@ -87,7 +91,13 @@ export function BudgetManagement() {
 				/>
 				<MetricCard
 					label="Facturación"
-					value={loading ? '...' : metrics.totalRevenue > 0 ? `${(metrics.totalRevenue / 1000000).toFixed(1)}M` : '--'}
+					value={
+						loading
+							? '...'
+							: metrics.totalRevenue > 0
+								? `${(metrics.totalRevenue / 1000000).toFixed(1)}M`
+								: '--'
+					}
 					icon={DollarSign}
 					loading={false}
 					status={metrics.totalRevenue > 0}

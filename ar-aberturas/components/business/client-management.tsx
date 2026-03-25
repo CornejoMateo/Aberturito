@@ -145,18 +145,21 @@ export function ClientManagement() {
 		filteredData: filteredClients,
 		paginatedData: currentItems,
 		totalPages,
-		totalItems
-	} = useMemo(() =>
-		paginateAndFilter(
-			clients,
-			searchTerm,
-			currentPage,
-			itemsPerPage,
-			(client, search) =>
-			client.name?.toLowerCase().includes(search) ||
-			client.last_name?.toLowerCase().includes(search) ||
-			client.locality?.toLowerCase().includes(search) || false
-		),[clients, searchTerm, currentPage, itemsPerPage]
+		totalItems,
+	} = useMemo(
+		() =>
+			paginateAndFilter(
+				clients,
+				searchTerm,
+				currentPage,
+				itemsPerPage,
+				(client, search) =>
+					client.name?.toLowerCase().includes(search) ||
+					client.last_name?.toLowerCase().includes(search) ||
+					client.locality?.toLowerCase().includes(search) ||
+					false
+			),
+		[clients, searchTerm, currentPage, itemsPerPage]
 	);
 
 	const { info: clientBudgetsInfo, loading: budgetsLoading } = useClientBudgetsInfo(currentItems);

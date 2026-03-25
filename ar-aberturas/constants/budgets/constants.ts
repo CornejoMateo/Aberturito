@@ -16,6 +16,7 @@ export const FORM_DEFAULTS = {
 	number: '',
 	amount: '',
 	amountUsd: '',
+	usdRate: '',
 	workId: 'none',
 	created_at: new Date().toLocaleDateString('es-AR', { 
 		year: 'numeric', 

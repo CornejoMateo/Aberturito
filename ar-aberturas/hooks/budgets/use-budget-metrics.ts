@@ -5,6 +5,7 @@ import { getClientsCount } from '@/lib/clients/clients';
 import {
   getBudgetsCount,
   getBudgetsTotalAmount,
+  getBudgetsSoldTotalAmount,
   getSoldBudgetsCount,
   getChosenBudgetsCount,
   getSoldBudgetsTotalAmount,
@@ -78,7 +79,7 @@ export const useBudgetMetrics = () => {
         }
 
         // Obtain total revenue (sum of sold budgets)
-        const { data: totalAmounts, error: amountError } = await getBudgetsTotalAmount();
+        const { data: totalAmounts, error: amountError } = await getBudgetsSoldTotalAmount();
         if (!amountError && totalAmounts) {
           setMetrics(prev => ({
             ...prev,

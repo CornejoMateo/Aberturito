@@ -153,7 +153,7 @@ export function BudgetFormModal({
 					</div>
 
 					<div className="grid gap-2">
-						<Label>Fecha de Creación</Label>
+						<Label>Fecha de creación</Label>
 						<Input
 							type="date"
 							value={formData.created_at}

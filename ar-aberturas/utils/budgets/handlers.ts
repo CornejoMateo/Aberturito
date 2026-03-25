@@ -31,7 +31,7 @@ export interface BudgetHandlers {
 	handleEditBudget: (budget: BudgetWithWork, setEditingBudget: (budget: BudgetWithWork | null) => void, closeBudgetDetailModal: () => void, setEditModalOpen: (open: boolean) => void) => void;
 	handleEditBudgetSubmit: (formData: any, editingBudget: BudgetWithWork | null, clientId: string, setIsLoading: (loading: boolean) => void, setEditModalOpen: (open: boolean) => void, setEditingBudget: (budget: BudgetWithWork | null) => void, refresh: () => void) => Promise<void>;
 	handleClientBudgetsUpdate: (newUsdRate: number, clientId: string, refresh: () => void) => Promise<void>;
-	handleCreateBudget: (formData: any, folderBudgets: any[], clientId: string, setIsCreateOpen: (open: boolean) => void, resetFormData: () => void, refresh: () => void, setIsLoading: (loading: boolean) => void) => Promise<void>;
+	handleCreateBudget: (formData: any, folderBudgets: any[], clientId: string, setIsCreateOpen: (open: boolean) => void, refresh: () => void, setIsLoading: (loading: boolean) => void) => Promise<void>;
 }
 
 export const budgetHandlers: BudgetHandlers = {
@@ -283,7 +283,7 @@ export const budgetHandlers: BudgetHandlers = {
 		}
 	},
 
-	async handleCreateBudget(formData: any, folderBudgets: any[], clientId: string, setIsCreateOpen: (open: boolean) => void, resetFormData: () => void, refresh: () => void, setIsLoading: (loading: boolean) => void) {
+	async handleCreateBudget(formData: any, folderBudgets: any[], clientId: string, setIsCreateOpen: (open: boolean) => void, refresh: () => void, setIsLoading: (loading: boolean) => void) {
 		try {
 			setIsLoading(true);
 
@@ -345,7 +345,6 @@ export const budgetHandlers: BudgetHandlers = {
 
 			toast({ title: TOAST_MESSAGES.budgetCreated });
 			setIsCreateOpen(false);
-			resetFormData();
 			refresh();
 		} finally {
 			setIsLoading(false);

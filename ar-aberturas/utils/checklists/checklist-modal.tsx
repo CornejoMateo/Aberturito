@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -160,6 +160,9 @@ export function ChecklistModal({
 							</Badge>
 						)}
 					</div>
+					<DialogDescription className="sr-only">
+						{isEditMode ? 'Modifica los detalles del checklist.' : 'Completa los campos para crear un nuevo checklist.'}
+					</DialogDescription>
 				</DialogHeader>
 
 				<div className="space-y-6">

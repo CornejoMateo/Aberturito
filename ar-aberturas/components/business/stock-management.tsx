@@ -23,11 +23,11 @@ import {
 	type AccessoryItemStock,
 } from '@/lib/stock/accesorie-stock';
 import {
-  listSuppliesStock,
-  createSupplyStock,
-  updateSupplyStock,
-  deleteSupplyStock,
-  type SupplyItemStock,
+	listSuppliesStock,
+	createSupplyStock,
+	updateSupplyStock,
+	deleteSupplyStock,
+	type SupplyItemStock,
 } from '@/lib/stock/supplies-stock';
 import {
 	listIronworksStock,
@@ -49,7 +49,6 @@ import {
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { Image } from 'lucide-react';
 import { PhotoGalleryModal } from '@/utils/stock/images/photo-gallery-modal';
-import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
 import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock/stock-config';
 import { filterStockItems } from '@/utils/stock/stock-filters-logic';
 
@@ -58,11 +57,13 @@ interface StockManagementProps {
 	category?: 'Perfiles' | StockCategory;
 }
 
-export function StockManagement({ materialType = 'Aluminio', category = 'Perfiles' }: StockManagementProps) {
+export function StockManagement({
+	materialType = 'Aluminio',
+	category = 'Perfiles',
+}: StockManagementProps) {
 	// choose data source based on category
-	const tableName = category === 'Perfiles' 
-		? 'profiles' 
-		: STOCK_CONFIGS[category as StockCategory].tableName;
+	const tableName =
+		category === 'Perfiles' ? 'profiles' : STOCK_CONFIGS[category as StockCategory].tableName;
 	const fetcher = async () => {
 		if (category === 'Perfiles') {
 			const { data, error } = await listStock();
@@ -89,7 +90,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 		loading,
 		error,
 		refresh,
-		invalidateCache
+		invalidateCache,
 	} = useOptimizedRealtime<any>(tableName, fetcher, `realtime_${category}_${materialType}`);
 
 	const [searchTerm, setSearchTerm] = useState('');
@@ -106,12 +107,17 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 	const filteredStock = useMemo(() => {
 		// First apply the standard filters (search, category, material)
 		let result = filterStockItems(stock, searchTerm, selectedCategory, materialType, category);
-		
+
 		// Then apply the out-of-stock filter if enabled
 		if (showOutOfStock) {
 			result = result.filter((item: any) => {
 				// Check all possible quantity fields and default to 0 if undefined
-				const qty = item.quantity ?? item.accessory_quantity ?? item.ironwork_quantity ?? item.supply_quantity ?? 0;
+				const qty =
+					item.quantity ??
+					item.accessory_quantity ??
+					item.ironwork_quantity ??
+					item.supply_quantity ??
+					0;
 				// Only include items with exactly 0 quantity
 				return qty === 0;
 			});
@@ -126,11 +132,15 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 		return filteredStock.slice(startIndex, startIndex + itemsPerPage);
 	}, [filteredStock, currentPage, itemsPerPage]);
 
-	const lowStockItems = (stock || []).filter((item:any) => {
+	const lowStockItems = (stock || []).filter((item: any) => {
 		const qty = item.quantity ?? item.accessory_quantity ?? item.ironwork_quantity ?? 0;
 		return qty < 10;
 	});
-	const totalItems = (stock || []).reduce((sum:any, item:any) => sum + (item.quantity ?? item.accessory_quantity ?? item.ironwork_quantity ?? 0), 0);
+	const totalItems = (stock || []).reduce(
+		(sum: any, item: any) =>
+			sum + (item.quantity ?? item.accessory_quantity ?? item.ironwork_quantity ?? 0),
+		0
+	);
 
 	const lastAddedItem = [...(stock || [])].sort(
 		(a: any, b: any) =>
@@ -139,7 +149,8 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 	)[0];
 
 	const getTitle = () => {
-		const categoryName = category === 'Perfiles' ? 'Perfiles' : STOCK_CONFIGS[category as StockCategory].title;
+		const categoryName =
+			category === 'Perfiles' ? 'Perfiles' : STOCK_CONFIGS[category as StockCategory].title;
 		if (category === 'Insumos') {
 			return `Gestión de ${categoryName}`;
 		}
@@ -154,7 +165,8 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 	};
 
 	const getDescription = () => {
-		const categoryName = category === 'Perfiles' ? 'Perfiles' : STOCK_CONFIGS[category as StockCategory].title;
+		const categoryName =
+			category === 'Perfiles' ? 'Perfiles' : STOCK_CONFIGS[category as StockCategory].title;
 		if (category === 'Insumos') {
 			return `Control de inventario de ${categoryName.toLowerCase()}`;
 		}
@@ -181,9 +193,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 			{/* Header */}
 			<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 				<div>
-					<h2 className="text-2xl font-bold text-foreground text-balance">
-						{getTitle()}
-					</h2>
+					<h2 className="text-2xl font-bold text-foreground text-balance">{getTitle()}</h2>
 					<p className="text-muted-foreground mt-1">{getDescription()}</p>
 				</div>
 
@@ -199,7 +209,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 							Ajustar opciones
 						</Button>
 					)}
-					
+
 					<PhotoGalleryModal
 						categoryState={category}
 						open={isPhotoGalleryOpen}
@@ -301,8 +311,7 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 								const { error } = await updateProfileStock(id, {
 									quantity: newQuantity,
 								});
-								if (error)
-									console.error('Error al actualizar la cantidad:', error);
+								if (error) console.error('Error al actualizar la cantidad:', error);
 							}}
 						/>
 					) : (
@@ -347,8 +356,9 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 					)}
 
 					{/* Edit dialog for selected item */}
-					{isEditDialogOpen && editingItem && (
-						(category === 'Perfiles') ? (
+					{isEditDialogOpen &&
+						editingItem &&
+						(category === 'Perfiles' ? (
 							<StockFormDialog
 								open={isEditDialogOpen}
 								onOpenChange={setIsEditDialogOpen}
@@ -381,77 +391,55 @@ export function StockManagement({ materialType = 'Aluminio', category = 'Perfile
 									setIsEditDialogOpen(false);
 								}}
 							/>
-						)
-					)}
+						))}
 
 					{/* Pagination */}
 					{filteredStock.length > itemsPerPage && (
 						<div className="flex items-center justify-between px-2 mt-4">
 							<div className="text-sm text-muted-foreground">
-								Mostrando{' '}
-								{Math.min(
-									(currentPage - 1) * itemsPerPage + 1,
-									filteredStock.length
-								)}
-								-
-								{Math.min(
-									currentPage * itemsPerPage,
-									filteredStock.length
-								)}{' '}
-								de {filteredStock.length} elementos
+								Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, filteredStock.length)}-
+								{Math.min(currentPage * itemsPerPage, filteredStock.length)} de{' '}
+								{filteredStock.length} elementos
 							</div>
 
 							<Pagination className="mx-0 w-auto">
 								<PaginationContent>
 									<PaginationItem>
 										<PaginationPrevious
-											onClick={() =>
-												setCurrentPage((p) => Math.max(1, p - 1))
-											}
+											onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
 											className={
-												currentPage === 1
-													? 'pointer-events-none opacity-50'
-													: 'cursor-pointer'
+												currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
 											}
 										/>
 									</PaginationItem>
 
-									{Array.from(
-										{ length: Math.min(5, totalPages) },
-										(_, i) => {
-											let pageNum = i + 1;
-											if (totalPages > 5) {
-												if (currentPage <= 3) {
-													pageNum = i + 1;
-												} else if (currentPage >= totalPages - 2) {
-													pageNum = totalPages - 4 + i;
-												} else {
-													pageNum = currentPage - 2 + i;
-												}
+									{Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+										let pageNum = i + 1;
+										if (totalPages > 5) {
+											if (currentPage <= 3) {
+												pageNum = i + 1;
+											} else if (currentPage >= totalPages - 2) {
+												pageNum = totalPages - 4 + i;
+											} else {
+												pageNum = currentPage - 2 + i;
 											}
-											return (
-												<PaginationItem key={pageNum}>
-													<PaginationLink
-														isActive={currentPage === pageNum}
-														className="cursor-pointer"
-														onClick={() =>
-															setCurrentPage(pageNum)
-														}
-													>
-														{pageNum}
-													</PaginationLink>
-												</PaginationItem>
-											);
 										}
-									)}
+										return (
+											<PaginationItem key={pageNum}>
+												<PaginationLink
+													isActive={currentPage === pageNum}
+													className="cursor-pointer"
+													onClick={() => setCurrentPage(pageNum)}
+												>
+													{pageNum}
+												</PaginationLink>
+											</PaginationItem>
+										);
+									})}
 
 									<PaginationItem>
 										<PaginationNext
-											onClick={() =>
-												setCurrentPage((p) =>
-													Math.min(totalPages, p + 1)
-												)
-											}
+											onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
 											className={
 												currentPage === totalPages
 													? 'pointer-events-none opacity-50'

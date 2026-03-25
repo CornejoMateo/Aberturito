@@ -13,7 +13,7 @@ import {
 	BudgetDetailModalState 
 } from '../../utils/budgets/types';
 import { FORM_DEFAULTS } from '../../constants/budgets/constants';
-import { workLabel, groupBudgetsByType, getOrderedTypeKeys } from '../../utils/budgets/utils';
+import { workLabel} from '../../utils/budgets/utils';
 
 export function useClientBudgetsState(clientId: string) {
 	const [isLoading, setIsLoading] = useState(false);
@@ -28,6 +28,7 @@ export function useClientBudgetsState(clientId: string) {
 		workId: FORM_DEFAULTS.workId,
 		pdf: null,
 		created_at: FORM_DEFAULTS.created_at,
+		usdRate: FORM_DEFAULTS.usdRate,
 	});
 	const [deleteBudgetConfirm, setDeleteBudgetConfirm] = useState<DeleteBudgetConfirmState>({
 		open: false,
@@ -163,6 +164,7 @@ export function useClientBudgetsState(clientId: string) {
 			workId: FORM_DEFAULTS.workId,
 			pdf: null,
 			created_at: FORM_DEFAULTS.created_at,
+			usdRate: FORM_DEFAULTS.usdRate,
 		});
 	};
 

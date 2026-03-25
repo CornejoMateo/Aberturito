@@ -37,8 +37,6 @@ import {
 	AlertCircle,
 } from 'lucide-react';
 import Image from 'next/image';
-import { ro } from 'date-fns/locale';
-import { Alert } from '../ui/alert';
 
 const navigation = [
 	{
@@ -294,7 +292,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 					{/* Logo */}
 					<div className="flex h-16 items-center justify-between border-b border-border px-6">
 						<div className="flex items-center gap-2">
-							<Image src="/logo-original.png" alt="Logo" width={80} height={80} />
+							<Image src="/logo-original.png" alt="Logo" width={80} height={80} style={{ height: 'auto' }} />
 							<span className="font-semibold text-foreground">AR Aberturas</span>
 						</div>
 						<Button

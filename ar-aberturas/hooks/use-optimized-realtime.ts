@@ -119,9 +119,12 @@ export function useOptimizedRealtime<T extends { id: string }>(
 		(payload: any) => {
 			const { eventType, new: newRecord, old: oldRecord } = payload;
 
-			// For the 'balances' table, do a full refresh on INSERT/UPDATE
-			// because it needs to load relationships (budget.folder_budget.work)
-			if (table === 'balances' && (eventType === 'INSERT' || eventType === 'UPDATE')) {
+			// For tables that require joined relational data, do a full refresh on INSERT/UPDATE
+			// to avoid incomplete realtime payloads without nested relations.
+			if (
+				(table === 'balances' || table === 'budgets') &&
+				(eventType === 'INSERT' || eventType === 'UPDATE')
+			) {
 				fetchData(true);
 				return;
 			}

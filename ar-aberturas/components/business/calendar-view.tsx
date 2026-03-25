@@ -21,7 +21,14 @@ import { Event } from '@/lib/calendar/events';
 import { useLoadEvents } from '@/hooks/use-load-events';
 import { useToast } from '@/components/ui/use-toast';
 import { deleteLastYearEvents } from '@/lib/calendar/events';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogFooter,
+} from '@/components/ui/dialog';
 import { useAuth } from '@/components/provider/auth-provider';
 
 export function CalendarView() {
@@ -494,7 +501,8 @@ export function CalendarView() {
 						<div>
 							<h3 className="text-sm font-medium text-foreground">Limpiar datos antiguos</h3>
 							<p className="text-xs text-muted-foreground mt-1">
-								Elimina eventos resueltos anteriores al 1 de enero del presente año para mantener el calendario limpio y relevante.
+								Elimina eventos resueltos anteriores al 1 de enero del presente año para mantener el
+								calendario limpio y relevante.
 							</p>
 						</div>
 						<Button
@@ -508,13 +516,24 @@ export function CalendarView() {
 							<DialogContent>
 								<DialogHeader>
 									<DialogTitle>¿Eliminar eventos de años anteriores?</DialogTitle>
+									<DialogDescription>
+										Esta acción eliminará todos los eventos (finalizados) anteriores al 1 de enero del
+										presente año. ¿Estás seguro?
+									</DialogDescription>
 								</DialogHeader>
-								<p className="py-2">Esta acción eliminará todos los eventos (finalizados) anteriores al 1 de enero del presente año. ¿Estás seguro?</p>
 								<DialogFooter>
-									<Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
+									<Button
+										variant="outline"
+										onClick={() => setIsDeleteDialogOpen(false)}
+										disabled={isDeleting}
+									>
 										Cancelar
 									</Button>
-									<Button variant="destructive" onClick={handleDeleteLastYearEvents} disabled={isDeleting}>
+									<Button
+										variant="destructive"
+										onClick={handleDeleteLastYearEvents}
+										disabled={isDeleting}
+									>
 										Eliminar
 									</Button>
 								</DialogFooter>

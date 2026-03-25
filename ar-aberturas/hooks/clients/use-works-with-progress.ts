@@ -45,16 +45,17 @@ export function useWorksWithProgress() {
 				const total = tasks.length;
 				const done = tasks.filter((t) => t.done).length;
 				const progress = total ? Math.round((done / total) * 100) : 100;
+				const hasGeneralNotes = !!work.general_note?.trim();
 
 				const hasNotes = hasNotesByWork.get(work.id) ?? false;
 
 				let newStatus = work.status;
 				if (total > 0) {
-					if (progress === 100 && work.status !== 'completed' && !hasNotes) {
+					if (progress === 100 && work.status !== 'completed' && !hasNotes && !hasGeneralNotes) {
 						newStatus = 'completed';
 					} else if (progress > 0 && progress < 100 && work.status !== 'in_progress') {
 						newStatus = 'in_progress';
-					} else if (work.status === 'completed' && hasNotes) {
+					} else if (work.status === 'completed' && (hasNotes || hasGeneralNotes)) {
 						newStatus = 'in_progress';
 					}
 				}

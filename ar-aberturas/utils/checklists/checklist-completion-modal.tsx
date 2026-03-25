@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -411,6 +412,9 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 				<DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-6">
 					<DialogHeader>
 						<DialogTitle>Completar Checklists</DialogTitle>
+						<DialogDescription>
+							Marca las tareas completadas de los checklists pendientes.
+						</DialogDescription>
 					</DialogHeader>
 
 					{loading ? (

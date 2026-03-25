@@ -1,6 +1,6 @@
 'use client';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
 	CalendarIcon,
@@ -110,6 +110,9 @@ export function EventDetailsModal({
 							<ChevronDown className="h-3.5 w-3.5 -ml-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
 						</div>
 					</div>
+					<DialogDescription className="sr-only">
+						Detalles del evento del calendario
+					</DialogDescription>
 				</DialogHeader>
 
 				<div className="space-y-4 py-2">

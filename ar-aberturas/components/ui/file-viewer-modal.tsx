@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ChevronLeft, ChevronRight, Download, FileText, X } from 'lucide-react';
 import {
 	formatDate,
@@ -66,6 +66,10 @@ export function FileViewerModal({
 				<VisuallyHidden.Root asChild>
 					<DialogTitle>Visor de archivos</DialogTitle>
 				</VisuallyHidden.Root>
+
+				<DialogDescription className="sr-only">
+					Visualiza el archivo seleccionado. Usa las flechas izquierda y derecha para navegar entre los archivos, o el botón de descarga para abrirlo en una nueva pestaña.
+				</DialogDescription>
 
 				<Button
 					size="icon"

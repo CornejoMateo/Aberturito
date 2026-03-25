@@ -1,6 +1,6 @@
 'use client';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
@@ -222,6 +222,9 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientU
               <X className="h-4 w-4" />
             </Button>
           </div>
+          <DialogDescription className="sr-only">
+            Información completa del cliente, obras, presupuestos y saldos
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-2 sm:p-3 pt-0">
@@ -355,6 +358,9 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientU
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Nueva Obra</DialogTitle>
+            <DialogDescription>
+              Completa los campos para crear una nueva obra.
+            </DialogDescription>
           </DialogHeader>
           <WorkForm 
             clientId={client?.id || ''} 
@@ -368,6 +374,9 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientU
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Nuevo saldo</DialogTitle>
+            <DialogDescription>
+              Completa los campos para crear un nuevo saldo.
+            </DialogDescription>
           </DialogHeader>
           <BalanceForm
             clientId={client?.id || ''}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -207,6 +207,9 @@ export function BalanceDetailsModal({
 			<DialogContent className="!max-w-5xl !max-h-[90vh] overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle>Detalle del saldo</DialogTitle>
+					<DialogDescription>
+						Información completa del saldo, pagos realizados y estado de la obra.
+					</DialogDescription>
 				</DialogHeader>
 
 				{balance && (

@@ -2,7 +2,6 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Package, Edit, Trash2, Plus, Minus } from 'lucide-react';
 import { useState } from 'react';
-import { ConfirmUpdateDialog } from '@/utils/stock/confirm-update-dialog';
 import ImageViewer from '@/components/ui/image-viewer';
 import {
 	AlertDialog,

@@ -112,7 +112,7 @@ export const budgetHandlers: BudgetHandlers = {
 				toast({
 					variant: 'destructive',
 					title: 'No se pudo eliminar el presupuesto',
-					description: 'Intente nuevamente.',
+					description: translateError(error) || 'Intente nuevamente.',
 				});
 				return;
 			}
@@ -146,7 +146,7 @@ export const budgetHandlers: BudgetHandlers = {
 				toast({
 					variant: 'destructive',
 					title: 'No se pudo eliminar la carpeta',
-					description: 'Intente nuevamente.',
+					description: translateError(error) || 'Intente nuevamente.',
 				});
 				return;
 			}

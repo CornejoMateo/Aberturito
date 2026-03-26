@@ -287,15 +287,19 @@ export const budgetHandlers: BudgetHandlers = {
 		try {
 			setIsLoading(true);
 
-			const work_id = formData.workId === 'none' ? null : formData.workId;
-			const existingFolder = folderBudgets.find((f) => (f.work_id ?? null) === work_id);
+		const work_id =
+			formData.workId === 'none' ? null : Number(formData.workId);
+
+		const existingFolder = folderBudgets.find(
+			(f) => (f.work_id ?? null) === work_id
+		);
 			let folderId = existingFolder?.id;
 			let newFolder = false;
 
 			if (!folderId) {
 				const { data: folder, error: folderError } = await createFolderBudget({
 					client_id: clientId,
-					work_id,
+					work_id: work_id?.toString(),
 				});
 
 				if (folderError || !folder) {

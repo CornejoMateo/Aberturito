@@ -40,7 +40,7 @@ export const translateError = (error: any): string => {
 		return 'Ya existe un registro con estos datos.';
 	}
 	if (errorMessage.includes('foreign key constraint')) {
-		return 'No se puede completar la operación debido a dependencias.';
+		return 'No se puede completar la operación ya que el dato que desea eliminar esta asociado a otros datos.';
 	}
 	if (errorMessage.includes('violates check constraint')) {
 		return 'Los datos no cumplen con las validaciones requeridas.';

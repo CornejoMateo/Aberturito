@@ -201,7 +201,7 @@ CREATE EXTENSION IF NOT EXISTS pg_cron;
 UPDATE public.events
 SET is_overdue = true
 WHERE date < CURRENT_DATE
-  AND status = 'Pendiente'
+  AND status = 'pending'
   AND is_overdue = false;
 
 SELECT cron.schedule(
@@ -211,7 +211,7 @@ SELECT cron.schedule(
   UPDATE public.events
   SET is_overdue = true
   WHERE date < CURRENT_DATE
-    AND status = 'Pendiente'
+    AND status = 'pending'
     AND is_overdue = false;
   $$
 );

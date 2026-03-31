@@ -233,12 +233,11 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 			const claimData = {
 				date: today,
 				daily: mode === 'daily',
+				client_id: clientData?.id || null,
 				alum_pvc: checklist.type_opening || null,
 				attend: null,
 				description,
 				resolved: false,
-				client_name: clientData?.name || null,
-				client_phone: clientData?.phone_number || null,
 				work_zone: null,
 				work_locality: workData.locality || null,
 				work_address: workData.address || null,

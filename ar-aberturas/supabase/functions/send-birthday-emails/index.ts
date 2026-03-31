@@ -13,7 +13,6 @@ serve(async (req) => {
     timeZone: 'America/Argentina/Buenos_Aires'
   })
 
-  // Get events for today with "Cumpleaños" in the title
   const { data: events, error } = await supabase
     .from("events")
     .select("*")

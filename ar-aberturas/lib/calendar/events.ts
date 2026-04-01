@@ -1,7 +1,7 @@
 import { getSupabaseClient } from '../supabase-client';
 
 export type Event = {
-  id: string;
+  id: number;
   created_at?: string;
   date: string;
   type?: string | null;
@@ -42,7 +42,7 @@ export async function listEvents(): Promise<{ data: Event[] | null; error: any }
   }
 }
 
-export async function getEventById(id: string): Promise<{ data: Event | null; error: any }> {
+export async function getEventById(id: number): Promise<{ data: Event | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
 	return { data, error };
@@ -63,7 +63,7 @@ export async function createEvent(
       location: event.location,
       date: event.date,
       address: event.address,
-      status: 'Pendiente',
+      status: 'pending',
       is_overdue: false,
       remember: event.remember,
       created_at: new Date().toISOString(),
@@ -104,7 +104,7 @@ export async function createEvent(
 }
 
 export async function updateEvent(
-  id: string,
+  id: number,
   changes: Partial<Event>
 ): Promise<{ data: Event | null; error: any }> {
   const supabase = getSupabaseClient();
@@ -112,7 +112,7 @@ export async function updateEvent(
   let updatePayload = { ...changes };
   if (Object.prototype.hasOwnProperty.call(changes, 'status')) {
     if (changes.status) {
-      if (changes.status !== 'Pendiente') {
+      if (changes.status !== 'pending') {
         updatePayload.is_overdue = false;
       } else {
         const currentDate = new Date();
@@ -132,7 +132,7 @@ export async function updateEvent(
   return { data, error };
 }
 
-export async function deleteEvent(id: string): Promise<{ data: null; error: any }> {
+export async function deleteEvent(id: number): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { error } = await supabase.from(TABLE).delete().eq('id', id);
 
@@ -150,7 +150,7 @@ export async function deleteLastYearEvents(): Promise<{ data: null; error: any }
 	const { error } = await supabase
 		.from(TABLE)
 		.delete()
-		.eq('status', 'Finalizado')
+		.eq('status', 'completed')
 		.lt('date', `${year}-01-01`);
 
 	return { data: null, error };

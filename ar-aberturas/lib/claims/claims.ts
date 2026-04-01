@@ -1,7 +1,7 @@
 import { getSupabaseClient } from '../supabase-client';
 
 export type Claim = {
-	id: string;
+	id: number;
 	created_at?: string;
 	client_id?: string | null;
 	client_name?: string | null;
@@ -57,7 +57,7 @@ export async function listClaims(): Promise<{ data: Claim[] | null; error: any }
 	return { data: (data as ClaimRowWithClient[]).map(mapClaim), error: null };
 }
 
-export async function getClaimById(id: string): Promise<{ data: Claim | null; error: any }> {
+export async function getClaimById(id: number): Promise<{ data: Claim | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
@@ -135,7 +135,7 @@ export async function createClaim(
 }
 
 export async function updateClaim(
-	id: string,
+	id: number,
 	changes: Partial<Claim>
 ): Promise<{ data: Claim | null; error: any }> {
 	const supabase = getSupabaseClient();
@@ -144,7 +144,7 @@ export async function updateClaim(
 }
 
 export async function resolveClaim(
-	id: string,
+	id: number,
 	resolutionDate?: string
 ): Promise<{ data: Claim | null; error: any }> {
 	const supabase = getSupabaseClient();
@@ -156,7 +156,7 @@ export async function resolveClaim(
 	return { data, error };
 }
 
-export async function reopenClaim(id: string): Promise<{ data: Claim | null; error: any }> {
+export async function reopenClaim(id: number): Promise<{ data: Claim | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const payload = {
 		resolved: false,
@@ -167,7 +167,7 @@ export async function reopenClaim(id: string): Promise<{ data: Claim | null; err
 	return { data, error };
 }
 
-export async function deleteClaim(id: string): Promise<{ data: null; error: any }> {
+export async function deleteClaim(id: number): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };

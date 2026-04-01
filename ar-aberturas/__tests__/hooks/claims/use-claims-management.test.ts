@@ -16,7 +16,7 @@ jest.mock('@/hooks/use-optimized-realtime', () => ({
 	useOptimizedRealtime: (table: string, fetchFn: Function) => ({
 		data: [
 			{
-				id: '1',
+				id: 1,
 				client_name: 'Test Client 1',
 				description: 'Test claim',
 				resolved: false,
@@ -25,7 +25,7 @@ jest.mock('@/hooks/use-optimized-realtime', () => ({
 				created_at: '2024-01-01',
 			},
 			{
-				id: '2',
+				id: 2,
 				client_name: 'Test Client 2',
 				description: 'Test claim 2',
 				resolved: true,
@@ -35,7 +35,7 @@ jest.mock('@/hooks/use-optimized-realtime', () => ({
 				resolution_date: '2024-01-05',
 			},
 			{
-				id: '3',
+				id: 3,
 				client_name: 'Test Client 3',
 				description: 'Daily activity',
 				resolved: false,

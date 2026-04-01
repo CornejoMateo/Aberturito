@@ -145,7 +145,7 @@ describe('ClaimsAddDialog', () => {
 	it('updates existing claim', async () => {
 		(updateClaim as jest.Mock).mockResolvedValue({ error: null });
 		const claimToEdit = {
-			id: '1',
+			id: 1,
 			client_id: 'c1',
 			description: 'Original description',
 			resolved: false,
@@ -171,7 +171,7 @@ describe('ClaimsAddDialog', () => {
 
 		await waitFor(() => {
 			expect(updateClaim).toHaveBeenCalledWith(
-				'1',
+				1,
 				expect.objectContaining({ description: 'Updated description', client_id: 'c1' })
 			);
 		});

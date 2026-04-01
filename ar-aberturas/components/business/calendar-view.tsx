@@ -30,6 +30,7 @@ import {
 	DialogFooter,
 } from '@/components/ui/dialog';
 import { useAuth } from '@/components/provider/auth-provider';
+import { translateError } from '@/lib/error-translator';
 
 export function CalendarView() {
 	const { toast } = useToast();
@@ -80,7 +81,7 @@ export function CalendarView() {
 		return eventsByType;
 	};
 
-	const handleDeleteEvent = async (eventId: string, e: React.MouseEvent) => {
+	const handleDeleteEvent = async (eventId: number, e: React.MouseEvent) => {
 		e.stopPropagation();
 		if (confirm('¿Estás seguro de que deseas eliminar este evento?')) {
 			const { error } = await deleteEvent(eventId);
@@ -95,6 +96,12 @@ export function CalendarView() {
 					setSelectedEvent(null);
 				}
 			} else {
+				const errorMesagge = translateError(error);
+				toast({
+					title: 'Error',
+					description: errorMesagge || 'No se pudo eliminar el evento.',
+					variant: 'destructive',
+				});
 				console.error('Error al eliminar el evento:', error);
 			}
 		}
@@ -151,9 +158,10 @@ export function CalendarView() {
 			});
 			await refresh();
 		} else {
+			const errorMesagge = translateError(error);
 			toast({
 				title: 'Error',
-				description: 'No se pudieron eliminar los eventos.',
+				description: errorMesagge || 'No se pudieron eliminar los eventos.',
 				variant: 'destructive',
 			});
 		}

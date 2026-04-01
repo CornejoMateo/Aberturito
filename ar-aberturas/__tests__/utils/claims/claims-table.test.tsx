@@ -4,7 +4,7 @@ import { Claim } from '@/lib/claims/claims';
 
 const mockClaims: Claim[] = [
 	{
-		id: '1',
+		id: 1,
 		client_name: 'Juan Perez',
 		client_phone: '123456789',
 		work_zone: 'Centro',
@@ -18,7 +18,7 @@ const mockClaims: Claim[] = [
 		created_at: '2024-01-15',
 	},
 	{
-		id: '2',
+		id: 2,
 		client_name: 'Maria Garcia',
 		client_phone: '987654321',
 		work_zone: 'Norte',

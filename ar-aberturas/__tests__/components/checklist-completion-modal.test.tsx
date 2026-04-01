@@ -50,7 +50,7 @@ const mockChecklists = [
 ];
 
 const defaultMockData = {
-	clientData: { name: 'John Doe', phone_number: '1234567890' },
+	clientData: { id: 'client-123', name: 'John Doe', phone_number: '1234567890' },
 	clientId: 'client-123',
 	workData: { id: '1', locality: 'Buenos Aires', address: 'Street 123' },
 	checklists: mockChecklists,
@@ -196,8 +196,7 @@ describe('ChecklistCompletionModal', () => {
 				expect.objectContaining({
 					daily: false,
 					description: 'Test note',
-					client_name: 'John Doe',
-					client_phone: '1234567890',
+					client_id: 'client-123',
 					work_locality: 'Buenos Aires',
 					work_address: 'Street 123',
 				})

@@ -4,7 +4,7 @@ import { Claim } from '@/lib/claims/claims';
 
 const mockClaims: Claim[] = [
 	{
-		id: '1',
+		id: 1,
 		client_name: 'Test Client 1',
 		description: 'Test claim 1',
 		resolved: false,
@@ -13,7 +13,7 @@ const mockClaims: Claim[] = [
 		created_at: '2024-01-01',
 	},
 	{
-		id: '2',
+		id: 2,
 		client_name: 'Test Client 2',
 		description: 'Test claim 2',
 		resolved: true,
@@ -23,7 +23,7 @@ const mockClaims: Claim[] = [
 		resolution_date: '2024-01-05',
 	},
 	{
-		id: '3',
+		id: 3,
 		client_name: 'Test Client 3',
 		description: 'Daily activity',
 		resolved: false,
@@ -32,7 +32,7 @@ const mockClaims: Claim[] = [
 		created_at: '2024-01-03',
 	},
 	{
-		id: '4',
+		id: 4,
 		client_name: 'Test Client 4',
 		description: 'Daily activity 2',
 		resolved: true,

@@ -1,8 +1,7 @@
 import { getSupabaseClient } from '../supabase-client';
 
 export type ProfileItemStock = {
-	id: string;
-	category: string;
+	id: number;
 	code: string;
 	line: string;
 	color: string;
@@ -23,28 +22,15 @@ export async function listStock(): Promise<{ data: ProfileItemStock[] | null; er
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select(
-			`
-			id,
-			category,
-			code,
-			line,
-			color,
-			status,
-			quantity,
-			site,
-			width,
-			material,
-			created_at,
-			last_update
-		`
-		)
+		.select(`
+			*
+		`)
 		.order('created_at', { ascending: false });
 	return { data, error };
 }
 
 export async function getProfileById(
-	id: string
+	id: number
 ): Promise<{ data: ProfileItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
@@ -57,7 +43,6 @@ export async function createProfileStock(
 	const requiredFields = [
 		'code',
 		'material',
-		'category',
 		'line',
 		'color',
 		'status',
@@ -103,7 +88,7 @@ export async function createProfileStock(
 }
 
 export async function updateProfileStock(
-	id: string,
+	id: number,
 	changes: Partial<ProfileItemStock>
 ): Promise<{ data: ProfileItemStock | null; error: any }> {
 	if (!id) {
@@ -139,7 +124,7 @@ export async function updateProfileStock(
 	return { data, error };
 }
 
-export async function deleteProfileStock(id: string): Promise<{ data: null; error: any }> {
+export async function deleteProfileStock(id: number): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };

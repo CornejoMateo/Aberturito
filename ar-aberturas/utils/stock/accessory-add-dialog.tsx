@@ -14,7 +14,6 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog';
 import { useState, useEffect } from 'react';
-import { SiteSelect } from '@/components/stock/site-select';
 import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock/stock-config';
 import { useToast } from '@/components/ui/use-toast';
 import { type AccessoryItemStock } from '@/lib/stock/accesorie-stock';

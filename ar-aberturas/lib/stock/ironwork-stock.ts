@@ -1,7 +1,7 @@
 import { getSupabaseClient } from '../supabase-client';
 
 export type IronworkItemStock = {
-	id: string;
+	id: number;
 	created_at: string;
 	ironwork_category: string;
 	ironwork_line: string;
@@ -55,7 +55,7 @@ export async function listIronworksStock(): Promise<{
 }
 
 export async function getIronworkById(
-	id: string
+	id: number
 ): Promise<{ data: IronworkItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
@@ -94,7 +94,7 @@ export async function createIronworkStock(
 }
 
 export async function updateIronworkStock(
-	id: string,
+	id: number,
 	changes: Partial<IronworkItemStock>
 ): Promise<{ data: IronworkItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
@@ -122,7 +122,7 @@ export async function updateIronworkStock(
 	return { data, error };
 }
 
-export async function deleteIronworkStock(id: string): Promise<{ data: null; error: any }> {
+export async function deleteIronworkStock(id: number): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };

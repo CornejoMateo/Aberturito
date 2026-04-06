@@ -1,7 +1,7 @@
 import { getSupabaseClient } from '../supabase-client';
 
 export type AccessoryItemStock = {
-	id: string;
+	id: number;
 	created_at: string;
 	accessory_category: string;
 	accessory_line: string | null;
@@ -55,7 +55,7 @@ export async function listAccesoriesStock(): Promise<{
 }
 
 export async function getAccesoryById(
-	id: string
+	id: number
 ): Promise<{ data: AccessoryItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
@@ -111,7 +111,7 @@ export async function createAccessoryStock(
 }
 
 export async function updateAccessoryStock(
-	id: string,
+	id: number,
 	changes: Partial<AccessoryItemStock>
 ): Promise<{ data: AccessoryItemStock | null; error: any }> {
 	if (!id) {
@@ -146,7 +146,7 @@ export async function updateAccessoryStock(
 	return { data, error };
 }
 
-export async function deleteAccesoryStock(id: string): Promise<{ data: null; error: any }> {
+export async function deleteAccesoryStock(id: number): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };

@@ -1,5 +1,5 @@
 import { Card } from '@/components/ui/card';
-import { Package, PackagePlus, AlertTriangle } from 'lucide-react';
+import { PackagePlus } from 'lucide-react';
 import type { ProfileItemStock } from '@/lib/stock/profile-stock';
 import type { AccessoryItemStock } from '@/lib/stock/accesorie-stock';
 import type { IronworkItemStock } from '@/lib/stock/ironwork-stock';
@@ -15,8 +15,6 @@ interface StockStatsProps {
 
 export function StockStats({
 	categoryState,
-	totalItems,
-	lowStockCount,
 	lastAddedItem,
 }: StockStatsProps) {
 	const getItemDisplay = () => {
@@ -51,7 +49,6 @@ export function StockStats({
 			};
 		}
 
-		// Herrajes
 		return {
 			line: item.ironwork_line || 'Sin código',
 			code: item.ironwork_code || 'Sin código',

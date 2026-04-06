@@ -32,9 +32,9 @@ import { useIsMobile } from '@/components/ui/use-mobile';
 interface AccesoriesTableProps {
 	categoryState: StockCategory;
 	filteredStock: AccessoryItemStock[] | IronworkItemStock[] | SupplyItemStock[];
-	onEdit: (id: string) => void;
-	onDelete: (id: string) => void;
-	onUpdateQuantity: (id: string, newQuantity: number, field?: string) => Promise<void>;
+	onEdit: (id: number) => void;
+	onDelete: (id: number) => void;
+	onUpdateQuantity: (id: number, newQuantity: number, field?: string) => Promise<void>;
 }
 
 export function AccesoriesTable({
@@ -48,23 +48,22 @@ export function AccesoriesTable({
 	const { toast } = useToast();
 	const [openImageUrl, setOpenImageUrl] = useState<string | null>(null);
 	const [currentAction, setCurrentAction] = useState<{
-		id: string;
+		id: number;
 		action: 'increment' | 'decrement';
 		currentQty: number;
 	} | null>(null);
-	const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 	const [isUpdating, setIsUpdating] = useState(false);
-	const [updatingId, setUpdatingId] = useState<string | null>(null);
+	const [updatingId, setUpdatingId] = useState<number | null>(null);
 	const [showQuantityDialog, setShowQuantityDialog] = useState(false);
 	const [quantityDialogType, setQuantityDialogType] = useState<'increase' | 'decrease' | null>(null);
 	const [quantityChange, setQuantityChange] = useState<number | ''>('');
-	const [currentItemId, setCurrentItemId] = useState<string | null>(null);
+	const [currentItemId, setCurrentItemId] = useState<number | null>(null);
 	const [currentItemTotal, setCurrentItemTotal] = useState<number>(0);
 
 	const isMobile = useIsMobile();
 
 	const handleQuantityAction = (
-		id: string,
+		id: number,
 		action: 'increment' | 'decrement',
 		currentQty: number
 	) => {
@@ -129,14 +128,6 @@ export function AccesoriesTable({
 
 	const config = STOCK_CONFIGS[categoryState];
 	const keys = config.fields;
-
-	const getItemName = (item: any) => {
-		return (
-			[(item as any)[keys.line], (item as any)[keys.code], (item as any)[keys.description]]
-				.filter(Boolean)
-				.join(' ') || 'este ítem'
-		);
-	};
 
 	return (
 		<Card className="bg-card border-border overflow-hidden">

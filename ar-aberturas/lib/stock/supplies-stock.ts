@@ -1,7 +1,7 @@
 import { getSupabaseClient } from '../supabase-client';
 
 export type SupplyItemStock = {
-	id: string;
+	id: number;
 	supply_category: string;
 	supply_line: string | null;
 	supply_brand: string | null;
@@ -52,7 +52,7 @@ export async function listSuppliesStock(): Promise<{ data: SupplyItemStock[] | n
 }
 
 export async function getSupplyById(
-	id: string
+	id: number
 ): Promise<{ data: SupplyItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
@@ -90,7 +90,7 @@ export async function createSupplyStock(
 }
 
 export async function updateSupplyStock(
-	id: string,
+	id: number,
 	changes: Partial<SupplyItemStock>
 ): Promise<{ data: SupplyItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
@@ -118,7 +118,7 @@ export async function updateSupplyStock(
 	return { data, error };
 }
 
-export async function deleteSupplyStock(id: string): Promise<{ data: null; error: any }> {
+export async function deleteSupplyStock(id: number): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };

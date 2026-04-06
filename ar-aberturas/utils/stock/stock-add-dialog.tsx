@@ -21,7 +21,7 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog';
 import { type ProfileItemStock } from '@/lib/stock/profile-stock';
-import { status, categories } from '@/constants/stock-constants';
+import { status } from '@/constants/stock-constants';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { LineSelect } from '@/components/stock/line-select';

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
+import { formatShortDate } from '@/helpers/date.tsx/formats';
 import { BALANCES_REPORT_COLUMNS, BALANCES_REPORT_TITLE } from '@/constants/reports/balances-report';
 import { BalanceWithBudgetAndClient, listBalancesForReport } from '@/lib/works/balances';
 import { getTotalsByBalanceIds } from '@/lib/works/balance_transactions';
@@ -27,17 +28,6 @@ type BalanceReportRow = {
 	usdCurrentToCancel: number;
 	balanceInUseUsd: number;
 };
-
-function formatShortDate(value: string | null | undefined) {
-	if (!value) return '-';
-	try {
-		const date = new Date(value);
-		if (Number.isNaN(date.getTime())) return '-';
-		return date.toLocaleDateString('es-AR');
-	} catch {
-		return '-';
-	}
-}
 
 export function BalancesReport() {
 	const [searchTerm, setSearchTerm] = useState('');

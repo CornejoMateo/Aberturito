@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
 import { formatShortDate } from '@/helpers/date.tsx/formats';
-import { BALANCES_REPORT_COLUMNS, BALANCES_REPORT_TITLE } from '@/constants/reports/balances-report';
+import { BALANCES_REPORT_COLUMNS, BALANCES_REPORT_TITLE, BALANCE_TYPES, DEFAULT_FALLBACK } from '@/constants/reports/balances-report';
 import { BalanceWithBudgetAndClient, listBalancesForReport } from '@/lib/works/balances';
 import { getTotalsByBalanceIds } from '@/lib/works/balance_transactions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -67,18 +67,18 @@ export function BalancesReport() {
 				const remainingArs = budgetArs - totalPaid;
 				const remainingUsd = budgetUsd - totalPaidUSD;
 
-				const clientName = `${b.client?.last_name ?? ''} ${b.client?.name ?? ''}`.trim() || '-';
+				const clientName = `${b.client?.last_name ?? ''} ${b.client?.name ?? ''}`.trim() || DEFAULT_FALLBACK;
 				const workLocality = b.budget?.folder_budget?.work?.locality ?? '';
 				const workAddress = b.budget?.folder_budget?.work?.address ?? '';
-				const work = `${workLocality}${workLocality && workAddress ? ' - ' : ''}${workAddress}`.trim() || '-';
+				const work = `${workLocality}${workLocality && workAddress ? ' - ' : ''}${workAddress}`.trim() || DEFAULT_FALLBACK;
 
 				const conceptParts = [b.budget?.number ?? '', b.budget?.type ?? ''].filter(Boolean);
-				const concept = conceptParts.join(' - ') || '-';
+				const concept = conceptParts.join(' - ') || DEFAULT_FALLBACK;
 
 				const usdContractRef = Number(b.contract_date_usd) || 0;
 				const usdCurrent = Number(b.usd_current) || 0;
 
-				const balanceType = remainingArs > 0 ? 'DEUDOR' : remainingArs < 0 ? 'ACREEDOR' : 'CANCELADO';
+				const balanceType = remainingArs > 0 ? BALANCE_TYPES.DEBTOR : remainingArs < 0 ? BALANCE_TYPES.CREDITOR : BALANCE_TYPES.CANCELLED;
 				const balanceAmountArs = remainingArs;
 				const balanceInUseUsd = remainingUsd;
 
@@ -180,9 +180,9 @@ export function BalancesReport() {
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value="all">Todos los tipos</SelectItem>
-							<SelectItem value="DEUDOR">Deudor</SelectItem>
-							<SelectItem value="ACREEDOR">Acreedor</SelectItem>
-							<SelectItem value="CANCELADO">Cancelado</SelectItem>
+							<SelectItem value={BALANCE_TYPES.DEBTOR}>Deudor</SelectItem>
+							<SelectItem value={BALANCE_TYPES.CREDITOR}>Acreedor</SelectItem>
+							<SelectItem value={BALANCE_TYPES.CANCELLED}>Cancelado</SelectItem>
 						</SelectContent>
 					</Select>
 

@@ -14,3 +14,11 @@ export const BALANCES_REPORT_COLUMNS = {
 	observations: 'OBSERVACIONES',
 	balanceInUseUsd: 'SALDO EN USD',
 } as const;
+
+export const BALANCE_TYPES = {
+	DEBTOR: 'DEUDOR',
+	CREDITOR: 'ACREEDOR',
+	CANCELLED: 'CANCELADO',
+} as const;
+
+export const DEFAULT_FALLBACK = '-';

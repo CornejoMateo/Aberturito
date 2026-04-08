@@ -28,7 +28,7 @@ import type { AccessoryItemStock } from '@/lib/stock/accesorie-stock';
 import type { IronworkItemStock } from '@/lib/stock/ironwork-stock';
 import type { SupplyItemStock } from '@/lib/stock/supplies-stock';
 import { useIsMobile } from '@/components/ui/use-mobile';
-import { formatCreatedAt } from '@/helpers/stock/stock-management';
+import { formatCreatedAt } from '@/helpers/date/format-date';
 
 interface AccesoriesTableProps {
 	categoryState: StockCategory;

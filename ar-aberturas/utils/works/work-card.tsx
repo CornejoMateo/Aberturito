@@ -15,14 +15,12 @@ import {
 	Clock,
 	MessageCircle,
 	StickyNote,
-	Edit3,
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { statusConfig } from '@/constants/type-config';
 import { WorkWithProgress } from '@/lib/works/works';
 import { useState } from 'react';
 import { translateError } from '@/lib/error-translator';
+import { formatCreatedAt } from '@/helpers/date/format-date';
 
 interface WorkCardProps {
 	work: WorkWithProgress;
@@ -96,11 +94,7 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp, onOpenCheckl
 							<div className="flex items-center gap-2 text-muted-foreground">
 								<Calendar className="h-4 w-4 flex-shrink-0" />
 								<span>
-									{work.created_at
-										? format(new Date(work.created_at), 'dd-MM-yyyy', {
-												locale: es,
-											})
-										: 'Fecha no especificada'}
+									{formatCreatedAt(work.created_at)}
 								</span>
 							</div>
 						</div>

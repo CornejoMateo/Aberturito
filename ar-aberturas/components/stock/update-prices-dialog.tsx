@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { updatePrices } from '@/lib/stock/update-prices';
 import { Progress } from '@/components/ui/progress';
 import { Loader2 } from 'lucide-react';
 
@@ -43,7 +42,6 @@ export function UpdatePricesDialog() {
     setProcessedLines(0);
     
     try {
-      // Leer el archivo y parsear entradas (cliente sólo prepara datos; el servidor hace el upsert)
       const text = await file.text();
       const rawLines = text.split('\n');
       const entriesMap = new Map<string, number>();
@@ -67,9 +65,9 @@ export function UpdatePricesDialog() {
         return;
       }
 
-      // Enviar por chunks al servidor para aprovechar service_role y batching del servidor
-      const BATCH_SIZE = 500; // debe coincidir con el servidor
-      const concurrency = 3; // número de requests paralelos por lote
+      // Send entries in batches to avoid overloading the server
+      const BATCH_SIZE = 500; 
+      const concurrency = 3; // requests number to run in parallel
       const chunks: typeof entries[] = [];
       for (let i = 0; i < entries.length; i += BATCH_SIZE) chunks.push(entries.slice(i, i + BATCH_SIZE));
 
@@ -88,12 +86,12 @@ export function UpdatePricesDialog() {
         return body;
       };
 
-      // Ejecutar chunks con concurrencia limitada
+      // Execute chunks with limited concurrency
       for (let i = 0; i < chunks.length; i += concurrency) {
         const group = chunks.slice(i, i + concurrency);
         try {
           const results = await Promise.all(group.map(c => runChunk(c)));
-          // sumar los actualizados y actualizar progreso
+          // add updated count and log any errors from chunks
           for (const r of results) {
             processed += (r.updated || 0);
             if (r.errors && r.errors.length) console.error('Chunk errors:', r.errors);
@@ -110,7 +108,7 @@ export function UpdatePricesDialog() {
 
       toast({ title: '¡Actualización completada!', description: `Se procesaron ${processed} registros` });
       
-      // Pequeño retraso antes de cerrar para que el pana David vea el mensaje de éxito
+      // Reset dialog after short delay to allow users to see the final state
       setTimeout(() => {
         setIsOpen(false);
         setFile(null);

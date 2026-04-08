@@ -28,6 +28,7 @@ import { LineSelect } from '@/components/stock/line-select';
 import { CodeSelect } from '@/components/stock/code-select';
 import { ColorSelect } from '@/components/stock/color-select';
 import { SiteSelect } from '@/components/stock/site-select';
+import { translateError } from '@/lib/error-translator';
 
 interface StockFormDialogProps {
 	open: boolean;
@@ -135,10 +136,10 @@ export function StockFormDialog({
 
 			onOpenChange(false);
 		} catch (error) {
-			console.error('Error al guardar el perfil:', error);
+			const errorMessage = translateError(error);
 			toast({
 				title: 'Error',
-				description: 'Ocurrió un error al guardar el perfil. Por favor, intente nuevamente.',
+				description: errorMessage || 'Ocurrió un error al guardar el perfil. Por favor, intente nuevamente.',
 				variant: 'destructive',
 				duration: 5000,
 			});

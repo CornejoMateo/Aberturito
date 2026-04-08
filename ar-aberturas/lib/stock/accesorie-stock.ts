@@ -151,3 +151,17 @@ export async function deleteAccesoryStock(id: number): Promise<{ data: null; err
 	const { data, error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };
 }
+
+export async function updateAccessoryQuantity(
+	id: number,
+	newQuantity: number
+): Promise<{ data: AccessoryItemStock | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.update({ accessory_quantity: newQuantity, last_update: new Date().toISOString().split('T')[0] })
+		.eq('id', id)
+		.select()
+		.single();
+	return { data, error };
+}

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
-import { formatShortDate } from '@/helpers/date.tsx/formats';
+import { formatShortDate } from '@/helpers/date/formats';
 import { BALANCES_REPORT_COLUMNS, BALANCES_REPORT_TITLE, BALANCE_TYPES, DEFAULT_FALLBACK } from '@/constants/reports/balances-report';
 import { BalanceWithBudgetAndClient, listBalancesForReport } from '@/lib/works/balances';
 import { getTotalsByBalanceIds } from '@/lib/works/balance_transactions';

@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Edit, CheckCircle } from 'lucide-react';
 import { BudgetWithWork } from '@/lib/works/balances';
-import { formatCurrency, formatDate } from '../utils';
+import { formatDate } from '../utils';
+import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
 
 interface BudgetDetailModalProps {
 	isOpen: boolean;
@@ -84,13 +85,13 @@ export function BudgetDetailModal({
 						<div>
 							<Label className="text-sm font-medium text-muted-foreground">Monto ARS</Label>
 							<p className="text-sm font-semibold">
-								{formatCurrency(budget.amount_ars, 'ARS')}
+								{formatCurrency(budget.amount_ars)}
 							</p>
 						</div>
 						<div>
 							<Label className="text-sm font-medium text-muted-foreground">Monto USD</Label>
 							<p className="text-sm font-semibold">
-								{formatCurrency(budget.amount_usd, 'USD')}
+								{formatCurrencyUSD(budget.amount_usd)}
 							</p>
 						</div>
 					</div>

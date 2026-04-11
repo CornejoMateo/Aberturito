@@ -16,14 +16,22 @@ export type Budget = {
   type?: string | null;
 };
 
+export type BudgetWithWorkAndClient = BudgetWithWork & {
+	client?: {
+		id: string;
+		name?: string | null;
+		last_name?: string | null;
+	} | null;
+};
+
 const TABLE = 'budgets';
 
 export async function getBudgetsCount(): Promise<{ data: number; error: any }> {
-	const supabase = getSupabaseClient();
-	const { count, error } = await supabase
-		.from(TABLE)
-		.select('*', { count: 'exact', head: true });
-	return { data: count || 0, error };
+  const supabase = getSupabaseClient();
+  const { count, error } = await supabase
+    .from(TABLE)
+    .select('*', { count: 'exact', head: true });
+  return { data: count || 0, error };
 }
 
 export async function getBudgetsTotalAmount(): Promise<{ data: { totalArs: number; totalUsd: number }; error: any }> {
@@ -196,6 +204,74 @@ export async function getBudgetsByFolderBudgetIds(
 			} as BudgetWithWork;
 		})
 		.filter((b): b is BudgetWithWork => b !== null);
+
+	return { data: result, error: null };
+}
+
+export async function listBudgetsForReport(): Promise<{
+	data: BudgetWithWorkAndClient[] | null;
+	error: any;
+}> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from('budgets')
+		.select(`
+			*,
+			folder_budget:folder_budgets(
+				client:clients(id, name, last_name),
+				work:works(address, locality)
+			)
+		`)
+		.order('created_at', { ascending: false });
+	
+	if (error) return { data: null, error };
+	if (!data) return { data: [], error: null };
+
+	const result: BudgetWithWorkAndClient[] = data
+		.map((b: any) => {
+			// Handle folder_budget - it can be null, array, or object
+			let folderBudget = null;
+			if (b.folder_budget) {
+				folderBudget = Array.isArray(b.folder_budget) ? b.folder_budget[0] : b.folder_budget;
+			}
+
+			// Handle work - it can be null, array, or object
+			let work = null;
+			if (folderBudget?.work) {
+				work = Array.isArray(folderBudget.work) ? folderBudget.work[0] : folderBudget.work;
+			}
+
+			// Handle client - it can be null, array, or object
+			let client = null;
+			if (folderBudget?.client) {
+				client = Array.isArray(folderBudget.client) ? folderBudget.client[0] : folderBudget.client;
+			}
+
+			return {
+				...b,
+				amount_ars: b.amount_ars || 0,
+				amount_usd: b.amount_usd || 0,
+				folder_budget: folderBudget ? {
+					id: folderBudget.id,
+					work_id: folderBudget.work_id,
+					work: work ? {
+						address: work.address || '',
+						locality: work.locality || '',
+					} : {
+						address: '',
+						locality: '',
+					},
+				} : {
+					id: '',
+					work_id: '',
+					work: {
+						address: '',
+						locality: '',
+					},
+				},
+				client: client || null,
+			} as BudgetWithWorkAndClient;
+		});
 
 	return { data: result, error: null };
 }

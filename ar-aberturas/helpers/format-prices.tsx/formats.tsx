@@ -15,3 +15,8 @@ export const formatCurrencyUSD = (amount: number | null | undefined) => {
 		minimumFractionDigits: 2,
 	}).format(amount);
 };
+
+export const normalizeMoney = (value: number): number => {
+	const rounded = Math.round((value + Number.EPSILON) * 100) / 100;
+	return Object.is(rounded, -0) ? 0 : rounded;
+};

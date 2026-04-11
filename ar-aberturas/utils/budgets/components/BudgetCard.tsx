@@ -7,7 +7,8 @@ import { CheckCircle, FileText, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BudgetWithWork } from '@/lib/works/balances';
 import { BudgetFolderVM } from '../types';
-import { formatCurrency, workLabel } from '../utils';
+import { workLabel } from '../utils';
+import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
 import { formatCreatedAt } from '@/helpers/date/format-date';
 
 interface BudgetCardProps {
@@ -70,10 +71,10 @@ export function BudgetCard({
 			<div className="mt-3 space-y-2">
 				<div className="space-y-1">
 					<p className="text-sm font-semibold text-foreground">
-						{formatCurrency(budget.amount_ars, 'ARS')}
+						{formatCurrency(budget.amount_ars)}
 					</p>
 					<p className="text-sm font-semibold text-foreground">
-						{formatCurrency(budget.amount_usd, 'USD')}
+						{formatCurrencyUSD(budget.amount_usd)}
 					</p>
 				</div>
 				{budget.number ? (

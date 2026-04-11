@@ -10,6 +10,7 @@ import { OverviewTab } from '@/utils/budgets/tabs/overview-tab';
 import { PerformanceTab } from '@/utils/budgets/tabs/performance-tab';
 import { SourcesAndMaterialsTab } from '@/utils/budgets/tabs/sources-and-materials-tab';
 import { TICKET_TYPES, DEFAULT_TICKET_TYPE } from '@/constants/budgets/tickets';
+import { formatCurrency } from '@/helpers/format-prices.tsx/formats';
 
 export function BudgetManagement() {
 	const { metrics, loading } = useBudgetMetrics();
@@ -95,7 +96,7 @@ export function BudgetManagement() {
 						loading
 							? '...'
 							: metrics.totalRevenue > 0
-								? `${(metrics.totalRevenue / 1000000).toFixed(1)}M`
+								? formatCurrency(metrics.totalRevenue)
 								: '--'
 					}
 					icon={DollarSign}

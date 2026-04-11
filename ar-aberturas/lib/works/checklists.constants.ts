@@ -59,6 +59,8 @@ export const checklistTypes = {
 	Porton: 'Porton',
 	Mampara: 'Mampara',
 	Vidrio: 'Vidrio',
+	Mosquitero: 'Mosquitero',
+	Puerta: 'Puerta',
 } as const;
 
 export type ChecklistType = typeof checklistTypes[keyof typeof checklistTypes];

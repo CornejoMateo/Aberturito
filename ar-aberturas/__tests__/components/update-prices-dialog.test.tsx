@@ -3,8 +3,10 @@ import '@testing-library/jest-dom';
 import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
 
 // Mock useToast
-jest.mock('@/hooks/use-toast', () => ({
-	useToast: () => ({ toast: jest.fn() }),
+const mockToast = jest.fn();
+
+jest.mock('@/components/ui/use-toast', () => ({
+	useToast: () => ({ toast: mockToast }),
 }));
 
 describe('UpdatePricesDialog', () => {
@@ -12,25 +14,22 @@ describe('UpdatePricesDialog', () => {
 		jest.clearAllMocks();
 	});
 
-	it('renderiza el botón y el modal', () => {
+	it('renders the button and the modal', () => {
 		render(<UpdatePricesDialog />);
 		expect(screen.getByText('Actualizar Precios')).toBeInTheDocument();
 	});
 
-	it('muestra error si no se selecciona archivo', async () => {
+	it('disables submit when no file is selected', async () => {
 		render(<UpdatePricesDialog />);
 		fireEvent.click(screen.getByText('Actualizar Precios'));
 		await waitFor(() => {
-			expect(screen.getByText('Actualizar precios')).toBeInTheDocument();
+			expect(screen.getByText('Actualizar precios desde archivo')).toBeInTheDocument();
 		});
-		fireEvent.click(screen.getByText('Actualizar precios'));
-		await waitFor(() => {
-			// Busca el texto en todo el documento, incluyendo portales
-			expect(document.body.textContent).toContain('Sube un archivo .txt con los códigos y precios actualizados.');
-		});
+		expect(screen.getByRole('button', { name: 'Actualizar precios' })).toBeDisabled();
+		expect(mockToast).not.toHaveBeenCalled();
 	});
 
-	it('acepta archivo y muestra nombre', async () => {
+	it('accepts a file and shows its name', async () => {
 		render(<UpdatePricesDialog />);
 		fireEvent.click(screen.getByText('Actualizar Precios'));
 		const input = screen.getByLabelText('Archivo');
@@ -41,7 +40,7 @@ describe('UpdatePricesDialog', () => {
 		expect(screen.getByText('precios.txt')).toBeInTheDocument();
 	});
 
-	it('envía el archivo y muestra progreso', async () => {
+	it('submits the file and shows progress', async () => {
 		global.fetch = jest.fn().mockResolvedValue({
 			ok: true,
 			json: async () => ({ updated: 2, errors: [] }),
@@ -59,8 +58,13 @@ describe('UpdatePricesDialog', () => {
 			// Match the actual progress text, e.g. "0 de 2 líneas", "1 de 2 líneas", "2 de 2 líneas"
 			expect(screen.getByText((content) => /\d+ de 2 líneas/.test(content))).toBeInTheDocument();
 		});
-		// await waitFor(() => {
-		//   expect(screen.getByText(/¡Actualización completada!/)).toBeInTheDocument();
-		// });
+		await waitFor(() => {
+			expect(mockToast).toHaveBeenCalledWith(
+				expect.objectContaining({
+					title: '¡Actualización completada!',
+					description: 'Se procesaron 2 registros',
+				})
+			);
+		});
 	});
 });

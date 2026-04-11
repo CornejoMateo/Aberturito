@@ -277,8 +277,9 @@ export function AccessoryFormDialog({
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2">
 					<div className="grid gap-4">
 						<div className="grid gap-2">
-							<Label>Categoría</Label>
+							<Label htmlFor="category">Categoría</Label>
 							<Input
+								id="category"
 								value={formData.category}
 								onChange={(e) => updateField('category', e.target.value)}
 								className="bg-background"
@@ -286,8 +287,9 @@ export function AccessoryFormDialog({
 						</div>
 
 						<div className="grid gap-2">
-							<Label>Línea</Label>
+							<Label htmlFor='line'>Línea</Label>
 							<Input 
+								id='line'
 								value={formData.line} 
 								onChange={(e) => updateField('line', e.target.value)} 
 								placeholder="Ingrese la línea"
@@ -296,8 +298,9 @@ export function AccessoryFormDialog({
 						</div>
 
 						<div className="grid gap-2">
-							<Label>Marca</Label>
+							<Label htmlFor='brand'>Marca</Label>
 							<Input 
+								id="brand"
 								value={formData.brand} 
 								onChange={(e) => updateField('brand', e.target.value)} 
 								placeholder="Ingrese la marca"
@@ -306,8 +309,9 @@ export function AccessoryFormDialog({
 						</div>
 
 						<div className="grid gap-2">
-							<Label>Código</Label>
+							<Label htmlFor='code'>Código</Label>
 							<Input 
+								id="code"
 								value={formData.code} 
 								onChange={(e) => updateField('code', e.target.value)} 
 								placeholder="Ingrese el código"
@@ -316,8 +320,9 @@ export function AccessoryFormDialog({
 						</div>
 
 						<div className="grid gap-2">
-							<Label>Descripción</Label>
+							<Label htmlFor='description'>Descripción</Label>
 							<Input
+								id="description"
 								value={formData.description}
 								onChange={(e) => updateField('description', e.target.value)}
 								className="bg-background"
@@ -325,8 +330,9 @@ export function AccessoryFormDialog({
 						</div>
 
 						<div className="grid gap-2">
-							<Label>Color</Label>
+							<Label htmlFor='color'>Color</Label>
 							<Input 
+								id="color"
 								value={formData.color} 
 								onChange={(e) => updateField('color', e.target.value)} 
 								placeholder="Ingrese el color"
@@ -336,8 +342,9 @@ export function AccessoryFormDialog({
 
 						<div className="grid gap-2 md:grid-cols-3">
 							<div className="grid gap-2">
-								<Label>Cantidad x bulto</Label>
+								<Label htmlFor='quantityPerLump'>Cantidad x bulto</Label>
 								<Input
+									id="quantityPerLump"
 									type="number"
 									value={formData.quantityPerLump}
 									onChange={(e) => {
@@ -348,8 +355,9 @@ export function AccessoryFormDialog({
 								/>
 							</div>
 							<div className="grid gap-2">
-								<Label>Cantidad de bultos</Label>
+								<Label htmlFor='lumpCount'>Cantidad de bultos</Label>
 								<Input
+									id="lumpCount"
 									type="number"
 									value={formData.lumpCount}
 									onChange={(e) => {
@@ -360,8 +368,9 @@ export function AccessoryFormDialog({
 								/>
 							</div>
 							<div className="grid gap-2">
-								<Label>Cantidad total</Label>
+								<Label htmlFor='quantity'>Cantidad total</Label>
 								<Input
+									id='quantity'
 									type="number"
 									value={formData.quantity}
 									onChange={(e) => updateField('quantity', e.target.value ? Number(e.target.value) : '')}
@@ -371,8 +380,9 @@ export function AccessoryFormDialog({
 						</div>
 
 						<div className="grid gap-2">
-							<Label>Ubicación</Label>
+							<Label htmlFor='site'>Ubicación</Label>
 							<Input 
+								id="site"
 								value={formData.site} 
 								onChange={(e) => updateField('site', e.target.value)} 
 								placeholder="Ingrese la ubicación"
@@ -382,8 +392,9 @@ export function AccessoryFormDialog({
 
 						{isAuthorized && (
 							<div className="grid gap-2">
-								<Label>Precio (opcional)</Label>
+								<Label htmlFor='price'>Precio (opcional)</Label>
 								<Input
+									id='price'
 									type="number"
 									value={formData.price}
 									onChange={(e) => updateField('price', e.target.value ? Number(e.target.value) : '')}

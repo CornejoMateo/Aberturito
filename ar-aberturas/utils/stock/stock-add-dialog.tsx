@@ -23,7 +23,7 @@ import {
 import { type ProfileItemStock } from '@/lib/stock/profile-stock';
 import { status } from '@/constants/stock-constants';
 import { useState, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { LineSelect } from '@/components/stock/line-select';
 import { CodeSelect } from '@/components/stock/code-select';
 import { ColorSelect } from '@/components/stock/color-select';
@@ -57,7 +57,6 @@ export function StockFormDialog({
 	const [site, setSite] = useState('');
 	const [width, setWidth] = useState<number | ''>('');
 	const [statusOptions, setStatusOptions] = useState<string[]>([...status]);
-	const { toast } = useToast();
 
 	// Loading data into form when editItem changes
 	useEffect(() => {

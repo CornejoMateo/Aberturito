@@ -59,7 +59,7 @@ export function BalanceCard({
 						<div className="flex items-center gap-2 mb-3">
 							<DollarSign className="h-4 w-4 text-primary flex-shrink-0" />
 							<span className="font-semibold text-sm">
-								{summary.isDebtor ? 'Deudor' : 'Acreedor'}
+								{summary.type}
 							</span>
 						</div>
 						<div className="text-sm">

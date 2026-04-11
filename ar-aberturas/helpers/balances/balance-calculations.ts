@@ -15,7 +15,7 @@ export interface BalanceSummary {
 	remainingArs: number;
 	remainingUsd: number;
 	progressPercentage: number;
-	isDebtor: boolean;
+	type: string;
 }
 
 const toSafeNumber = (value?: number | null) => Number(value) || 0;
@@ -44,6 +44,6 @@ export function calculateBalanceSummary(input: BalanceCalculationInput): Balance
 		remainingArs,
 		remainingUsd,
 		progressPercentage,
-		isDebtor: remainingUsd > 0,
+		type: remainingUsd > 0 ? 'Deudor' : remainingUsd < 0 ? 'Acreedor' : 'Cancelado',
 	};
 }

@@ -91,7 +91,7 @@ describe('ClaimsForm', () => {
 
 	it('shows atendido field only in edit mode', () => {
 		const claimToEdit = {
-			id: '1',
+			id: 1,
 			description: 'Test',
 			daily: false,
 			resolved: false,

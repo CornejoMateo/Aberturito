@@ -12,7 +12,8 @@ import { BalanceWithBudgetAndClient, listBalancesForReport } from '@/lib/works/b
 import { getLastTransactionUSD } from '@/lib/works/balance_transactions';
 import { getTotalsByBalanceIds } from '@/lib/works/balance_transactions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';}
 import { normalizeMoney} from '@/helpers/format-prices.tsx/formats';
 
 type BalanceReportRow = {
@@ -208,13 +209,10 @@ export function BalancesReport() {
 					<div className="text-sm text-muted-foreground">
 						{loading ? 'Cargando...' : `${filteredRows.length} fila(s)`}
 					</div>
-					<button
-						onClick={() => refresh()}
-						className="text-sm text-primary hover:underline"
-						type="button"
-					>
+					<Button variant="outline" onClick={() => refresh()} className="gap-2">
+						<RefreshCw className="h-4 w-4" />
 						Actualizar
-					</button>
+					</Button>
 				</div>
 
 				<Table>

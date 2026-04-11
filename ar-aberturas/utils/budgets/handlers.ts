@@ -31,7 +31,7 @@ export interface BudgetHandlers {
 	handleEditBudget: (budget: BudgetWithWork, setEditingBudget: (budget: BudgetWithWork | null) => void, closeBudgetDetailModal: () => void, setEditModalOpen: (open: boolean) => void) => void;
 	handleEditBudgetSubmit: (formData: any, editingBudget: BudgetWithWork | null, clientId: string, setIsLoading: (loading: boolean) => void, setEditModalOpen: (open: boolean) => void, setEditingBudget: (budget: BudgetWithWork | null) => void, refresh: () => void) => Promise<void>;
 	handleClientBudgetsUpdate: (newUsdRate: number, clientId: string, refresh: () => void) => Promise<void>;
-	handleCreateBudget: (formData: any, folderBudgets: any[], clientId: string, setIsCreateOpen: (open: boolean) => void, resetFormData: () => void, refresh: () => void, setIsLoading: (loading: boolean) => void) => Promise<void>;
+	handleCreateBudget: (formData: any, folderBudgets: any[], clientId: string, setIsCreateOpen: (open: boolean) => void, refresh: () => void, setIsLoading: (loading: boolean) => void) => Promise<void>;
 }
 
 export const budgetHandlers: BudgetHandlers = {
@@ -112,7 +112,7 @@ export const budgetHandlers: BudgetHandlers = {
 				toast({
 					variant: 'destructive',
 					title: 'No se pudo eliminar el presupuesto',
-					description: 'Intente nuevamente.',
+					description: translateError(error) || 'Intente nuevamente.',
 				});
 				return;
 			}
@@ -146,7 +146,7 @@ export const budgetHandlers: BudgetHandlers = {
 				toast({
 					variant: 'destructive',
 					title: 'No se pudo eliminar la carpeta',
-					description: 'Intente nuevamente.',
+					description: translateError(error) || 'Intente nuevamente.',
 				});
 				return;
 			}
@@ -283,19 +283,23 @@ export const budgetHandlers: BudgetHandlers = {
 		}
 	},
 
-	async handleCreateBudget(formData: any, folderBudgets: any[], clientId: string, setIsCreateOpen: (open: boolean) => void, resetFormData: () => void, refresh: () => void, setIsLoading: (loading: boolean) => void) {
+	async handleCreateBudget(formData: any, folderBudgets: any[], clientId: string, setIsCreateOpen: (open: boolean) => void, refresh: () => void, setIsLoading: (loading: boolean) => void) {
 		try {
 			setIsLoading(true);
 
-			const work_id = formData.workId === 'none' ? null : formData.workId;
-			const existingFolder = folderBudgets.find((f) => (f.work_id ?? null) === work_id);
+		const work_id =
+			formData.workId === 'none' ? null : Number(formData.workId);
+
+		const existingFolder = folderBudgets.find(
+			(f) => (f.work_id ?? null) === work_id
+		);
 			let folderId = existingFolder?.id;
 			let newFolder = false;
 
 			if (!folderId) {
 				const { data: folder, error: folderError } = await createFolderBudget({
 					client_id: clientId,
-					work_id,
+					work_id: work_id?.toString(),
 				});
 
 				if (folderError || !folder) {
@@ -345,7 +349,6 @@ export const budgetHandlers: BudgetHandlers = {
 
 			toast({ title: TOAST_MESSAGES.budgetCreated });
 			setIsCreateOpen(false);
-			resetFormData();
 			refresh();
 		} finally {
 			setIsLoading(false);

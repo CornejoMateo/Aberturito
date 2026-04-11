@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -232,12 +233,11 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 			const claimData = {
 				date: today,
 				daily: mode === 'daily',
+				client_id: clientData?.id || null,
 				alum_pvc: checklist.type_opening || null,
 				attend: null,
 				description,
 				resolved: false,
-				client_name: clientData?.name || null,
-				client_phone: clientData?.phone_number || null,
 				work_zone: null,
 				work_locality: workData.locality || null,
 				work_address: workData.address || null,
@@ -411,6 +411,9 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 				<DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-6">
 					<DialogHeader>
 						<DialogTitle>Completar Checklists</DialogTitle>
+						<DialogDescription>
+							Marca las tareas completadas de los checklists pendientes.
+						</DialogDescription>
 					</DialogHeader>
 
 					{loading ? (

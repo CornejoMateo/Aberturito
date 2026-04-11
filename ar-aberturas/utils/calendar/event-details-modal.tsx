@@ -1,6 +1,6 @@
 'use client';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
 	CalendarIcon,
@@ -15,6 +15,7 @@ import { Event, updateEvent } from '@/lib/calendar/events';
 import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { Bell } from 'lucide-react';
+import { translateError } from '@/lib/error-translator';
 
 interface EventDetailsModalProps {
 	isOpen: boolean;
@@ -53,9 +54,10 @@ export function EventDetailsModal({
 		} catch (error) {
 			console.error('Error al actualizar el recordatorio:', error);
 			setCurrentRemember(event.remember || false);
+			const errorMessage = translateError(error);
 			toast({
 				title: 'Error',
-				description: 'No se pudo actualizar el recordatorio',
+				description: errorMessage || 'No se pudo actualizar el recordatorio',
 				variant: 'destructive',
 			});
 		}
@@ -71,10 +73,11 @@ export function EventDetailsModal({
 			}
 
 			onEventUpdated?.();
-
+			const statusLabel =
+				statusOptions.find((option) => option.value === newStatus)?.label ?? newStatus;
 			toast({
 				title: 'Estado actualizado',
-				description: `El evento ha sido marcado como ${newStatus}`,
+				description: `El evento ha sido marcado como ${statusLabel}`,
 			});
 		} catch (error) {
 			console.error('Error al actualizar el estado:', error);
@@ -110,6 +113,9 @@ export function EventDetailsModal({
 							<ChevronDown className="h-3.5 w-3.5 -ml-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
 						</div>
 					</div>
+					<DialogDescription className="sr-only">
+						Detalles del evento del calendario
+					</DialogDescription>
 				</DialogHeader>
 
 				<div className="space-y-4 py-2">

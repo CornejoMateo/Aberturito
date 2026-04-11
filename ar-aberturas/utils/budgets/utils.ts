@@ -57,3 +57,37 @@ export function parseAmount(amount: string): number | null {
 	const parsed = Number(trimmed);
 	return !Number.isNaN(parsed) ? parsed : null;
 }
+
+export const formatNumber = (value: string) => {
+	// remove all except digits and comma
+	let cleaned = value.replace(/[^\d,]/g, "");
+
+	// separate integer and decimal parts
+	const parts = cleaned.split(",");
+	const integerPart = parts[0];
+	const decimalPart = parts[1];
+
+	// format integer part with thousand separators
+	const formattedInteger = integerPart
+		? new Intl.NumberFormat("es-AR").format(Number(integerPart))
+		: "";
+
+	// reconstruct the number with comma if there was a decimal part or if the user typed a comma
+	if (cleaned.includes(",")) {
+		return decimalPart !== undefined
+		? `${formattedInteger},${decimalPart}`
+		: `${formattedInteger},`;
+	}
+
+	return formattedInteger;
+};
+
+export 	const parseArsToNumber = (value: string): number => {
+	if (!value) return 0;
+
+	const normalized = value
+		.replace(/\./g, "")
+		.replace(",", "."); 
+
+	return Number(normalized);
+};

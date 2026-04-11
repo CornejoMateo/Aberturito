@@ -11,6 +11,7 @@ import { Client, listClients } from '@/lib/clients/clients';
 import { Work, getWorksByClientId } from '@/lib/works/works';
 import { toast } from '@/components/ui/use-toast';
 import { ClaimsForm } from './claims-form';
+import { translateError } from '@/lib/error-translator';
 
 interface ClaimsAddDialogProps {
 	open: boolean;
@@ -206,8 +207,9 @@ export function ClaimsAddDialog({
 			resetForm();
 		} catch (error) {
 			console.error('Error al procesar el reclamo:', error);
+			const errorMessage = translateError(error);
 			toast({
-				title: 'Error',
+				title: errorMessage || 'Error',
 				description: claimToEdit
 					? 'No se pudo actualizar el reclamo. Por favor, intenta nuevamente.'
 					: 'No se pudo crear el reclamo. Por favor, intenta nuevamente.',

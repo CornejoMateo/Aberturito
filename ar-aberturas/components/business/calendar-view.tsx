@@ -21,8 +21,16 @@ import { Event } from '@/lib/calendar/events';
 import { useLoadEvents } from '@/hooks/use-load-events';
 import { useToast } from '@/components/ui/use-toast';
 import { deleteLastYearEvents } from '@/lib/calendar/events';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogFooter,
+} from '@/components/ui/dialog';
 import { useAuth } from '@/components/provider/auth-provider';
+import { translateError } from '@/lib/error-translator';
 
 export function CalendarView() {
 	const { toast } = useToast();
@@ -73,7 +81,7 @@ export function CalendarView() {
 		return eventsByType;
 	};
 
-	const handleDeleteEvent = async (eventId: string, e: React.MouseEvent) => {
+	const handleDeleteEvent = async (eventId: number, e: React.MouseEvent) => {
 		e.stopPropagation();
 		if (confirm('¿Estás seguro de que deseas eliminar este evento?')) {
 			const { error } = await deleteEvent(eventId);
@@ -88,6 +96,12 @@ export function CalendarView() {
 					setSelectedEvent(null);
 				}
 			} else {
+				const errorMesagge = translateError(error);
+				toast({
+					title: 'Error',
+					description: errorMesagge || 'No se pudo eliminar el evento.',
+					variant: 'destructive',
+				});
 				console.error('Error al eliminar el evento:', error);
 			}
 		}
@@ -144,9 +158,10 @@ export function CalendarView() {
 			});
 			await refresh();
 		} else {
+			const errorMesagge = translateError(error);
 			toast({
 				title: 'Error',
-				description: 'No se pudieron eliminar los eventos.',
+				description: errorMesagge || 'No se pudieron eliminar los eventos.',
 				variant: 'destructive',
 			});
 		}
@@ -494,7 +509,8 @@ export function CalendarView() {
 						<div>
 							<h3 className="text-sm font-medium text-foreground">Limpiar datos antiguos</h3>
 							<p className="text-xs text-muted-foreground mt-1">
-								Elimina eventos resueltos anteriores al 1 de enero del presente año para mantener el calendario limpio y relevante.
+								Elimina eventos resueltos anteriores al 1 de enero del presente año para mantener el
+								calendario limpio y relevante.
 							</p>
 						</div>
 						<Button
@@ -508,13 +524,24 @@ export function CalendarView() {
 							<DialogContent>
 								<DialogHeader>
 									<DialogTitle>¿Eliminar eventos de años anteriores?</DialogTitle>
+									<DialogDescription>
+										Esta acción eliminará todos los eventos (finalizados) anteriores al 1 de enero del
+										presente año. ¿Estás seguro?
+									</DialogDescription>
 								</DialogHeader>
-								<p className="py-2">Esta acción eliminará todos los eventos (finalizados) anteriores al 1 de enero del presente año. ¿Estás seguro?</p>
 								<DialogFooter>
-									<Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
+									<Button
+										variant="outline"
+										onClick={() => setIsDeleteDialogOpen(false)}
+										disabled={isDeleting}
+									>
 										Cancelar
 									</Button>
-									<Button variant="destructive" onClick={handleDeleteLastYearEvents} disabled={isDeleting}>
+									<Button
+										variant="destructive"
+										onClick={handleDeleteLastYearEvents}
+										disabled={isDeleting}
+									>
 										Eliminar
 									</Button>
 								</DialogFooter>

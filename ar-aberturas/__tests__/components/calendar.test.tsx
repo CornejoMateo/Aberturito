@@ -5,7 +5,7 @@ jest.mock('@/hooks/use-load-events', () => ({
   useLoadEvents: () => ({
     events: [
       {
-        id: '1',
+        id: 1,
         title: 'Evento Test',
         type: 'produccionOK',
         date: '2026-03-15',
@@ -156,7 +156,7 @@ describe('CalendarView', () => {
         expect(global.confirm).toHaveBeenCalledWith('¿Estás seguro de que deseas eliminar este evento?');
         
         // Verify deleteEvent was called
-        expect(deleteEvent).toHaveBeenCalledWith('1');
+        expect(deleteEvent).toHaveBeenCalledWith(1);
 
     });
 });

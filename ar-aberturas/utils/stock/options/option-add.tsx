@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import {
 	Dialog,
 	DialogContent,
@@ -32,6 +32,7 @@ import {
 } from '@/lib/stock/stock-options';
 import React from 'react';
 import { LineSelect } from '@/components/stock/line-select';
+import { translateError } from '@/lib/error-translator';
 
 interface OptionFormDialogProps {
 	open: boolean;
@@ -56,7 +57,6 @@ export function OptionDialog({
 	const [title, setTitle] = useState('');
 	const [name, setName] = useState('');
 	const [optionName, setOptionName] = useState('');
-	const { toast } = useToast();
 
 	React.useEffect(() => {
 		if (table === 'lines') {
@@ -125,17 +125,13 @@ export function OptionDialog({
 		const { data, error } = await createOption(tableName ?? '', fields);
 		if (error) {
 			console.error('Supabase error:', error);
-			let errorMessage = 'Ocurrió un error al guardar la opción';
-			if (error.message?.includes('duplicate key value violates unique constraint')) {
-				errorMessage = `Ya existe ${fieldName === 'ubicación' ? 'una' : 'un'} ${fieldName} con ese nombre`;
-			}
+			let errorMessage = translateError(error);
 			toast({
 				title: 'Error al guardar',
 				description: errorMessage,
 				variant: 'destructive',
 				duration: 5000,
 			});
-			console.log('Mostrando toast de error:', errorMessage);
 			return;
 		}
 
@@ -148,7 +144,6 @@ export function OptionDialog({
 			description: successMessage,
 			duration: 3000,
 		});
-		console.log('Mostrando toast de éxito:', successMessage);
 
 		setOption('');
 		setDependence('');

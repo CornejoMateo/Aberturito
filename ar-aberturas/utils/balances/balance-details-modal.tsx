@@ -20,7 +20,6 @@ import {
 	deleteTransaction,
 } from '@/lib/works/balance_transactions';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { useToast } from '@/components/ui/use-toast';
 import { formatCurrency } from '../../helpers/format-prices.tsx/formats';
 import { calculateBalanceSummary } from '../../helpers/balances/balance-calculations';
@@ -29,6 +28,7 @@ import { AddTransactionSection } from './add-transaction';
 import { TransactionsTable } from './transactions-table';
 import { BalanceInformation } from './balance-information';
 import { translateError } from '@/lib/error-translator';
+import { formatCreatedAt } from '@/helpers/date/format-date';
 
 interface BalanceDetailsModalProps {
 	balance: BalanceWithBudget | null;
@@ -164,16 +164,6 @@ export function BalanceDetailsModal({
 		}
 	};
 
-	const formatDate = (dateStr: string | null | undefined) => {
-		if (!dateStr) return '-';
-		try {
-			const date = new Date(dateStr);
-			return format(date, 'PPP', { locale: es });
-		} catch {
-			return '-';
-		}
-	};
-
 	const totalPaid = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 	const totalPaidUSD = transactions.reduce((sum, t) => sum + (Number(t.usd_amount) || 0), 0);
 	const summary = calculateBalanceSummary({
@@ -221,7 +211,7 @@ export function BalanceDetailsModal({
 							usdCurrent={balance.usd_current}
 							totalPaid={totalPaid}
 							summary={summary}
-							formatDate={formatDate}
+							formatDate={formatCreatedAt}
 						/>
 
 						<AddTransactionSection
@@ -255,7 +245,7 @@ export function BalanceDetailsModal({
 							<TransactionsTable
 								isLoading={isLoading}
 								transactions={transactions}
-								formatDate={formatDate}
+								formatDate={formatCreatedAt}
 								onDeleteTransaction={(transaction) => {
 									setTransactionToDelete(transaction);
 									setIsDeleteDialogOpen(true);
@@ -276,7 +266,7 @@ export function BalanceDetailsModal({
 								<>
 									{' '}
 									de {formatCurrency(transactionToDelete.amount)} del{' '}
-									{formatDate(transactionToDelete.date)}
+									{formatCreatedAt(transactionToDelete.date)}
 								</>
 							)}
 							.

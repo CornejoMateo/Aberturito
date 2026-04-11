@@ -7,7 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { CheckCircle, ChevronDown, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BudgetFolderVM } from '../types';
-import { workLabel, groupBudgetsByType, getOrderedTypeKeys, normalizeType } from '../utils';
+import { workLabel, groupBudgetsByType, getOrderedTypeKeys } from '../utils';
 import { BudgetCard } from './BudgetCard';
 
 interface FolderCardProps {

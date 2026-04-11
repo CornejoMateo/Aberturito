@@ -8,6 +8,7 @@ import {
 	MAX_FILE_SIZE_CLIENT,
 	validateFileForUpload,
 } from '@/utils/file-upload-utils';
+import { optimizeFile } from '@/helpers/images/optimization';
 
 interface UseFileUploadOptions {
 	clientId: string;
@@ -82,9 +83,11 @@ export function useFileUpload({
 		setIsUploading(true);
 
 		try {
+			const optimizedFile = await optimizeFile(selectedFile);
+
 			const { error } = await uploadClientFile(
 				clientId,
-				selectedFile,
+				optimizedFile,
 				displayName.trim() || null,
 				description.trim() || null,
 				checklistId || null,

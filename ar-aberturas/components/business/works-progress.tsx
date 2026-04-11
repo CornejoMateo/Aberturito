@@ -111,7 +111,6 @@ export function WorksOpenings() {
 			})),
 			progress: checklist.items.length > 0 ? 0 : 100,
 		});
-		
 
 		if (error) {
 			const errorMessage = translateError(error);
@@ -124,7 +123,7 @@ export function WorksOpenings() {
 
 	const handleUpdateGeneralNote = async (workId: string, note: string) => {
 		const { error } = await updateWorkGeneralNote(workId, note.trim() || null);
-		
+
 		if (error) {
 			const errorMessage = translateError(error);
 			console.error('Error updating general note:', errorMessage);
@@ -274,7 +273,6 @@ export function WorksOpenings() {
 					onSave={handleSaveChecklist}
 				/>
 			)}
-
 		</div>
 	);
 }

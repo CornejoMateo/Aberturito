@@ -105,7 +105,7 @@ describe('validateDate', () => {
 
 describe('EventDetailsModal', () => {
 	const mockEvent = {
-		id: '1',
+		id: 1,
 		title: 'Test Event',
 		type: 'produccionOK',
 		date: '15-03-2026',
@@ -179,10 +179,10 @@ describe('EventDetailsModal', () => {
 		);
 
 		const statusSelect = screen.getByDisplayValue('Pendiente');
-		fireEvent.change(statusSelect, { target: { value: 'Finalizado' } });
+		fireEvent.change(statusSelect, { target: { value: 'completed' } });
 
 		await waitFor(() => {
-			expect(updateEvent).toHaveBeenCalledWith('1', { status: 'Finalizado' });
+			expect(updateEvent).toHaveBeenCalledWith(1, { status: 'completed' });
 			expect(onEventUpdatedMock).toHaveBeenCalled();
 		});
 	});
@@ -208,7 +208,7 @@ describe('EventDetailsModal', () => {
 			fireEvent.click(bellButton);
 
 			await waitFor(() => {
-				expect(updateEvent).toHaveBeenCalledWith('1', { remember: false });
+				expect(updateEvent).toHaveBeenCalledWith(1, { remember: false });
 				expect(onEventUpdatedMock).toHaveBeenCalled();
 			});
 		}

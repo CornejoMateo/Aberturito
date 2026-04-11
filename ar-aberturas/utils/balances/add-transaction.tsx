@@ -115,21 +115,21 @@ export function AddTransactionSection({
 			</div>
 			<div className="grid grid-cols-2 gap-4">
 				<div className="space-y-2">
-					<Label htmlFor="usd-amount">Monto en USD</Label>
-					<Input
-						id="usd-amount"
-						type="number"
-						value={usdAmount}
-						onChange={(e) => onUsdAmountChange(e.target.value)}
-					/>
-				</div>
-				<div className="space-y-2">
 					<Label htmlFor="quote-usd">Cotización USD</Label>
 					<Input
 						id="quote-usd"
 						type="number"
 						value={quoteUsd}
 						onChange={(e) => onQuoteUsdChange(e.target.value)}
+					/>
+				</div>
+				<div className="space-y-2">
+					<Label htmlFor="usd-amount">Monto en USD</Label>
+					<Input
+						id="usd-amount"
+						type="number"
+						value={usdAmount}
+						onChange={(e) => onUsdAmountChange(e.target.value)}
 					/>
 				</div>
 			</div>

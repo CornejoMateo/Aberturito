@@ -22,19 +22,20 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/components/provider/auth-provider';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock/stock-config';
 import type { AccessoryItemStock } from '@/lib/stock/accesorie-stock';
 import type { IronworkItemStock } from '@/lib/stock/ironwork-stock';
 import type { SupplyItemStock } from '@/lib/stock/supplies-stock';
 import { useIsMobile } from '@/components/ui/use-mobile';
+import { formatCreatedAt } from '@/helpers/date/format-date';
 
 interface AccesoriesTableProps {
 	categoryState: StockCategory;
 	filteredStock: AccessoryItemStock[] | IronworkItemStock[] | SupplyItemStock[];
-	onEdit: (id: string) => void;
-	onDelete: (id: string) => void;
-	onUpdateQuantity: (id: string, newQuantity: number, field?: string) => Promise<void>;
+	onEdit: (id: number) => void;
+	onDelete: (id: number) => void;
+	onUpdateQuantity: (id: number, newQuantity: number, field?: string) => Promise<void>;
 }
 
 export function AccesoriesTable({
@@ -45,26 +46,20 @@ export function AccesoriesTable({
 	onUpdateQuantity,
 }: AccesoriesTableProps) {
 	const { user } = useAuth();
-	const { toast } = useToast();
 	const [openImageUrl, setOpenImageUrl] = useState<string | null>(null);
-	const [currentAction, setCurrentAction] = useState<{
-		id: string;
-		action: 'increment' | 'decrement';
-		currentQty: number;
-	} | null>(null);
-	const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 	const [isUpdating, setIsUpdating] = useState(false);
-	const [updatingId, setUpdatingId] = useState<string | null>(null);
+	const [updatingId, setUpdatingId] = useState<number | null>(null);
 	const [showQuantityDialog, setShowQuantityDialog] = useState(false);
 	const [quantityDialogType, setQuantityDialogType] = useState<'increase' | 'decrease' | null>(null);
 	const [quantityChange, setQuantityChange] = useState<number | ''>('');
-	const [currentItemId, setCurrentItemId] = useState<string | null>(null);
+	const [currentItemId, setCurrentItemId] = useState<number | null>(null);
 	const [currentItemTotal, setCurrentItemTotal] = useState<number>(0);
 
 	const isMobile = useIsMobile();
+	const isAutorized = user?.role === 'Admin' || user?.role === 'Ventas';
 
 	const handleQuantityAction = (
-		id: string,
+		id: number,
 		action: 'increment' | 'decrement',
 		currentQty: number
 	) => {
@@ -116,6 +111,10 @@ export function AccesoriesTable({
 			setIsUpdating(true);
 			setUpdatingId(currentItemId);
 			await onUpdateQuantity(currentItemId, newQuantity);
+			toast({
+				title: 'Cantidad actualizada',
+				description: `La cantidad se ha ${quantityDialogType === 'increase' ? 'aumentado' : 'disminuido'} a ${newQuantity}`,
+			});
 		} finally {
 			setIsUpdating(false);
 			setUpdatingId(null);
@@ -129,14 +128,6 @@ export function AccesoriesTable({
 
 	const config = STOCK_CONFIGS[categoryState];
 	const keys = config.fields;
-
-	const getItemName = (item: any) => {
-		return (
-			[(item as any)[keys.line], (item as any)[keys.code], (item as any)[keys.description]]
-				.filter(Boolean)
-				.join(' ') || 'este ítem'
-		);
-	};
 
 	return (
 		<Card className="bg-card border-border overflow-hidden">
@@ -319,7 +310,7 @@ export function AccesoriesTable({
 												{(item as any)[keys.site] || ''}
 											</p>
 										</td>
-										{user?.role === 'Admin' || user?.role === 'Ventas' ? (
+										{isAutorized ? (
 											<td className="px-2 py-2 whitespace-nowrap">
 												<p className="text-center text-sm text-foreground">
 													{(item as any)[keys.price] ? `$${(item as any)[keys.price]}` : '—'}
@@ -328,16 +319,7 @@ export function AccesoriesTable({
 										) : null}
 										<td className="px-2 py-2 whitespace-nowrap">
 											<p className="text-center text-xs text-muted-foreground">
-												{(() => {
-													const dateStr = (item as any)[keys.createdAt];
-													if (!dateStr) return 'N/A';
-													const d = new Date(dateStr);
-													if (isNaN(d.getTime())) return 'N/A';
-													const day = String(d.getUTCDate()).padStart(2, '0');
-													const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-													const year = d.getUTCFullYear();
-													return `${day}-${month}-${year}`;
-												})()}
+												{formatCreatedAt((item as any)[keys.createdAt])}
 											</p>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap text-right">

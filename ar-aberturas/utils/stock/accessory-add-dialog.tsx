@@ -14,13 +14,26 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog';
 import { useState, useEffect } from 'react';
-import { SiteSelect } from '@/components/stock/site-select';
 import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock/stock-config';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { type AccessoryItemStock } from '@/lib/stock/accesorie-stock';
 import { type IronworkItemStock } from '@/lib/stock/ironwork-stock';
 import { type SupplyItemStock } from '@/lib/stock/supplies-stock';
 import { useAuth } from '@/components/provider/auth-provider';
+
+type FormData = {
+  category: string;
+  line: string;
+  brand: string;
+  code: string;
+  description: string;
+  color: string;
+  quantityPerLump: number | '';
+  lumpCount: number | '';
+  quantity: number | '';
+  site: string;
+  price: number | '';
+};
 
 interface AccessoryFormDialogProps {
 	open: boolean;
@@ -45,41 +58,46 @@ export function AccessoryFormDialog({
 	const config = STOCK_CONFIGS[category];
 
 	// Fields common to accessories/ironworks
-	const [categoryHA, setCategoryHA] = useState('');
-	const [line, setLine] = useState('');
-	const [brand, setBrand] = useState('');
-	const [code, setCode] = useState('');
-	const [description, setDescription] = useState('');
-	const [color, setColor] = useState('');
-	const [quantityPerLump, setQuantityPerLump] = useState<number | ''>('');
-	const [lumpCount, setLumpCount] = useState<number | ''>('');
-	const [quantity, setQuantity] = useState<number | ''>('');
-	const [site, setSite] = useState('');
-	const [price, setPrice] = useState<number | ''>('');
+	const [formData, setFormData] = useState<FormData>({
+  		category: '',
+		line: '',
+		brand: '',
+		code: '',
+		description: '',
+		color: '',
+		quantityPerLump: '',
+		lumpCount: '',
+		quantity: '',
+		site: '',
+		price: '',
+	});
+
 	const [showQuantityDialog, setShowQuantityDialog] = useState(false);
 	const [quantityDialogType, setQuantityDialogType] = useState<'increase' | 'decrease' | null>(null);
 	const [quantityChange, setQuantityChange] = useState<number | ''>('');
 	const [changeQuantityFlag, setChangeQuantityFlag] = useState(false);
-	const { toast } = useToast();
 
 	const {user} = useAuth();
+	const isAuthorized = user?.role === 'Admin' || user?.role === 'Ventas';
 
 	useEffect(() => {
 		if (editItem) {
 			const fields = config.fields;
 			const item = editItem as any;
-			
-			setCategoryHA(item[fields.category] || '');
-			setLine(item[fields.line] || '');
-			setBrand(item[fields.brand] || '');
-			setCode(item[fields.code] || '');
-			setDescription(item[fields.description] || '');
-			setColor(item[fields.color] || '');
-			setQuantityPerLump(item[fields.quantityForLump] ?? '');
-			setLumpCount(item[fields.quantityLump] ?? '');
-			setQuantity(item[fields.quantity] ?? '');
-			setSite(item[fields.site] || '');
-			setPrice(item[fields.price] ?? '');
+
+			setFormData({
+			category: item[fields.category] || '',
+			line: item[fields.line] || '',
+			brand: item[fields.brand] || '',
+			code: item[fields.code] || '',
+			description: item[fields.description] || '',
+			color: item[fields.color] || '',
+			quantityPerLump: item[fields.quantityForLump] ?? '',
+			lumpCount: item[fields.quantityLump] ?? '',
+			quantity: item[fields.quantity] ?? '',
+			site: item[fields.site] || '',
+			price: item[fields.price] ?? '',
+			});
 		} else {
 			resetForm();
 		}
@@ -87,30 +105,32 @@ export function AccessoryFormDialog({
 
 	// Auto-calculate quantity when quantityPerLump or lumpCount changes
 	useEffect(() => {
-		if (quantityPerLump !== '' && lumpCount !== '' && changeQuantityFlag) {
-			setQuantity(Number(quantityPerLump) * Number(lumpCount));
+		if (formData.quantityPerLump !== '' && formData.lumpCount !== '' && changeQuantityFlag) {
+			updateField('quantity', Number(formData.quantityPerLump) * Number(formData.lumpCount));
 		}
-	}, [quantityPerLump, lumpCount, changeQuantityFlag]);
+	}, [formData.quantityPerLump, formData.lumpCount, changeQuantityFlag]);
 
 	const resetForm = () => {
-		setCategoryHA('');
-		setLine('');
-		setBrand('');
-		setCode('');
-		setDescription('');
-		setColor('');
-		setQuantityPerLump('');
-		setLumpCount('');
-		setQuantity('');
-		setSite('');
-		setPrice('');
-		setQuantityChange('');
+		setFormData({
+			category: '',
+			line: '',
+			brand: '',
+			code: '',
+			description: '',
+			color: '',
+			quantityPerLump: '',
+			lumpCount: '',
+			quantity: '',
+			site: '',
+			price: '',
+		});
+		setChangeQuantityFlag(false);
 	};
 
 	const handleQuantityAdjustment = () => {
 		if (quantityChange === '') return;
 		
-		const currentTotal = (quantity as number) || 0;
+		const currentTotal = (formData.quantity as number) || 0;
 		const adjustment = Number(quantityChange);
 		
 		if (quantityDialogType === 'decrease') {
@@ -158,7 +178,10 @@ export function AccessoryFormDialog({
 			return;
 		}
 		
-		setQuantity(newTotal);
+		updateField('quantity', newTotal);
+		onSave({
+			[config.fields.quantity]: newTotal,
+		});
 		setShowQuantityDialog(false);
 		setQuantityChange('');
 		setQuantityDialogType(null);
@@ -167,13 +190,13 @@ export function AccessoryFormDialog({
 	const handleSave = () => {
 		// validation
 		if (
-			!categoryHA ||
-			!code ||
-			!color ||
-			!site ||
-			quantityPerLump === '' ||
-			lumpCount === '' ||
-			quantity === ''
+			!formData.category ||
+			!formData.code ||
+			!formData.color ||
+			!formData.site ||
+			formData.quantityPerLump === '' ||
+			formData.lumpCount === '' ||
+			formData.quantity === ''
 		) {
 			toast({
 				title: 'Error de validación',
@@ -184,7 +207,7 @@ export function AccessoryFormDialog({
 			return;
 		}
 		
-		if (quantityPerLump < 0 || lumpCount < 0 || quantity < 0) {
+		if (formData.quantityPerLump < 0 || formData.lumpCount < 0 || formData.quantity < 0) {
 			toast({
 				title: 'Error de validación',
 				description: 'Las cantidades no pueden ser negativas',
@@ -202,23 +225,34 @@ export function AccessoryFormDialog({
 					? (editItem as any)[fields.createdAt]
 					: new Date().toISOString().split('T')[0],
 			[fields.material]: isEditing ? (editItem as any)[fields.material] || materialType : materialType,
-			[fields.category]: categoryHA,
-			[fields.line]: line,
-			[fields.brand]: brand,
-			[fields.code]: code,
-			[fields.description]: description,
-			[fields.color]: color,
-			[fields.quantityForLump]: Number(quantityPerLump),
-			[fields.quantityLump]: Number(lumpCount),
-			[fields.quantity]: Number(quantity),
-			[fields.site]: site,
-			[fields.price]: price === '' ? null : Number(price),
+			[fields.category]: formData.category,
+			[fields.line]: formData.line,
+			[fields.brand]: formData.brand,
+			[fields.code]: formData.code,
+			[fields.description]: formData.description,
+			[fields.color]: formData.color,
+			[fields.quantityForLump]: Number(formData.quantityPerLump),
+			[fields.quantityLump]: Number(formData.lumpCount),
+			[fields.quantity]: Number(formData.quantity),
+			[fields.site]: formData.site,
+			[fields.price]: formData.price === '' ? null : Number(formData.price),
 		};
 
 		onSave(payload);
 		setChangeQuantityFlag(false);
+		toast({
+			title: isEditing ? 'Ítem actualizado' : 'Ítem agregado',
+			description: `El ${config.title.slice(0, -1).toLowerCase()} ha sido ${isEditing ? 'actualizado' : 'agregado'} exitosamente`,
+		});
 		if (!isEditing) resetForm();
 		onOpenChange(false);
+	};
+
+	const updateField = (field: keyof FormData, value: any) => {
+		setFormData((prev) => ({
+			...prev,
+			[field]: value,
+		}));
 	};
 
 	return (
@@ -243,120 +277,131 @@ export function AccessoryFormDialog({
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2">
 					<div className="grid gap-4">
 						<div className="grid gap-2">
-							<Label>Categoría</Label>
+							<Label htmlFor="category">Categoría</Label>
 							<Input
-								value={categoryHA}
-								onChange={(e) => setCategoryHA(e.target.value)}
+								id="category"
+								value={formData.category}
+								onChange={(e) => updateField('category', e.target.value)}
 								className="bg-background"
 							/>
 						</div>
 
 						<div className="grid gap-2">
-							<Label>Línea</Label>
+							<Label htmlFor='line'>Línea</Label>
 							<Input 
-								value={line} 
-								onChange={(e) => setLine(e.target.value)} 
+								id='line'
+								value={formData.line} 
+								onChange={(e) => updateField('line', e.target.value)} 
 								placeholder="Ingrese la línea"
 								className="bg-background"
 							/>
 						</div>
 
 						<div className="grid gap-2">
-							<Label>Marca</Label>
+							<Label htmlFor='brand'>Marca</Label>
 							<Input 
-								value={brand} 
-								onChange={(e) => setBrand(e.target.value)} 
+								id="brand"
+								value={formData.brand} 
+								onChange={(e) => updateField('brand', e.target.value)} 
 								placeholder="Ingrese la marca"
 								className="bg-background"
 							/>
 						</div>
 
 						<div className="grid gap-2">
-							<Label>Código</Label>
+							<Label htmlFor='code'>Código</Label>
 							<Input 
-						value={code} 
-						onChange={(e) => setCode(e.target.value)} 
-						placeholder="Ingrese el código"
-						className="bg-background"
-					/>
-						</div>
-
-						<div className="grid gap-2">
-							<Label>Descripción</Label>
-							<Input
-								value={description}
-								onChange={(e) => setDescription(e.target.value)}
+								id="code"
+								value={formData.code} 
+								onChange={(e) => updateField('code', e.target.value)} 
+								placeholder="Ingrese el código"
 								className="bg-background"
 							/>
 						</div>
 
 						<div className="grid gap-2">
-							<Label>Color</Label>
+							<Label htmlFor='description'>Descripción</Label>
+							<Input
+								id="description"
+								value={formData.description}
+								onChange={(e) => updateField('description', e.target.value)}
+								className="bg-background"
+							/>
+						</div>
+
+						<div className="grid gap-2">
+							<Label htmlFor='color'>Color</Label>
 							<Input 
-						value={color} 
-						onChange={(e) => setColor(e.target.value)} 
-						placeholder="Ingrese el color"
-						className="bg-background"
-					/>
+								id="color"
+								value={formData.color} 
+								onChange={(e) => updateField('color', e.target.value)} 
+								placeholder="Ingrese el color"
+								className="bg-background"
+							/>
 						</div>
 
 						<div className="grid gap-2 md:grid-cols-3">
 							<div className="grid gap-2">
-								<Label>Cantidad x bulto</Label>
+								<Label htmlFor='quantityPerLump'>Cantidad x bulto</Label>
 								<Input
+									id="quantityPerLump"
 									type="number"
-									value={quantityPerLump as any}
+									value={formData.quantityPerLump}
 									onChange={(e) => {
-										setQuantityPerLump(e.target.value ? Number(e.target.value) : ''); 
+										updateField('quantityPerLump', e.target.value ? Number(e.target.value) : ''); 
 										setChangeQuantityFlag(true);
 									}}
 									className="bg-background"
 								/>
 							</div>
 							<div className="grid gap-2">
-								<Label>Cantidad de bultos</Label>
+								<Label htmlFor='lumpCount'>Cantidad de bultos</Label>
 								<Input
+									id="lumpCount"
 									type="number"
-									value={lumpCount as any}
+									value={formData.lumpCount}
 									onChange={(e) => {
-										setLumpCount(e.target.value ? Number(e.target.value) : '');
+										updateField('lumpCount', e.target.value ? Number(e.target.value) : '');
 										setChangeQuantityFlag(true);
 									}}
 									className="bg-background"
 								/>
 							</div>
 							<div className="grid gap-2">
-								<Label>Cantidad total</Label>
+								<Label htmlFor='quantity'>Cantidad total</Label>
 								<Input
+									id='quantity'
 									type="number"
-									value={quantity}
-									onChange={(e) => setQuantity(e.target.value ? Number(e.target.value) : '')}
+									value={formData.quantity}
+									onChange={(e) => updateField('quantity', e.target.value ? Number(e.target.value) : '')}
 									className="bg-background"
 								/>
 							</div>
 						</div>
 
 						<div className="grid gap-2">
-							<Label>Ubicación</Label>
+							<Label htmlFor='site'>Ubicación</Label>
 							<Input 
-								value={site} 
-								onChange={(e) => setSite(e.target.value)} 
+								id="site"
+								value={formData.site} 
+								onChange={(e) => updateField('site', e.target.value)} 
 								placeholder="Ingrese la ubicación"
 								className="bg-background"
 							/>
 						</div>
 
-                    {user?.role === 'Admin' || user?.role === 'Ventas' && (
-						<div className="grid gap-2">
-							<Label>Precio (opcional)</Label>
-							<Input
-								type="number"
-								value={price as any}
-								onChange={(e) => setPrice(e.target.value ? Number(e.target.value) : '')}
-								className="bg-background"
-							/>
-						</div>
-					)}
+						{isAuthorized && (
+							<div className="grid gap-2">
+								<Label htmlFor='price'>Precio (opcional)</Label>
+								<Input
+									id='price'
+									type="number"
+									value={formData.price}
+									onChange={(e) => updateField('price', e.target.value ? Number(e.target.value) : '')}
+									className="bg-background"
+								/>
+							</div>
+						)}
 					</div>
 				</div>
 				<DialogFooter className="pt-4 border-t border-border">

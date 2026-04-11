@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Search, Check, Filter } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -20,7 +20,6 @@ export function StockFilters({
   selectedCategory,
   showOutOfStock,
   setShowOutOfStock,
-  setSelectedCategory,
 }: StockFiltersProps) {
   return (
     <Card className="p-4 bg-card border-border">

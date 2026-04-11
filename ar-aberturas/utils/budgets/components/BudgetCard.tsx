@@ -7,8 +7,9 @@ import { CheckCircle, FileText, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BudgetWithWork } from '@/lib/works/balances';
 import { BudgetFolderVM } from '../types';
-import { workLabel, formatDate } from '../utils';
+import { workLabel } from '../utils';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
+import { formatCreatedAt } from '@/helpers/date/format-date';
 
 interface BudgetCardProps {
 	budget: BudgetWithWork;
@@ -81,7 +82,7 @@ export function BudgetCard({
 				) : null}
 				{budget.created_at && (
 					<p className="text-xs text-muted-foreground">
-						{formatDate(budget.created_at)}
+						{formatCreatedAt(budget.created_at)}
 					</p>
 				)}
 			</div>

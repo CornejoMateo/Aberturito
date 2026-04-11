@@ -20,15 +20,6 @@ export function formatCurrency(amount: number | null | undefined, currency: stri
 	return `$${amount.toLocaleString('es-AR')} ${currency}`;
 }
 
-export function formatDate(dateString: string | null | undefined): string {
-	if (!dateString) return 'Fecha no disponible';
-	return new Date(dateString).toLocaleDateString('es-AR', {
-		day: '2-digit',
-		month: '2-digit',
-		year: '2-digit',
-	});
-}
-
 export function groupBudgetsByType(budgets: BudgetWithWork[]): Map<string, BudgetWithWork[]> {
 	const budgetsByType = new Map<string, BudgetWithWork[]>();
 

@@ -21,13 +21,14 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog';
 import { type ProfileItemStock } from '@/lib/stock/profile-stock';
-import { status, categories } from '@/constants/stock-constants';
+import { status } from '@/constants/stock-constants';
 import { useState, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { LineSelect } from '@/components/stock/line-select';
 import { CodeSelect } from '@/components/stock/code-select';
 import { ColorSelect } from '@/components/stock/color-select';
 import { SiteSelect } from '@/components/stock/site-select';
+import { translateError } from '@/lib/error-translator';
 
 interface StockFormDialogProps {
 	open: boolean;
@@ -48,7 +49,6 @@ export function StockFormDialog({
 }: StockFormDialogProps) {
 	const isEditing = !!editItem;
 
-	const [category, setCategory] = useState('');
 	const [code, setCode] = useState('');
 	const [line, setLine] = useState('');
 	const [color, setColor] = useState('');
@@ -56,16 +56,11 @@ export function StockFormDialog({
 	const [quantity, setQuantity] = useState<number | ''>('');
 	const [site, setSite] = useState('');
 	const [width, setWidth] = useState<number | ''>('');
-
-	// Status and options for selects
-	const [categoriesOptions, setCategoriesOptions] = useState(categories);
 	const [statusOptions, setStatusOptions] = useState<string[]>([...status]);
-	const { toast } = useToast();
 
 	// Loading data into form when editItem changes
 	useEffect(() => {
 		if (editItem) {
-			setCategory(editItem.category || '');
 			setCode(editItem.code || '');
 			setLine(editItem.line || '');
 			setColor(editItem.color || '');
@@ -80,7 +75,6 @@ export function StockFormDialog({
 	}, [editItem]);
 
 	const resetForm = () => {
-		setCategory('');
 		setCode('');
 		setLine('');
 		setColor('');
@@ -92,7 +86,7 @@ export function StockFormDialog({
 
 	const handleSave = () => {
 		// Validate required fields
-		if (!category || !code || !line || !color || !site) {
+		if (!code || !line || !color || !site || !width || !quantity) {
 			toast({
 				title: 'Error de validación',
 				description: 'Por favor complete todos los campos obligatorios',
@@ -114,7 +108,6 @@ export function StockFormDialog({
 
 		try {
 			onSave({
-				category,
 				code,
 				line,
 				color,
@@ -142,10 +135,10 @@ export function StockFormDialog({
 
 			onOpenChange(false);
 		} catch (error) {
-			console.error('Error al guardar el perfil:', error);
+			const errorMessage = translateError(error);
 			toast({
 				title: 'Error',
-				description: 'Ocurrió un error al guardar el perfil. Por favor, intente nuevamente.',
+				description: errorMessage || 'Ocurrió un error al guardar el perfil. Por favor, intente nuevamente.',
 				variant: 'destructive',
 				duration: 5000,
 			});
@@ -175,23 +168,6 @@ export function StockFormDialog({
 				</DialogHeader>
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2">
 					<div className="grid gap-4">
-						<div className="grid gap-2">
-							<Label htmlFor="category" className="text-foreground">
-								Categoria
-							</Label>
-							<Select value={category} onValueChange={setCategory}>
-								<SelectTrigger className="w-full">
-									<SelectValue placeholder="Seleccionar categoría" />
-								</SelectTrigger>
-								<SelectContent>
-									{categoriesOptions.map((cat) => (
-										<SelectItem key={cat} value={cat}>
-											{cat}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
 
 						<div className="grid gap-2">
 							<Label htmlFor="line" className="text-foreground">

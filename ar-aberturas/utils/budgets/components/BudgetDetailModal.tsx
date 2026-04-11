@@ -6,8 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Edit, CheckCircle } from 'lucide-react';
 import { BudgetWithWork } from '@/lib/works/balances';
-import { formatDate } from '../utils';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
+import { formatCreatedAt } from '@/helpers/date/format-date'
 
 interface BudgetDetailModalProps {
 	isOpen: boolean;
@@ -108,7 +108,7 @@ export function BudgetDetailModal({
 						<div>
 							<Label className="text-sm font-medium text-muted-foreground mt-2">Fecha de emisión</Label>
 							<p className="text-sm font-semibold">
-								{formatDate(budget.created_at)}
+								{formatCreatedAt(budget.created_at)}
 							</p>
 						</div>
 					</div>

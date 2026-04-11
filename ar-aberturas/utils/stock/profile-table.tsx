@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Package, TrendingDown, TrendingUp, Edit, Trash2, Plus, Minus } from 'lucide-react';
+import { Package, Edit, Trash2, Plus, Minus } from 'lucide-react';
 import { type ProfileItemStock } from '@/lib/stock/profile-stock';
 import { useState } from 'react';
 import { ConfirmUpdateDialog } from '@/utils/stock/confirm-update-dialog';
@@ -15,12 +15,13 @@ import {
 	AlertDialogAction,
 	AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
+import { formatCreatedAt } from '@/helpers/date/format-date'
 
 interface ProfileTableProps {
 	filteredStock: ProfileItemStock[];
-	onEdit: (id: string) => void;
-	onDelete: (id: string) => void;
-	onUpdateQuantity: (id: string, newQuantity: number) => Promise<void>;
+	onEdit: (id: number) => void;
+	onDelete: (id: number) => void;
+	onUpdateQuantity: (id: number, newQuantity: number) => Promise<void>;
 }
 
 export function ProfileTable({
@@ -29,18 +30,18 @@ export function ProfileTable({
 	onDelete,
 	onUpdateQuantity,
 }: ProfileTableProps) {
-	const [updatingId, setUpdatingId] = useState<string | null>(null);
+	const [updatingId, setUpdatingId] = useState<number | null>(null);
 	const [isUpdating, setIsUpdating] = useState(false);
 	const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 	const [currentAction, setCurrentAction] = useState<{
-		id: string;
+		id: number;
 		action: 'increment' | 'decrement';
 		currentQty: number;
 	} | null>(null);
 	const [openImageUrl, setOpenImageUrl] = useState<string | null>(null);
 
 	const handleQuantityAction = (
-		id: string,
+		id: number,
 		action: 'increment' | 'decrement',
 		currentQty: number
 	) => {
@@ -69,6 +70,7 @@ export function ProfileTable({
 	const getItemName = (item: ProfileItemStock) => {
 		return [item.line, item.code, item.color].filter(Boolean).join(' ') || 'este ítem';
 	};
+	
 	return (
 		<Card className="bg-card border-border overflow-hidden">
 			<div className="overflow-x-auto">
@@ -119,7 +121,6 @@ export function ProfileTable({
 							</tr>
 						) : (
 							filteredStock.map((item) => {
-								const isLowStock = (item.quantity ?? 0) < 10; // threshold fixed at 10
 
 								return (
 									<tr key={item.id} className="hover:bg-secondary/50 transition-colors">
@@ -194,16 +195,7 @@ export function ProfileTable({
 										</td>
 										<td className="px-2 py-2 whitespace-nowrap">
 											<p className="text-center text-xs text-muted-foreground">
-												{(() => {
-													const dateStr = item.created_at || item.last_update;
-													if (!dateStr) return 'N/A';
-													const d = new Date(dateStr);
-													if (isNaN(d.getTime())) return 'N/A';
-													const day = String(d.getUTCDate()).padStart(2, '0');
-													const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-													const year = d.getUTCFullYear();
-													return `${day}-${month}-${year}`;
-												})()}
+												{formatCreatedAt(item.created_at)}
 											</p>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap text-right">

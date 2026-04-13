@@ -1,4 +1,3 @@
-import { StyledString } from 'next/dist/build/swc/types';
 import { getSupabaseClient } from '../supabase-client';
 
 export type Balance = {

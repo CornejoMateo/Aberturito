@@ -9,10 +9,12 @@ import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/f
 import { formatShortDate } from '@/helpers/date/formats';
 import { BALANCES_REPORT_COLUMNS, BALANCES_REPORT_TITLE, BALANCE_TYPES, DEFAULT_FALLBACK } from '@/constants/reports/balances-report';
 import { BalanceWithBudgetAndClient, listBalancesForReport } from '@/lib/works/balances';
+import { getLastTransactionUSD } from '@/lib/works/balance_transactions';
 import { getTotalsByBalanceIds } from '@/lib/works/balance_transactions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';}
+import { normalizeMoney} from '@/helpers/format-prices.tsx/formats';
 
 type BalanceReportRow = {
 	id: string;
@@ -26,7 +28,7 @@ type BalanceReportRow = {
 	balanceType: string;
 	balanceAmountArs: number;
 	usdContractRef: number;
-	usdCurrentToCancel: number;
+	usdCurrentToCancel: number | null;
 	balanceInUseUsd: number;
 };
 
@@ -60,13 +62,13 @@ export function BalancesReport() {
 			const ids = balances.map((b) => String(b.id));
 			const { data: totals } = await getTotalsByBalanceIds(ids);
 
-			const next: BalanceReportRow[] = balances.map((b) => {
+			const next: BalanceReportRow[] = await Promise.all(balances.map(async (b) => {
 				const totalPaid = totals?.[String(b.id)]?.totalAmount ?? 0;
 				const totalPaidUSD = totals?.[String(b.id)]?.totalAmountUSD ?? 0;
 				const budgetArs = b.budget?.amount_ars ?? 0;
 				const budgetUsd = b.budget?.amount_usd ?? 0;
-				const remainingArs = budgetArs - totalPaid;
-				const remainingUsd = budgetUsd - totalPaidUSD;
+				const remainingArs = normalizeMoney(budgetArs - totalPaid);
+				const remainingUsd = normalizeMoney(budgetUsd - totalPaidUSD);
 
 				const clientName = `${b.client?.last_name ?? ''} ${b.client?.name ?? ''}`.trim() || DEFAULT_FALLBACK;
 				const workLocality = b.budget?.folder_budget?.work?.locality ?? '';
@@ -77,13 +79,17 @@ export function BalancesReport() {
 				const concept = conceptParts.join(' - ') || DEFAULT_FALLBACK;
 
 				const usdContractRef = Number(b.contract_date_usd) || 0;
-				const usdCurrent = Number(b.usd_current) || 0;
 
 				const balanceType = remainingArs > 0 ? BALANCE_TYPES.DEBTOR : remainingArs < 0 ? BALANCE_TYPES.CREDITOR : BALANCE_TYPES.CANCELLED;
 				const balanceAmountArs = remainingArs;
 				const balanceInUseUsd = remainingUsd;
 
 				const contractDateRaw = new Date(b.start_date || b.created_at);
+				let usdCurrentToCancel: number | null = null;
+				if (balanceType === BALANCE_TYPES.CANCELLED) {
+					const { data: lastTransactionUsd } = await getLastTransactionUSD(String(b.id));
+					usdCurrentToCancel = lastTransactionUsd ?? 0;
+				}
 
 				return {
 					id: String(b.id),
@@ -97,10 +103,10 @@ export function BalancesReport() {
 					balanceType,
 					balanceAmountArs,
 					usdContractRef,
-					usdCurrentToCancel: usdCurrent,
+					usdCurrentToCancel: usdCurrentToCancel,
 					balanceInUseUsd,
 				};
-			});
+			}));
 
 			setRows(next);
 		};
@@ -146,6 +152,8 @@ export function BalancesReport() {
 				bVal = bVal.toLowerCase();
 			}
 
+			if (aVal == null) aVal = '';
+			if (bVal == null) bVal = '';
 			if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
 			if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
 			return 0;

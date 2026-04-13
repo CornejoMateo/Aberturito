@@ -19,6 +19,8 @@ export const BALANCE_TYPES = {
 	DEBTOR: 'DEUDOR',
 	CREDITOR: 'ACREEDOR',
 	CANCELLED: 'CANCELADO',
+	TOTAL: 'TOTAL',
 } as const;
 
 export const DEFAULT_FALLBACK = '-';
+

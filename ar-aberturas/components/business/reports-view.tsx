@@ -1,9 +1,7 @@
 'use client';
 
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BalancesReport } from './reports/balances-report';
 import { BudgetsReport } from './reports/budgets-report';
-import { FileText } from 'lucide-react';
 
 export function ReportsView() {
 	return (
@@ -16,32 +14,8 @@ export function ReportsView() {
 				</div>
 			</div>
 
-			{/* Tabs */}
-			<Tabs defaultValue="overview" className="space-y-4">
-				<TabsList className="bg-card border border-border">
-					<TabsTrigger value="overview">Saldos</TabsTrigger>
-					<TabsTrigger value="performance">Presupuestos</TabsTrigger>
-					<TabsTrigger value="sources">A definir</TabsTrigger>
-				</TabsList>
-
-				<TabsContent value="overview" className="space-y-4">
-					<BalancesReport />
-				</TabsContent>
-
-				<TabsContent value="performance" className="space-y-4">
-					<BudgetsReport />
-				</TabsContent>
-
-				<TabsContent value="sources" className="space-y-4">
-					<div className="border rounded-lg p-8 text-center">
-						<FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-						<h3 className="text-lg font-semibold mb-2">A definir</h3>
-						<p className="text-muted-foreground">
-							Contenido de este reporte será implementado aquí
-						</p>
-					</div>
-				</TabsContent>
-			</Tabs>
+			{/* Content */}
+			<BalancesReport />
 		</div>
 	);
 }

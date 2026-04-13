@@ -13,7 +13,7 @@ import { getLastTransactionUSD } from '@/lib/works/balance_transactions';
 import { getTotalsByBalanceIds } from '@/lib/works/balance_transactions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';}
+import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
 import { normalizeMoney} from '@/helpers/format-prices.tsx/formats';
 
 type BalanceReportRow = {

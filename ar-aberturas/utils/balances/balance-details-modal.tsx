@@ -19,7 +19,7 @@ import {
 	createTransaction,
 	deleteTransaction,
 } from '@/lib/works/balance_transactions';
-import { format } from 'date-fns';
+import { format, set } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 import { formatCurrency } from '../../helpers/format-prices.tsx/formats';
 import { calculateBalanceSummary } from '../../helpers/balances/balance-calculations';
@@ -234,6 +234,8 @@ export function BalanceDetailsModal({
 								setTransactionAmount('');
 								setPaymentMethod('');
 								setNotes('');
+								setQuoteUsd('');
+								setUsdAmount('');
 							}}
 							onSave={handleAddTransaction}
 							onStartAdd={() => setIsAddingTransaction(true)}

@@ -51,7 +51,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 						<ResponsiveContainer width="100%" height={300}>
 							<BarChart data={metrics.budgetsByMaterial}>
 								<CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-								<XAxis dataKey="material" />
+								<XAxis dataKey="material" interval={0} />
 								<YAxis />
 								<Tooltip formatter={(value) => `${value} presupuestos`} />
 								<Bar dataKey="count" fill="#06b6d4" name="Presupuestos" radius={[8, 8, 0, 0]} />
@@ -73,7 +73,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 						<ResponsiveContainer width="100%" height={300}>
 							<BarChart data={metrics.soldBudgetsByMaterial}>
 								<CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-								<XAxis dataKey="material" />
+								<XAxis dataKey="material"  interval={0}/>
 								<YAxis />
 								<Tooltip formatter={(value) => `${value} presupuestos vendidos`} />
 								<Bar

@@ -26,17 +26,17 @@ export function MetricCard({
 
   return (
     <Card className="p-6 bg-card border-border">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <p className="text-sm font-medium text-muted-foreground">{label}</p>
-          <p className="text-2xl font-bold text-foreground mt-2">
+          <p className="text-2xl font-bold text-foreground mt-2 whitespace-normal break-all leading-tight">
             {loading ? '...' : value}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             {loading ? 'Cargando...' : statusText}
           </p>
         </div>
-        <div className="rounded-lg bg-secondary p-3 text-chart-1">
+        <div className="rounded-lg bg-secondary p-3 text-chart-1 shrink-0">
           <Icon className="h-6 w-6" />
         </div>
       </div>

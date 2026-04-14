@@ -13,7 +13,8 @@ import {
   getBudgetsByLocation,
   getClientsByContactMethod,
   getBudgetsByMaterial,
-  getSoldBudgetsByMaterial
+  getSoldBudgetsByMaterial,
+  getLostBudgetsCount,
 } from '@/lib/budgets/budgets';
 import { SalesMetrics, DEFAULT_METRICS } from '@/lib/budgets/types';
 
@@ -36,18 +37,28 @@ export const useBudgetMetrics = () => {
           setMetrics(prev => ({ ...prev, clientsWithBudget }));
         }
 
-        // Obtain total budgets
+        // Obtain total quantity budgets
         const { data: budgetsCount, error: budgetsError } = await getBudgetsCount();
         if (!budgetsError && budgetsCount !== null) {
           setMetrics(prev => ({ ...prev, totalBudgets: budgetsCount }));
         }
 
-        // Obtain total amount of all budgets
+        // Obtain total quantity of sold budgets
         const { data: soldBudgetsCount, error: soldError } = await getSoldBudgetsCount();
         if (!soldError && soldBudgetsCount !== null) {
           setMetrics(prev => ({
             ...prev,
             totalSales: soldBudgetsCount,
+            conversionRate: budgetsCount > 0 ? Math.round((soldBudgetsCount / budgetsCount) * 100) : 0
+          }));
+        }
+
+        // Obtain total quantity of lost budgets
+        const { data: lostBudgetsCount, error: lostError } = await getLostBudgetsCount();
+        if (!soldError && soldBudgetsCount !== null) {
+          setMetrics(prev => ({
+            ...prev,
+            totalLost: lostBudgetsCount,
             conversionRate: budgetsCount > 0 ? Math.round((soldBudgetsCount / budgetsCount) * 100) : 0
           }));
         }

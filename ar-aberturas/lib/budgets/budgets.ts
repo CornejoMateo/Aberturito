@@ -2,18 +2,19 @@ import { getSupabaseClient } from '../supabase-client';
 import { BudgetWithWork } from '../works/balances';
 
 export type Budget = {
-  id: string;
-  created_at: string;
-  folder_budget_id?: string | null;
-  accepted?: boolean | null;
-  sold?: boolean | null;
-  pdf_url?: string | null;
-  pdf_path?: string | null;
-  number?: string | null;
-  amount_ars?: number | null;
-  amount_usd?: number | null;
-  version?: string | null;
-  type?: string | null;
+	id: string;
+	created_at: string;
+	folder_budget_id?: string | null;
+	accepted?: boolean | null;
+	sold?: boolean | null;
+	lost?: boolean | null;
+	pdf_url?: string | null;
+	pdf_path?: string | null;
+	number?: string | null;
+	amount_ars?: number | null;
+	amount_usd?: number | null;
+	version?: string | null;
+	type?: string | null;
 };
 
 export type BudgetWithWorkAndClient = BudgetWithWork & {
@@ -67,6 +68,15 @@ export async function getSoldBudgetsCount(): Promise<{ data: number; error: any 
 	return { data: count || 0, error };
 }
 
+export async function getLostBudgetsCount(): Promise<{ data: number; error: any }> {
+	const supabase = getSupabaseClient();
+	const { count, error } = await supabase
+		.from(TABLE)
+		.select('*', { count: 'exact', head: true })
+		.eq('lost', true);
+	return { data: count || 0, error };
+}
+
 export async function getChosenBudgetsCount(): Promise<{ data: number; error: any }> {
 	const supabase = getSupabaseClient();
 	const { count, error } = await supabase
@@ -82,6 +92,22 @@ export async function getSoldBudgetsTotalAmount(): Promise<{ data: { totalArs: n
 		.from(TABLE)
 		.select('amount_ars, amount_usd')
 		.eq('sold', true);
+	
+	if (error) return { data: { totalArs: 0, totalUsd: 0 }, error };
+	if (!data) return { data: { totalArs: 0, totalUsd: 0 }, error: null };
+	
+	const totalArs = data.reduce((sum, budget) => sum + (budget.amount_ars || 0), 0);
+	const totalUsd = data.reduce((sum, budget) => sum + (budget.amount_usd || 0), 0);
+	
+	return { data: { totalArs, totalUsd }, error: null };
+}
+
+export async function getLostBudgetsTotalAmount(): Promise<{ data: { totalArs: number; totalUsd: number }; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('amount_ars, amount_usd')
+		.eq('lost', true);
 	
 	if (error) return { data: { totalArs: 0, totalUsd: 0 }, error };
 	if (!data) return { data: { totalArs: 0, totalUsd: 0 }, error: null };
@@ -152,6 +178,7 @@ export async function getBudgetsByFolderBudgetIds(
 				amount_usd,
 				accepted,
 				sold,
+				lost,
 				pdf_url,
 				pdf_path,
 				number,
@@ -188,6 +215,7 @@ export async function getBudgetsByFolderBudgetIds(
 				amount_usd: b.amount_usd,
 				accepted: b.accepted,
 				sold: b.sold,
+				lost: b.lost,
 				pdf_url: b.pdf_url,
 				pdf_path: b.pdf_path,
 				number: b.number,

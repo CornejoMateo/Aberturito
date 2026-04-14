@@ -19,6 +19,7 @@ import { parseAmount } from './utils';
 export interface BudgetHandlers {
 	handleChooseBudget: (budgetId: string, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void) => Promise<void>;
 	handleToggleSold: (budgetId: string, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void, closeBudgetDetailModal: () => void) => Promise<void>;
+	handleToggleLost: (budgetId: string, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void, closeBudgetDetailModal: () => void) => Promise<void>;
 	handleDeleteBudget: (budgetId: string, setDeleteBudgetConfirm: (state: any) => void) => void;
 	confirmDeleteBudget: (deleteBudgetConfirm: any, refresh: () => void, setIsLoading: (loading: boolean) => void, setDeleteBudgetConfirm: (state: any) => void) => Promise<void>;
 	handleDeleteFolder: (folderId: string, budgetsByFolderId: Map<string, BudgetWithWork[]>, setDeleteFolderConfirm: (state: any) => void) => void;
@@ -85,6 +86,37 @@ export const budgetHandlers: BudgetHandlers = {
 			toast({ 
 				title: budget.sold ? TOAST_MESSAGES.soldUnmarked : TOAST_MESSAGES.soldMarked,
 				description: budget.sold ? 'El presupuesto ya no está marcado como vendido.' : 'El presupuesto ahora está marcado como vendido.',
+			});
+			
+			closeBudgetDetailModal();
+			refresh();
+		} finally {
+			setIsLoading(false);
+		}
+	},
+
+	async handleToggleLost(budgetId: string, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void, closeBudgetDetailModal: () => void) {
+		try {
+			setIsLoading(true);
+			const budget = budgets.find(b => b.id === budgetId);
+			if (!budget) return;
+
+			const { error } = await updateBudget(budgetId, {
+				lost: !budget.lost
+			});
+			
+			if (error) {
+				toast({
+					variant: 'destructive',
+					title: 'No se pudo cambiar el estado del presupuesto',
+					description: translateError(error),
+				});
+				return;
+			}
+			
+			toast({ 
+				title: budget.lost ? TOAST_MESSAGES.lostUnmarked : TOAST_MESSAGES.lostMarked,
+				description: budget.lost ? 'El presupuesto ya no está marcado como perdido.' : 'El presupuesto ahora está marcado como perdido.',
 			});
 			
 			closeBudgetDetailModal();

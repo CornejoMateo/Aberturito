@@ -115,7 +115,7 @@ const navigation = [
 		name: 'Reportes',
 		href: '/reports',
 		icon: BarChart3,
-		disabled: true,
+		disabled: false,
 	},
 ];
 

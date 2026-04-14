@@ -10,6 +10,7 @@ import { BudgetFolderVM } from '../types';
 import { workLabel } from '../utils';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
 import { formatCreatedAt } from '@/helpers/date/format-date';
+import { getBudgetStatus, BUDGET_STATUS_COLORS, BUDGET_STATUS_LABELS } from '@/constants/budget-status';
 
 interface BudgetCardProps {
 	budget: BudgetWithWork;
@@ -118,11 +119,24 @@ export function BudgetCard({
 					{isChosen ? 'Elegido' : 'Elegir'}
 				</Button>
 			</div>
-			{budget.sold && (
-				<div className="absolute bottom-0 left-0 right-0 bg-green-500 text-white text-xs font-semibold py-1 text-center rounded-b-lg">
-					VENDIDO
-				</div>
-			)}
+			{(() => {
+				const currentStatus = getBudgetStatus(budget);
+				const statusColors = {
+					in_progress: 'bg-yellow-500',
+					sold: 'bg-green-500',
+					lost: 'bg-red-500',
+					accepted: 'bg-blue-500',
+				};
+				
+				return (
+					<div className={cn(
+						'absolute bottom-0 left-0 right-0 text-white text-xs font-semibold py-1 text-center rounded-b-lg',
+						statusColors[currentStatus as keyof typeof statusColors] || 'bg-gray-500'
+					)}>
+						{BUDGET_STATUS_LABELS[currentStatus as keyof typeof BUDGET_STATUS_LABELS]}
+					</div>
+				);
+			})()}
 		</Card>
 	);
 }

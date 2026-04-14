@@ -69,6 +69,10 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 		budgetHandlers.handleToggleSold(budgetId, budgets, refresh, setIsLoading, () => setBudgetDetailModal({ open: false, budget: null }));
 	};
 
+	const handleStatusChange = (budgetId: string, newStatus: string) => {
+		budgetHandlers.handleStatusChange(budgetId, newStatus, budgets, refresh, setIsLoading);
+	};
+
 	const handleDeleteBudget = (budgetId: string) => {
 		budgetHandlers.handleDeleteBudget(budgetId, setDeleteBudgetConfirm);
 	};
@@ -235,6 +239,7 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 				onToggleSold={handleToggleSold}
 				onChooseBudget={handleChooseBudget}
 				onViewPdf={handleViewPdf}
+				onStatusChange={handleStatusChange}
 				onClose={closeBudgetDetailModal}
 			/>
 

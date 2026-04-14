@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
 	AlertDialog,
@@ -17,9 +17,8 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from '@/components/ui/dialog';
-import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { OptionDialog } from './option-add';
 import { toast } from '@/components/ui/use-toast';
@@ -33,6 +32,7 @@ import {
 	SiteOption,
 } from '@/lib/stock/stock-options';
 import { useOptions } from '@/hooks/use-options';
+import { translateError } from '@/lib/error-translator';
 
 interface OptionsModalProps {
 	open: boolean;
@@ -123,18 +123,13 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 
 			if (error) {
 				console.error('Error al eliminar:', error);
-				let errorMessage = 'Ocurrió un error al eliminar el elemento.';
-				if (error.message?.includes('violates foreign key constraint')) {
-					errorMessage =
-						'No se puede eliminar este elemento porque está siendo utilizado por otra de las opciones.';
-				}
+				let errorMessage = translateError(error);
 				toast({
 					title: 'Error al eliminar',
 					description: errorMessage,
 					variant: 'destructive',
 					duration: 5000,
 				});
-				console.log('Mostrando toast de error:', errorMessage);
 				return;
 			}
 
@@ -163,10 +158,11 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 			});
 			console.log('Mostrando toast de éxito');
 		} catch (err) {
+			const errorMessage = translateError(err);
 			console.error('Error inesperado:', err);
 			toast({
 				title: 'Error inesperado',
-				description: 'Ocurrió un error inesperado al eliminar el elemento.',
+				description: errorMessage || 'Ocurrió un error inesperado al eliminar el elemento.',
 				variant: 'destructive',
 				duration: 5000,
 			});
@@ -495,7 +491,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 						variant="outline"
 						onClick={() => {
 							onOpenChange(false);
-							window.location.reload(); // Navega a la misma ruta, forzando recarga
+							window.location.reload(); 
 						}}
 					>
 						Cerrar

@@ -34,16 +34,9 @@ export function filterStockItems(
 			(item.supply_code?.toLowerCase?.() || '').includes(searchLower) ||
 			(item.supply_description?.toLowerCase?.() || '').includes(searchLower);
 
-		let matchesCategory = true;
-		if (category === 'Perfiles') {
-			matchesCategory = item.category === selectedCategory;
-		} else if (category === 'Accesorios') {
-			matchesCategory = true; // accessories don't use the same category field
-		}
-
 		const matchesMaterial =
 			!materialType || (item.material || item.accessory_material || item.supply_material || item.ironwork_material || '').toLowerCase() === materialType.toLowerCase();
 
-		return matchesSearch && matchesCategory && matchesMaterial;
+		return matchesSearch && matchesMaterial;
 	});
 }

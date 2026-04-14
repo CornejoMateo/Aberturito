@@ -46,12 +46,12 @@ export function BalanceInformation({
 
 			<div>
 				<p className="text-xs text-muted-foreground mb-1">Dolar en fecha contratacion</p>
-				<p className="text-sm font-bold text-blue-600">{formatCurrencyUSD(contractDateUsd)}</p>
+				<p className="text-sm font-bold text-blue-600">{formatCurrency(contractDateUsd)}</p>
 			</div>
 
 			<div>
 				<p className="text-xs text-muted-foreground mb-1">Dolar actual</p>
-				<p className="text-sm font-bold text-blue-600">{formatCurrencyUSD(usdCurrent)}</p>
+				<p className="text-sm font-bold text-blue-600">{formatCurrency(usdCurrent)}</p>
 			</div>
 
 			<div>

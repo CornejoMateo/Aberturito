@@ -16,6 +16,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { Command, CommandInput, CommandList, CommandEmpty, CommandItem } from '@/components/ui/command';
 import { Client } from '@/lib/clients/clients';
 import { Work } from '@/lib/works/works';
+import { checklistTypes } from '@/lib/works/checklists.constants';
 
 const NO_WORK_VALUE = '__none__';
 
@@ -46,6 +47,8 @@ export function ClaimsForm({
 }: ClaimsFormProps) {
 	const [open, setOpen] = useState(false);
 	const [selected, setSelected] = useState<Client | null>(null);
+
+	const types = Object.values(checklistTypes);
 
 	useEffect(() => {
 		const match = clients.find((client) => client.id === formData.client_id) ?? null;
@@ -189,13 +192,12 @@ export function ClaimsForm({
 							<SelectValue placeholder="Seleccionar tipo" />
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value="Aluminio">Aluminio</SelectItem>
-							<SelectItem value="PVC">PVC</SelectItem>
-							<SelectItem value="Persiana">Persiana</SelectItem>
-							<SelectItem value="Mampara">Mampara</SelectItem>
-							<SelectItem value="Portón">Portón</SelectItem>
-							<SelectItem value="Vidrio">Vidrio</SelectItem>
-							<SelectItem value="Otros">Otros</SelectItem>
+							{types && types.map((type) => (
+								<SelectItem key={type} value={type}>
+									{type}
+								</SelectItem>
+							))}
+							<SelectItem value="Otro">Otro</SelectItem>
 						</SelectContent>
 					</Select>
 				</div>

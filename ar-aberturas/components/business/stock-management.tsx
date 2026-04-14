@@ -8,34 +8,6 @@ import { ProfileTable } from '../../utils/stock/profile-table';
 import { AccesoriesTable } from '@/utils/stock/stock-tables';
 import { AccessoryFormDialog } from '@/utils/stock/accessory-add-dialog';
 import { OptionsModal } from '@/utils/stock/options/options';
-import {
-	listStock,
-	createProfileStock,
-	deleteProfileStock,
-	type ProfileItemStock,
-	updateProfileStock,
-} from '@/lib/stock/profile-stock';
-import {
-	listAccesoriesStock,
-	createAccessoryStock,
-	updateAccessoryStock,
-	deleteAccesoryStock,
-	type AccessoryItemStock,
-} from '@/lib/stock/accesorie-stock';
-import {
-	listSuppliesStock,
-	createSupplyStock,
-	updateSupplyStock,
-	deleteSupplyStock,
-	type SupplyItemStock,
-} from '@/lib/stock/supplies-stock';
-import {
-	listIronworksStock,
-	createIronworkStock,
-	updateIronworkStock,
-	deleteIronworkStock,
-	type IronworkItemStock,
-} from '@/lib/stock/ironwork-stock';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import {
@@ -51,6 +23,10 @@ import { Image } from 'lucide-react';
 import { PhotoGalleryModal } from '@/utils/stock/images/photo-gallery-modal';
 import { STOCK_CONFIGS, type StockCategory } from '@/lib/stock/stock-config';
 import { filterStockItems } from '@/utils/stock/stock-filters-logic';
+import { toast } from '../ui/use-toast';
+import { translateError } from '@/lib/error-translator';
+import { getDescription, getTitle } from '@/helpers/stock/stock-management';
+import { STOCK_ADAPTERS } from '@/lib/stock/adapters';
 
 interface StockManagementProps {
 	materialType?: 'Aluminio' | 'PVC';
@@ -61,36 +37,16 @@ export function StockManagement({
 	materialType = 'Aluminio',
 	category = 'Perfiles',
 }: StockManagementProps) {
-	// choose data source based on category
+	// Get adapter for current category
+	const adapter = STOCK_ADAPTERS[category] || STOCK_ADAPTERS['Perfiles'];
 	const tableName =
 		category === 'Perfiles' ? 'profiles' : STOCK_CONFIGS[category as StockCategory].tableName;
-	const fetcher = async () => {
-		if (category === 'Perfiles') {
-			const { data, error } = await listStock();
-			if (error) throw error;
-			return data || [];
-		}
-		if (category === 'Accesorios') {
-			const { data, error } = await listAccesoriesStock();
-			if (error) throw error;
-			return data || [];
-		}
-		if (category === 'Insumos') {
-			const { data, error } = await listSuppliesStock();
-			if (error) throw error;
-			return data || [];
-		}
-		const { data, error } = await listIronworksStock();
-		if (error) throw error;
-		return data || [];
-	};
+	const fetcher = () => adapter.fetch();
 
 	const {
 		data: stock,
 		loading,
 		error,
-		refresh,
-		invalidateCache,
 	} = useOptimizedRealtime<any>(tableName, fetcher, `realtime_${category}_${materialType}`);
 
 	const [searchTerm, setSearchTerm] = useState('');
@@ -110,17 +66,7 @@ export function StockManagement({
 
 		// Then apply the out-of-stock filter if enabled
 		if (showOutOfStock) {
-			result = result.filter((item: any) => {
-				// Check all possible quantity fields and default to 0 if undefined
-				const qty =
-					item.quantity ??
-					item.accessory_quantity ??
-					item.ironwork_quantity ??
-					item.supply_quantity ??
-					0;
-				// Only include items with exactly 0 quantity
-				return qty === 0;
-			});
+			result = result.filter((item: any) => adapter.getQuantity(item) === 0);
 		}
 		return result;
 	}, [stock, searchTerm, selectedCategory, materialType, category, showOutOfStock]);
@@ -132,13 +78,9 @@ export function StockManagement({
 		return filteredStock.slice(startIndex, startIndex + itemsPerPage);
 	}, [filteredStock, currentPage, itemsPerPage]);
 
-	const lowStockItems = (stock || []).filter((item: any) => {
-		const qty = item.quantity ?? item.accessory_quantity ?? item.ironwork_quantity ?? 0;
-		return qty < 10;
-	});
+	const lowStockItems = (stock || []).filter((item: any) => adapter.getQuantity(item) < 10);
 	const totalItems = (stock || []).reduce(
-		(sum: any, item: any) =>
-			sum + (item.quantity ?? item.accessory_quantity ?? item.ironwork_quantity ?? 0),
+		(sum: any, item: any) => sum + adapter.getQuantity(item),
 		0
 	);
 
@@ -148,39 +90,7 @@ export function StockManagement({
 			new Date(a.created_at || a.last_update || 0).getTime()
 	)[0];
 
-	const getTitle = () => {
-		const categoryName =
-			category === 'Perfiles' ? 'Perfiles' : STOCK_CONFIGS[category as StockCategory].title;
-		if (category === 'Insumos') {
-			return `Gestión de ${categoryName}`;
-		}
-		switch (materialType) {
-			case 'Aluminio':
-				return `${categoryName} de Aluminio`;
-			case 'PVC':
-				return `${categoryName} de PVC`;
-			default:
-				return `Gestión de ${categoryName}`;
-		}
-	};
-
-	const getDescription = () => {
-		const categoryName =
-			category === 'Perfiles' ? 'Perfiles' : STOCK_CONFIGS[category as StockCategory].title;
-		if (category === 'Insumos') {
-			return `Control de inventario de ${categoryName.toLowerCase()}`;
-		}
-		switch (materialType) {
-			case 'Aluminio':
-				return `Control de inventario de ${categoryName.toLowerCase()} de aluminio`;
-			case 'PVC':
-				return `Control de inventario de ${categoryName.toLowerCase()} de PVC`;
-			default:
-				return `Control de inventario de ${categoryName.toLowerCase()}`;
-		}
-	};
-
-	const handleEdit = (id: string) => {
+	const handleEdit = (id: number) => {
 		const item = stock.find((s) => s.id === id);
 		if (item) {
 			setEditingItem(item);
@@ -193,8 +103,8 @@ export function StockManagement({
 			{/* Header */}
 			<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 				<div>
-					<h2 className="text-2xl font-bold text-foreground text-balance">{getTitle()}</h2>
-					<p className="text-muted-foreground mt-1">{getDescription()}</p>
+					<h2 className="text-2xl font-bold text-foreground text-balance">{getTitle(category, materialType)}</h2>
+					<p className="text-muted-foreground mt-1">{getDescription(category, materialType)}</p>
 				</div>
 
 				<div className="flex gap-2">
@@ -228,12 +138,27 @@ export function StockManagement({
 							open={isAddDialogOpen}
 							onOpenChange={setIsAddDialogOpen}
 							onSave={async (newItem) => {
-								const { error } = await createProfileStock(newItem);
-								if (error) {
-									console.error('Error al crear perfil:', error);
-									return;
+								try {
+									const result = await adapter.create(newItem);
+									if (result?.error) {
+										const errorMessage = translateError(result.error);
+										toast({
+											title: 'Error',
+											description: errorMessage || 'No se pudo crear el perfil. Intenta nuevamente.',
+											variant: 'destructive',
+										});
+										return;
+									}
+									setIsAddDialogOpen(false);
+								} catch (error) {
+									console.error('Error al crear:', error);
+									const errorMessage = translateError(error);
+									toast({
+										title: 'Error',
+										description: errorMessage || 'No se pudo crear el perfil. Intenta nuevamente.',
+										variant: 'destructive',
+									});
 								}
-								setIsAddDialogOpen(false);
 							}}
 							materialType={materialType}
 							triggerButton={true}
@@ -246,25 +171,25 @@ export function StockManagement({
 							materialType={materialType}
 							onSave={async (newItem) => {
 								try {
-									if (category === 'Accesorios') {
-										const { error } = await createAccessoryStock(newItem as any);
-										if (error) throw error;
-									} else if (category === 'Insumos') {
-										const { error } = await createSupplyStock(newItem as any);
-										if (error) throw error;
-									} else {
-										const { error } = await createIronworkStock(newItem as any);
-										if (error) throw error;
+									const result = await adapter.create(newItem);
+									if (result?.error) {
+										const errorMessage = translateError(result.error);
+										toast({
+											title: 'Error',
+											description: errorMessage || 'No se pudo crear el item. Intenta nuevamente.',
+											variant: 'destructive',
+										});
+										return;
 									}
 									setIsAddDialogOpen(false);
-								} catch (err) {
-									if (typeof err === 'object' && err !== null) {
-										console.log('Error keys:', Object.keys(err));
-										console.log('Error JSON:', JSON.stringify(err, null, 2));
-									} else {
-										console.log('Error value:', err);
-									}
-									console.error('Error al crear item:', err);
+								} catch (error) {
+									console.error('Error al crear:', error);
+									const errorMessage = translateError(error);
+									toast({
+										title: 'Error',
+										description: errorMessage || 'No se pudo crear el item. Intenta nuevamente.',
+										variant: 'destructive',
+									});
 								}
 							}}
 							triggerButton={true}
@@ -303,15 +228,46 @@ export function StockManagement({
 							filteredStock={currentItems}
 							onEdit={handleEdit}
 							onDelete={async (id) => {
-								const { error } = await deleteProfileStock(id);
-								if (error) console.error('Error al eliminar perfil:', error);
+								try {
+									const result = await adapter.remove(id);
+									if (result?.error) {
+										const errorMessage = translateError(result.error);
+										toast({
+											title: 'Error',
+											description: errorMessage || 'No se pudo eliminar el perfil. Intenta nuevamente.',
+											variant: 'destructive',
+										});
+									}
+								} catch (error) {
+									const errorMessage = translateError(error);
+									console.error('Error al eliminar:', error);
+									toast({
+										title: 'Error',
+										description: errorMessage || 'No se pudo eliminar el perfil. Intenta nuevamente.',
+										variant: 'destructive',
+									});
+								}
 							}}
 							onUpdateQuantity={async (id, newQuantity) => {
 								if (newQuantity < 0) return;
-								const { error } = await updateProfileStock(id, {
-									quantity: newQuantity,
-								});
-								if (error) console.error('Error al actualizar la cantidad:', error);
+								try {
+									const result = await adapter.updateQuantity(id, newQuantity);
+									if (result?.error) {
+										const errorMessage = translateError(result.error);
+										toast({
+											title: 'Error',
+											description: errorMessage || 'No se pudo actualizar la cantidad. Intenta nuevamente.',
+											variant: 'destructive',
+										});
+									}
+								} catch (error) {
+									console.error('Error al actualizar cantidad:', error);
+									toast({
+										title: 'Error',
+										description: 'No se pudo actualizar la cantidad. Intenta nuevamente.',
+										variant: 'destructive',
+									});
+								}
 							}}
 						/>
 					) : (
@@ -327,29 +283,44 @@ export function StockManagement({
 							}}
 							onDelete={async (id) => {
 								try {
-									if (category === 'Accesorios') {
-										await deleteAccesoryStock(id);
-									} else if (category === 'Insumos') {
-										await deleteSupplyStock(id);
-									} else {
-										await deleteIronworkStock(id);
+									const result = await adapter.remove(id);
+									if (result?.error) {
+										const errorMessage = translateError(result.error);
+										toast({
+											title: 'Error',
+											description: errorMessage || 'No se pudo eliminar el item. Intenta nuevamente.',
+											variant: 'destructive',
+										});
 									}
-								} catch (err) {
-									console.error('Error al eliminar item:', err);
+								} catch (error) {
+									const errorMessage = translateError(error);
+									toast({
+										title: 'Error',
+										description: errorMessage || 'No se pudo eliminar el item. Intenta nuevamente.',
+										variant: 'destructive',
+									});
 								}
 							}}
 							onUpdateQuantity={async (id, newQuantity) => {
 								if (newQuantity < 0) return;
 								try {
-									if (category === 'Accesorios') {
-										await updateAccessoryStock(id, { accessory_quantity: newQuantity });
-									} else if (category === 'Insumos') {
-										await updateSupplyStock(id, { supply_quantity: newQuantity });
-									} else {
-										await updateIronworkStock(id, { ironwork_quantity: newQuantity });
+									const result = await adapter.updateQuantity(id, newQuantity);
+									if (result?.error) {
+										const errorMessage = translateError(result.error);
+										toast({
+											title: 'Error',
+											description: errorMessage || 'No se pudo actualizar la cantidad. Intenta nuevamente.',
+											variant: 'destructive',
+										});
 									}
-								} catch (err) {
-									console.error('Error al actualizar cantidad:', err);
+								} catch (error) {
+									console.error('Error al actualizar cantidad:', error);
+									const errorMessage = translateError(error);
+									toast({
+										title: 'Error',
+										description: errorMessage || 'No se pudo actualizar la cantidad. Intenta nuevamente.',
+										variant: 'destructive',
+									});
 								}
 							}}
 						/>
@@ -365,9 +336,29 @@ export function StockManagement({
 								editItem={editingItem}
 								materialType={materialType}
 								onSave={async (changes) => {
-									const { error } = await updateProfileStock(editingItem.id, changes as any);
-									if (error) console.error('Error al guardar perfil:', error);
-									setIsEditDialogOpen(false);
+									try {
+										const result = await adapter.update(editingItem.id, changes);
+										if (result?.error) {
+											const errorMessage = translateError(result.error);
+											toast({
+												title: 'Error',
+												description:
+													errorMessage || 'No se pudo actualizar el perfil. Intenta nuevamente.',
+												variant: 'destructive',
+											});
+											return;
+										}
+										setIsEditDialogOpen(false);
+									} catch (error) {
+										console.error('Error al actualizar:', error);
+										const errorMessage = translateError(error);
+										toast({
+											title: 'Error',
+											description:
+												errorMessage || 'No se pudo actualizar el perfil. Intenta nuevamente.',
+											variant: 'destructive',
+										});
+									}
 								}}
 							/>
 						) : (
@@ -378,17 +369,26 @@ export function StockManagement({
 								editItem={editingItem}
 								onSave={async (changes) => {
 									try {
-										if (category === 'Accesorios') {
-											await updateAccessoryStock(editingItem.id, changes as any);
-										} else if (category === 'Insumos') {
-											await updateSupplyStock(editingItem.id, changes as any);
-										} else {
-											await updateIronworkStock(editingItem.id, changes as any);
+										const result = await adapter.update(editingItem.id, changes);
+										if (result?.error) {
+											const errorMessage = translateError(result.error);
+											toast({
+												title: 'Error',
+												description: errorMessage || 'No se pudo actualizar el item. Intenta nuevamente.',
+												variant: 'destructive',
+											});
+											return;
 										}
-									} catch (err) {
-										console.error('Error al actualizar item:', err);
+										setIsEditDialogOpen(false);
+									} catch (error) {
+										console.error('Error al actualizar:', error);
+										const errorMessage = translateError(error);
+										toast({
+											title: 'Error',
+											description: errorMessage || 'No se pudo actualizar el item. Intenta nuevamente.',
+											variant: 'destructive',
+										});
 									}
-									setIsEditDialogOpen(false);
 								}}
 							/>
 						))}

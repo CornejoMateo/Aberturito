@@ -99,3 +99,42 @@ export async function getTotalByBalanceId(balanceId: string): Promise<{
 	
 	return { data: { totalAmount, totalAmountUSD }, error: null };
 }
+
+export async function getTotalsByBalanceIds(
+	balanceIds: string[]
+): Promise<{ data: Record<string, { totalAmount: number; totalAmountUSD: number }> | null; error: any }> {
+	if (!balanceIds.length) return { data: {}, error: null };
+	const supabase = getSupabaseClient();
+	const { data: transactions, error } = await supabase
+		.from(TABLE)
+		.select('balance_id, amount, usd_amount')
+		.in('balance_id', balanceIds);
+
+	if (error) {
+		return { data: null, error };
+	}
+
+	const totals: Record<string, { totalAmount: number; totalAmountUSD: number }> = {};
+	for (const t of transactions || []) {
+		const id = String((t as any).balance_id || '');
+		if (!id) continue;
+		if (!totals[id]) totals[id] = { totalAmount: 0, totalAmountUSD: 0 };
+		totals[id].totalAmount += Number((t as any).amount) || 0;
+		totals[id].totalAmountUSD += Number((t as any).usd_amount) || 0;
+	}
+
+	return { data: totals, error: null };
+}
+
+export async function getLastTransactionUSD(id: string): Promise<{ data: number | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('quote_usd')
+		.eq('balance_id', id)
+		.order('created_at', { ascending: false })
+		.limit(1)
+		.single();
+	
+	return { data: data?.quote_usd || null, error };
+}

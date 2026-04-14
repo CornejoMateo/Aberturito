@@ -1,6 +1,5 @@
 import { toast } from '@/components/ui/use-toast';
 import { getSupabaseClient } from '@/lib/supabase-client';
-import { Work } from '@/lib/works/works';
 import { BudgetWithWork } from '@/lib/works/balances';
 import { 
 	createBudget, 

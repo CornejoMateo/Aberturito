@@ -89,7 +89,7 @@ export function BalancesReport() {
 
 				const usdContractRef = Number(b.contract_date_usd) || 0;
 
-				const balanceType = remainingArs > 0 ? BALANCE_TYPES.DEBTOR : remainingArs < 0 ? BALANCE_TYPES.CREDITOR : BALANCE_TYPES.CANCELLED;
+				const balanceType = remainingUsd > 0 ? BALANCE_TYPES.DEBTOR : remainingUsd < 0 ? BALANCE_TYPES.CREDITOR : BALANCE_TYPES.CANCELLED;
 				const balanceAmountArs = remainingArs;
 				const balanceInUseUsd = remainingUsd;
 

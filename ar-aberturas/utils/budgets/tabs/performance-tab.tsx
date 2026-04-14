@@ -1,6 +1,5 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
 import { TabsContent } from '@/components/ui/tabs';
 import { PerformanceChartsCarousel } from '../performance-charts-carousel';
 import { SalesMetrics } from '../../../lib/budgets/types';

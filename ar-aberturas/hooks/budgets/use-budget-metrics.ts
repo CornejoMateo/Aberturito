@@ -16,6 +16,7 @@ import {
   getSoldBudgetsByMaterial
 } from '@/lib/budgets/budgets';
 import { SalesMetrics, DEFAULT_METRICS } from '@/lib/budgets/types';
+import { normalize } from '@/helpers/budget/normalize';
 
 export const useBudgetMetrics = () => {
   const [metrics, setMetrics] = useState<SalesMetrics>(DEFAULT_METRICS);
@@ -96,6 +97,7 @@ export const useBudgetMetrics = () => {
         // Obtain budgets by month
         const { data: budgetsByMonth, error: budgetsByMonthError } = await getBudgetsByMonth();
         if (!budgetsByMonthError && budgetsByMonth) {
+          
           setMetrics(prev => ({
             ...prev,
             budgetsByMonth
@@ -105,9 +107,27 @@ export const useBudgetMetrics = () => {
         // Obtain budgets by location
         const { data: budgetsByLocation, error: budgetsByLocationError } = await getBudgetsByLocation();
         if (!budgetsByLocationError && budgetsByLocation) {
+
+          const grouped = Object.values(
+            budgetsByLocation.reduce((acc, item) => {
+              const key = normalize(item.location);
+
+              if (!acc[key]) {
+                acc[key] = {
+                  location: item.location.trim(),
+                  count: 0,
+                };
+              }
+
+              acc[key].count += item.count;
+
+              return acc;
+            }, {} as Record<string, { location: string; count: number }>)
+          );
+
           setMetrics(prev => ({
             ...prev,
-            budgetsByLocation
+            budgetsByLocation: grouped
           }));
         }
 

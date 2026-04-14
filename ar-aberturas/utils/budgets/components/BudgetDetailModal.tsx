@@ -140,16 +140,7 @@ export function BudgetDetailModal({
 							<Edit className="h-4 w-4" />
 							Editar
 						</Button>
-						<Button
-							variant={budget.sold ? "secondary" : "default"}
-							onClick={() => onToggleSold(budget.id)}
-							className="gap-2"
-							disabled={isLoading}
-						>
-							<CheckCircle className="h-4 w-4" />
-							{budget.sold ? 'Marcar como no vendido' : 'Marcar como vendido'}
-						</Button>
-						{!budget.accepted && (
+												{!budget.accepted && (
 							<Button
 								onClick={() => {
 									onChooseBudget(budget.id);

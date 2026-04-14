@@ -48,10 +48,14 @@ export const BUDGET_STATUS_OPTIONS = [
 	{ value: BUDGET_STATUS.LOST, label: BUDGET_STATUS_LABELS.lost },
 ] as const;
 
-// Helper function to get current budget status
+// Helper function to get current budget status (excluding 'accepted' which is independent)
 export const getBudgetStatus = (budget: { sold?: boolean | null; accepted?: boolean | null; lost?: boolean | null }): string => {
 	if (budget.sold) return BUDGET_STATUS.SOLD;
-	if (budget.accepted) return BUDGET_STATUS.ACCEPTED;
 	if (budget.lost) return BUDGET_STATUS.LOST;
 	return BUDGET_STATUS.IN_PROGRESS;
+};
+
+// Helper function to check if budget is chosen/accepted (independent status)
+export const isBudgetChosen = (budget: { accepted?: boolean | null }): boolean => {
+	return Boolean(budget.accepted);
 };

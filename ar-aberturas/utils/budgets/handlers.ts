@@ -134,10 +134,9 @@ export const budgetHandlers: BudgetHandlers = {
 			const budget = budgets.find(b => b.id === budgetId);
 			if (!budget) return;
 
-			// Reset all status flags
+			// Reset only main status flags (keep 'accepted' independent)
 			const updateData: any = {
 				sold: false,
-				accepted: false,
 				lost: false,
 			};
 
@@ -145,9 +144,6 @@ export const budgetHandlers: BudgetHandlers = {
 			switch (newStatus) {
 				case BUDGET_STATUS.SOLD:
 					updateData.sold = true;
-					break;
-				case BUDGET_STATUS.ACCEPTED:
-					updateData.accepted = true;
 					break;
 				case BUDGET_STATUS.LOST:
 					updateData.lost = true;

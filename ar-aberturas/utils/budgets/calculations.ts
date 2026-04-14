@@ -54,19 +54,11 @@ export const buildChartPages = (metrics: any) => [
         title: 'Distribución de presupuestos por material',
         showPercentage: true,
         data: metrics.budgetsByMaterial && metrics.budgetsByMaterial.length > 0
-          ? getPercentages(
-              metrics.budgetsByMaterial.map((item: any, index: number) => ({
-                material: item.material,
-                count: item.count,
-                originalIndex: index,
-              })),
-              metrics.totalBudgets,
-            )
-              .sort((a: any, b: any) => a.originalIndex - b.originalIndex)
-              .map((item: any) => ({
+          ? getPercentages(metrics.budgetsByMaterial, metrics.totalBudgets)
+              .map((item: any, index:number) => ({
                 name: item.material,
                 value: item.percent,
-                color: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'][item.originalIndex % 7],
+                color: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'][index % 7],
               }))
           : []
       },
@@ -74,19 +66,11 @@ export const buildChartPages = (metrics: any) => [
         title: 'Distribución de presupuestos vendidos por material',
         showPercentage: true,
         data: metrics.soldBudgetsByMaterial && metrics.soldBudgetsByMaterial.length > 0
-          ? getPercentages(
-              metrics.soldBudgetsByMaterial.map((item: any, index: number) => ({
-                material: item.material,
-                count: item.count,
-                originalIndex: index,
-              })),
-              metrics.totalSales,
-            )
-              .sort((a: any, b: any) => a.originalIndex - b.originalIndex)
-              .map((item: any) => ({
+          ? getPercentages(metrics.soldBudgetsByMaterial, metrics.totalSales)
+              .map((item: any, index: number) => ({
                 name: item.material,
                 value: item.percent,
-                color: ['#06b6d4', '#ec4899', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'][item.originalIndex % 7],
+                color: ['#06b6d4', '#ec4899', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'][index % 7],
               }))
           : []
       }

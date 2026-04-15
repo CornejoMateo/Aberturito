@@ -17,7 +17,6 @@ interface BudgetDetailModalProps {
 	budget: BudgetWithWork | null;
 	isLoading: boolean;
 	onEdit: (budget: BudgetWithWork) => void;
-	onToggleSold: (budgetId: string) => void;
 	onChooseBudget: (budgetId: string) => void;
 	onViewPdf: (budget: BudgetWithWork) => void;
 	onStatusChange: (budgetId: string, newStatus: string) => void;
@@ -30,7 +29,6 @@ export function BudgetDetailModal({
 	budget,
 	isLoading,
 	onEdit,
-	onToggleSold,
 	onChooseBudget,
 	onViewPdf,
 	onStatusChange,
@@ -140,7 +138,7 @@ export function BudgetDetailModal({
 							<Edit className="h-4 w-4" />
 							Editar
 						</Button>
-												{!budget.accepted && (
+							{!budget.accepted && (
 							<Button
 								onClick={() => {
 									onChooseBudget(budget.id);

@@ -10,7 +10,7 @@ import { BudgetFolderVM } from '../types';
 import { workLabel } from '../utils';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
 import { formatCreatedAt } from '@/helpers/date/format-date';
-import { getBudgetStatus, BUDGET_STATUS_COLORS, BUDGET_STATUS_LABELS } from '@/constants/budget-status';
+import { getBudgetStatus, BUDGET_STATUS_LABELS } from '@/constants/budget-status';
 
 interface BudgetCardProps {
 	budget: BudgetWithWork;

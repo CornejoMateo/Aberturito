@@ -56,20 +56,22 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 	};
 
 	const isLoading = externalLoading || loading;
+	const allArchitects = report?.architects ?? [];
+	const soldArchitects = allArchitects.filter(a => a.soldBudgets > 0);
+	const hasMoreAnyList = hasMore(allArchitects) || hasMore(soldArchitects);
+	const maxRemaining = Math.max(
+		allArchitects.length - displayCount,
+		soldArchitects.length - displayCount,
+		0
+	);
 
-	const getTopPerformers = () => {
-		if (!report?.architects.length) return [];
-		
-		return report.architects
-			.sort((a, b) => b.totalBudgets - a.totalBudgets)
-			.slice(0, 5);
-	};
 
 	const getSoldLeaders = () => {
 		if (!report?.architects.length) return [];
 		
 		return report.architects
 			.filter(a => a.soldBudgets > 0)
+			.slice()
 			.sort((a, b) => b.soldBudgets - a.soldBudgets)
 			.slice(0, 5);
 	};
@@ -78,6 +80,7 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 		if (!report?.architects.length) return [];
 		
 		return report.architects
+			.slice()
 			.sort((a, b) => b.totalAmount - a.totalAmount)
 			.slice(0, 5);
 	};
@@ -162,6 +165,19 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 				</Card>
 			</div>
 
+			{!isLoading && displayCount > ITEMS_PER_PAGE && (
+				<div className="flex justify-center">
+					<Button 
+						variant="outline" 
+						onClick={() => setDisplayCount(ITEMS_PER_PAGE)}
+						className="w-full max-w-md"
+						disabled={isLoading}
+					>
+						Cargar menos
+					</Button>
+				</div>
+			)}
+
 			{/* Charts Grid */}
 			<div className="grid gap-6 lg:grid-cols-3">
 				{/* Top Performers by Budget Count */}
@@ -181,7 +197,7 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 							</div>
 						) : (
 							<>
-								{getDisplayedArchitects(report.architects.sort((a, b) => b.totalBudgets - a.totalBudgets)).map((architect, index) => {
+								{getDisplayedArchitects(report.architects.slice().sort((a, b) => b.totalBudgets - a.totalBudgets)).map((architect, index) => {
 									const maxBudgets = report.architects[0]?.totalBudgets || 1;
 									const percentage = (architect.totalBudgets / maxBudgets) * 100;
 									
@@ -204,30 +220,6 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 										</div>
 									);
 								})}
-								{hasMore(report.architects) && (
-									<div className="pt-4">
-										<Button 
-											variant="outline" 
-											onClick={loadMore}
-											className="w-full"
-											disabled={isLoading}
-										>
-											Cargar más ({report.architects.length - displayCount} restantes)
-										</Button>
-									</div>
-								)}
-								{displayCount > ITEMS_PER_PAGE && (
-									<div className="pt-4">
-										<Button 
-											variant="outline" 
-											onClick={() => setDisplayCount(ITEMS_PER_PAGE)}
-											className="w-full"
-											disabled={isLoading}
-										>
-											Cargar menos
-										</Button>
-									</div>
-								)}
 							</>
 						)}
 					</div>
@@ -250,7 +242,7 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 							</div>
 						) : (
 							<>
-								{getDisplayedArchitects(report.architects.filter(a => a.soldBudgets > 0).sort((a, b) => b.soldBudgets - a.soldBudgets)).map((architect, index) => {
+								{getDisplayedArchitects(report.architects.filter(a => a.soldBudgets > 0).slice().sort((a, b) => b.soldBudgets - a.soldBudgets)).map((architect, index) => {
 									const maxSold = report.architects.filter(a => a.soldBudgets > 0)[0]?.soldBudgets || 1;
 									const percentage = (architect.soldBudgets / maxSold) * 100;
 									
@@ -277,18 +269,6 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 										</div>
 									);
 								})}
-								{hasMore(report.architects.filter(a => a.soldBudgets > 0)) && (
-									<div className="pt-4">
-										<Button 
-											variant="outline" 
-											onClick={loadMore}
-											className="w-full"
-											disabled={isLoading}
-										>
-											Cargar más ({report.architects.filter(a => a.soldBudgets > 0).length - displayCount} restantes)
-										</Button>
-									</div>
-								)}
 							</>
 						)}
 					</div>
@@ -311,7 +291,7 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 							</div>
 						) : (
 							<>
-								{getDisplayedArchitects(report.architects.sort((a, b) => b.totalAmount - a.totalAmount)).map((architect, index) => {
+								{getDisplayedArchitects(report.architects.slice().sort((a, b) => b.totalAmount - a.totalAmount)).map((architect, index) => {
 									const maxRevenue = report.architects[0]?.totalAmount || 1;
 									const percentage = (architect.totalAmount / maxRevenue) * 100;
 									
@@ -338,23 +318,24 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 										</div>
 									);
 								})}
-								{hasMore(report.architects) && (
-									<div className="pt-4">
-										<Button 
-											variant="outline" 
-											onClick={loadMore}
-											className="w-full"
-											disabled={isLoading}
-										>
-											Cargar más ({report.architects.length - displayCount} restantes)
-										</Button>
-									</div>
-								)}
 							</>
 						)}
 					</div>
 				</Card>
 			</div>
+
+			{!isLoading && hasMoreAnyList && (
+				<div className="flex justify-center">
+					<Button 
+						variant="outline" 
+						onClick={loadMore}
+						className="w-full max-w-md"
+						disabled={isLoading}
+					>
+						Cargar más
+					</Button>
+				</div>
+			)}
 		</div>
 	);
 }

@@ -2,8 +2,8 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Clock, XCircle } from 'lucide-react';
-import { BUDGET_STATUS_OPTIONS, BUDGET_STATUS_COLORS, BUDGET_STATUS_LABELS, BUDGET_STATUS } from '@/constants/budget-status';
+import { BUDGET_STATUS_OPTIONS, BUDGET_STATUS_COLORS, BUDGET_STATUS_LABELS } from '@/constants/budget-status';
+import { getStatusIcon } from '@/helpers/budgets/status-helpers';
 
 interface BudgetStatusSelectorProps {
 	value?: string;
@@ -12,19 +12,6 @@ interface BudgetStatusSelectorProps {
 	placeholder?: string;
 	className?: string;
 }
-
-const getStatusIcon = (status: string) => {
-	switch (status) {
-		case BUDGET_STATUS.IN_PROGRESS:
-			return <Clock className="h-3.5 w-3.5" />;
-		case BUDGET_STATUS.SOLD:
-			return <CheckCircle className="h-3.5 w-3.5" />;
-		case BUDGET_STATUS.LOST:
-			return <XCircle className="h-3.5 w-3.5" />;
-		default:
-			return <Clock className="h-3.5 w-3.5" />;
-	}
-};
 
 export function BudgetStatusSelector({
 	value,

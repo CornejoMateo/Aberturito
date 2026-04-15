@@ -1,3 +1,5 @@
+import { getPercentages } from "@/helpers/reports/percentajes";
+
 export const calculatePercentage = (value: number, total: number): number => {
   return total > 0 ? Math.round((value / total) * 100) : 0;
 };
@@ -50,22 +52,29 @@ export const buildChartPages = (metrics: any) => [
     charts: [
       {
         title: 'Distribución de presupuestos por material',
-        data: metrics.budgetsByMaterial && metrics.budgetsByMaterial.length > 0 ? 
-          metrics.budgetsByMaterial.map((item: any, index: number) => ({
-            name: item.material,
-            value: Math.round((item.count / (metrics.totalBudgets || 1)) * 100),
-            color: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'][index % 7]
-          })) : []
+        showPercentage: true,
+        data: metrics.budgetsByMaterial && metrics.budgetsByMaterial.length > 0
+          ? getPercentages(metrics.budgetsByMaterial, metrics.totalBudgets)
+              .map((item: any, index:number) => ({
+                name: item.material,
+                value: item.percent,
+                color: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'][index % 7],
+              }))
+          : []
       },
       {
         title: 'Distribución de presupuestos vendidos por material',
-        data: metrics.soldBudgetsByMaterial && metrics.soldBudgetsByMaterial.length > 0 ? 
-          metrics.soldBudgetsByMaterial.map((item: any, index: number) => ({
-            name: item.material,
-            value: Math.round((item.count / (metrics.totalSales || 1)) * 100),
-            color: ['#06b6d4', '#ec4899', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'][index % 7]
-          })) : []
+        showPercentage: true,
+        data: metrics.soldBudgetsByMaterial && metrics.soldBudgetsByMaterial.length > 0
+          ? getPercentages(metrics.soldBudgetsByMaterial, metrics.totalSales)
+              .map((item: any, index: number) => ({
+                name: item.material,
+                value: item.percent,
+                color: ['#06b6d4', '#ec4899', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'][index % 7],
+              }))
+          : []
       }
     ]
   }
 ];
+

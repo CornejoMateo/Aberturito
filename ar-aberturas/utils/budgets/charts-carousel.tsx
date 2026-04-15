@@ -7,6 +7,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 interface ChartPage {
   charts: Array<{
     title: string;
+    showPercentage: boolean;
     data: Array<{ name: string; value: number; color: string }>;
   }>;
 }
@@ -84,7 +85,13 @@ export function ChartsCarousel({
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => formatChartValue(value as number)} />
+                  <Tooltip 
+                    formatter={(value) => 
+                      chart.showPercentage 
+                        ? `${formatChartValue(value as number)}%`
+                        : formatChartValue(value as number)
+                    } 
+                  />                  
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>

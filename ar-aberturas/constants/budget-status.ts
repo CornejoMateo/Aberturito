@@ -33,12 +33,12 @@ export const BUDGET_STATUS_LABELS = {
 	accepted: 'Elegido',
 } as const;
 
-// Status colors for UI
+// Status colors for UI (badges, selectors, and card bars)
 export const BUDGET_STATUS_COLORS = {
-	in_progress: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-	sold: 'bg-green-100 text-green-800 border-green-300',
-	lost: 'bg-red-100 text-red-800 border-red-300',
-	accepted: 'bg-blue-100 text-blue-800 border-blue-300',
+	in_progress: 'bg-yellow-500 text-yellow-100 border-yellow-600',
+	sold: 'bg-green-500 text-green-100 border-green-600',
+	lost: 'bg-red-500 text-red-100 border-red-600',
+	accepted: 'bg-blue-500 text-blue-100 border-blue-600',
 } as const;
 
 // All available status options for dropdown

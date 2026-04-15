@@ -1,3 +1,5 @@
+import { getPercentages } from "@/helpers/reports/percentajes";
+
 export const calculatePercentage = (value: number, total: number): number => {
   return total > 0 ? Math.round((value / total) * 100) : 0;
 };
@@ -49,19 +51,30 @@ export const buildChartPages = (metrics: any) => [
   {
     charts: [
       {
-        title: 'Clientes con presupuesto',
-        data: metrics.totalClients > 0 ? [
-          { name: 'Con presupuesto', value: metrics.clientsWithBudget, color: '#10b981' },
-          { name: 'Sin presupuesto', value: metrics.totalClients - metrics.clientsWithBudget, color: '#3b82f6' },
-        ] : []
+        title: 'Distribución de presupuestos por material',
+        showPercentage: true,
+        data: metrics.budgetsByMaterial && metrics.budgetsByMaterial.length > 0
+          ? getPercentages(metrics.budgetsByMaterial, metrics.totalBudgets)
+              .map((item: any, index:number) => ({
+                name: item.material,
+                value: item.percent,
+                color: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'][index % 7],
+              }))
+          : []
       },
       {
-        title: 'Ingresos por tipo',
-        data: [
-          { name: 'De ventas', value: metrics.soldAverageTicket > 0 ? Math.round(metrics.totalSales * metrics.soldAverageTicket) : 0, color: '#06b6d4' },
-          { name: 'Totales', value: metrics.totalRevenue, color: '#ec4899' },
-        ].filter(item => item.value > 0)
+        title: 'Distribución de presupuestos vendidos por material',
+        showPercentage: true,
+        data: metrics.soldBudgetsByMaterial && metrics.soldBudgetsByMaterial.length > 0
+          ? getPercentages(metrics.soldBudgetsByMaterial, metrics.totalSales)
+              .map((item: any, index: number) => ({
+                name: item.material,
+                value: item.percent,
+                color: ['#06b6d4', '#ec4899', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'][index % 7],
+              }))
+          : []
       }
     ]
   }
 ];
+

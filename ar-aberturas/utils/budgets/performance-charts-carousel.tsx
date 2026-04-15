@@ -117,7 +117,7 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis type="number" />
-              <YAxis dataKey="location" type="category" width={140} />
+              <YAxis dataKey="location" type="category" width={140} interval={0} />
               <Tooltip formatter={(value) => `${value} presupuestos`} />
               <Bar dataKey="count" fill="#ec4899" name="Presupuestos" radius={[0, 8, 8, 0]} />
             </BarChart>

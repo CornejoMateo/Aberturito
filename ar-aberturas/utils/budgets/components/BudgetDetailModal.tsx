@@ -7,7 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Edit, CheckCircle } from 'lucide-react';
 import { BudgetWithWork } from '@/lib/works/balances';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
-import { formatCreatedAt } from '@/helpers/date/format-date'
+import { formatCreatedAt } from '@/helpers/date/format-date';
+import { BudgetStatusSelector } from '@/components/ui/budget-status-selector';
+import { getBudgetStatus } from '@/constants/budget-status';
 
 interface BudgetDetailModalProps {
 	isOpen: boolean;
@@ -15,9 +17,9 @@ interface BudgetDetailModalProps {
 	budget: BudgetWithWork | null;
 	isLoading: boolean;
 	onEdit: (budget: BudgetWithWork) => void;
-	onToggleSold: (budgetId: string) => void;
 	onChooseBudget: (budgetId: string) => void;
 	onViewPdf: (budget: BudgetWithWork) => void;
+	onStatusChange: (budgetId: string, newStatus: string) => void;
 	onClose: () => void;
 }
 
@@ -27,9 +29,9 @@ export function BudgetDetailModal({
 	budget,
 	isLoading,
 	onEdit,
-	onToggleSold,
 	onChooseBudget,
 	onViewPdf,
+	onStatusChange,
 	onClose,
 }: BudgetDetailModalProps) {
 	if (!budget) return null;
@@ -62,21 +64,13 @@ export function BudgetDetailModal({
 						</div>
 						<div>
 							<Label className="text-sm font-medium text-muted-foreground">Estado</Label>
-							<div className="flex items-center gap-2">
-								{budget.accepted ? (
-									<Badge className="gap-1">
-										<CheckCircle className="h-3.5 w-3.5" /> Elegido
-									</Badge>
-								) : (
-									<Badge variant="secondary">No elegido</Badge>
-								)}
-								{budget.sold ? (
-									<Badge className="gap-1 bg-green-500 hover:bg-green-600">
-										<CheckCircle className="h-3.5 w-3.5" /> Vendido
-									</Badge>
-								) : (
-									<Badge variant="outline">No vendido</Badge>
-								)}
+							<div className="mt-1">
+								<BudgetStatusSelector
+									value={getBudgetStatus(budget)}
+									onValueChange={(newStatus) => onStatusChange(budget.id, newStatus)}
+									disabled={isLoading}
+									className="w-full"
+								/>
 							</div>
 						</div>
 					</div>
@@ -144,16 +138,7 @@ export function BudgetDetailModal({
 							<Edit className="h-4 w-4" />
 							Editar
 						</Button>
-						<Button
-							variant={budget.sold ? "secondary" : "default"}
-							onClick={() => onToggleSold(budget.id)}
-							className="gap-2"
-							disabled={isLoading}
-						>
-							<CheckCircle className="h-4 w-4" />
-							{budget.sold ? 'Marcar como no vendido' : 'Marcar como vendido'}
-						</Button>
-						{!budget.accepted && (
+							{!budget.accepted && (
 							<Button
 								onClick={() => {
 									onChooseBudget(budget.id);

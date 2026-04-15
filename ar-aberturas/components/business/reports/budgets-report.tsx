@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
 import { formatShortDate } from '@/helpers/date/formats';
-import { formatBudgetType, formatBudgetStatus } from '@/helpers/budget.tsx/formats';
+import { formatBudgetType, formatBudgetStatus } from '@/helpers/budget/formats';
 import { BUDGETS_REPORT_COLUMNS, BUDGETS_REPORT_TITLE, BUDGET_TYPES, BUDGET_STATUS } from '@/constants/reports/budgets-report';
 import { BudgetWithWorkAndClient, listBudgetsForReport } from '@/lib/budgets/budgets';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

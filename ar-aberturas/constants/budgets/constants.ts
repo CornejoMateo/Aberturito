@@ -34,5 +34,7 @@ export const TOAST_MESSAGES = {
 	budgetUnchosen: 'Presupuesto deseleccionado',
 	soldMarked: 'Presupuesto marcado como vendido',
 	soldUnmarked: 'Presupuesto marcado como no vendido',
+	lostMarked: 'Presupuesto marcado como perdido',
+	lostUnmarked: 'Presupuesto marcado como no perdido',
 	pricesUpdated: 'Presupuestos actualizados',
 } as const;

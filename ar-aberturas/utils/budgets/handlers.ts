@@ -15,10 +15,11 @@ import {
 import { translateError } from '@/lib/error-translator';
 import { TOAST_MESSAGES } from '../../constants/budgets/constants';
 import { parseAmount } from './utils';
+import { BUDGET_STATUS, BUDGET_STATUS_LABELS } from '@/constants/budget-status';
 
 export interface BudgetHandlers {
 	handleChooseBudget: (budgetId: string, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void) => Promise<void>;
-	handleToggleSold: (budgetId: string, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void, closeBudgetDetailModal: () => void) => Promise<void>;
+	handleStatusChange: (budgetId: string, newStatus: string, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void) => Promise<void>;
 	handleDeleteBudget: (budgetId: string, setDeleteBudgetConfirm: (state: any) => void) => void;
 	confirmDeleteBudget: (deleteBudgetConfirm: any, refresh: () => void, setIsLoading: (loading: boolean) => void, setDeleteBudgetConfirm: (state: any) => void) => Promise<void>;
 	handleDeleteFolder: (folderId: string, budgetsByFolderId: Map<string, BudgetWithWork[]>, setDeleteFolderConfirm: (state: any) => void) => void;
@@ -63,31 +64,49 @@ export const budgetHandlers: BudgetHandlers = {
 		}
 	},
 
-	async handleToggleSold(budgetId: string, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void, closeBudgetDetailModal: () => void) {
+	async handleStatusChange(budgetId: string, newStatus: string, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void) {
 		try {
 			setIsLoading(true);
 			const budget = budgets.find(b => b.id === budgetId);
 			if (!budget) return;
 
-			const { error } = await updateBudget(budgetId, {
-				sold: !budget.sold
-			});
+			// Reset only main status flags (keep 'accepted' independent)
+			const updateData: any = {
+				sold: false,
+				lost: false,
+			};
+
+			// Set the new status
+			switch (newStatus) {
+				case BUDGET_STATUS.SOLD:
+					updateData.sold = true;
+					break;
+				case BUDGET_STATUS.LOST:
+					updateData.lost = true;
+					break;
+				case BUDGET_STATUS.IN_PROGRESS:
+				default:
+					// All flags remain false for "in progress"
+					break;
+			}
+
+			const { error } = await updateBudget(budgetId, updateData);
 			
 			if (error) {
 				toast({
 					variant: 'destructive',
-					title: 'No se pudo cambiar el estado de venta',
+					title: 'No se pudo cambiar el estado del presupuesto',
 					description: translateError(error),
 				});
 				return;
 			}
 			
+			const statusLabel = BUDGET_STATUS_LABELS[newStatus as keyof typeof BUDGET_STATUS_LABELS];
 			toast({ 
-				title: budget.sold ? TOAST_MESSAGES.soldUnmarked : TOAST_MESSAGES.soldMarked,
-				description: budget.sold ? 'El presupuesto ya no está marcado como vendido.' : 'El presupuesto ahora está marcado como vendido.',
+				title: 'Estado actualizado',
+				description: `El presupuesto ahora está marcado como "${statusLabel}".`,
 			});
 			
-			closeBudgetDetailModal();
 			refresh();
 		} finally {
 			setIsLoading(false);
@@ -322,6 +341,8 @@ export const budgetHandlers: BudgetHandlers = {
 				{
 					folder_budget_id: folderId,
 					accepted: false,
+					sold: false,
+					lost: false,
 					type: formData.type,
 					version: formData.version.trim() || null,
 					number: number,

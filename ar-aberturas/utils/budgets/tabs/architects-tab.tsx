@@ -23,12 +23,15 @@ interface ArchitectsTabProps {
 export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTabProps) {
 	const [report, setReport] = useState<ArchitectReport | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [displayCount, setDisplayCount] = useState(5); // Initial items to show
+	const ITEMS_PER_PAGE = 5;
 
 	const fetchData = async () => {
 		try {
 			setLoading(true);
 			const { data } = await getArchitectsReport();
 			setReport(data);
+			setDisplayCount(5); // Reset display count when data refreshes
 		} catch (error) {
 			console.error('Error fetching architects report:', error);
 		} finally {
@@ -39,6 +42,18 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 	useEffect(() => {
 		fetchData();
 	}, []);
+
+	const loadMore = () => {
+		setDisplayCount(prev => prev + ITEMS_PER_PAGE);
+	};
+
+	const getDisplayedArchitects = (architects: ArchitectStats[]) => {
+		return architects.slice(0, displayCount);
+	};
+
+	const hasMore = (architects: ArchitectStats[]) => {
+		return displayCount < architects.length;
+	};
 
 	const isLoading = externalLoading || loading;
 
@@ -160,34 +175,60 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 							<div className="text-center text-muted-foreground py-8">
 								Cargando datos...
 							</div>
-						) : getTopPerformers().length === 0 ? (
+						) : !report?.architects.length ? (
 							<div className="text-center text-muted-foreground py-8">
 								No hay datos disponibles
 							</div>
 						) : (
-							getTopPerformers().map((architect, index) => {
-								const maxBudgets = getTopPerformers()[0]?.totalBudgets || 1;
-								const percentage = (architect.totalBudgets / maxBudgets) * 100;
-								
-								return (
-									<div key={architect.name} className="space-y-2">
-										<div className="flex items-center justify-between">
-											<div className="flex items-center gap-2">
-												<Badge variant="outline" className="text-xs">
-													#{index + 1}
-												</Badge>
-												<span className="text-sm font-medium truncate">
-													{architect.name}
+							<>
+								{getDisplayedArchitects(report.architects.sort((a, b) => b.totalBudgets - a.totalBudgets)).map((architect, index) => {
+									const maxBudgets = report.architects[0]?.totalBudgets || 1;
+									const percentage = (architect.totalBudgets / maxBudgets) * 100;
+									
+									return (
+										<div key={architect.name} className="space-y-2">
+											<div className="flex items-center justify-between">
+												<div className="flex items-center gap-2">
+													<Badge variant="outline" className="text-xs">
+														#{index + 1}
+													</Badge>
+													<span className="text-sm font-medium truncate">
+														{architect.name}
+													</span>
+												</div>
+												<span className="text-sm text-muted-foreground">
+													{architect.totalBudgets}
 												</span>
 											</div>
-											<span className="text-sm text-muted-foreground">
-												{architect.totalBudgets}
-											</span>
+											<Progress value={percentage} className="h-2" />
 										</div>
-										<Progress value={percentage} className="h-2" />
+									);
+								})}
+								{hasMore(report.architects) && (
+									<div className="pt-4">
+										<Button 
+											variant="outline" 
+											onClick={loadMore}
+											className="w-full"
+											disabled={isLoading}
+										>
+											Cargar más ({report.architects.length - displayCount} restantes)
+										</Button>
 									</div>
-								);
-							})
+								)}
+								{displayCount > ITEMS_PER_PAGE && (
+									<div className="pt-4">
+										<Button 
+											variant="outline" 
+											onClick={() => setDisplayCount(ITEMS_PER_PAGE)}
+											className="w-full"
+											disabled={isLoading}
+										>
+											Cargar menos
+										</Button>
+									</div>
+								)}
+							</>
 						)}
 					</div>
 				</Card>
@@ -203,38 +244,52 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 							<div className="text-center text-muted-foreground py-8">
 								Cargando datos...
 							</div>
-						) : getSoldLeaders().length === 0 ? (
+						) : !report?.architects.filter(a => a.soldBudgets > 0).length ? (
 							<div className="text-center text-muted-foreground py-8">
 								No hay ventas registradas
 							</div>
 						) : (
-							getSoldLeaders().map((architect, index) => {
-								const maxSold = getSoldLeaders()[0]?.soldBudgets || 1;
-								const percentage = (architect.soldBudgets / maxSold) * 100;
-								
-								return (
-									<div key={architect.name} className="space-y-2">
-										<div className="flex items-center justify-between">
-											<div className="flex items-center gap-2">
-												<Badge variant="outline" className="text-xs">
-													#{index + 1}
-												</Badge>
-												<span className="text-sm font-medium truncate">
-													{architect.name}
+							<>
+								{getDisplayedArchitects(report.architects.filter(a => a.soldBudgets > 0).sort((a, b) => b.soldBudgets - a.soldBudgets)).map((architect, index) => {
+									const maxSold = report.architects.filter(a => a.soldBudgets > 0)[0]?.soldBudgets || 1;
+									const percentage = (architect.soldBudgets / maxSold) * 100;
+									
+									return (
+										<div key={architect.name} className="space-y-2">
+											<div className="flex items-center justify-between">
+												<div className="flex items-center gap-2">
+													<Badge variant="outline" className="text-xs">
+														#{index + 1}
+													</Badge>
+													<span className="text-sm font-medium truncate">
+														{architect.name}
+													</span>
+												</div>
+												<span className="text-sm text-muted-foreground">
+													{architect.soldBudgets}
 												</span>
 											</div>
-											<span className="text-sm text-muted-foreground">
-												{architect.soldBudgets}
-											</span>
+											<Progress value={percentage} className="h-2" />
+											<div className="flex items-center justify-between text-xs text-muted-foreground">
+												<span>{architect.soldPercentage.toFixed(1)}% de conversión</span>
+												<span>{formatCurrency(architect.soldAmount)}</span>
+											</div>
 										</div>
-										<Progress value={percentage} className="h-2" />
-										<div className="flex items-center justify-between text-xs text-muted-foreground">
-											<span>{architect.soldPercentage.toFixed(1)}% de conversión</span>
-											<span>{formatCurrency(architect.soldAmount)}</span>
-										</div>
+									);
+								})}
+								{hasMore(report.architects.filter(a => a.soldBudgets > 0)) && (
+									<div className="pt-4">
+										<Button 
+											variant="outline" 
+											onClick={loadMore}
+											className="w-full"
+											disabled={isLoading}
+										>
+											Cargar más ({report.architects.filter(a => a.soldBudgets > 0).length - displayCount} restantes)
+										</Button>
 									</div>
-								);
-							})
+								)}
+							</>
 						)}
 					</div>
 				</Card>
@@ -250,38 +305,52 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 							<div className="text-center text-muted-foreground py-8">
 								Cargando datos...
 							</div>
-						) : getRevenueLeaders().length === 0 ? (
+						) : !report?.architects.length ? (
 							<div className="text-center text-muted-foreground py-8">
 								No hay datos de facturación
 							</div>
 						) : (
-							getRevenueLeaders().map((architect, index) => {
-								const maxRevenue = getRevenueLeaders()[0]?.totalAmount || 1;
-								const percentage = (architect.totalAmount / maxRevenue) * 100;
-								
-								return (
-									<div key={architect.name} className="space-y-2">
-										<div className="flex items-center justify-between">
-											<div className="flex items-center gap-2">
-												<Badge variant="outline" className="text-xs">
-													#{index + 1}
-												</Badge>
-												<span className="text-sm font-medium truncate">
-													{architect.name}
+							<>
+								{getDisplayedArchitects(report.architects.sort((a, b) => b.totalAmount - a.totalAmount)).map((architect, index) => {
+									const maxRevenue = report.architects[0]?.totalAmount || 1;
+									const percentage = (architect.totalAmount / maxRevenue) * 100;
+									
+									return (
+										<div key={architect.name} className="space-y-2">
+											<div className="flex items-center justify-between">
+												<div className="flex items-center gap-2">
+													<Badge variant="outline" className="text-xs">
+														#{index + 1}
+													</Badge>
+													<span className="text-sm font-medium truncate">
+														{architect.name}
+													</span>
+												</div>
+												<span className="text-sm text-muted-foreground">
+													{formatCurrency(architect.totalAmount)}
 												</span>
 											</div>
-											<span className="text-sm text-muted-foreground">
-												{formatCurrency(architect.totalAmount)}
-											</span>
+											<Progress value={percentage} className="h-2" />
+											<div className="flex items-center justify-between text-xs text-muted-foreground">
+												<span>{architect.totalBudgets} presupuestos</span>
+												<span>{architect.soldBudgets} vendidos</span>
+											</div>
 										</div>
-										<Progress value={percentage} className="h-2" />
-										<div className="flex items-center justify-between text-xs text-muted-foreground">
-											<span>{architect.totalBudgets} presupuestos</span>
-											<span>{architect.soldBudgets} vendidos</span>
-										</div>
+									);
+								})}
+								{hasMore(report.architects) && (
+									<div className="pt-4">
+										<Button 
+											variant="outline" 
+											onClick={loadMore}
+											className="w-full"
+											disabled={isLoading}
+										>
+											Cargar más ({report.architects.length - displayCount} restantes)
+										</Button>
 									</div>
-								);
-							})
+								)}
+							</>
 						)}
 					</div>
 				</Card>

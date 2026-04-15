@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '../supabase-client';
+import { normalize } from '../../helpers/budget/normalize';
 
 export interface ArchitectStats {
 	name: string;
@@ -56,6 +57,7 @@ export async function getArchitectsReport(): Promise<{ data: ArchitectReport | n
 
 		// Agrupar presupuestos por arquitecto
 		const architectMap = new Map<string, {
+			name: string;
 			totalBudgets: number;
 			soldBudgets: number;
 			chosenBudgets: number;
@@ -64,10 +66,16 @@ export async function getArchitectsReport(): Promise<{ data: ArchitectReport | n
 		}>();
 
 		budgets.forEach((budget: any) => {
-			const architect = budget.folder_budget?.work?.architect;
-			if (!architect) return;
+			const rawArchitect = budget.folder_budget?.work?.architect;
+			if (typeof rawArchitect !== 'string') return;
 
-			const current = architectMap.get(architect) || {
+			const architectName = rawArchitect.trim();
+			if (!architectName) return;
+
+			const architectKey = normalize(architectName);
+
+			const current = architectMap.get(architectKey) || {
+				name: architectName,
 				totalBudgets: 0,
 				soldBudgets: 0,
 				chosenBudgets: 0,
@@ -87,12 +95,12 @@ export async function getArchitectsReport(): Promise<{ data: ArchitectReport | n
 				current.chosenBudgets++;
 			}
 
-			architectMap.set(architect, current);
+			architectMap.set(architectKey, current);
 		});
 
 		// Convertir a arreglo y calcular porcentajes
-		const architects: ArchitectStats[] = Array.from(architectMap.entries()).map(([name, stats]) => ({
-			name,
+		const architects: ArchitectStats[] = Array.from(architectMap.values()).map((stats) => ({
+			name: stats.name,
 			totalBudgets: stats.totalBudgets,
 			soldBudgets: stats.soldBudgets,
 			chosenBudgets: stats.chosenBudgets,
@@ -105,9 +113,11 @@ export async function getArchitectsReport(): Promise<{ data: ArchitectReport | n
 		architects.sort((a, b) => b.totalBudgets - a.totalBudgets);
 
 		// Encontrar el arquitecto con más presupuestos vendidos
-		const mostSoldArchitect = architects.reduce((prev, current) => 
-			current.soldBudgets > prev.soldBudgets ? current : prev
-		, architects[0]);
+		const mostSoldArchitect = architects.length > 0
+			? architects.reduce((prev, current) =>
+				current.soldBudgets > prev.soldBudgets ? current : prev
+			)
+			: null;
 
 		const report: ArchitectReport = {
 			architects,

@@ -12,16 +12,16 @@ export const BUDGET_STATUS = {
 	DEFAULT: 'in_progress',
 	
 	// Status combinations for filtering
-	LOCKED_STATUSES: ['sold', 'accepted'], // Budgets that shouldn't be updated
-	UPDATABLE_STATUSES: ['in_progress', 'lost'], // Only budgets with these flags can be updated
+	LOCKED_STATUSES: ['sold', 'accepted', 'lost'], // Budgets that shouldn't be updated
+	UPDATABLE_STATUSES: ['in_progress'], // Only budgets with these flags can be updated
 } as const;
 
 // Helper functions for budget filtering
-export const isBudgetLocked = (budget: { sold?: boolean | null; accepted?: boolean | null }): boolean => {
-	return Boolean(budget.sold || budget.accepted);
+export const isBudgetLocked = (budget: { sold?: boolean | null; accepted?: boolean | null; lost?: boolean | null }): boolean => {
+	return Boolean(budget.sold || budget.accepted || budget.lost);
 };
 
-export const canUpdateBudget = (budget: { sold?: boolean | null; accepted?: boolean | null }): boolean => {
+export const canUpdateBudget = (budget: { sold?: boolean | null; accepted?: boolean | null; lost?: boolean | null }): boolean => {
 	return !isBudgetLocked(budget);
 };
 

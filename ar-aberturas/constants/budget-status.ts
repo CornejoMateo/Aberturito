@@ -28,8 +28,8 @@ export const canUpdateBudget = (budget: { sold?: boolean | null; accepted?: bool
 // Status labels for UI
 export const BUDGET_STATUS_LABELS = {
 	in_progress: 'En proceso',
-	sold: 'Vendida',
-	lost: 'Perdida',
+	sold: 'Vendido',
+	lost: 'Perdido',
 	accepted: 'Elegido',
 } as const;
 

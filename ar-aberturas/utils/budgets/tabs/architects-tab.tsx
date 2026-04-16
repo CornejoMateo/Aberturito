@@ -1,19 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-	Users, 
-	Trophy, 
-	TrendingUp, 
-	RefreshCw,
-	Building,
-	DollarSign 
-} from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { getArchitectsReport, ArchitectReport, ArchitectStats } from '@/lib/budgets/architects';
+import { ArchitectsTopBudgetsCount } from '../architects-top-budgets-count';
+import { ArchitectMetricsCards } from '../architect-metrics-cards';
+import { Building, Trophy, DollarSign } from 'lucide-react';
 import { formatCurrency } from '@/helpers/format-prices.tsx/formats';
 
 interface ArchitectsTabProps {
@@ -65,26 +61,6 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 		0
 	);
 
-
-	const getSoldLeaders = () => {
-		if (!report?.architects.length) return [];
-		
-		return report.architects
-			.filter(a => a.soldBudgets > 0)
-			.slice()
-			.sort((a, b) => b.soldBudgets - a.soldBudgets)
-			.slice(0, 5);
-	};
-
-	const getRevenueLeaders = () => {
-		if (!report?.architects.length) return [];
-		
-		return report.architects
-			.slice()
-			.sort((a, b) => b.totalAmount - a.totalAmount)
-			.slice(0, 5);
-	};
-
 	return (
 		<div className="space-y-6">
 			{/* Header */}
@@ -100,70 +76,7 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 			</div>
 
 			{/* Key Metrics */}
-			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-				<Card className="p-4">
-					<div className="flex items-center gap-3">
-						<div className="p-2 bg-blue-100 rounded-lg">
-							<Users className="h-5 w-5 text-blue-600" />
-						</div>
-						<div>
-							<p className="text-sm text-muted-foreground">Total arquitectos</p>
-							<p className="text-2xl font-bold">{report?.totalArchitects || 0}</p>
-						</div>
-					</div>
-				</Card>
-
-				<Card className="p-4">
-					<div className="flex items-center gap-3">
-						<div className="p-2 bg-green-100 rounded-lg">
-							<Trophy className="h-5 w-5 text-green-600" />
-						</div>
-						<div>
-							<p className="text-sm text-muted-foreground">Top arquitecto</p>
-							<p className="text-lg font-semibold truncate">
-								{report?.topArchitect?.name || 'N/A'}
-							</p>
-							<p className="text-xs text-muted-foreground">
-								{report?.topArchitect?.totalBudgets || 0} presupuestos
-							</p>
-						</div>
-					</div>
-				</Card>
-
-				<Card className="p-4">
-					<div className="flex items-center gap-3">
-						<div className="p-2 bg-purple-100 rounded-lg">
-							<TrendingUp className="h-5 w-5 text-purple-600" />
-						</div>
-						<div>
-							<p className="text-sm text-muted-foreground">Más ventas</p>
-							<p className="text-lg font-semibold truncate">
-								{report?.mostSoldArchitect?.name || 'N/A'}
-							</p>
-							<p className="text-xs text-muted-foreground">
-								{report?.mostSoldArchitect?.soldBudgets || 0} vendidos
-							</p>
-						</div>
-					</div>
-				</Card>
-
-				<Card className="p-4">
-					<div className="flex items-center gap-3">
-						<div className="p-2 bg-orange-100 rounded-lg">
-							<DollarSign className="h-5 w-5 text-orange-600" />
-						</div>
-						<div>
-							<p className="text-sm text-muted-foreground">Mayor facturación</p>
-							<p className="text-lg font-semibold truncate">
-								{getRevenueLeaders()[0]?.name || 'N/A'}
-							</p>
-							<p className="text-xs text-muted-foreground">
-								{formatCurrency(getRevenueLeaders()[0]?.totalAmount || 0)}
-							</p>
-						</div>
-					</div>
-				</Card>
-			</div>
+			<ArchitectMetricsCards report={report} />
 
 			{!isLoading && displayCount > ITEMS_PER_PAGE && (
 				<div className="flex justify-center">
@@ -181,147 +94,39 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 			{/* Charts Grid */}
 			<div className="grid gap-6 lg:grid-cols-3">
 				{/* Top Performers by Budget Count */}
-				<Card className="p-6">
-					<div className="flex items-center gap-2 mb-4">
-						<Building className="h-5 w-5 text-blue-600" />
-						<h4 className="text-lg font-semibold">Más presupuestos</h4>
-					</div>
-					<div className="space-y-3">
-						{isLoading ? (
-							<div className="text-center text-muted-foreground py-8">
-								Cargando datos...
-							</div>
-						) : !report?.architects.length ? (
-							<div className="text-center text-muted-foreground py-8">
-								No hay datos disponibles
-							</div>
-						) : (
-							<>
-								{getDisplayedArchitects(report.architects.slice().sort((a, b) => b.totalBudgets - a.totalBudgets)).map((architect, index) => {
-									const maxBudgets = report.architects[0]?.totalBudgets || 1;
-									const percentage = (architect.totalBudgets / maxBudgets) * 100;
-									
-									return (
-										<div key={architect.name} className="space-y-2">
-											<div className="flex items-center justify-between">
-												<div className="flex items-center gap-2">
-													<Badge variant="outline" className="text-xs">
-														#{index + 1}
-													</Badge>
-													<span className="text-sm font-medium truncate">
-														{architect.name}
-													</span>
-												</div>
-												<span className="text-sm text-muted-foreground">
-													{architect.totalBudgets}
-												</span>
-											</div>
-											<Progress value={percentage} className="h-2" />
-										</div>
-									);
-								})}
-							</>
-						)}
-					</div>
-				</Card>
+				<ArchitectsTopBudgetsCount
+					title="Más presupuestos"
+					icon={<Building className="h-5 w-5 text-blue-600" />}
+					architects={report?.architects.sort((a, b) => b.totalBudgets - a.totalBudgets) || []}
+					displayCount={displayCount}
+					onLoadMore={loadMore}
+					hasMore={hasMore(report?.architects || [])}
+					isLoading={isLoading}
+				/>
 
 				{/* Most Sales */}
-				<Card className="p-6">
-					<div className="flex items-center gap-2 mb-4">
-						<Trophy className="h-5 w-5 text-green-600" />
-						<h4 className="text-lg font-semibold">Más ventas</h4>
-					</div>
-					<div className="space-y-3">
-						{isLoading ? (
-							<div className="text-center text-muted-foreground py-8">
-								Cargando datos...
-							</div>
-						) : !report?.architects.filter(a => a.soldBudgets > 0).length ? (
-							<div className="text-center text-muted-foreground py-8">
-								No hay ventas registradas
-							</div>
-						) : (
-							<>
-								{getDisplayedArchitects(report.architects.filter(a => a.soldBudgets > 0).slice().sort((a, b) => b.soldBudgets - a.soldBudgets)).map((architect, index) => {
-									const maxSold = report.architects.filter(a => a.soldBudgets > 0)[0]?.soldBudgets || 1;
-									const percentage = (architect.soldBudgets / maxSold) * 100;
-									
-									return (
-										<div key={architect.name} className="space-y-2">
-											<div className="flex items-center justify-between">
-												<div className="flex items-center gap-2">
-													<Badge variant="outline" className="text-xs">
-														#{index + 1}
-													</Badge>
-													<span className="text-sm font-medium truncate">
-														{architect.name}
-													</span>
-												</div>
-												<span className="text-sm text-muted-foreground">
-													{architect.soldBudgets}
-												</span>
-											</div>
-											<Progress value={percentage} className="h-2" />
-											<div className="flex items-center justify-between text-xs text-muted-foreground">
-												<span>{architect.soldPercentage.toFixed(1)}% de conversión</span>
-												<span>{formatCurrency(architect.soldAmount)}</span>
-											</div>
-										</div>
-									);
-								})}
-							</>
-						)}
-					</div>
-				</Card>
+				<ArchitectsTopBudgetsCount
+					title="Más ventas"
+					icon={<Trophy className="h-5 w-5 text-green-600" />}
+					architects={report?.architects.filter(a => a.soldBudgets > 0).sort((a, b) => b.soldBudgets - a.soldBudgets) || []}
+					displayCount={displayCount}
+					onLoadMore={loadMore}
+					hasMore={hasMore(report?.architects.filter(a => a.soldBudgets > 0) || [])}
+					isLoading={isLoading}
+					showSalesInfo
+				/>
 
 				{/* Revenue Leaders */}
-				<Card className="p-6">
-					<div className="flex items-center gap-2 mb-4">
-						<DollarSign className="h-5 w-5 text-orange-600" />
-						<h4 className="text-lg font-semibold">Mayor facturación</h4>
-					</div>
-					<div className="space-y-3">
-						{isLoading ? (
-							<div className="text-center text-muted-foreground py-8">
-								Cargando datos...
-							</div>
-						) : !report?.architects.length ? (
-							<div className="text-center text-muted-foreground py-8">
-								No hay datos de facturación
-							</div>
-						) : (
-							<>
-								{getDisplayedArchitects(report.architects.slice().sort((a, b) => b.totalAmount - a.totalAmount)).map((architect, index) => {
-									const maxRevenue = report.architects[0]?.totalAmount || 1;
-									const percentage = (architect.totalAmount / maxRevenue) * 100;
-									
-									return (
-										<div key={architect.name} className="space-y-2">
-											<div className="flex items-center justify-between">
-												<div className="flex items-center gap-2">
-													<Badge variant="outline" className="text-xs">
-														#{index + 1}
-													</Badge>
-													<span className="text-sm font-medium truncate">
-														{architect.name}
-													</span>
-												</div>
-												<span className="text-sm text-muted-foreground">
-													{formatCurrency(architect.totalAmount)}
-												</span>
-											</div>
-											<Progress value={percentage} className="h-2" />
-											<div className="flex items-center justify-between text-xs text-muted-foreground">
-												<span>{architect.totalBudgets} presupuestos</span>
-												<span>{architect.soldBudgets} vendidos</span>
-											</div>
-										</div>
-									);
-								})}
-							</>
-						)}
-					</div>
-				</Card>
+				<ArchitectsTopBudgetsCount
+					title="Mayor facturación"
+					icon={<DollarSign className="h-5 w-5 text-orange-600" />}
+					architects={report?.architects.sort((a, b) => b.totalAmount - a.totalAmount) || []}
+					displayCount={displayCount}
+					onLoadMore={loadMore}
+					hasMore={hasMore(report?.architects || [])}
+					isLoading={isLoading}
+					showRevenueInfo
+				/>
 			</div>
 
 			{!isLoading && hasMoreAnyList && (

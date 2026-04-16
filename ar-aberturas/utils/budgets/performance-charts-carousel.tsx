@@ -20,6 +20,9 @@ interface Chart {
 export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarouselProps) {
   const [currentChart, setCurrentChart] = useState(0);
 
+  const locationCount = metrics.budgetsByLocation?.length ?? 0;
+  const locationChartHeight = Math.max(300, locationCount * 30);
+
   // Dates for the monthly budgets chart (default to 0 if no data)
   const monthlyBudgetData = metrics.budgetsByMonth && metrics.budgetsByMonth.length > 0
     ? metrics.budgetsByMonth
@@ -109,7 +112,7 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
       description: 'Distribución de presupuestos según la localidad',
       render: () =>
         metrics.budgetsByLocation && metrics.budgetsByLocation.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={locationChartHeight}>
             <BarChart
               data={metrics.budgetsByLocation}
               layout="vertical"

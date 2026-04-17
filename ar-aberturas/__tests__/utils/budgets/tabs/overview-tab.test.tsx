@@ -17,27 +17,37 @@ jest.mock('@/utils/budgets/average-ticket-card', () => ({
   AverageTicketCard: () => <div data-testid="average-ticket-card" />,
 }));
 
+jest.mock('@/utils/budgets/sum-ticket-card', () => ({
+  SumTicketCard: () => <div data-testid="sum-ticket-card" />,
+}));
+
 describe('OverviewTab', () => {
   it('renders overview section and child cards', () => {
     const chartPages = [{ charts: [] }];
 
     render(
       <OverviewTab
-        metrics={{ totalSales: 2, totalBudgets: 4, clientsWithBudget: 3, totalClients: 6, totalRevenue: 1000, soldAverageTicket: 200 } as any}
+        metrics={{ totalSales: 2, totalBudgets: 4, clientsWithBudget: 3, totalClients: 6, totalRevenue: 1000, chosenRevenue: 500, lostRevenue: 100, totalBudgetsRevenue: 1600, soldAverageTicket: 200 } as any}
         loading={false}
         chartPages={chartPages}
         chartPage={0}
         ticketType="sold"
-        ticketTypes={[{ id: 'sold', description: 'Sold' }] as any}
+        ticketTypes={[{ id: 'sold', description: 'Sold', label: '' }, { id: 'chosen', description: 'Chosen', label: '' }, { id: 'total', description: 'Total', label: '' }, { id: 'lost', description: 'Lost', label: '' }] as any}
+        sumTicketType="sold"
         onPrevChart={jest.fn()}
         onNextChart={jest.fn()}
         onSelectChart={jest.fn()}
         onPrevTicket={jest.fn()}
         onNextTicket={jest.fn()}
         onSelectTicket={jest.fn()}
+        onPrevSumTicket={jest.fn()}
+        onNextSumTicket={jest.fn()}
+        onSelectSumTicket={jest.fn()}
         formatChartValue={(v) => `${v}`}
         getCurrentTicketValue={() => 10}
         getCurrentTicketLabel={() => 'Sold'}
+        getCurrentSumTicketValue={() => 20}
+        getCurrentSumTicketLabel={() => 'Sold'}
       />
     );
 
@@ -45,5 +55,6 @@ describe('OverviewTab', () => {
     expect(screen.getByTestId('charts-carousel')).toBeInTheDocument();
     expect(screen.getByTestId('conversion-rate-card')).toBeInTheDocument();
     expect(screen.getByTestId('average-ticket-card')).toBeInTheDocument();
+    expect(screen.getByTestId('sum-ticket-card')).toBeInTheDocument();
   });
 });

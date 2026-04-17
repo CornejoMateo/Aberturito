@@ -30,6 +30,9 @@ describe('BudgetManagement', () => {
         totalBudgets: 7,
         totalSales: 4,
         totalRevenue: 2500000,
+        chosenRevenue: 900000,
+        lostRevenue: 120000,
+        totalBudgetsRevenue: 3520000,
         soldAverageTicket: 12000,
         chosenAverageTicket: 9000,
         totalAverageTicket: 11000,
@@ -49,7 +52,9 @@ describe('BudgetManagement', () => {
     expect(screen.getByText('12')).toBeInTheDocument(); // totalClients
     expect(screen.getByText('7')).toBeInTheDocument(); // totalBudgets
     expect(screen.getByText('4')).toBeInTheDocument(); // totalSales
-    expect(screen.getByText('2500000')).toBeInTheDocument(); // totalRevenue
+    expect(
+      screen.getAllByText((_, element) => element?.textContent?.includes('2.500.000') ?? false)
+    ).not.toHaveLength(0); // totalRevenue
 
     expect(screen.getByTestId('overview-tab')).toBeInTheDocument();
     expect(screen.getByTestId('performance-tab')).toBeInTheDocument();

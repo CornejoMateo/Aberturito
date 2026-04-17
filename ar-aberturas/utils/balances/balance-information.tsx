@@ -10,6 +10,7 @@ interface BalanceInformationProps {
 	contractDateUsd?: number | null;
 	usdCurrent?: number | null;
 	totalPaid: number;
+	totalPaidUsd: number;
 	summary: BalanceSummary;
 	formatDate: (dateStr: string | null | undefined) => string;
 }
@@ -20,6 +21,7 @@ export function BalanceInformation({
 	contractDateUsd,
 	usdCurrent,
 	totalPaid,
+	totalPaidUsd,
 	summary,
 	formatDate,
 }: BalanceInformationProps) {
@@ -80,7 +82,7 @@ export function BalanceInformation({
 					<p className="text-sm font-bold text-green-600">{formatCurrency(totalPaid)}</p>
 					{usdCurrent && (
 						<p className="text-xs text-muted-foreground">
-							{formatCurrencyUSD(totalPaid / (usdCurrent || 1))}
+							{formatCurrencyUSD(totalPaidUsd)}
 						</p>
 					)}
 				</div>

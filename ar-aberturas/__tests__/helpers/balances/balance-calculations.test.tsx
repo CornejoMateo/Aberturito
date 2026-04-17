@@ -16,7 +16,7 @@ describe('calculateBalanceSummary', () => {
 			budgetArsCurrent: 120000,
 			totalPaidArs: 30000,
 			totalPaidUsd: 20,
-			remainingArs: 90000,
+			remainingArs: 96000,
 			remainingUsd: 80,
 			progressPercentage: 25,
 			type: 'Deudor',

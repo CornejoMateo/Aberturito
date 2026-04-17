@@ -59,13 +59,13 @@ export function SumTicketCard({
 						? 'Cargando...'
 						: ticketValue > 0
 							? `Basado en ${
-								ticketType === 'sold'
-									? 'presupuestos vendidos'
-									: ticketType === 'lost'
-										? 'presupuestos perdidos'
-										: ticketType === 'chosen'
-											? 'presupuestos elegidos'
-											: 'todos los presupuestos'
+									ticketType === 'sold'
+										? 'presupuestos vendidos'
+										: ticketType === 'lost'
+											? 'presupuestos perdidos'
+											: ticketType === 'chosen'
+												? 'presupuestos elegidos'
+												: 'todos los presupuestos'
 								}`
 							: 'Sin datos para calcular'}
 				</p>

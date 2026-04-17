@@ -5,6 +5,7 @@ import { TabsContent } from '@/components/ui/tabs';
 import { ChartsCarousel } from '../charts-carousel';
 import { ConversionRateCard } from '../conversion-rate-card';
 import { AverageTicketCard } from '../average-ticket-card';
+import { SumTicketCard } from '@/utils/budgets/sum-ticket-card';
 import { SalesMetrics } from '../../../lib/budgets/types';
 import { calculateChartPercentages } from '../calculations';
 import { TicketType, TicketTypeId } from '@/constants/budgets/tickets';
@@ -16,15 +17,21 @@ interface OverviewTabProps {
   chartPage: number;
   ticketType: TicketTypeId;
   ticketTypes: readonly TicketType[];
+  sumTicketType: TicketTypeId;
   onPrevChart: () => void;
   onNextChart: () => void;
   onSelectChart: (index: number) => void;
   onPrevTicket: () => void;
   onNextTicket: () => void;
   onSelectTicket: (type: TicketTypeId) => void;
+  onPrevSumTicket: () => void;
+  onNextSumTicket: () => void;
+  onSelectSumTicket: (type: TicketTypeId) => void;
   formatChartValue: (value: number) => string;
   getCurrentTicketValue: () => number;
   getCurrentTicketLabel: () => string;
+  getCurrentSumTicketValue: () => number;
+  getCurrentSumTicketLabel: () => string;
 }
 
 export function OverviewTab({
@@ -34,15 +41,21 @@ export function OverviewTab({
   chartPage,
   ticketType,
   ticketTypes,
+  sumTicketType,
   onPrevChart,
   onNextChart,
   onSelectChart,
   onPrevTicket,
   onNextTicket,
   onSelectTicket,
+  onPrevSumTicket,
+  onNextSumTicket,
+  onSelectSumTicket,
   formatChartValue,
   getCurrentTicketValue,
   getCurrentTicketLabel,
+  getCurrentSumTicketValue,
+  getCurrentSumTicketLabel,
 }: OverviewTabProps) {
   const percentages = calculateChartPercentages(metrics);
   const currentPage = chartPages[chartPage % chartPages.length];
@@ -70,7 +83,7 @@ export function OverviewTab({
         />
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <ConversionRateCard
           conversionRate={metrics.conversionRate}
           totalBudgets={metrics.totalBudgets}
@@ -87,6 +100,18 @@ export function OverviewTab({
           onNextTicket={onNextTicket}
           onSelectTicket={onSelectTicket}
         />
+
+        <SumTicketCard
+          loading={loading}
+          ticketValue={getCurrentSumTicketValue()}
+          ticketLabel={getCurrentSumTicketLabel()}
+          ticketType={sumTicketType}
+          ticketTypes={ticketTypes}
+          onPrevTicket={onPrevSumTicket}
+          onNextTicket={onNextSumTicket}
+          onSelectTicket={onSelectSumTicket}
+        />
+
       </div>
     </TabsContent>
   );

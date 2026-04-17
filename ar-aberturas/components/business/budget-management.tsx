@@ -15,6 +15,7 @@ import { formatCurrency } from '@/helpers/format-prices.tsx/formats';
 export function BudgetManagement() {
 	const { metrics, loading } = useBudgetMetrics();
 	const [ticketType, setTicketType] = useState(DEFAULT_TICKET_TYPE);
+	const [sumTicketType, setSumTicketType] = useState(DEFAULT_TICKET_TYPE);
 	const [chartPage, setChartPage] = useState(0);
 
 	const getCurrentTicketValue = () => {
@@ -25,6 +26,8 @@ export function BudgetManagement() {
 				return metrics.chosenAverageTicket;
 			case 'total':
 				return metrics.totalAverageTicket;
+			case 'lost':
+				return metrics.lostAverageTicket;
 			default:
 				return 0;
 		}
@@ -32,6 +35,26 @@ export function BudgetManagement() {
 
 	const getCurrentTicketLabel = () => {
 		const current = TICKET_TYPES.find((t) => t.id === ticketType);
+		return current?.description || '';
+	};
+
+	const getCurrentSumTicketValue = () => {
+		switch (sumTicketType) {
+			case 'sold':
+				return metrics.totalRevenue;
+			case 'chosen':
+				return metrics.chosenRevenue;
+			case 'total':
+				return metrics.totalBudgetsRevenue;
+			case 'lost':
+				return metrics.lostRevenue;
+			default:
+				return 0;
+		}
+	};
+
+	const getCurrentSumTicketLabel = () => {
+		const current = TICKET_TYPES.find((t) => t.id === sumTicketType);
 		return current?.description || '';
 	};
 
@@ -45,6 +68,18 @@ export function BudgetManagement() {
 		const currentIndex = TICKET_TYPES.findIndex((t) => t.id === ticketType);
 		const prevIndex = currentIndex === 0 ? TICKET_TYPES.length - 1 : currentIndex - 1;
 		setTicketType(TICKET_TYPES[prevIndex].id);
+	};
+
+	const handleNextSumTicket = () => {
+		const currentIndex = TICKET_TYPES.findIndex((t) => t.id === sumTicketType);
+		const nextIndex = (currentIndex + 1) % TICKET_TYPES.length;
+		setSumTicketType(TICKET_TYPES[nextIndex].id);
+	};
+
+	const handlePrevSumTicket = () => {
+		const currentIndex = TICKET_TYPES.findIndex((t) => t.id === sumTicketType);
+		const prevIndex = currentIndex === 0 ? TICKET_TYPES.length - 1 : currentIndex - 1;
+		setSumTicketType(TICKET_TYPES[prevIndex].id);
 	};
 
 	const handleNextChart = () => {
@@ -120,15 +155,21 @@ export function BudgetManagement() {
 					chartPage={chartPage}
 					ticketType={ticketType}
 					ticketTypes={TICKET_TYPES}
+					sumTicketType={sumTicketType}
 					onPrevChart={handlePrevChart}
 					onNextChart={handleNextChart}
 					onSelectChart={(idx) => setChartPage(idx)}
 					onPrevTicket={handlePrevTicket}
 					onNextTicket={handleNextTicket}
 					onSelectTicket={setTicketType}
+					onPrevSumTicket={handlePrevSumTicket}
+					onNextSumTicket={handleNextSumTicket}
+					onSelectSumTicket={setSumTicketType}
 					formatChartValue={formatChartValue}
 					getCurrentTicketValue={getCurrentTicketValue}
 					getCurrentTicketLabel={getCurrentTicketLabel}
+					getCurrentSumTicketValue={getCurrentSumTicketValue}
+					getCurrentSumTicketLabel={getCurrentSumTicketLabel}
 				/>
 
 				<PerformanceTab metrics={metrics} loading={loading} />

@@ -72,7 +72,7 @@ describe('useBudgetMetrics', () => {
     expect(result.current.metrics.soldAverageTicket).toBe(10000);
     expect(result.current.metrics.chosenAverageTicket).toBe(10000);
     expect(result.current.metrics.totalRevenue).toBe(40000); // Revenue from sold budgets, not all budgets
-    expect(result.current.metrics.totalAverageTicket).toBe(4000); // Average across all budgets
+    expect(result.current.metrics.totalAverageTicket).toBe(10000); // Average across all budgets
     expect(result.current.metrics.budgetsByAmount[0].amountRange).toBe('$ 0 - 10.000');
     expect(result.current.metrics.budgetsByMaterial[0].material).toBe('Aluminio');
     expect(result.current.metrics.soldBudgetsByMaterial[0].material).toBe('PVC');

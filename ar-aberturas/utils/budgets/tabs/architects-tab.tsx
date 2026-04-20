@@ -2,15 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { RefreshCw } from 'lucide-react';
 import { getArchitectsReport, ArchitectReport, ArchitectStats } from '@/lib/budgets/architects';
 import { ArchitectsTopBudgetsCount } from '../architects-top-budgets-count';
 import { ArchitectMetricsCards } from '../architect-metrics-cards';
 import { Building, Trophy, DollarSign } from 'lucide-react';
-import { formatCurrency } from '@/helpers/format-prices.tsx/formats';
 
 interface ArchitectsTabProps {
 	loading?: boolean;
@@ -43,10 +39,6 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 		setDisplayCount(prev => prev + ITEMS_PER_PAGE);
 	};
 
-	const getDisplayedArchitects = (architects: ArchitectStats[]) => {
-		return architects.slice(0, displayCount);
-	};
-
 	const hasMore = (architects: ArchitectStats[]) => {
 		return displayCount < architects.length;
 	};
@@ -55,11 +47,6 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 	const allArchitects = report?.architects ?? [];
 	const soldArchitects = allArchitects.filter(a => a.soldBudgets > 0);
 	const hasMoreAnyList = hasMore(allArchitects) || hasMore(soldArchitects);
-	const maxRemaining = Math.max(
-		allArchitects.length - displayCount,
-		soldArchitects.length - displayCount,
-		0
-	);
 
 	return (
 		<div className="space-y-6">

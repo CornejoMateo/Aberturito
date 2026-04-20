@@ -24,7 +24,6 @@ jest.mock('@/lib/budgets/budgets', () => ({
   getClientsByContactMethod: jest.fn(),
   getBudgetsByMaterial: jest.fn(),
   getSoldBudgetsByMaterial: jest.fn(),
-  getLostBudgetsCount: jest.fn(),
 }));
 
 const clientsLib = require('@/lib/clients/clients');

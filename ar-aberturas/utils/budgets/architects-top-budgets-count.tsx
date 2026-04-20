@@ -1,10 +1,8 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Building, Trophy, DollarSign } from 'lucide-react';
 import { ArchitectStats } from '@/lib/budgets/architects';
 import { formatCurrency } from '@/helpers/format-prices.tsx/formats';
 
@@ -25,8 +23,6 @@ export function ArchitectsTopBudgetsCount({
 	icon,
 	architects,
 	displayCount,
-	onLoadMore,
-	hasMore,
 	isLoading,
 	showSalesInfo = false,
 	showRevenueInfo = false

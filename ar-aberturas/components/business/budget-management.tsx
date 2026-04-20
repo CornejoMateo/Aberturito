@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Users, FileText, Package, DollarSign } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useBudgetMetrics } from '@/hooks/budgets/use-budget-metrics';
 import { buildChartPages, formatChartValue } from '@/utils/budgets/calculations';
 import { MetricCard } from '@/utils/budgets/metric-card';
@@ -150,35 +150,43 @@ export function BudgetManagement() {
 					<TabsTrigger value="architects">Arquitectos</TabsTrigger>
 				</TabsList>
 
-				<OverviewTab
-					metrics={metrics}
-					loading={loading}
-					chartPages={chartPages}
-					chartPage={chartPage}
-					ticketType={ticketType}
-					ticketTypes={TICKET_TYPES}
-					sumTicketType={sumTicketType}
-					onPrevChart={handlePrevChart}
-					onNextChart={handleNextChart}
-					onSelectChart={(idx) => setChartPage(idx)}
-					onPrevTicket={handlePrevTicket}
-					onNextTicket={handleNextTicket}
-					onSelectTicket={setTicketType}
-					onPrevSumTicket={handlePrevSumTicket}
-					onNextSumTicket={handleNextSumTicket}
-					onSelectSumTicket={setSumTicketType}
-					formatChartValue={formatChartValue}
-					getCurrentTicketValue={getCurrentTicketValue}
-					getCurrentTicketLabel={getCurrentTicketLabel}
-					getCurrentSumTicketValue={getCurrentSumTicketValue}
-					getCurrentSumTicketLabel={getCurrentSumTicketLabel}
-				/>
+				<TabsContent value="overview">
+					<OverviewTab
+						metrics={metrics}
+						loading={loading}
+						chartPages={chartPages}
+						chartPage={chartPage}
+						ticketType={ticketType}
+						ticketTypes={TICKET_TYPES}
+						sumTicketType={sumTicketType}
+						onPrevChart={handlePrevChart}
+						onNextChart={handleNextChart}
+						onSelectChart={(idx) => setChartPage(idx)}
+						onPrevTicket={handlePrevTicket}
+						onNextTicket={handleNextTicket}
+						onSelectTicket={setTicketType}
+						onPrevSumTicket={handlePrevSumTicket}
+						onNextSumTicket={handleNextSumTicket}
+						onSelectSumTicket={setSumTicketType}
+						formatChartValue={formatChartValue}
+						getCurrentTicketValue={getCurrentTicketValue}
+						getCurrentTicketLabel={getCurrentTicketLabel}
+						getCurrentSumTicketValue={getCurrentSumTicketValue}
+						getCurrentSumTicketLabel={getCurrentSumTicketLabel}
+					/>
+				</TabsContent>
 
-				<PerformanceTab metrics={metrics} loading={loading} />
+				<TabsContent value="performance">
+					<PerformanceTab metrics={metrics} loading={loading} />
+				</TabsContent>
 
-				<SourcesAndMaterialsTab metrics={metrics} loading={loading} />
+				<TabsContent value="sources">
+					<SourcesAndMaterialsTab metrics={metrics} loading={loading} />
+				</TabsContent>
 
-				<ArchitectsTab loading={loading} />
+				<TabsContent value="architects">
+					<ArchitectsTab loading={loading} />
+				</TabsContent>
 			</Tabs>
 		</div>
 	);

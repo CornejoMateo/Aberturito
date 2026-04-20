@@ -122,18 +122,6 @@ export function ArchitectsTopBudgetsCount({
 								</div>
 							);
 						})}
-						{hasMore && (
-							<div className="pt-4">
-								<Button 
-									variant="outline" 
-									onClick={onLoadMore}
-									className="w-full"
-									disabled={isLoading}
-								>
-									Cargar más ({architects.length - displayCount} restantes)
-								</Button>
-							</div>
-						)}
 					</>
 				)}
 			</div>

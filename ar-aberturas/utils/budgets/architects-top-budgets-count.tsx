@@ -12,7 +12,6 @@ interface ArchitectsTopBudgetsCountProps {
 	architects: ArchitectStats[];
 	displayCount: number;
 	onLoadMore: () => void;
-	hasMore: boolean;
 	isLoading: boolean;
 	showSalesInfo?: boolean;
 	showRevenueInfo?: boolean;
@@ -27,13 +26,33 @@ export function ArchitectsTopBudgetsCount({
 	showSalesInfo = false,
 	showRevenueInfo = false
 }: ArchitectsTopBudgetsCountProps) {
+	const getSortedArchitects = () => {
+		const sortedArchitects = [...architects];
+
+		if (showSalesInfo) {
+			return sortedArchitects.sort((a, b) => b.soldBudgets - a.soldBudgets);
+		}
+
+		if (showRevenueInfo) {
+			return sortedArchitects.sort((a, b) => b.soldAmount - a.soldAmount);
+		}
+
+		return sortedArchitects.sort((a, b) => b.totalBudgets - a.totalBudgets);
+	};
+
 	const getDisplayedArchitects = () => {
-		return architects.slice(0, displayCount);
+		return getSortedArchitects().slice(0, displayCount);
 	};
 
 	const getMetricValue = (architect: ArchitectStats) => {
 		if (showSalesInfo) return architect.soldBudgets;
-		if (showRevenueInfo) return architect.totalAmount;
+		if (showRevenueInfo) return architect.soldAmount;
+		return architect.totalBudgets;
+	};
+
+	const getProgressValue = (architect: ArchitectStats) => {
+		if (showSalesInfo) return architect.soldPercentage;
+		if (showRevenueInfo) return architect.soldAmount;
 		return architect.totalBudgets;
 	};
 
@@ -42,10 +61,10 @@ export function ArchitectsTopBudgetsCount({
 		if (displayed.length === 0) return 1;
 		
 		if (showSalesInfo) {
-			return displayed[0]?.soldBudgets || 1;
+			return 100;
 		}
 		if (showRevenueInfo) {
-			return displayed[0]?.totalAmount || 1;
+			return displayed[0]?.soldAmount || 1;
 		}
 		return displayed[0]?.totalBudgets || 1;
 	};
@@ -81,7 +100,8 @@ export function ArchitectsTopBudgetsCount({
 						{getDisplayedArchitects().map((architect, index) => {
 							const maxValue = getMaxValue();
 							const currentValue = getMetricValue(architect);
-							const percentage = (currentValue / maxValue) * 100;
+							const currentProgressValue = getProgressValue(architect);
+							const percentage = (currentProgressValue / maxValue) * 100;
 							
 							return (
 								<div key={architect.name} className="space-y-2">
@@ -98,7 +118,9 @@ export function ArchitectsTopBudgetsCount({
 											{formatMetricValue(currentValue)}
 										</span>
 									</div>
-									<Progress value={percentage} className="h-2" />
+									{!showRevenueInfo && (
+										<Progress value={percentage} className="h-2" />
+									)}
 									
 									{(showSalesInfo || showRevenueInfo) && (
 										<div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -109,8 +131,8 @@ export function ArchitectsTopBudgetsCount({
 												</>
 											) : showRevenueInfo ? (
 												<>
-													<span>{architect.totalBudgets} presupuestos</span>
 													<span>{architect.soldBudgets} vendidos</span>
+													<span>{architect.soldPercentage.toFixed(1)}% de conversión</span>
 												</>
 											) : null}
 										</div>

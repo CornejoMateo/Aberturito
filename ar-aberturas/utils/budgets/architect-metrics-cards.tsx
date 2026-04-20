@@ -66,10 +66,10 @@ export function ArchitectMetricsCards({ report }: ArchitectMetricsCardsProps) {
 					<div>
 						<p className="text-sm text-muted-foreground">Mayor facturación</p>
 						<p className="text-lg font-semibold truncate">
-							{report?.architects?.sort((a, b) => b.totalAmount - a.totalAmount)[0]?.name || 'N/A'}
+							{report?.architects?.sort((a, b) => b.soldAmount - a.soldAmount)[0]?.name || 'N/A'}
 						</p>
 						<p className="text-xs text-muted-foreground">
-							{formatCurrency(report?.architects?.sort((a, b) => b.totalAmount - a.totalAmount)[0]?.totalAmount || 0)}
+							{formatCurrency(report?.architects?.sort((a, b) => b.soldAmount - a.soldAmount)[0]?.soldAmount || 0)}
 						</p>
 					</div>
 				</div>

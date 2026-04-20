@@ -84,10 +84,9 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 				<ArchitectsTopBudgetsCount
 					title="Más presupuestos"
 					icon={<Building className="h-5 w-5 text-blue-600" />}
-					architects={report?.architects.sort((a, b) => b.totalBudgets - a.totalBudgets) || []}
+					architects={allArchitects}
 					displayCount={displayCount}
 					onLoadMore={loadMore}
-					hasMore={hasMore(report?.architects || [])}
 					isLoading={isLoading}
 				/>
 
@@ -95,10 +94,9 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 				<ArchitectsTopBudgetsCount
 					title="Más ventas"
 					icon={<Trophy className="h-5 w-5 text-green-600" />}
-					architects={report?.architects.filter(a => a.soldBudgets > 0).sort((a, b) => b.soldBudgets - a.soldBudgets) || []}
+					architects={soldArchitects}
 					displayCount={displayCount}
 					onLoadMore={loadMore}
-					hasMore={hasMore(report?.architects.filter(a => a.soldBudgets > 0) || [])}
 					isLoading={isLoading}
 					showSalesInfo
 				/>
@@ -107,10 +105,9 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 				<ArchitectsTopBudgetsCount
 					title="Mayor facturación"
 					icon={<DollarSign className="h-5 w-5 text-orange-600" />}
-					architects={report?.architects.sort((a, b) => b.totalAmount - a.totalAmount) || []}
+					architects={allArchitects}
 					displayCount={displayCount}
 					onLoadMore={loadMore}
-					hasMore={hasMore(report?.architects || [])}
 					isLoading={isLoading}
 					showRevenueInfo
 				/>

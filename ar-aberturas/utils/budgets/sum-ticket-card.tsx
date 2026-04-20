@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { TicketType, TicketTypeId } from '@/constants/budgets/tickets';
 import { formatCurrency } from '@/helpers/format-prices.tsx/formats';
-import { Progress } from '@/components/ui/progress';
 
 interface SumTicketCardProps {
 	loading: boolean;
@@ -50,7 +49,7 @@ export function SumTicketCard({
 				<div className="flex items-center justify-between">
 					<span className="text-sm text-muted-foreground">Monto acumulado</span>
 					<span className="text-2xl font-bold text-foreground">
-						{loading ? '...' : ticketValue > 0 ? formatCurrency(ticketValue) : '--'}
+						{loading ? '...' : ticketValue > 0 ? formatCurrency(ticketValue) : 0}
 					</span>
 				</div>
 

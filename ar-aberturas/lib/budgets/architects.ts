@@ -22,7 +22,6 @@ export async function getArchitectsReport(): Promise<{ data: ArchitectReport | n
 	try {
 		const supabase = getSupabaseClient();
 		
-		// Obtener todos los presupuestos con información de obras y arquitectos
 		const { data: budgets, error: budgetsError } = await supabase
 			.from('budgets')
 			.select(`
@@ -55,7 +54,6 @@ export async function getArchitectsReport(): Promise<{ data: ArchitectReport | n
 			};
 		}
 
-		// Agrupar presupuestos por arquitecto
 		const architectMap = new Map<string, {
 			name: string;
 			totalBudgets: number;
@@ -98,7 +96,6 @@ export async function getArchitectsReport(): Promise<{ data: ArchitectReport | n
 			architectMap.set(architectKey, current);
 		});
 
-		// Convertir a arreglo y calcular porcentajes
 		const architects: ArchitectStats[] = Array.from(architectMap.values()).map((stats) => ({
 			name: stats.name,
 			totalBudgets: stats.totalBudgets,
@@ -109,10 +106,8 @@ export async function getArchitectsReport(): Promise<{ data: ArchitectReport | n
 			soldPercentage: stats.totalBudgets > 0 ? (stats.soldBudgets / stats.totalBudgets) * 100 : 0
 		}));
 
-		// Ordenar por total de presupuestos (descendente)
 		architects.sort((a, b) => b.totalBudgets - a.totalBudgets);
 
-		// Encontrar el arquitecto con más presupuestos vendidos
 		const mostSoldArchitect = architects.length > 0
 			? architects.reduce((prev, current) =>
 				current.soldBudgets > prev.soldBudgets ? current : prev

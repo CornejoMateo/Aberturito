@@ -58,7 +58,7 @@ export function AverageTicketCard({
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Por presupuesto</span>
           <span className="text-2xl font-bold text-foreground">
-            {loading ? '...' : ticketValue > 0 ? formatCurrency(ticketValue) : '--'}
+            {loading ? '...' : ticketValue > 0 ? formatCurrency(ticketValue) : 0}
           </span>
         </div>
         <p className="text-xs text-muted-foreground">

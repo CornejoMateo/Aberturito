@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 interface AddressLinkProps {
-  address: string;
+  address: string | null;
   locality?: string | null;
   className?: string;
 }
 
 export function AddressLink({ address, locality, className }: AddressLinkProps) {
-  if (!address || address === 'Dirección no especificada') {
+  if (!address && !locality) {
     return <span className={cn('text-muted-foreground', className)}>Dirección no especificada</span>;
   }
 
@@ -32,7 +32,10 @@ export function AddressLink({ address, locality, className }: AddressLinkProps) 
       )}
     >
       <MapPin className="h-4 w-4 flex-shrink-0" />
-      <span>{address}{locality && `, ${locality}`}</span>
+      <span>
+        {address}
+        {address && locality ? `, ${locality}` : locality ? locality : ''}
+      </span>
     </Link>
   );
 }

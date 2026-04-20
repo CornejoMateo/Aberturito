@@ -10,11 +10,17 @@ import {
   getChosenBudgetsTotalAmount,
   getClientsWithBudgetCount,
   getBudgetsByMonth,
+  getBudgetsByAmountRange,
+  getBudgetsByAmountRangeChosen,
+  getBudgetsByAmountRangeSold,
+  getBudgetsByAmountRangeLost,
   getBudgetsByLocation,
   getClientsByContactMethod,
   getBudgetsByMaterial,
   getSoldBudgetsByMaterial,
   getLostBudgetsCount,
+  getBudgetsTotalAmount,
+  getLostBudgetsTotalAmount
 } from '@/lib/budgets/budgets';
 import { SalesMetrics, DEFAULT_METRICS } from '@/lib/budgets/types';
 import { normalize } from '@/helpers/budget/normalize';
@@ -71,7 +77,21 @@ export const useBudgetMetrics = () => {
           if (!soldCount.error && soldCount.data > 0) {
             setMetrics(prev => ({
               ...prev,
+              totalRevenue: soldAmounts.totalArs,
               soldAverageTicket: Math.round(soldAmounts.totalArs / soldCount.data)
+            }));
+          }
+        }
+
+        // Obtain total amount of lost budgets
+        const { data: lostAmounts, error: lostAmountError } = await getLostBudgetsTotalAmount();
+        if (!lostAmountError && lostAmounts) {
+          const lostCount = await getLostBudgetsCount();
+          if (!lostCount.error && lostCount.data > 0) {
+            setMetrics(prev => ({
+              ...prev,
+              lostRevenue: lostAmounts.totalArs,
+              lostAverageTicket: Math.round(lostAmounts.totalArs / lostCount.data)
             }));
           }
         }
@@ -83,23 +103,21 @@ export const useBudgetMetrics = () => {
           if (!chosenCount.error && chosenCount.data > 0) {
             setMetrics(prev => ({
               ...prev,
+              chosenRevenue: chosenAmounts.totalArs,
               chosenAverageTicket: Math.round(chosenAmounts.totalArs / chosenCount.data)
             }));
           }
         }
 
         // Obtain total revenue (sum of sold budgets)
-        const { data: totalAmounts, error: amountError } = await getSoldBudgetsTotalAmount();
+        const { data: totalAmounts, error: amountError } = await getBudgetsTotalAmount();
         if (!amountError && totalAmounts) {
-          setMetrics(prev => ({
-            ...prev,
-            totalRevenue: totalAmounts.totalArs
-          }));
 
           // Obtain total average ticket
           if (budgetsCount > 0) {
             setMetrics(prev => ({
               ...prev,
+              totalBudgetsRevenue: totalAmounts.totalArs,
               totalAverageTicket: Math.round(totalAmounts.totalArs / budgetsCount)
             }));
           }
@@ -112,6 +130,42 @@ export const useBudgetMetrics = () => {
           setMetrics(prev => ({
             ...prev,
             budgetsByMonth
+          }));
+        }
+
+        // Obtain budgets by amount range
+        const { data: budgetsByAmount, error: budgetsByAmountError } = await getBudgetsByAmountRange();
+        if (!budgetsByAmountError && budgetsByAmount) {
+          setMetrics(prev => ({
+            ...prev,
+            budgetsByAmount
+          }));
+        }
+
+        // Obtain budgets by amount range for chosen
+        const { data: budgetsByAmountChosen, error: budgetsByAmountChosenError } = await getBudgetsByAmountRangeChosen();
+        if (!budgetsByAmountChosenError && budgetsByAmountChosen) {
+          setMetrics(prev => ({
+            ...prev,
+            budgetsByAmountChosen
+          }));
+        }
+
+        // Obtain budgets by amount range for sold
+        const { data: budgetsByAmountSold, error: budgetsByAmountSoldError } = await getBudgetsByAmountRangeSold();
+        if (!budgetsByAmountSoldError && budgetsByAmountSold) {
+          setMetrics(prev => ({
+            ...prev,
+            budgetsByAmountSold
+          }));
+        }
+
+        // Obtain budgets by amount range for lost
+        const { data: budgetsByAmountLost, error: budgetsByAmountLostError } = await getBudgetsByAmountRangeLost();
+        if (!budgetsByAmountLostError && budgetsByAmountLost) {
+          setMetrics(prev => ({
+            ...prev,
+            budgetsByAmountLost
           }));
         }
 

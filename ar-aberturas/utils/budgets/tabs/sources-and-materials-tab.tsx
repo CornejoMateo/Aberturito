@@ -41,7 +41,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 	return (
 		<TabsContent value="sources" className="space-y-4">
 			{/* Charts Section */}
-			<div className="grid gap-4 md:grid-cols-2">
+			<div className="grid gap-4 md:grid-cols-1">
 				{/* Material Distribution Chart */}
 				<Card className="p-6 bg-card border-border">
 					<h3 className="text-lg font-semibold text-foreground mb-6">
@@ -64,7 +64,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 					)}
 				</Card>
 
-        {/* Sold Budgets Material Distribution Chart */}
+        		{/* Sold Budgets Material Distribution Chart */}
 				<Card className="p-6 bg-card border-border">
 					<h3 className="text-lg font-semibold text-foreground mb-6">
 						Distribución de presupuestos vendidos por material
@@ -91,7 +91,11 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 					)}
 				</Card>
 
-        {/* Contact Method Chart */}
+			</div>
+
+			<div className="grid gap-4 md:grid-cols-2">
+
+        		{/* Contact Method Chart */}
 				<Card className="p-6 bg-card border-border">
 					<h3 className="text-lg font-semibold text-foreground mb-6">
 						Clientes por medio de contacto
@@ -163,7 +167,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 						</div>
 					</Card>
 
-          <Card className="p-6 bg-card border-border hover:shadow-md transition-shadow">
+          			<Card className="p-6 bg-card border-border hover:shadow-md transition-shadow">
 						<div className="space-y-2">
 							<p className="text-sm font-medium text-muted-foreground">
 								Medio de Contacto principal
@@ -180,6 +184,8 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 							</p>
 						</div>
 					</Card>
+
+
 
 				</div>
 			</div>

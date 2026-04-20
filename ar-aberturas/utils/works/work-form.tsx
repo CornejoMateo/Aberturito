@@ -57,7 +57,6 @@ export function WorkForm({ onSubmit, onCancel }: WorkFormProps) {
             value={formData.address || ''}
             onChange={handleChange}
             placeholder="Ej: Av. Colón 1234"
-            required
           />
         </div>
 

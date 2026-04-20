@@ -210,6 +210,7 @@ export function BalanceDetailsModal({
 							contractDateUsd={balance.contract_date_usd}
 							usdCurrent={balance.usd_current}
 							totalPaid={totalPaid}
+							totalPaidUsd={totalPaidUSD}
 							summary={summary}
 							formatDate={formatCreatedAt}
 						/>

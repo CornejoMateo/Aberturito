@@ -1,7 +1,6 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { TicketType, TicketTypeId } from '@/constants/budgets/tickets';
@@ -62,10 +61,6 @@ export function AverageTicketCard({
             {loading ? '...' : ticketValue > 0 ? formatCurrency(ticketValue) : '--'}
           </span>
         </div>
-        <Progress
-          value={ticketValue > 0 ? Math.min((ticketValue / 50000) * 100, 100) : 0}
-          className="h-3"
-        />
         <p className="text-xs text-muted-foreground">
           {loading
             ? 'Cargando...'
@@ -73,9 +68,11 @@ export function AverageTicketCard({
               ? `Basado en ${
                   ticketType === 'sold'
                     ? 'presupuestos vendidos'
-                    : ticketType === 'chosen'
-                      ? 'presupuestos elegidos'
-                      : 'todos los presupuestos'
+                    : ticketType === 'lost'
+                      ? 'presupuestos perdidos'
+                      : ticketType === 'chosen'
+                        ? 'presupuestos elegidos'
+                        : 'todos los presupuestos'
                 }`
               : 'Sin datos para calcular'}
         </p>

@@ -475,6 +475,185 @@ export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string
 	return { data: result, error: null };
 }
 
+const AMOUNT_INTERVALS = [
+	{ label: '0 a 1.000.000', min: 0, max: 1_000_000 },
+	{ label: '1.000.000 a 10.000.000', min: 1_000_000, max: 10_000_000 },
+	{ label: '10.000.000 a 30.000.000', min: 10_000_000, max: 30_000_000 },
+	{ label: '30.000.000 a 50.000.000', min: 30_000_000, max: 50_000_000 },
+	{ label: 'Mayor a 50.000.000', min: 50_000_000, max: Number.POSITIVE_INFINITY },
+];
+
+export async function getBudgetsByAmountRange(): Promise<{ data: Array<{ amountRange: string; count: number }> | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('amount_ars');
+
+	if (error) return { data: null, error };
+	if (!data) return { data: [], error: null };
+
+	const amounts = data
+		.map((budget: any) => Number(budget.amount_ars || 0))
+		.filter((amount: number) => Number.isFinite(amount) && amount >= 0);
+
+	if (amounts.length === 0) {
+		return {
+			data: AMOUNT_INTERVALS.map((interval) => ({ amountRange: interval.label, count: 0 })),
+			error: null,
+		};
+	}
+
+	const intervalCounts = AMOUNT_INTERVALS.map((interval) => ({
+		amountRange: interval.label,
+		count: 0,
+	}));
+
+	amounts.forEach((amount) => {
+		const intervalIndex = AMOUNT_INTERVALS.findIndex((interval, index) => {
+			if (index === AMOUNT_INTERVALS.length - 1) {
+				return amount >= interval.min;
+			}
+
+			return amount >= interval.min && amount < interval.max;
+		});
+
+		if (intervalIndex >= 0) {
+			intervalCounts[intervalIndex].count += 1;
+		}
+	});
+
+	return { data: intervalCounts, error: null };
+}
+
+export async function getBudgetsByAmountRangeChosen(): Promise<{ data: Array<{ amountRange: string; count: number }> | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('amount_ars')
+		.eq('accepted', true);
+
+	if (error) return { data: null, error };
+	if (!data) return { data: [], error: null };
+
+	const amounts = data
+		.map((budget: any) => Number(budget.amount_ars || 0))
+		.filter((amount: number) => Number.isFinite(amount) && amount >= 0);
+
+	if (amounts.length === 0) {
+		return {
+			data: AMOUNT_INTERVALS.map((interval) => ({ amountRange: interval.label, count: 0 })),
+			error: null,
+		};
+	}
+
+	const intervalCounts = AMOUNT_INTERVALS.map((interval) => ({
+		amountRange: interval.label,
+		count: 0,
+	}));
+
+	amounts.forEach((amount) => {
+		const intervalIndex = AMOUNT_INTERVALS.findIndex((interval, index) => {
+			if (index === AMOUNT_INTERVALS.length - 1) {
+				return amount >= interval.min;
+			}
+
+			return amount >= interval.min && amount < interval.max;
+		});
+
+		if (intervalIndex >= 0) {
+			intervalCounts[intervalIndex].count += 1;
+		}
+	});
+
+	return { data: intervalCounts, error: null };
+}
+
+export async function getBudgetsByAmountRangeSold(): Promise<{ data: Array<{ amountRange: string; count: number }> | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('amount_ars')
+		.eq('sold', true);
+
+	if (error) return { data: null, error };
+	if (!data) return { data: [], error: null };
+
+	const amounts = data
+		.map((budget: any) => Number(budget.amount_ars || 0))
+		.filter((amount: number) => Number.isFinite(amount) && amount >= 0);
+
+	if (amounts.length === 0) {
+		return {
+			data: AMOUNT_INTERVALS.map((interval) => ({ amountRange: interval.label, count: 0 })),
+			error: null,
+		};
+	}
+
+	const intervalCounts = AMOUNT_INTERVALS.map((interval) => ({
+		amountRange: interval.label,
+		count: 0,
+	}));
+
+	amounts.forEach((amount) => {
+		const intervalIndex = AMOUNT_INTERVALS.findIndex((interval, index) => {
+			if (index === AMOUNT_INTERVALS.length - 1) {
+				return amount >= interval.min;
+			}
+
+			return amount >= interval.min && amount < interval.max;
+		});
+
+		if (intervalIndex >= 0) {
+			intervalCounts[intervalIndex].count += 1;
+		}
+	});
+
+	return { data: intervalCounts, error: null };
+}
+
+export async function getBudgetsByAmountRangeLost(): Promise<{ data: Array<{ amountRange: string; count: number }> | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('amount_ars')
+		.eq('lost', true);
+
+	if (error) return { data: null, error };
+	if (!data) return { data: [], error: null };
+
+	const amounts = data
+		.map((budget: any) => Number(budget.amount_ars || 0))
+		.filter((amount: number) => Number.isFinite(amount) && amount >= 0);
+
+	if (amounts.length === 0) {
+		return {
+			data: AMOUNT_INTERVALS.map((interval) => ({ amountRange: interval.label, count: 0 })),
+			error: null,
+		};
+	}
+
+	const intervalCounts = AMOUNT_INTERVALS.map((interval) => ({
+		amountRange: interval.label,
+		count: 0,
+	}));
+
+	amounts.forEach((amount) => {
+		const intervalIndex = AMOUNT_INTERVALS.findIndex((interval, index) => {
+			if (index === AMOUNT_INTERVALS.length - 1) {
+				return amount >= interval.min;
+			}
+
+			return amount >= interval.min && amount < interval.max;
+		});
+
+		if (intervalIndex >= 0) {
+			intervalCounts[intervalIndex].count += 1;
+		}
+	});
+
+	return { data: intervalCounts, error: null };
+}
+
 export async function getBudgetsByLocation(): Promise<{ data: Array<{ location: string; count: number }> | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase

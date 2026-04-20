@@ -10,8 +10,10 @@ jest.mock('@/lib/budgets/budgets', () => ({
   getBudgetsTotalAmount: jest.fn(),
   getSoldBudgetsCount: jest.fn(),
   getChosenBudgetsCount: jest.fn(),
+  getLostBudgetsCount: jest.fn(),
   getSoldBudgetsTotalAmount: jest.fn(),
   getChosenBudgetsTotalAmount: jest.fn(),
+  getLostBudgetsTotalAmount: jest.fn(),
   getClientsWithBudgetCount: jest.fn(),
   getBudgetsByMonth: jest.fn(),
   getBudgetsByAmountRange: jest.fn(),
@@ -36,8 +38,10 @@ describe('useBudgetMetrics', () => {
     budgetsLib.getBudgetsCount.mockResolvedValue({ data: 10, error: null });
     budgetsLib.getSoldBudgetsCount.mockResolvedValue({ data: 4, error: null });
     budgetsLib.getChosenBudgetsCount.mockResolvedValue({ data: 3, error: null });
+    budgetsLib.getLostBudgetsCount.mockResolvedValue({ data: 0, error: null });
     budgetsLib.getSoldBudgetsTotalAmount.mockResolvedValue({ data: { totalArs: 40000, totalUsd: 0 }, error: null });
     budgetsLib.getChosenBudgetsTotalAmount.mockResolvedValue({ data: { totalArs: 30000, totalUsd: 0 }, error: null });
+    budgetsLib.getLostBudgetsTotalAmount.mockResolvedValue({ data: { totalArs: 0, totalUsd: 0 }, error: null });
     budgetsLib.getBudgetsTotalAmount.mockResolvedValue({ data: { totalArs: 100000, totalUsd: 0 }, error: null });
     budgetsLib.getClientsWithBudgetCount.mockResolvedValue({ data: 12, error: null });
     budgetsLib.getBudgetsByMonth.mockResolvedValue({ data: [{ month: 'Ene', presupuestos: 2, vendidos: 1 }], error: null });
@@ -61,6 +65,10 @@ describe('useBudgetMetrics', () => {
     expect(result.current.metrics.totalBudgets).toBe(10);
     expect(result.current.metrics.totalSales).toBe(4);
     expect(result.current.metrics.conversionRate).toBe(40);
+    expect(result.current.metrics.totalRevenue).toBe(40000);
+    expect(result.current.metrics.chosenRevenue).toBe(30000);
+    expect(result.current.metrics.lostRevenue).toBe(0);
+    expect(result.current.metrics.totalBudgetsRevenue).toBe(100000);
     expect(result.current.metrics.soldAverageTicket).toBe(10000);
     expect(result.current.metrics.chosenAverageTicket).toBe(10000);
     expect(result.current.metrics.totalRevenue).toBe(40000); // Revenue from sold budgets, not all budgets

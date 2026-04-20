@@ -74,10 +74,10 @@ export function BalancesReport() {
 			const next: BalanceReportRow[] = await Promise.all(balances.map(async (b) => {
 				const totalPaid = totals?.[String(b.id)]?.totalAmount ?? 0;
 				const totalPaidUSD = totals?.[String(b.id)]?.totalAmountUSD ?? 0;
-				const budgetArs = b.budget?.amount_ars ?? 0;
 				const budgetUsd = b.budget?.amount_usd ?? 0;
-				const remainingArs = normalizeMoney(budgetArs - totalPaid);
+				const budgetArs = budgetUsd * (b.usd_current ?? 1);
 				const remainingUsd = normalizeMoney(budgetUsd - totalPaidUSD);
+				const remainingArs = normalizeMoney(remainingUsd * (b.usd_current ?? 1));
 
 				const clientName = `${b.client?.last_name ?? ''} ${b.client?.name ?? ''}`.trim() || DEFAULT_FALLBACK;
 				const workLocality = b.budget?.folder_budget?.work?.locality ?? '';

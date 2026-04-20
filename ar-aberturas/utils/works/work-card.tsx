@@ -86,7 +86,7 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp, onOpenCheckl
 						<div className="grid gap-2 md:grid-cols-3 text-sm">
 							<div className="flex items-center text-muted-foreground">
 								<AddressLink
-									address={work.address || 'Dirección no especificada'}
+									address={work.address || null}
 									locality={work.locality}
 									className="text-sm"
 								/>

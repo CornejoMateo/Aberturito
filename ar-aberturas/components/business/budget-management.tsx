@@ -9,6 +9,7 @@ import { MetricCard } from '@/utils/budgets/metric-card';
 import { OverviewTab } from '@/utils/budgets/tabs/overview-tab';
 import { PerformanceTab } from '@/utils/budgets/tabs/performance-tab';
 import { SourcesAndMaterialsTab } from '@/utils/budgets/tabs/sources-and-materials-tab';
+import { ArchitectsTab } from '@/utils/budgets/tabs/architects-tab';
 import { TICKET_TYPES, DEFAULT_TICKET_TYPE } from '@/constants/budgets/tickets';
 import { formatCurrency } from '@/helpers/format-prices.tsx/formats';
 
@@ -146,6 +147,7 @@ export function BudgetManagement() {
 					<TabsTrigger value="overview">Resumen de ventas</TabsTrigger>
 					<TabsTrigger value="performance">Rendimiento</TabsTrigger>
 					<TabsTrigger value="sources">Fuentes y materiales</TabsTrigger>
+					<TabsTrigger value="architects">Arquitectos</TabsTrigger>
 				</TabsList>
 
 				<OverviewTab
@@ -175,6 +177,8 @@ export function BudgetManagement() {
 				<PerformanceTab metrics={metrics} loading={loading} />
 
 				<SourcesAndMaterialsTab metrics={metrics} loading={loading} />
+
+				<ArchitectsTab loading={loading} />
 			</Tabs>
 		</div>
 	);

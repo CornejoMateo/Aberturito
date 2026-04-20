@@ -29,8 +29,8 @@ export function calculateBalanceSummary(input: BalanceCalculationInput): Balance
 	const totalPaidUsd = toSafeNumber(input.totalPaidUsd);
 
 	const budgetArsCurrent = budgetUsd * usdCurrent;
-	const remainingArs = budgetArsCurrent - totalPaidArs;
 	const remainingUsd = budgetUsd - totalPaidUsd;
+	const remainingArs = remainingUsd * usdCurrent;
 	const progressBase = budgetArsCurrent > 0 ? budgetArsCurrent : budgetArsInitial;
 	const progressPercentage =
 		progressBase > 0 ? Math.min(Math.round((totalPaidArs / progressBase) * 100), 100) : 0;

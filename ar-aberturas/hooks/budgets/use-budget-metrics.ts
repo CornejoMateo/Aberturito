@@ -10,6 +10,10 @@ import {
   getChosenBudgetsTotalAmount,
   getClientsWithBudgetCount,
   getBudgetsByMonth,
+  getBudgetsByAmountRange,
+  getBudgetsByAmountRangeChosen,
+  getBudgetsByAmountRangeSold,
+  getBudgetsByAmountRangeLost,
   getBudgetsByLocation,
   getClientsByContactMethod,
   getBudgetsByMaterial,
@@ -126,6 +130,42 @@ export const useBudgetMetrics = () => {
           setMetrics(prev => ({
             ...prev,
             budgetsByMonth
+          }));
+        }
+
+        // Obtain budgets by amount range
+        const { data: budgetsByAmount, error: budgetsByAmountError } = await getBudgetsByAmountRange();
+        if (!budgetsByAmountError && budgetsByAmount) {
+          setMetrics(prev => ({
+            ...prev,
+            budgetsByAmount
+          }));
+        }
+
+        // Obtain budgets by amount range for chosen
+        const { data: budgetsByAmountChosen, error: budgetsByAmountChosenError } = await getBudgetsByAmountRangeChosen();
+        if (!budgetsByAmountChosenError && budgetsByAmountChosen) {
+          setMetrics(prev => ({
+            ...prev,
+            budgetsByAmountChosen
+          }));
+        }
+
+        // Obtain budgets by amount range for sold
+        const { data: budgetsByAmountSold, error: budgetsByAmountSoldError } = await getBudgetsByAmountRangeSold();
+        if (!budgetsByAmountSoldError && budgetsByAmountSold) {
+          setMetrics(prev => ({
+            ...prev,
+            budgetsByAmountSold
+          }));
+        }
+
+        // Obtain budgets by amount range for lost
+        const { data: budgetsByAmountLost, error: budgetsByAmountLostError } = await getBudgetsByAmountRangeLost();
+        if (!budgetsByAmountLostError && budgetsByAmountLost) {
+          setMetrics(prev => ({
+            ...prev,
+            budgetsByAmountLost
           }));
         }
 

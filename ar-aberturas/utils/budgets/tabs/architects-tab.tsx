@@ -105,7 +105,7 @@ export function ArchitectsTab({ loading: externalLoading = false }: ArchitectsTa
 				<ArchitectsTopBudgetsCount
 					title="Mayor facturación"
 					icon={<DollarSign className="h-5 w-5 text-orange-600" />}
-					architects={allArchitects}
+					architects={soldArchitects}
 					displayCount={displayCount}
 					onLoadMore={loadMore}
 					isLoading={isLoading}

@@ -128,18 +128,18 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
 		metrics.budgetsByMonth && metrics.budgetsByMonth.length > 0
 			? metrics.budgetsByMonth
 			: [
-					{ month: 'Ene', presupuestos: 0, vendidos: 0 },
-					{ month: 'Feb', presupuestos: 0, vendidos: 0 },
-					{ month: 'Mar', presupuestos: 0, vendidos: 0 },
-					{ month: 'Abr', presupuestos: 0, vendidos: 0 },
-					{ month: 'May', presupuestos: 0, vendidos: 0 },
-					{ month: 'Jun', presupuestos: 0, vendidos: 0 },
-					{ month: 'Jul', presupuestos: 0, vendidos: 0 },
-					{ month: 'Ago', presupuestos: 0, vendidos: 0 },
-					{ month: 'Sep', presupuestos: 0, vendidos: 0 },
-					{ month: 'Oct', presupuestos: 0, vendidos: 0 },
-					{ month: 'Nov', presupuestos: 0, vendidos: 0 },
-					{ month: 'Dic', presupuestos: 0, vendidos: 0 },
+					{ month: 'Ene', presupuestos: 0, vendidos: 0, perdidos: 0 },
+					{ month: 'Feb', presupuestos: 0, vendidos: 0, perdidos: 0 },
+					{ month: 'Mar', presupuestos: 0, vendidos: 0, perdidos: 0 },
+					{ month: 'Abr', presupuestos: 0, vendidos: 0, perdidos: 0 },
+					{ month: 'May', presupuestos: 0, vendidos: 0, perdidos: 0 },
+					{ month: 'Jun', presupuestos: 0, vendidos: 0, perdidos: 0 },
+					{ month: 'Jul', presupuestos: 0, vendidos: 0, perdidos: 0 },
+					{ month: 'Ago', presupuestos: 0, vendidos: 0, perdidos: 0 },
+					{ month: 'Sep', presupuestos: 0, vendidos: 0, perdidos: 0 },
+					{ month: 'Oct', presupuestos: 0, vendidos: 0, perdidos: 0 },
+					{ month: 'Nov', presupuestos: 0, vendidos: 0, perdidos: 0 },
+					{ month: 'Dic', presupuestos: 0, vendidos: 0, perdidos: 0 },
 				];
 
 	// Data for the average ticket chart (default to 0 if no data)
@@ -179,6 +179,15 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
 								dot={{ fill: '#10b981', r: 4 }}
 								activeDot={{ r: 6 }}
 								name="Vendidos"
+							/>
+							<Line
+								type="monotone"
+								dataKey="perdidos"
+								stroke="#ef4444"
+								strokeWidth={2}
+								dot={{ fill: '#ef4444', r: 4 }}
+								activeDot={{ r: 6 }}
+								name="Perdidos"
 							/>
 						</LineChart>
 					</ResponsiveContainer>

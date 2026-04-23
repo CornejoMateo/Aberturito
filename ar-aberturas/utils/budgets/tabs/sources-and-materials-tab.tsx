@@ -18,6 +18,8 @@ import {
 import { SalesMetrics } from '../../../lib/budgets/types';
 import { CONTACT_METHODS } from '@/constants/budgets/contact-methods';
 import { COLORS } from '@/constants/budgets/colors';
+import { ConversionRateCard } from '../conversion-rate-card';
+import { calculatePercentage } from '../calculations';
 
 interface SourcesAndMaterialsTabProps {
 	metrics: SalesMetrics;
@@ -25,6 +27,12 @@ interface SourcesAndMaterialsTabProps {
 }
 
 export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterialsTabProps) {
+
+	const getMaterialCount = (materials: Array<{ material: string; count: number }>, aliases: string) => {
+		const materialEntry = materials.find(item => aliases.includes(item.material));
+		return materialEntry ? materialEntry.count : 0;
+	};
+
 	const contactMethodLabels: Record<string, string> = CONTACT_METHODS.reduce(
 		(acc, method) => {
 			acc[method.value] = method.label;
@@ -37,6 +45,26 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 		name: `${contactMethodLabels[item.method] || item.method}`,
 		value: item.count,
 	}));
+
+	const aluminumBudgeted = getMaterialCount(metrics.budgetsByMaterial || [], 'Aluminio');
+	const aluminumSold = getMaterialCount(metrics.soldBudgetsByMaterial || [], 'Aluminio');
+	const pvcBudgeted = getMaterialCount(metrics.budgetsByMaterial || [], 'PVC');
+	const pvcSold = getMaterialCount(metrics.soldBudgetsByMaterial || [], 'PVC');
+
+	const conversionByMaterial = [
+		{
+			material: 'PVC',
+			budgeted: pvcBudgeted,
+			sold: pvcSold,
+			rate: pvcBudgeted > 0 ? (pvcSold / pvcBudgeted) * 100 : 0,
+		},
+		{
+			material: 'Aluminio',
+			budgeted: aluminumBudgeted,
+			sold: aluminumSold,
+			rate: aluminumBudgeted > 0 ? (aluminumSold / aluminumBudgeted) * 100 : 0,
+		},
+	];
 
 	return (
 		<TabsContent value="sources" className="space-y-4">
@@ -94,6 +122,19 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 			</div>
 
 			<div className="grid gap-4 md:grid-cols-2">
+				{conversionByMaterial.map((item) => (
+					<ConversionRateCard
+						key={item.material}
+						title={`Tasa de concrecion ${item.material}`}
+						label="Presupuestos -> Vendidos"
+						conversionRate={item.rate}
+						totalBudgets={item.budgeted}
+						totalSales={item.sold}
+					/>
+				))}
+			</div>
+
+			<div className="grid gap-4 md:grid-cols-2">
 
         		{/* Contact Method Chart */}
 				<Card className="p-6 bg-card border-border">
@@ -118,10 +159,10 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 									))}
 								</Pie>
 								<Tooltip formatter={(value) => `${value}`} />
-                <Legend
-                  formatter={(value, entry) => `${value} (${entry.payload?.value})`}
-                />
-						</PieChart>
+								<Legend
+									formatter={(value, entry) => `${value} (${entry.payload?.value})`}
+								/>
+							</PieChart>
 						</ResponsiveContainer>
 					) : (
 						<div className="h-[300px] flex items-center justify-center text-muted-foreground">
@@ -184,8 +225,6 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 							</p>
 						</div>
 					</Card>
-
-
 
 				</div>
 			</div>

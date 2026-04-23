@@ -3,7 +3,7 @@ import { PerformanceChartsCarousel } from '@/utils/budgets/performance-charts-ca
 
 jest.mock('recharts', () => ({
   LineChart: ({ children }: any) => <div data-testid="line-chart">{children}</div>,
-  Line: () => <div data-testid="line" />,
+  Line: ({ dataKey }: any) => <div data-testid={`line-${dataKey}`} />,
   BarChart: ({ children }: any) => <div data-testid="bar-chart">{children}</div>,
   Bar: () => <div data-testid="bar" />,
   XAxis: () => <div data-testid="x-axis" />,
@@ -17,7 +17,7 @@ jest.mock('recharts', () => ({
 describe('PerformanceChartsCarousel', () => {
   const metrics = {
     totalBudgets: 10,
-    budgetsByMonth: [{ month: 'Ene', presupuestos: 10, vendidos: 4 }],
+    budgetsByMonth: [{ month: 'Ene', presupuestos: 10, vendidos: 4, perdidos: 2 }],
     budgetsByAmount: [{ amountRange: '$ 0 - 10.000', count: 2 }],
     budgetsByAmountChosen: [{ amountRange: '$ 0 - 10.000', count: 1 }],
     budgetsByAmountSold: [{ amountRange: '$ 0 - 10.000', count: 1 }],
@@ -30,6 +30,7 @@ describe('PerformanceChartsCarousel', () => {
 
     expect(screen.getByText('Presupuestos realizados por mes')).toBeInTheDocument();
     expect(screen.getByText('Gráfico 1 de 3')).toBeInTheDocument();
+    expect(screen.getByTestId('line-perdidos')).toBeInTheDocument();
   });
 
   it('navigates to next chart and previous chart', () => {

@@ -10,8 +10,24 @@ describe('ConversionRateCard', () => {
     render(<ConversionRateCard conversionRate={40} totalBudgets={10} totalSales={4} />);
 
     expect(screen.getByText('Tasa de concreción')).toBeInTheDocument();
-    expect(screen.getByText('40%')).toBeInTheDocument();
+    expect(screen.getByText('40.0%')).toBeInTheDocument();
     expect(screen.getByText('4 de 10 presupuestos concretados')).toBeInTheDocument();
+  });
+
+  it('renders custom title and label', () => {
+    render(
+      <ConversionRateCard
+        conversionRate={25}
+        totalBudgets={8}
+        totalSales={2}
+        title="Tasa de concrecion Aluminio"
+        label="Presupuestos -> Vendidos"
+      />
+    );
+
+    expect(screen.getByText('Tasa de concrecion Aluminio')).toBeInTheDocument();
+    expect(screen.getByText('Presupuestos -> Vendidos')).toBeInTheDocument();
+    expect(screen.getByText('25.0%')).toBeInTheDocument();
   });
 
   it('shows no-data state when there are no budgets', () => {

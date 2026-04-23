@@ -7,21 +7,25 @@ interface ConversionRateCardProps {
   conversionRate: number;
   totalBudgets: number;
   totalSales: number;
+  title?: string;
+  label?: string;
 }
 
 export function ConversionRateCard({
   conversionRate,
   totalBudgets,
   totalSales,
+  title = 'Tasa de concreción',
+  label = 'Presupuestos -> Ventas',
 }: ConversionRateCardProps) {
   return (
     <Card className="p-6 bg-card border-border">
-      <h3 className="text-lg font-semibold text-foreground mb-4">Tasa de concreción</h3>
+      <h3 className="text-lg font-semibold text-foreground mb-4">{title}</h3>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Presupuestos → Ventas</span>
+          <span className="text-sm text-muted-foreground">{label}</span>
           <span className="text-2xl font-bold text-foreground">
-            {conversionRate > 0 ? `${conversionRate}%` : '--'}
+            {conversionRate > 0 ? `${conversionRate.toFixed(1)}%` : '--'}
           </span>
         </div>
         <Progress value={conversionRate} className="h-3" />

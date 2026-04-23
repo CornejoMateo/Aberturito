@@ -74,7 +74,8 @@ export function OverviewTab({
           formatChartValue={formatChartValue}
           percentageLabels={{
             'Vendidos': percentages.soldPercentage,
-            'Pendientes': percentages.chosenPercentage,
+            'En proceso': percentages.chosenPercentage,
+            'Perdidos': percentages.lostPercentage,
             'Con presupuesto': percentages.clientsWithBudgetPercentage,
             'Sin presupuesto': percentages.clientsWithoutBudgetPercentage,
             'De ventas': percentages.soldPercentage > 0 ? Math.round((metrics.totalSales * metrics.soldAverageTicket) / metrics.totalRevenue * 100) : 0,

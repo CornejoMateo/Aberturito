@@ -16,6 +16,7 @@ const props = {
       charts: [
         {
           title: 'First chart',
+          showPercentage: false,
           data: [
             { name: 'A', value: 10, color: '#111' },
             { name: 'B', value: 20, color: '#222' },
@@ -23,6 +24,7 @@ const props = {
         },
         {
           title: 'Second chart',
+          showPercentage: true,
           data: [{ name: 'C', value: 30, color: '#333' }],
         },
       ],
@@ -32,6 +34,7 @@ const props = {
     charts: [
       {
         title: 'First chart',
+        showPercentage: false,
         data: [
           { name: 'A', value: 10, color: '#111' },
           { name: 'B', value: 20, color: '#222' },
@@ -39,6 +42,7 @@ const props = {
       },
       {
         title: 'Second chart',
+        showPercentage: true,
         data: [{ name: 'C', value: 30, color: '#333' }],
       },
     ],
@@ -77,11 +81,36 @@ describe('ChartsCarousel', () => {
     expect(props.onNextChart).toHaveBeenCalledTimes(1);
   });
 
+  it('calls select handler when clicking page indicator dot', () => {
+    const multiPageProps = {
+      ...props,
+      chartPages: [
+        ...props.chartPages,
+        {
+          charts: [
+            {
+              title: 'Third chart',
+              showPercentage: false,
+              data: [{ name: 'D', value: 15, color: '#444' }],
+            },
+          ],
+        },
+      ],
+    };
+
+    render(<ChartsCarousel {...multiPageProps} />);
+
+    const dots = screen.getAllByRole('button');
+    fireEvent.click(dots[dots.length - 1]);
+
+    expect(props.onSelectChart).toHaveBeenCalledWith(1);
+  });
+
   it('renders empty-state message when chart has no data', () => {
     const emptyProps = {
       ...props,
       currentPage: {
-        charts: [{ title: 'Empty chart', data: [] }],
+        charts: [{ title: 'Empty chart', showPercentage: false, data: [] }],
       },
     };
 

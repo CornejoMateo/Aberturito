@@ -19,7 +19,6 @@ import { SalesMetrics } from '../../../lib/budgets/types';
 import { CONTACT_METHODS } from '@/constants/budgets/contact-methods';
 import { COLORS } from '@/constants/budgets/colors';
 import { ConversionRateCard } from '../conversion-rate-card';
-import { calculatePercentage } from '../calculations';
 
 interface SourcesAndMaterialsTabProps {
 	metrics: SalesMetrics;
@@ -125,7 +124,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 				{conversionByMaterial.map((item) => (
 					<ConversionRateCard
 						key={item.material}
-						title={`Tasa de concrecion ${item.material}`}
+						title={`Tasa de concreción ${item.material}`}
 						label="Presupuestos -> Vendidos"
 						conversionRate={item.rate}
 						totalBudgets={item.budgeted}

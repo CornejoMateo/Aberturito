@@ -6,13 +6,15 @@ export const calculatePercentage = (value: number, total: number): number => {
 
 export const calculateChartPercentages = (metrics: any) => {
   const soldPercentage = calculatePercentage(metrics.totalSales, metrics.totalBudgets);
-  const chosenPercentage = 100 - soldPercentage;
+  const lostPercentage = calculatePercentage(metrics.totalLost, metrics.totalBudgets);
+  const chosenPercentage = 100 - soldPercentage - lostPercentage;
   const clientsWithBudgetPercentage = calculatePercentage(metrics.clientsWithBudget, metrics.totalClients);
   const clientsWithoutBudgetPercentage = 100 - clientsWithBudgetPercentage;
 
   return {
     soldPercentage,
     chosenPercentage,
+    lostPercentage,
     clientsWithBudgetPercentage,
     clientsWithoutBudgetPercentage,
   };
@@ -36,7 +38,8 @@ export const buildChartPages = (metrics: any) => [
         title: 'Distribución de presupuestos',
         data: metrics.totalBudgets > 0 ? [
           { name: 'Vendidos', value: metrics.totalSales, color: '#10b981' },
-          { name: 'Pendientes', value: metrics.totalBudgets - metrics.totalSales, color: '#3b82f6' },
+          { name: 'En proceso', value: metrics.totalBudgets - (metrics.totalSales + metrics.totalLost), color: '#3b82f6' },
+          { name: 'Perdidos', value: metrics.totalLost, color: '#a82222' },
         ] : []
       },
       {

@@ -3,7 +3,7 @@ import { useLoadEvents } from '@/hooks/use-load-events';
 import { useEffect, useState } from 'react';
 import { getClientsCount } from '@/lib/clients/clients';
 import { getWorksInProgressCount } from '@/lib/works/works';
-import { getSoldBudgetsCount } from '@/lib/budgets/budgets';
+import { getSoldBudgetsCount, getLostBudgetsCount } from '@/lib/budgets/budgets';
 
 export function DashboardHome() {
 	const { events, isLoading } = useLoadEvents();
@@ -11,15 +11,17 @@ export function DashboardHome() {
 	const [totalClients, setTotalClients] = useState(0);
 	const [worksInProgress, setWorksInProgress] = useState(0);
 	const [soldBudgets, setSoldBudgets] = useState(0);
+	const [lostBudgets, setLostBudgets] = useState(0);
 
 	useEffect(() => {
 		let isMounted = true;
 
 		const fetchCounts = async () => {
-			const [clientsResult, worksResult, budgetsResult] = await Promise.all([
+			const [clientsResult, worksResult, budgetsSoldResult, budgetsLostResult] = await Promise.all([
 				getClientsCount(),
 				getWorksInProgressCount(),
 				getSoldBudgetsCount(),
+				getLostBudgetsCount(),
 			]);
 
 			if (!isMounted) return;
@@ -30,8 +32,11 @@ export function DashboardHome() {
 			if (!worksResult.error && worksResult.data !== null) {
 				setWorksInProgress(worksResult.data);
 			}
-			if (!budgetsResult.error && budgetsResult.data !== null) {
-				setSoldBudgets(budgetsResult.data);
+			if (!budgetsSoldResult.error && budgetsSoldResult.data !== null) {
+				setSoldBudgets(budgetsSoldResult.data);
+			}
+			if (!budgetsLostResult.error && budgetsLostResult.data !== null) {
+				setLostBudgets(budgetsLostResult.data);
 			}
 		};
 
@@ -140,8 +145,8 @@ export function DashboardHome() {
 					<Card className="p-6">
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="text-sm font-medium text-muted-foreground">Stock total</p>
-								<p className="text-2xl font-bold text-foreground mt-2">0</p>
+								<p className="text-sm font-medium text-muted-foreground">Presupuestos perdidos</p>
+								<p className="text-2xl font-bold text-foreground mt-2">{lostBudgets}</p>
 							</div>
 						</div>
 					</Card>

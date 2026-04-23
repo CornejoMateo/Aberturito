@@ -252,6 +252,7 @@ create table public.balances (
   notes text[] null,
   usd_current numeric null,
   budget_id bigint null,
+  notes text null,
   constraint balances_pkey primary key (id),
   constraint balances_budget_id_fkey foreign KEY (budget_id) references budgets (id) on update CASCADE,
   constraint balances_client_id_fkey foreign KEY (client_id) references clients (id) on update CASCADE on delete CASCADE

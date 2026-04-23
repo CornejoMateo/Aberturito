@@ -15,7 +15,7 @@ export function ConversionRateCard({
   conversionRate,
   totalBudgets,
   totalSales,
-  title = 'Tasa de concrecion',
+  title = 'Tasa de concreción',
   label = 'Presupuestos -> Ventas',
 }: ConversionRateCardProps) {
   return (

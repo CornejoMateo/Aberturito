@@ -24,8 +24,14 @@ jest.mock('recharts', () => ({
 describe('SourcesAndMaterialsTab', () => {
 	const metrics = {
 		clientsByContactMethod: [{ method: 'whatsapp', count: 5 }],
-		budgetsByMaterial: [{ material: 'Aluminio', count: 8 }],
-		soldBudgetsByMaterial: [{ material: 'PVC', count: 4 }],
+		budgetsByMaterial: [
+			{ material: 'Aluminio', count: 8 },
+			{ material: 'PVC', count: 10 },
+		],
+		soldBudgetsByMaterial: [
+			{ material: 'PVC', count: 4 },
+			{ material: 'Aluminio', count: 2 },
+		],
 	} as any;
 
 	it('renders all chart sections and stats cards', () => {
@@ -36,6 +42,13 @@ describe('SourcesAndMaterialsTab', () => {
 			screen.getByText('Distribución de presupuestos vendidos por material')
 		).toBeInTheDocument();
 		expect(screen.getByText('Clientes por medio de contacto')).toBeInTheDocument();
+		expect(screen.getByText('Tasa de concreción PVC')).toBeInTheDocument();
+		expect(screen.getByText('Tasa de concreción Aluminio')).toBeInTheDocument();
+		expect(screen.getAllByText(/Presupuestos\s*->\s*Vendidos/).length).toBeGreaterThan(0);
+		expect(screen.getByText('40.0%')).toBeInTheDocument();
+		expect(screen.getByText('25.0%')).toBeInTheDocument();
+		expect(screen.getByText('4 de 10 presupuestos concretados')).toBeInTheDocument();
+		expect(screen.getByText('2 de 8 presupuestos concretados')).toBeInTheDocument();
 		expect(screen.getByText('Material más presupuestado')).toBeInTheDocument();
 		expect(screen.getByText('Material más vendido')).toBeInTheDocument();
 		expect(screen.getByText('8 presupuestos')).toBeInTheDocument();

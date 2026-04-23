@@ -8,6 +8,7 @@ import {
 
 const metrics = {
   totalSales: 4,
+  totalLost: 1,
   totalBudgets: 10,
   clientsWithBudget: 8,
   totalClients: 20,
@@ -23,10 +24,10 @@ describe('budget calculations', () => {
   });
 
   it('builds chart percentages from metrics', () => {
-
     expect(calculateChartPercentages(metrics)).toEqual({
       soldPercentage: 40,
-      chosenPercentage: 60,
+      chosenPercentage: 50,
+      lostPercentage: 10,
       clientsWithBudgetPercentage: 40,
       clientsWithoutBudgetPercentage: 60,
     });
@@ -47,10 +48,19 @@ describe('budget calculations', () => {
     const metrics = {
       totalBudgets: 10,
       totalSales: 4,
+      totalLost: 2,
       totalClients: 20,
       clientsWithBudget: 8,
       soldAverageTicket: 1000,
       totalRevenue: 20000,
+      budgetsByMaterial: [
+        { material: 'PVC', count: 6 },
+        { material: 'Aluminio', count: 4 },
+      ],
+      soldBudgetsByMaterial: [
+        { material: 'PVC', count: 3 },
+        { material: 'Aluminio', count: 1 },
+      ],
     };
 
     const pages = buildChartPages(metrics);
@@ -58,6 +68,11 @@ describe('budget calculations', () => {
     expect(pages).toHaveLength(2);
     expect(pages[0].charts[0].title).toBe('Distribución de presupuestos');
     expect(pages[0].charts[0].data[0]).toEqual({ name: 'Vendidos', value: 4, color: '#10b981' });
-    expect(pages[1].charts[1].title).toBe('Ingresos por tipo');
+    expect(pages[0].charts[0].data[1]).toEqual({ name: 'En proceso', value: 4, color: '#3b82f6' });
+    expect(pages[0].charts[0].data[2]).toEqual({ name: 'Perdidos', value: 2, color: '#a82222' });
+    expect(pages[1].charts[0].title).toBe('Distribución de presupuestos por material');
+    expect(pages[1].charts[1].title).toBe('Distribución de presupuestos vendidos por material');
+    expect(pages[1].charts[0].data).toHaveLength(2);
+    expect(pages[1].charts[1].data).toHaveLength(2);
   });
 });

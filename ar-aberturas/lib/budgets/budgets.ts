@@ -418,6 +418,8 @@ export async function deleteBudget(id: string): Promise<{ data: null; error: any
 	return { data: null, error };
 }
 
+const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
 export async function getClientsWithBudgetCount(): Promise<{ data: number; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
@@ -443,7 +445,6 @@ export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string
 
 	// Group by month and count presupuestos and vendidos
 	const monthMap = new Map<string, { presupuestos: number; vendidos: number, perdidos: number }>();
-	const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 	// Inizialize monthMap with all months to ensure they appear in the result even if they have 0 presupuestos/vendidos
 	months.forEach(month => {
@@ -760,6 +761,51 @@ export async function getSoldBudgetsByMaterial(): Promise<{ data: Array<{ materi
 		material,
 		count
 	})).sort((a, b) => b.count - a.count);
+
+	return { data: result, error: null };
+}
+
+export async function getSoldBudgetsByMaterialByMonth(): Promise<{
+	data: Array<{ month: string; pvc: number; aluminio: number }> | null;
+	error: any;
+}> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('created_at, type')
+		.eq('sold', true);
+
+	if (error) return { data: null, error };
+	if (!data) return { data: [], error: null };
+
+	const monthMap = new Map<string, { pvc: number; aluminio: number }>();
+
+	months.forEach((month) => {
+		monthMap.set(month, { pvc: 0, aluminio: 0 });
+	});
+
+	data.forEach((budget: any) => {
+		if (!budget.created_at) return;
+
+		const monthName = months[new Date(budget.created_at).getMonth()];
+		const current = monthMap.get(monthName) || { pvc: 0, aluminio: 0 };
+		const material = String(budget.type || '').trim().toLowerCase();
+
+		if (material.includes('pvc')) {
+			current.pvc += 1;
+		}
+
+		if (material.includes('aluminio')) {
+			current.aluminio += 1;
+		}
+
+		monthMap.set(monthName, current);
+	});
+
+	const result = months.map((month) => ({
+		month,
+		...monthMap.get(month)!,
+	}));
 
 	return { data: result, error: null };
 }

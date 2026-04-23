@@ -24,6 +24,7 @@ jest.mock('@/lib/budgets/budgets', () => ({
   getClientsByContactMethod: jest.fn(),
   getBudgetsByMaterial: jest.fn(),
   getSoldBudgetsByMaterial: jest.fn(),
+  getSoldBudgetsByMaterialByMonth: jest.fn(),
 }));
 
 const clientsLib = require('@/lib/clients/clients');
@@ -52,6 +53,10 @@ describe('useBudgetMetrics', () => {
     budgetsLib.getClientsByContactMethod.mockResolvedValue({ data: [{ method: 'whatsapp', count: 7 }], error: null });
     budgetsLib.getBudgetsByMaterial.mockResolvedValue({ data: [{ material: 'Aluminio', count: 6 }], error: null });
     budgetsLib.getSoldBudgetsByMaterial.mockResolvedValue({ data: [{ material: 'PVC', count: 3 }], error: null });
+    budgetsLib.getSoldBudgetsByMaterialByMonth.mockResolvedValue({
+      data: [{ month: 'Ene', pvc: 2, aluminio: 1 }],
+      error: null,
+    });
     budgetsLib.getLostBudgetsCount.mockResolvedValue({ data: 2, error: null });
   });
 
@@ -75,6 +80,11 @@ describe('useBudgetMetrics', () => {
     expect(result.current.metrics.budgetsByAmount[0].amountRange).toBe('$ 0 - 10.000');
     expect(result.current.metrics.budgetsByMaterial[0].material).toBe('Aluminio');
     expect(result.current.metrics.soldBudgetsByMaterial[0].material).toBe('PVC');
+    expect(result.current.metrics.soldBudgetsByMaterialByMonth[0]).toEqual({
+      month: 'Ene',
+      pvc: 2,
+      aluminio: 1,
+    });
   });
 
   it('handles service errors by ending loading state', async () => {

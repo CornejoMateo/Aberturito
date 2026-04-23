@@ -11,6 +11,8 @@ import {
 	Tooltip,
 	BarChart,
 	Bar,
+	LineChart,
+	Line,
 	XAxis,
 	YAxis,
 	CartesianGrid,
@@ -64,6 +66,24 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 			rate: aluminumBudgeted > 0 ? (aluminumSold / aluminumBudgeted) * 100 : 0,
 		},
 	];
+
+	const soldByMaterialByMonthData =
+		metrics.soldBudgetsByMaterialByMonth && metrics.soldBudgetsByMaterialByMonth.length > 0
+			? metrics.soldBudgetsByMaterialByMonth
+			: [
+					{ month: 'Ene', pvc: 0, aluminio: 0 },
+					{ month: 'Feb', pvc: 0, aluminio: 0 },
+					{ month: 'Mar', pvc: 0, aluminio: 0 },
+					{ month: 'Abr', pvc: 0, aluminio: 0 },
+					{ month: 'May', pvc: 0, aluminio: 0 },
+					{ month: 'Jun', pvc: 0, aluminio: 0 },
+					{ month: 'Jul', pvc: 0, aluminio: 0 },
+					{ month: 'Ago', pvc: 0, aluminio: 0 },
+					{ month: 'Sep', pvc: 0, aluminio: 0 },
+					{ month: 'Oct', pvc: 0, aluminio: 0 },
+					{ month: 'Nov', pvc: 0, aluminio: 0 },
+					{ month: 'Dic', pvc: 0, aluminio: 0 },
+				];
 
 	return (
 		<TabsContent value="sources" className="space-y-4">
@@ -119,6 +139,48 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 				</Card>
 
 			</div>
+
+			<Card className="p-6 bg-card border-border">
+				<h3 className="text-lg font-semibold text-foreground mb-2">
+					Presupuestos vendidos por mes (PVC vs Aluminio)
+				</h3>
+				<p className="text-xs text-muted-foreground mb-4">
+					Evolución mensual de ventas por material
+				</p>
+				{metrics.totalSales > 0 ? (
+					<ResponsiveContainer width="100%" height={300}>
+						<LineChart data={soldByMaterialByMonthData}>
+							<CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+							<XAxis dataKey="month" />
+							<YAxis />
+							<Tooltip formatter={(value) => Math.round(value as number)} />
+							<Legend />
+							<Line
+								type="monotone"
+								dataKey="pvc"
+								stroke="#10b981"
+								strokeWidth={2}
+								dot={{ fill: '#10b981', r: 4 }}
+								activeDot={{ r: 6 }}
+								name="PVC"
+							/>
+							<Line
+								type="monotone"
+								dataKey="aluminio"
+								stroke="#8b5cf6"
+								strokeWidth={2}
+								dot={{ fill: '#8b5cf6', r: 4 }}
+								activeDot={{ r: 6 }}
+								name="Aluminio"
+							/>
+						</LineChart>
+					</ResponsiveContainer>
+				) : (
+					<div className="h-[300px] flex items-center justify-center text-muted-foreground">
+						<p>Sin datos disponibles</p>
+					</div>
+				)}
+			</Card>
 
 			<div className="grid gap-4 md:grid-cols-2">
 				{conversionByMaterial.map((item) => (

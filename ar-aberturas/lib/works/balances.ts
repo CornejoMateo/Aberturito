@@ -8,7 +8,7 @@ export type Balance = {
 	contract_date_usd?: number | null;
 	usd_current?: number | null;
 	client_id?: string | null;
-	notes?: string[] | null;
+	notes?: string | null;
 };
 
 export type BalanceWithBudget = Balance & {

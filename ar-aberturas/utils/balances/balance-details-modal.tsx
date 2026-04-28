@@ -65,7 +65,7 @@ export function BalanceDetailsModal({
 	useEffect(() => {
 		if (balance && isOpen) {
 			loadTransactions();
-			setBalanceNotes(balance.notes?.join('\n') || '');
+			setBalanceNotes(balance.notes ?? ''); // notes is a string (or null)
 		}
 	}, [balance, isOpen]);
 
@@ -174,7 +174,7 @@ export function BalanceDetailsModal({
 
 		try {
 			const { error } = await updateBalance(balance.id, {
-				notes: balanceNotes ? [balanceNotes] : null,
+				notes: balanceNotes ? balanceNotes : null,
 			});
 
 			if (error) {
@@ -258,12 +258,12 @@ export function BalanceDetailsModal({
 							<div className="flex items-center justify-between mb-3">
 								<h4 className="font-semibold">Notas del saldo</h4>
 								{!isEditingNotes && (
-									<button
-										onClick={() => setIsEditingNotes(true)}
-										className="text-sm text-primary hover:underline"
-									>
-										{balance.notes && balance.notes.length > 0 ? 'Editar notas' : 'Agregar notas'}
-									</button>
+								<button
+									onClick={() => setIsEditingNotes(true)}
+									className="text-sm text-primary hover:underline"
+								>
+									{balance.notes && String(balance.notes).trim() !== '' ? 'Editar notas' : 'Agregar notas'}
+								</button>
 								)}
 							</div>
 							{isEditingNotes ? (
@@ -279,7 +279,7 @@ export function BalanceDetailsModal({
 										<button
 											onClick={() => {
 												setIsEditingNotes(false);
-												setBalanceNotes(balance.notes?.join('\n') || '');
+												setBalanceNotes(balance.notes ?? '');
 											}}
 											className="px-4 py-2 text-sm border rounded-md hover:bg-secondary"
 										>
@@ -297,7 +297,7 @@ export function BalanceDetailsModal({
 								<div>
 									{balance.notes && balance.notes.length > 0 ? (
 										<div className="text-sm text-muted-foreground whitespace-pre-wrap">
-											{balance.notes.join('\n')}
+											{balance.notes}
 										</div>
 									) : (
 										<p className="text-sm text-muted-foreground italic">

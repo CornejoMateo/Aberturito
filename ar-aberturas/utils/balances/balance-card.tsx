@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { DollarSign, Trash2, TrendingUp } from 'lucide-react';
+import { DollarSign, Trash2, TrendingUp, StickyNote } from 'lucide-react';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
 import { BalanceSummary } from '@/helpers/balances/balance-calculations';
 import { BalanceWithBudget } from '@/lib/works/balances';
@@ -61,6 +61,11 @@ export function BalanceCard({
 							<span className="font-semibold text-sm">
 								{summary.type}
 							</span>
+							{balance.notes && balance.notes.length > 0 && (
+								<div title="Tiene notas">
+									<StickyNote className="h-3.5 w-3.5 text-yellow-600" />
+								</div>
+							)}
 						</div>
 						<div className="text-sm">
 							{balance.budget?.folder_budget?.work ? (

@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NotesInput } from '@/components/ui/notes-input';
 import {
 	Select,
 	SelectContent,
@@ -34,6 +35,7 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 		contract_date_usd: undefined,
 		start_date: undefined,
 		usd_current: undefined,
+		notes: null,
 	});
 
 	const budgetsAccepted = useMemo(() => {
@@ -49,7 +51,7 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 			start_date: formData.start_date ? format(formData.start_date, 'yyyy-MM-dd') : undefined,
 			contract_date_usd: formData.contract_date_usd || null,
 			usd_current: formData.usd_current || null,
-			notes: null,
+			notes: formData.notes && formData.notes.length > 0 ? formData.notes : null,
 		};
 
 		await onSubmit(balanceData);
@@ -153,6 +155,13 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 					/>
 				</div>
 			</div>
+
+			<NotesInput
+				value={formData.notes?.join('\n') || ''}
+				onChange={(value) => setFormData((prev) => ({ ...prev, notes: value ? [value] : null }))}
+				placeholder="Agregar notas sobre este saldo (opcional)"
+				rows={3}
+			/>
 
 			<div className="flex justify-end gap-2 pt-4">
 				<Button type="button" variant="outline" onClick={onCancel}>

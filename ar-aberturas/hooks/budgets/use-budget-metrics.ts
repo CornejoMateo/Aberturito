@@ -18,6 +18,7 @@ import {
   getClientsByContactMethod,
   getBudgetsByMaterial,
   getSoldBudgetsByMaterial,
+  getSoldBudgetsByMaterialByMonth,
   getLostBudgetsCount,
   getBudgetsTotalAmount,
   getLostBudgetsTotalAmount
@@ -220,6 +221,15 @@ export const useBudgetMetrics = () => {
           setMetrics(prev => ({
             ...prev,
             soldBudgetsByMaterial
+          }));
+        }
+
+        // Obtain sold budgets by month split by material (PVC and Aluminio)
+        const { data: soldBudgetsByMaterialByMonth, error: soldBudgetsByMaterialByMonthError } = await getSoldBudgetsByMaterialByMonth();
+        if (!soldBudgetsByMaterialByMonthError && soldBudgetsByMaterialByMonth) {
+          setMetrics(prev => ({
+            ...prev,
+            soldBudgetsByMaterialByMonth
           }));
         }
       } catch (err) {

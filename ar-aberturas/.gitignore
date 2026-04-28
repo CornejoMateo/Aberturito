@@ -29,3 +29,6 @@ next-env.d.ts.DS_Store
 
 # tests
 coverage/
+
+# agents
+../AGENTS.md

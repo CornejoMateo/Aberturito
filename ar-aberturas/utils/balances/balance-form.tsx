@@ -12,12 +12,11 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { Balance, BudgetWithWork } from '@/lib/works/balances';
-import { Work } from '@/lib/works/works';
 import { useState, useMemo } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
-import { format, set } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
@@ -36,11 +35,27 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 		start_date: undefined,
 		usd_current: undefined,
 		notes: null,
+		balance_amount_usd: null,
+		balance_amount_ars: null,
 	});
 
 	const budgetsAccepted = useMemo(() => {
 		return budgets.filter((b) => b.accepted || b.sold);
 	}, [budgets]);
+
+	const handleBudgetChange = (budgetId: string) => {
+		setSelectedBudgetId(budgetId);
+
+		const selectedBudget = budgetsAccepted.find((budget) => budget.id === budgetId);
+
+		if (!selectedBudget) return;
+
+		setFormData((prev) => ({
+			...prev,
+			balance_amount_ars: selectedBudget.amount_ars,
+			balance_amount_usd: selectedBudget.amount_usd,
+		}));
+	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -52,6 +67,8 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 			contract_date_usd: formData.contract_date_usd || null,
 			usd_current: formData.usd_current || null,
 			notes: formData.notes && formData.notes.length > 0 ? formData.notes : null,
+			balance_amount_usd: formData.balance_amount_usd || null,
+			balance_amount_ars: formData.balance_amount_ars || null,
 		};
 
 		await onSubmit(balanceData);
@@ -72,7 +89,7 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<div className="space-y-2 md:col-span-2">
 					<Label htmlFor="budget">Presupuesto asociado</Label>
-					<Select value={selectedBudgetId} onValueChange={setSelectedBudgetId}>
+					<Select value={selectedBudgetId} onValueChange={handleBudgetChange}>
 						<SelectTrigger className="w-full">
 							<SelectValue placeholder="Seleccionar presupuesto" />
 						</SelectTrigger>
@@ -94,7 +111,7 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 					</Select>
 				</div>
 
-				<div className="space-y-2">
+				<div className="space-y-2 md:col-span-2">
 					<Label>Fecha de inicio</Label>
 					<Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
 						<PopoverTrigger asChild>
@@ -154,11 +171,38 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 						onChange={handleChange}
 					/>
 				</div>
+
+				<div className="space-y-2">
+					<Label htmlFor="balance_amount_ars">Monto del saldo en ARS</Label>
+					<Input
+						id="balance_amount_ars"
+						name="balance_amount_ars"
+						type="number"
+						step="0.01"
+						value={formData.balance_amount_ars || ''}
+						onChange={handleChange}
+						placeholder="0.00"
+					/>
+				</div>
+
+				<div className="space-y-2">
+					<Label htmlFor="balance_amount_usd">Monto del saldo en USD</Label>
+					<Input
+						id="balance_amount_usd"
+						name="balance_amount_usd"
+						type="number"
+						step="0.01"
+						value={formData.balance_amount_usd || ''}
+						onChange={handleChange}
+						placeholder="0.00"
+					/>
+				</div>
+
 			</div>
 
 			<NotesInput
-				value={formData.notes?.join('\n') || ''}
-				onChange={(value) => setFormData((prev) => ({ ...prev, notes: value ? [value] : null }))}
+				value={formData.notes|| ''}
+				onChange={(value) => setFormData((prev) => ({ ...prev, notes: value ? value : null }))}
 				placeholder="Agregar notas sobre este saldo (opcional)"
 				rows={3}
 			/>

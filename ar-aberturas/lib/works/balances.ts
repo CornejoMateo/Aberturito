@@ -5,6 +5,8 @@ export type Balance = {
 	created_at: string;
 	start_date?: string;
 	budget_id?: string | null;
+	balance_amount_ars?: number | null;
+	balance_amount_usd?: number | null;
 	contract_date_usd?: number | null;
 	usd_current?: number | null;
 	client_id?: string | null;

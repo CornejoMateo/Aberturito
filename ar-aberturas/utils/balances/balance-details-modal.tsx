@@ -19,6 +19,7 @@ import {
 	createTransaction,
 	deleteTransaction,
 } from '@/lib/works/balance_transactions';
+import { updateBalance } from '@/lib/works/balances';
 import { format, set } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 import { formatCurrency } from '../../helpers/format-prices.tsx/formats';
@@ -27,6 +28,7 @@ import { parseArsToNumber } from '@/utils/budgets/utils';
 import { AddTransactionSection } from './add-transaction';
 import { TransactionsTable } from './transactions-table';
 import { BalanceInformation } from './balance-information';
+import { NotesInput } from '@/components/ui/notes-input';
 import { translateError } from '@/lib/error-translator';
 import { formatCreatedAt } from '@/helpers/date/format-date';
 
@@ -48,6 +50,8 @@ export function BalanceDetailsModal({
 	const [isAddingTransaction, setIsAddingTransaction] = useState(false);
 	const [transactionToDelete, setTransactionToDelete] = useState<BalanceTransaction | null>(null);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [isEditingNotes, setIsEditingNotes] = useState(false);
+	const [balanceNotes, setBalanceNotes] = useState('');
 	const { toast } = useToast();
 
 	// Form state
@@ -61,6 +65,7 @@ export function BalanceDetailsModal({
 	useEffect(() => {
 		if (balance && isOpen) {
 			loadTransactions();
+			setBalanceNotes(balance.notes ?? ''); // notes is a string (or null)
 		}
 	}, [balance, isOpen]);
 
@@ -164,6 +169,39 @@ export function BalanceDetailsModal({
 		}
 	};
 
+	const handleUpdateBalanceNotes = async () => {
+		if (!balance) return;
+
+		try {
+			const { error } = await updateBalance(balance.id, {
+				notes: balanceNotes ? balanceNotes : null,
+			});
+
+			if (error) {
+				toast({
+					variant: 'destructive',
+					title: 'Error al actualizar notas',
+					description: translateError(error) || 'Hubo un problema al actualizar las notas.',
+				});
+				return;
+			}
+
+			toast({
+				title: 'Notas actualizadas',
+				description: 'Las notas del saldo se han actualizado exitosamente.',
+			});
+
+			setIsEditingNotes(false);
+			onTransactionCreated?.();
+		} catch (error) {
+			toast({
+				variant: 'destructive',
+				title: 'Error inesperado',
+				description: translateError(error) || 'Ocurrió un error inesperado. Intente nuevamente.',
+			});
+		}
+	};
+
 	const totalPaid = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 	const totalPaidUSD = transactions.reduce((sum, t) => sum + (Number(t.usd_amount) || 0), 0);
 	const summary = calculateBalanceSummary({
@@ -214,6 +252,61 @@ export function BalanceDetailsModal({
 							summary={summary}
 							formatDate={formatCreatedAt}
 						/>
+
+						{/* Balance Notes Section */}
+						<div className="border rounded-lg p-4">
+							<div className="flex items-center justify-between mb-3">
+								<h4 className="font-semibold">Notas del saldo</h4>
+								{!isEditingNotes && (
+								<button
+									onClick={() => setIsEditingNotes(true)}
+									className="text-sm text-primary hover:underline"
+								>
+									{balance.notes && String(balance.notes).trim() !== '' ? 'Editar notas' : 'Agregar notas'}
+								</button>
+								)}
+							</div>
+							{isEditingNotes ? (
+								<div className="space-y-3">
+									<NotesInput
+										value={balanceNotes}
+										onChange={setBalanceNotes}
+										placeholder="Agregar notas sobre este saldo (opcional)"
+										rows={3}
+										showLabel={false}
+									/>
+									<div className="flex justify-end gap-2">
+										<button
+											onClick={() => {
+												setIsEditingNotes(false);
+												setBalanceNotes(balance.notes ?? '');
+											}}
+											className="px-4 py-2 text-sm border rounded-md hover:bg-secondary"
+										>
+											Cancelar
+										</button>
+										<button
+											onClick={handleUpdateBalanceNotes}
+											className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+										>
+											Guardar
+										</button>
+									</div>
+								</div>
+							) : (
+								<div>
+									{balance.notes && balance.notes.length > 0 ? (
+										<div className="text-sm text-muted-foreground whitespace-pre-wrap">
+											{balance.notes}
+										</div>
+									) : (
+										<p className="text-sm text-muted-foreground italic">
+											No hay notas agregadas
+										</p>
+									)}
+								</div>
+							)}
+						</div>
 
 						<AddTransactionSection
 							isAddingTransaction={isAddingTransaction}

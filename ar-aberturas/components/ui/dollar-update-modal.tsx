@@ -210,7 +210,7 @@ export function DollarUpdateModal({
 												${(newValues.budgetInARS || 0).toLocaleString('es-AR')} → ${newValues.newBudgetInARS.toLocaleString('es-AR')}
 											</div>
 											<div className="text-xs text-muted-foreground">
-												{newValues.budgetInUSD.toFixed(2)} USD
+												{newValues.budgetInUSD.toFixed(2)} USD (Sin modificación)
 											</div>
 										</div>
 									</div>

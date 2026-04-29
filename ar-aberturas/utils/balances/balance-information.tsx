@@ -14,6 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { updateBalance } from '@/lib/works/balances';
 import { formatNumber, parseArsToNumber } from '@/utils/budgets/utils';
+import { toast } from '@/components/ui/use-toast';
+import { translateError } from '@/lib/error-translator';
 
 interface BalanceInformationProps {
 	balanceId: string;
@@ -71,14 +73,29 @@ export function BalanceInformation({
 			});
 
 			if (error) {
-				console.error(error);
+				toast({
+					variant: 'destructive',
+					title: 'Error al actualizar presupuesto',
+					description: translateError(error) || 'Hubo un problema al actualizar el presupuesto. Intente nuevamente.',
+				});
 				return;
 			}
+
+			toast({
+				title: 'Presupuesto actualizado',
+				description: 'El presupuesto ha sido actualizado exitosamente.',
+			});
 
 			setOpen(false);
 
 			onUpdated?.();
 		} catch (err) {
+			const errorMessage = err instanceof Error ? err.message : 'Error al actualizar el presupuesto';
+			toast({
+				variant: 'destructive',
+				title: 'Error al actualizar presupuesto',
+				description: translateError(errorMessage),
+			});
 			console.error(err);
 		} finally {
 			setLoading(false);

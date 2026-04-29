@@ -65,7 +65,7 @@ export function BalanceDetailsModal({
 	useEffect(() => {
 		if (balance && isOpen) {
 			loadTransactions();
-			setBalanceNotes(balance.notes ?? ''); // notes is a string (or null)
+			setBalanceNotes(balance.notes ?? '');
 		}
 	}, [balance, isOpen]);
 

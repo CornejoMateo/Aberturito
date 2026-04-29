@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 interface DollarRateRequest {
   balanceId: number;
+  newBalanceAmountARS?: number;
   newUsdRate: number;
 }
 
@@ -10,7 +11,7 @@ export async function POST(req: Request) {
   try {
     const body: DollarRateRequest = await req.json();
 
-    const { balanceId, newUsdRate } = body;
+    const { balanceId, newBalanceAmountARS, newUsdRate } = body;
 
     if (!balanceId || !newUsdRate) {
       return NextResponse.json(
@@ -38,7 +39,6 @@ export async function POST(req: Request) {
       );
     }
 
-
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       supabaseKey
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     // First, get the current balance to verify it exists and get the budget info
     const { data: existingBalance, error: fetchError } = await supabase
       .from('balances')
-      .select('*, budget:budgets(id, amount_ars, amount_usd)')
+      .select('*')
       .eq('id', balanceId)
       .single();
 
@@ -66,16 +66,22 @@ export async function POST(req: Request) {
       );
     }
 
-    // Get budget values from the budgets table
-    const budgetInARS = existingBalance.budget?.amount_ars || 0;
-    const budgetInUSD = existingBalance.budget?.amount_usd || 0;
+    const updatedBalanceAmountARS = newBalanceAmountARS ?? existingBalance.balance_amount_ars;
     const oldUsd = existingBalance.usd_current;
+    const updatePayload: {
+      usd_current: number;
+      balance_amount_ars?: number | null;
+    } = {
+      usd_current: newUsdRate,
+    };
+
+    if (newBalanceAmountARS !== undefined) {
+      updatePayload.balance_amount_ars = updatedBalanceAmountARS;
+    }
 
     const { data: updatedBalance, error: updateError } = await supabase
       .from('balances')
-      .update({
-        usd_current: newUsdRate,
-      })
+      .update(updatePayload)
       .eq('id', balanceId)
       .select()
       .single();
@@ -95,8 +101,7 @@ export async function POST(req: Request) {
         balanceId,
         oldUsdRate: oldUsd,
         newUsdRate,
-        budgetInARS: budgetInARS,
-        budgetInUSD: budgetInUSD,
+        newBalanceAmountARS: updatedBalance.balance_amount_ars,
       },
     });
 

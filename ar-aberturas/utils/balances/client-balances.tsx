@@ -102,8 +102,8 @@ export function ClientBalances({
 					const totalPaid = totals?.totalAmount || 0;
 					const totalPaidUSD = totals?.totalAmountUSD || 0;
 					const summary = calculateBalanceSummary({
-						budgetAmountArs: balance.budget?.amount_ars,
-						budgetAmountUsd: balance.budget?.amount_usd,
+						budgetAmountArs: balance.balance_amount_ars,
+						budgetAmountUsd: balance.balance_amount_usd,
 						usdCurrent: balance.usd_current,
 						totalPaidArs: totalPaid,
 						totalPaidUsd: totalPaidUSD,
@@ -189,8 +189,8 @@ export function ClientBalances({
 				<div className="space-y-3">
 					{currentItems.map((balance) => {
 						const summary = calculateBalanceSummary({
-							budgetAmountArs: balance.budget?.amount_ars,
-							budgetAmountUsd: balance.budget?.amount_usd,
+							budgetAmountArs: balance.balance_amount_ars,
+							budgetAmountUsd: balance.balance_amount_usd,
 							usdCurrent: balance.usd_current,
 							totalPaidArs: balance.totalPaid,
 							totalPaidUsd: balance.totalPaidUSD,

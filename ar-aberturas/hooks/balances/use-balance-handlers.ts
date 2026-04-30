@@ -57,7 +57,7 @@ export function useBalanceHandlers({ onBalanceDeleted, onRefresh }: UseBalanceHa
 		}
 	};
 
-	const handleDollarUpdate = async (newUsdRate: number) => {
+	const handleDollarUpdate = async (newUsdRate: number, newAmountArs: number) => {
 		if (!balanceToUpdate) return;
 
 		try {
@@ -69,6 +69,7 @@ export function useBalanceHandlers({ onBalanceDeleted, onRefresh }: UseBalanceHa
 				body: JSON.stringify({
 					balanceId: balanceToUpdate.id,
 					newUsdRate,
+					newBalanceAmountARS: newAmountArs,
 				}),
 			});
 

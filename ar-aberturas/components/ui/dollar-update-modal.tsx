@@ -30,7 +30,7 @@ interface DollarUpdateModalProps {
 	isOpen: boolean;
 	onOpenChange: (open: boolean) => void;
 	balance: BalanceWithTotals | null;
-	onUpdateConfirmed: (newUsdRate: number) => Promise<void>;
+	onUpdateConfirmed: (newUsdRate: number, newAmountArs: number) => Promise<void>;
 }
 
 export function DollarUpdateModal({
@@ -87,7 +87,10 @@ export function DollarUpdateModal({
 	const handleUpdate = async () => {
 		if (!currentRate || !balance) return;
 
+		if (!newValues) return;
+
 		try {
+			
 			setIsUpdating(true);
 			
 			const response = await fetch('/api/dollar-rate', {
@@ -98,6 +101,7 @@ export function DollarUpdateModal({
 				body: JSON.stringify({
 					balanceId: parseInt(balance.id),
 					newUsdRate: currentRate.venta,
+					newBalanceAmountARS: newValues.newBudgetInARS,
 				}),
 			});
 
@@ -107,7 +111,7 @@ export function DollarUpdateModal({
 				throw new Error(result.error || 'Error al actualizar el tipo de cambio');
 			}
 
-			await onUpdateConfirmed(currentRate.venta);
+			await onUpdateConfirmed(currentRate.venta, newValues.newBudgetInARS);
 			onOpenChange(false);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Error al actualizar');
@@ -120,26 +124,24 @@ export function DollarUpdateModal({
 		if (!currentRate || !balance) return null;
 
 		// Get the budget in ARS and USD from the budget relation
-		const budgetInARS = (balance.budget?.amount_usd || 0) * (balance.usd_current || 1);
-		const budgetInUSD = balance.budget?.amount_usd || 0;
-		const newBudgetInARS = (balance.budget?.amount_usd || 0) * currentRate.venta;
+		const budgetInARS = balance.balance_amount_ars || 0;
+		const budgetInUSD = balance.balance_amount_usd || 0;
+		const newBudgetInARS = (budgetInUSD || 0) * currentRate.venta;
 		
 		// For paid and remaining, we need to calculate their USD equivalents first
-		const totalPaidInUSD = balance.totalPaid && balance.usd_current ? (balance.totalPaid / balance.usd_current) : 0;
-		const newTotalPaidUSD = balance.totalPaid && currentRate.venta ? (balance.totalPaid / currentRate.venta) : 0;
-		const newTotalPaidInPesos = Math.round(balance.totalPaid || 0);
+		const totalPaidInUSD = balance.totalPaidUSD || 0;
+		const totalPaidInARS = balance.totalPaid || 0;
 		
 		const remainingInUSD = balance.remainingUSD || 0;
-		const remainingInARS = (remainingInUSD * (balance.usd_current || 0));
-		const newRemainingInARS = (remainingInUSD * currentRate.venta);
+		const remainingInARS = balance.remaining || 0;
+		const newRemainingInARS = newBudgetInARS - totalPaidInARS;
 
 		return {
 			budgetInUSD,
 			budgetInARS,
 			newBudgetInARS,
+			totalPaidInARS,
 			totalPaidInUSD,
-			newTotalPaidInPesos,
-			newTotalPaidUSD,
 			remainingInUSD,
 			newRemainingInARS,
 			remainingInARS,
@@ -208,7 +210,7 @@ export function DollarUpdateModal({
 												${(newValues.budgetInARS || 0).toLocaleString('es-AR')} → ${newValues.newBudgetInARS.toLocaleString('es-AR')}
 											</div>
 											<div className="text-xs text-muted-foreground">
-												{newValues.budgetInUSD.toFixed(2)} USD
+												{newValues.budgetInUSD.toFixed(2)} USD (Sin modificación)
 											</div>
 										</div>
 									</div>
@@ -217,10 +219,7 @@ export function DollarUpdateModal({
 										<span>Entregado:</span>
 										<div className="text-right">
 											<div className="font-medium">
-											US$ {(newValues.totalPaidInUSD || 0).toFixed(2)} → US${newValues.newTotalPaidUSD.toFixed(2)}
-										</div>
-										<div className="text-xs text-muted-foreground">
-											${newValues.newTotalPaidInPesos.toLocaleString('es-AR')} ARS (Sin modificación)
+												Sin modificación
 											</div>
 										</div>
 									</div>
@@ -232,7 +231,7 @@ export function DollarUpdateModal({
 												${(newValues.remainingInARS || 0).toLocaleString('es-AR')} → ${newValues.newRemainingInARS.toLocaleString('es-AR')}
 											</div>
 											<div className="text-xs text-muted-foreground">
-												{newValues.remainingInUSD.toFixed(2)} USD
+												{newValues.remainingInUSD.toFixed(2)} USD (Sin modificación)
 											</div>
 										</div>
 									</div>

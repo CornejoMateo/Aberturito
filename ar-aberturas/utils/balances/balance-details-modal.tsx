@@ -20,7 +20,7 @@ import {
 	deleteTransaction,
 } from '@/lib/works/balance_transactions';
 import { updateBalance } from '@/lib/works/balances';
-import { format, set } from 'date-fns';
+import { format } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 import { formatCurrency } from '../../helpers/format-prices.tsx/formats';
 import { calculateBalanceSummary } from '../../helpers/balances/balance-calculations';
@@ -65,7 +65,7 @@ export function BalanceDetailsModal({
 	useEffect(() => {
 		if (balance && isOpen) {
 			loadTransactions();
-			setBalanceNotes(balance.notes ?? ''); // notes is a string (or null)
+			setBalanceNotes(balance.notes ?? '');
 		}
 	}, [balance, isOpen]);
 
@@ -205,8 +205,9 @@ export function BalanceDetailsModal({
 	const totalPaid = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 	const totalPaidUSD = transactions.reduce((sum, t) => sum + (Number(t.usd_amount) || 0), 0);
 	const summary = calculateBalanceSummary({
-		budgetAmountArs: balance?.budget?.amount_ars,
-		budgetAmountUsd: balance?.budget?.amount_usd,
+		budgetAmountArs: balance?.balance_amount_ars,
+		budgetAmountUsd: balance?.balance_amount_usd,
+		budgetInitialArs: balance?.budget?.amount_ars,
 		usdCurrent: balance?.usd_current,
 		totalPaidArs: totalPaid,
 		totalPaidUsd: totalPaidUSD,
@@ -243,6 +244,7 @@ export function BalanceDetailsModal({
 				{balance && (
 					<div className="space-y-6">
 						<BalanceInformation
+							balanceId={balance.id}
 							work={work}
 							startDate={balance.start_date}
 							contractDateUsd={balance.contract_date_usd}

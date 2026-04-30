@@ -32,7 +32,7 @@ describe('useBalanceHandlers', () => {
 		start_date: '2024-01-01',
 		contract_date_usd: 1000,
 		usd_current: 1100,
-		notes: [],
+		notes: '',
 		created_at: '2024-01-01',
 		budget: {
 			id: 'budget-1',
@@ -229,7 +229,7 @@ describe('useBalanceHandlers', () => {
 			});
 
 			await act(async () => {
-				await result.current.handleDollarUpdate(1200);
+				await result.current.handleDollarUpdate(1200, 550000);
 			});
 
 			expect(global.fetch).toHaveBeenCalledWith('/api/dollar-rate', {
@@ -240,6 +240,7 @@ describe('useBalanceHandlers', () => {
 				body: JSON.stringify({
 					balanceId: '1',
 					newUsdRate: 1200,
+					newBalanceAmountARS: 550000,
 				}),
 			});
 			expect(mockRefresh).toHaveBeenCalled();
@@ -265,7 +266,7 @@ describe('useBalanceHandlers', () => {
 
 			await expect(
 				act(async () => {
-					await result.current.handleDollarUpdate(1200);
+					await result.current.handleDollarUpdate(1200, 550000);
 				})
 			).rejects.toThrow();
 
@@ -280,7 +281,7 @@ describe('useBalanceHandlers', () => {
 			);
 
 			await act(async () => {
-				await result.current.handleDollarUpdate(1200);
+				await result.current.handleDollarUpdate(1200, 550000);
 			});
 
 			expect(global.fetch).not.toHaveBeenCalled();

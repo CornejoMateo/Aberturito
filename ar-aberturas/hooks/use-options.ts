@@ -1,5 +1,9 @@
 import { getSupabaseClient } from '@/lib/supabase-client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+
+// Singleton pattern to share channels across components
+const channelRegistry = new Map<string, any>();
+const subscriberCount = new Map<string, number>();
 
 export function useOptions<T>(key: string, fetchFromDb: () => Promise<T[]>) {
 	const [options, setOptions] = useState<T[]>([]);
@@ -38,20 +42,41 @@ export function useOptions<T>(key: string, fetchFromDb: () => Promise<T[]>) {
 	useEffect(() => {
 		if (!key) return;
 
-		console.log('Suscribiendo a realtime para', key);
-		const channel = supabase
-			.channel(`${key}-realtime`)
-			.on('postgres_changes', { event: '*', schema: 'public', table: key }, async (payload) => {
-				console.log(`[Realtime] Cambio detectado en ${key}`, payload);
-				await fetchAndCache(); // refresh local cache
-			})
-			.subscribe((status) => {
-				console.log(`📡 Estado canal (${key}):`, status);
-			});
+		const channelName = `${key}-realtime`;
+
+		// Increment subscriber count
+		subscriberCount.set(channelName, (subscriberCount.get(channelName) || 0) + 1);
+
+		// Create channel if it doesn't exist
+		if (!channelRegistry.has(channelName)) {
+			console.log('Creando nuevo canal para', key);
+			const channel = supabase
+				.channel(channelName)
+				.on('postgres_changes', { event: '*', schema: 'public', table: key }, async (payload) => {
+					console.log(`[Realtime] Cambio detectado en ${key}`, payload);
+					await fetchAndCache(); // refresh local cache
+				})
+				.subscribe();
+			channelRegistry.set(channelName, channel);
+		} else {
+			console.log('Reutilizando canal existente para', key);
+		}
 
 		return () => {
-			console.log(`Desuscribiendo canal de ${key}`);
-			supabase.removeChannel(channel);
+			// Decrement subscriber count
+			const count = (subscriberCount.get(channelName) || 0) - 1;
+			subscriberCount.set(channelName, count);
+
+			// Remove channel if no more subscribers
+			if (count <= 0) {
+				console.log(`Desuscribiendo canal de ${key} (no más suscriptores)`);
+				const channel = channelRegistry.get(channelName);
+				if (channel) {
+					supabase.removeChannel(channel);
+					channelRegistry.delete(channelName);
+				}
+				subscriberCount.delete(channelName);
+			}
 		};
 	}, [key]);
 

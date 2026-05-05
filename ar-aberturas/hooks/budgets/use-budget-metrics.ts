@@ -57,7 +57,7 @@ export const useBudgetMetrics = () => {
           setMetrics(prev => ({
             ...prev,
             totalSales: soldBudgetsCount,
-            conversionRate: budgetsCount > 0 ? Math.round((soldBudgetsCount / budgetsCount) * 100) : 0
+            conversionRate: clientsCount > 0 ? Math.round((soldBudgetsCount / clientsCount) * 100) : 0
           }));
         }
 
@@ -67,7 +67,7 @@ export const useBudgetMetrics = () => {
           setMetrics(prev => ({
             ...prev,
             totalLost: lostBudgetsCount,
-            conversionRate: budgetsCount > 0 ? Math.round((soldBudgetsCount / budgetsCount) * 100) : 0
+            conversionRate: clientsCount > 0 ? Math.round((soldBudgetsCount / clientsCount) * 100) : 0
           }));
         }
 

@@ -87,7 +87,7 @@ export function OverviewTab({
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <ConversionRateCard
           conversionRate={metrics.conversionRate}
-          totalBudgets={metrics.totalBudgets}
+          totalClients={metrics.totalClients}
           totalSales={metrics.totalSales}
         />
 

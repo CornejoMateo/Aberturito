@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 
 interface ConversionRateCardProps {
   conversionRate: number;
-  totalBudgets: number;
+  totalClients?: number;
   totalSales: number;
   title?: string;
   label?: string;
@@ -13,11 +13,14 @@ interface ConversionRateCardProps {
 
 export function ConversionRateCard({
   conversionRate,
-  totalBudgets,
+  totalClients,
   totalSales,
   title = 'Tasa de concreción',
   label = 'Presupuestos -> Ventas',
 }: ConversionRateCardProps) {
+  const denominator = totalClients ?? 0;
+  const denominatorLabel = 'clientes';
+
   return (
     <Card className="p-6 bg-card border-border">
       <h3 className="text-lg font-semibold text-foreground mb-4">{title}</h3>
@@ -30,8 +33,8 @@ export function ConversionRateCard({
         </div>
         <Progress value={conversionRate} className="h-3" />
         <p className="text-xs text-muted-foreground">
-          {totalBudgets > 0
-            ? `${totalSales} de ${totalBudgets} presupuestos concretados`
+          {denominator > 0
+            ? `${totalSales} ventas de ${denominator} ${denominatorLabel}`
             : 'Sin datos para calcular'}
         </p>
       </div>

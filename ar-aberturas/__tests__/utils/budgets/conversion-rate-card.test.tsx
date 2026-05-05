@@ -6,12 +6,20 @@ jest.mock('@/components/ui/progress', () => ({
 }));
 
 describe('ConversionRateCard', () => {
-  it('renders conversion data when totals are available', () => {
-    render(<ConversionRateCard conversionRate={40} totalBudgets={10} totalSales={4} />);
+  it('renders conversion data when totals are available with clients', () => {
+    render(<ConversionRateCard conversionRate={40} totalClients={10} totalSales={4} />);
 
     expect(screen.getByText('Tasa de concreción')).toBeInTheDocument();
     expect(screen.getByText('40.0%')).toBeInTheDocument();
-    expect(screen.getByText('4 de 10 presupuestos concretados')).toBeInTheDocument();
+    expect(screen.getByText('4 ventas de 10 clientes')).toBeInTheDocument();
+  });
+
+  it('renders conversion data when totals are available with budgets', () => {
+    render(<ConversionRateCard conversionRate={25} totalBudgets={8} totalSales={2} />);
+
+    expect(screen.getByText('Tasa de concreción')).toBeInTheDocument();
+    expect(screen.getByText('25.0%')).toBeInTheDocument();
+    expect(screen.getByText('2 ventas de 8 presupuestos')).toBeInTheDocument();
   });
 
   it('renders custom title and label', () => {

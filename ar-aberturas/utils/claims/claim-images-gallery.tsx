@@ -32,7 +32,7 @@ interface ClaimImage {
 }
 
 interface ClaimImagesGalleryProps {
-	claimId: string;
+	claimId: number;
 	clientId?: string | null;
 	claimDescription?: string | null;
 	workLocality?: string | null;

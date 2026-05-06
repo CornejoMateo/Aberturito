@@ -11,7 +11,7 @@ export type ClientFileRecord = {
 	title: string | null;
 	description: string | null;
 	checklist_id: string | null;
-	claim_id: string | null;
+	claim_id: number | null;
 };
 
 // get all client files
@@ -43,7 +43,7 @@ export async function listClientFiles(
 
 // get files by claim_id
 export async function getClientFilesByClaim(
-	claimId: string
+	claimId: number
 ): Promise<{ data: ClientFileRecord[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 
@@ -102,7 +102,7 @@ export async function uploadClientFile(
 	title: string | null = null,
 	description: string | null = null,
 	checklistId: string | null = null,
-	claimId: string | null = null
+	claimId: number | null = null
 ): Promise<{ data: ClientFileRecord | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const fileExt = file.name.split('.').pop();

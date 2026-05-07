@@ -61,7 +61,6 @@ export const useBudgetMetrics = () => {
           }));
         }
 
-
         // Obtain total amount of sold budgets
         const { data: soldAmounts, error: soldAmountError } = await getSoldBudgetsTotalAmount();
         if (!soldAmountError && soldAmounts) {
@@ -83,7 +82,8 @@ export const useBudgetMetrics = () => {
             setMetrics(prev => ({
               ...prev,
               lostRevenue: lostAmounts.totalArs,
-              lostAverageTicket: Math.round(lostAmounts.totalArs / lostCount.data)
+              lostAverageTicket: Math.round(lostAmounts.totalArs / lostCount.data),
+              totalLost: lostCount.data,
             }));
           }
         }

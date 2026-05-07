@@ -292,6 +292,10 @@ export function StockManagement({
 											variant: 'destructive',
 										});
 									}
+									toast({
+										title: 'Éxito',
+										description: 'Item eliminado correctamente.',
+									});
 								} catch (error) {
 									const errorMessage = translateError(error);
 									toast({

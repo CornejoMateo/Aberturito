@@ -47,6 +47,7 @@ export type BudgetWithWork = {
 	accepted?: boolean | null;
 	sold?: boolean | null;
 	lost?: boolean | null;
+	date_of_sale?: string | null;
 	pdf_url?: string | null;
 	pdf_path?: string | null;
 	number?: string | null;

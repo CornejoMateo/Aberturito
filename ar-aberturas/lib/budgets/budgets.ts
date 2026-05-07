@@ -15,6 +15,7 @@ export type Budget = {
 	amount_usd?: number | null;
 	version?: string | null;
 	type?: string | null;
+	date_of_sale?: string | null;
 };
 
 export type BudgetWithWorkAndClient = BudgetWithWork & {
@@ -179,6 +180,7 @@ export async function getBudgetsByFolderBudgetIds(
 				accepted,
 				sold,
 				lost,
+				date_of_sale,
 				pdf_url,
 				pdf_path,
 				number,
@@ -216,6 +218,7 @@ export async function getBudgetsByFolderBudgetIds(
 				accepted: b.accepted,
 				sold: b.sold,
 				lost: b.lost,
+				date_of_sale: b.date_of_sale,
 				pdf_url: b.pdf_url,
 				pdf_path: b.pdf_path,
 				number: b.number,

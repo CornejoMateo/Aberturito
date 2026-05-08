@@ -249,7 +249,6 @@ create table public.balances (
   start_date date null,
   contract_date_usd numeric null,
   client_id bigint null,
-  notes text[] null,
   usd_current numeric null,
   budget_id bigint null,
   notes text null,

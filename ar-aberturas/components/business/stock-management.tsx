@@ -238,6 +238,10 @@ export function StockManagement({
 											variant: 'destructive',
 										});
 									}
+									toast({
+										title: 'Éxito',
+										description: 'Perfil eliminado correctamente.',
+									});
 								} catch (error) {
 									const errorMessage = translateError(error);
 									console.error('Error al eliminar:', error);
@@ -292,6 +296,10 @@ export function StockManagement({
 											variant: 'destructive',
 										});
 									}
+									toast({
+										title: 'Éxito',
+										description: 'Item eliminado correctamente.',
+									});
 								} catch (error) {
 									const errorMessage = translateError(error);
 									toast({

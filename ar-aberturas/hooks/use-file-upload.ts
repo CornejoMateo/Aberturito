@@ -13,7 +13,7 @@ import { optimizeFile } from '@/helpers/images/optimization';
 interface UseFileUploadOptions {
 	clientId: string;
 	checklistId?: string | null;
-	claimId?: string | null;
+	claimId?: number | null;
 	allowedFileTypes?: readonly string[];
 	maxFileSize?: number;
 	getDefaultDisplayName?: (file: File) => string;

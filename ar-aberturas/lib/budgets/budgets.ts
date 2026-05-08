@@ -491,6 +491,39 @@ export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string
 	return { data: result, error: null };
 }
 
+export async function getAverageSaleDelayDays(): Promise<{ data: number; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('created_at, date_of_sale')
+		.eq('sold', true)
+		.not('date_of_sale', 'is', null);
+
+	if (error) return { data: 0, error };
+	if (!data || data.length === 0) return { data: 0, error: null };
+
+	let totalDays = 0;
+	let count = 0;
+
+	data.forEach((b: any) => {
+		if (b.created_at && b.date_of_sale) {
+			const created = new Date(b.created_at).getTime();
+			const soldAt = new Date(b.date_of_sale).getTime();
+			const diffDays = (soldAt - created) / (1000 * 60 * 60 * 24);
+			if (!Number.isNaN(diffDays)) {
+				totalDays += diffDays;
+				count += 1;
+			}
+		}
+	});
+
+	if (count === 0) return { data: 0, error: null };
+
+	const avg = totalDays / count;
+	// keep one decimal
+	return { data: Number(avg.toFixed(1)), error: null };
+}
+
 const AMOUNT_INTERVALS = [
 	{ label: '0 a 1.000.000', min: 0, max: 1_000_000 },
 	{ label: '1.000.000 a 10.000.000', min: 1_000_000, max: 10_000_000 },

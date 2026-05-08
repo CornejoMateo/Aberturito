@@ -17,6 +17,7 @@ import {
 	ResponsiveContainer,
 } from 'recharts';
 import { SalesMetrics } from '../../lib/budgets/types';
+import { MetricCard } from './metric-card';
 
 interface PerformanceChartsCarouselProps {
 	metrics: SalesMetrics;
@@ -316,6 +317,15 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
 				onNext={handleNextChartByAmount}
 				onPrev={handlePrevChartByAmount}
 				onSelect={handleSelectChartByAmount}
+			/>
+			<MetricCard
+				label='Promedio de días hasta la venta'
+				value={
+					metrics.totalSales > 0
+						? `${metrics.averageSaleDelayDays.toFixed(2)} días`
+						: 'Sin datos disponibles'
+				}
+				icon={ChevronRight}
 			/>
 		</div>
 	);

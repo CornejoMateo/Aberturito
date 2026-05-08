@@ -21,7 +21,8 @@ import {
   getSoldBudgetsByMaterialByMonth,
   getLostBudgetsCount,
   getBudgetsTotalAmount,
-  getLostBudgetsTotalAmount
+  getLostBudgetsTotalAmount, 
+  getAverageSaleDelayDays
 } from '@/lib/budgets/budgets';
 import { SalesMetrics, DEFAULT_METRICS } from '@/lib/budgets/types';
 import { normalize } from '@/helpers/budget/normalize';
@@ -222,6 +223,12 @@ export const useBudgetMetrics = () => {
             ...prev,
             soldBudgetsByMaterialByMonth
           }));
+        }
+
+        // Obtain average sale delay (days)
+        const { data: averageSaleDelayDays, error: avgDelayError } = await getAverageSaleDelayDays();
+        if (!avgDelayError && averageSaleDelayDays !== undefined && averageSaleDelayDays !== null) {
+          setMetrics(prev => ({ ...prev, averageSaleDelayDays }));
         }
       } catch (err) {
         console.error('Error fetching metrics:', err);

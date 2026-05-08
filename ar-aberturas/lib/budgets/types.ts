@@ -14,7 +14,7 @@ export interface SalesMetrics {
 	totalAverageTicket: number; // Average amount of all budgets
 	lostAverageTicket: number; // Average amount of lost budgets
 	clientsWithBudget: number; 
-	budgetsByMonth: Array<{ month: string; presupuestos: number; vendidos: number }>;
+	budgetsByMonth: Array<{ month: string; presupuestos: number; vendidos: number; date_sale: number; perdidos: number }>;
 	budgetsByAmount: Array<{ amountRange: string; count: number }>;
 	budgetsByAmountChosen: Array<{ amountRange: string; count: number }>;
 	budgetsByAmountSold: Array<{ amountRange: string; count: number }>;

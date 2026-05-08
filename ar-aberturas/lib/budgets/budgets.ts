@@ -8,6 +8,7 @@ export type Budget = {
 	accepted?: boolean | null;
 	sold?: boolean | null;
 	lost?: boolean | null;
+	date_of_sale?: string | null;
 	pdf_url?: string | null;
 	pdf_path?: string | null;
 	number?: string | null;
@@ -15,7 +16,6 @@ export type Budget = {
 	amount_usd?: number | null;
 	version?: string | null;
 	type?: string | null;
-	date_of_sale?: string | null;
 };
 
 export type BudgetWithWorkAndClient = BudgetWithWork & {
@@ -180,7 +180,6 @@ export async function getBudgetsByFolderBudgetIds(
 				accepted,
 				sold,
 				lost,
-				date_of_sale,
 				pdf_url,
 				pdf_path,
 				number,
@@ -218,7 +217,6 @@ export async function getBudgetsByFolderBudgetIds(
 				accepted: b.accepted,
 				sold: b.sold,
 				lost: b.lost,
-				date_of_sale: b.date_of_sale,
 				pdf_url: b.pdf_url,
 				pdf_path: b.pdf_path,
 				number: b.number,
@@ -437,21 +435,21 @@ export async function getClientsWithBudgetCount(): Promise<{ data: number; error
 	return { data: uniqueClients.size, error: null };
 }
 
-export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string; presupuestos: number; vendidos: number }> | null; error: any }> {
+export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string; presupuestos: number; vendidos: number; date_sale: number; perdidos: number }> | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('created_at, sold, lost');
+		.select('created_at, sold, lost, date_of_sale');
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
 
 	// Group by month and count presupuestos and vendidos
-	const monthMap = new Map<string, { presupuestos: number; vendidos: number, perdidos: number }>();
+	const monthMap = new Map<string, { presupuestos: number; vendidos: number; date_sale: number; perdidos: number }>();
 
 	// Inizialize monthMap with all months to ensure they appear in the result even if they have 0 presupuestos/vendidos
 	months.forEach(month => {
-		monthMap.set(month, { presupuestos: 0, vendidos: 0, perdidos: 0 });
+		monthMap.set(month, { presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0 });
 	});
 
 	// Contact data and populate monthMap
@@ -461,7 +459,7 @@ export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string
 			const monthIndex = date.getMonth();
 			const monthName = months[monthIndex];
 
-			const current = monthMap.get(monthName) || { presupuestos: 0, vendidos: 0, perdidos: 0 };
+			const current = monthMap.get(monthName) || { presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0 };
 			current.presupuestos += 1;
 			if (budget.sold) {
 				current.vendidos += 1;
@@ -469,6 +467,17 @@ export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string
 			if (budget.lost) {
 				current.perdidos += 1;
 			}
+			monthMap.set(monthName, current);
+		}
+
+		// Count sold by date sale
+		if (budget.sold && budget.date_of_sale) {
+			const date = new Date(budget.date_of_sale);
+			const monthIndex = date.getMonth();
+			const monthName = months[monthIndex];
+
+			const current = monthMap.get(monthName) || { presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0 };
+			current.date_sale += 1;
 			monthMap.set(monthName, current);
 		}
 	});

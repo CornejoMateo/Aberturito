@@ -8,6 +8,7 @@ export type Budget = {
 	accepted?: boolean | null;
 	sold?: boolean | null;
 	lost?: boolean | null;
+	date_of_sale?: string | null;
 	pdf_url?: string | null;
 	pdf_path?: string | null;
 	number?: string | null;
@@ -434,21 +435,21 @@ export async function getClientsWithBudgetCount(): Promise<{ data: number; error
 	return { data: uniqueClients.size, error: null };
 }
 
-export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string; presupuestos: number; vendidos: number }> | null; error: any }> {
+export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string; presupuestos: number; vendidos: number; date_sale: number; perdidos: number }> | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('created_at, sold, lost');
+		.select('created_at, sold, lost, date_of_sale');
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
 
 	// Group by month and count presupuestos and vendidos
-	const monthMap = new Map<string, { presupuestos: number; vendidos: number, perdidos: number }>();
+	const monthMap = new Map<string, { presupuestos: number; vendidos: number; date_sale: number; perdidos: number }>();
 
 	// Inizialize monthMap with all months to ensure they appear in the result even if they have 0 presupuestos/vendidos
 	months.forEach(month => {
-		monthMap.set(month, { presupuestos: 0, vendidos: 0, perdidos: 0 });
+		monthMap.set(month, { presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0 });
 	});
 
 	// Contact data and populate monthMap
@@ -458,7 +459,7 @@ export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string
 			const monthIndex = date.getMonth();
 			const monthName = months[monthIndex];
 
-			const current = monthMap.get(monthName) || { presupuestos: 0, vendidos: 0, perdidos: 0 };
+			const current = monthMap.get(monthName) || { presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0 };
 			current.presupuestos += 1;
 			if (budget.sold) {
 				current.vendidos += 1;
@@ -466,6 +467,17 @@ export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string
 			if (budget.lost) {
 				current.perdidos += 1;
 			}
+			monthMap.set(monthName, current);
+		}
+
+		// Count sold by date sale
+		if (budget.sold && budget.date_of_sale) {
+			const date = new Date(budget.date_of_sale);
+			const monthIndex = date.getMonth();
+			const monthName = months[monthIndex];
+
+			const current = monthMap.get(monthName) || { presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0 };
+			current.date_sale += 1;
 			monthMap.set(monthName, current);
 		}
 	});
@@ -477,6 +489,39 @@ export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string
 	}));
 
 	return { data: result, error: null };
+}
+
+export async function getAverageSaleDelayDays(): Promise<{ data: number; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('created_at, date_of_sale')
+		.eq('sold', true)
+		.not('date_of_sale', 'is', null);
+
+	if (error) return { data: 0, error };
+	if (!data || data.length === 0) return { data: 0, error: null };
+
+	let totalDays = 0;
+	let count = 0;
+
+	data.forEach((b: any) => {
+		if (b.created_at && b.date_of_sale) {
+			const created = new Date(b.created_at).getTime();
+			const soldAt = new Date(b.date_of_sale).getTime();
+			const diffDays = (soldAt - created) / (1000 * 60 * 60 * 24);
+			if (!Number.isNaN(diffDays)) {
+				totalDays += diffDays;
+				count += 1;
+			}
+		}
+	});
+
+	if (count === 0) return { data: 0, error: null };
+
+	const avg = totalDays / count;
+	// keep one decimal
+	return { data: Number(avg.toFixed(1)), error: null };
 }
 
 const AMOUNT_INTERVALS = [

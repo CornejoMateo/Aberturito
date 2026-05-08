@@ -74,12 +74,14 @@ export const budgetHandlers: BudgetHandlers = {
 			const updateData: any = {
 				sold: false,
 				lost: false,
+				date_of_sale: null,
 			};
 
 			// Set the new status
 			switch (newStatus) {
 				case BUDGET_STATUS.SOLD:
 					updateData.sold = true;
+					updateData.date_of_sale = new Date().toISOString();
 					break;
 				case BUDGET_STATUS.LOST:
 					updateData.lost = true;

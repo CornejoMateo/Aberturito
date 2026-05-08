@@ -16,14 +16,6 @@ jest.mock('@/components/ui/button', () => ({
 	),
 }));
 
-jest.mock('@/components/ui/label', () => ({
-	Label: ({ children }: { children: React.ReactNode }) => <label>{children}</label>,
-}));
-
-jest.mock('@/components/ui/badge', () => ({
-	Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
-}));
-
 jest.mock('@/components/ui/budget-status-selector', () => ({
 	BudgetStatusSelector: ({ value }: { value: string }) => <div data-testid="budget-status-selector">{value}</div>,
 }));

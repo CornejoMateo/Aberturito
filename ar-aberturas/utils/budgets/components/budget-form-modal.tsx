@@ -215,8 +215,8 @@ export function BudgetFormModal({
 									const formatted = formatNumber(e.target.value);
 
 									setFormData((prev: BudgetFormData) => ({
-									...prev,
-									amount: formatted,
+										...prev,
+										amount: formatted,
 									}));
 								}}
 								placeholder="0"

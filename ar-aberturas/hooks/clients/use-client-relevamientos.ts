@@ -82,7 +82,9 @@ export function useClientRelevamientos(clientId?: string) {
 					order: index,
 				}));
 
-				await Promise.all(defaultItems.map((item) => createRelevamientoItemLib(item)));
+				const created = await Promise.all(defaultItems.map((item) => createRelevamientoItemLib(item)));
+				const itemError = created.find((r) => r.error)?.error;
+				if (itemError) throw itemError;
 
 				await load();
 			} catch (err) {

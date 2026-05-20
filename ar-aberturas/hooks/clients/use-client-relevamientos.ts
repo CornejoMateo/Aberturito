@@ -26,7 +26,8 @@ export function useClientRelevamientos(clientId?: string) {
 		if (!clientId) return;
 		setIsLoading(true);
 		try {
-			const { data: folders } = await getFolderBudgetsByClientId(clientId);
+			const { data: folders, error: foldersError } = await getFolderBudgetsByClientId(clientId);
+			if (foldersError) throw foldersError;
 			if (!folders?.length) {
 				setSoldBudgets([]);
 				setRelevamientos([]);
@@ -35,7 +36,8 @@ export function useClientRelevamientos(clientId?: string) {
 			}
 
 			const folderIds = folders.map((f) => f.id);
-			const { data: allBudgets } = await getBudgetsByFolderBudgetIds(folderIds);
+			const { data: allBudgets, error: budgetsError } = await getBudgetsByFolderBudgetIds(folderIds);
+			if (budgetsError) throw budgetsError;
 			const sold = (allBudgets ?? []).filter((b) => b.sold === true);
 			setSoldBudgets(sold);
 
@@ -45,7 +47,8 @@ export function useClientRelevamientos(clientId?: string) {
 				return;
 			}
 
-			const { data: loadedRelevamientos } = await getRelevamientosByClientId(clientId);
+			const { data: loadedRelevamientos, error: relevamientosError } = await getRelevamientosByClientId(clientId);
+			if (relevamientosError) throw relevamientosError;
 			const rel = loadedRelevamientos ?? [];
 			setRelevamientos(rel);
 
@@ -55,10 +58,12 @@ export function useClientRelevamientos(clientId?: string) {
 			}
 
 			const relIds = rel.map((r) => r.id);
-			const { data: loadedItems } = await getRelevamientoItemsByRelevamientoIds(relIds);
+			const { data: loadedItems, error: itemsError } = await getRelevamientoItemsByRelevamientoIds(relIds);
+			if (itemsError) throw itemsError;
 			setItems(loadedItems ?? []);
 		} catch (err) {
 			console.error('Error loading relevamientos:', (err as any)?.message ?? JSON.stringify(err));
+			throw err;
 		} finally {
 			setIsLoading(false);
 		}

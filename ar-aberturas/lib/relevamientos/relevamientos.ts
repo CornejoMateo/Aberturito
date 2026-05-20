@@ -46,10 +46,18 @@ export async function createRelevamiento(
 
 export async function deleteRelevamiento(
 	id: string
-): Promise<{ data: null; error: unknown }> {
+): Promise<{ error: unknown }> {
 	const supabase = getSupabaseClient();
-	const { error } = await supabase.from(TABLE).delete().eq('id', id);
-	return { data: null, error };
+	const { data, error } = await supabase
+		.from(TABLE)
+		.delete()
+		.eq('id', id)
+		.select('id');
+	if (error) return { error };
+	if (!data?.length) {
+		return { error: new Error('Delete did not affect any rows. Check RLS policies on relevamientos.') };
+	}
+	return { error: null };
 }
 
 export async function getRelevamientoItemsByRelevamientoIds(
@@ -96,8 +104,16 @@ export async function updateRelevamientoItem(
 
 export async function deleteRelevamientoItem(
 	id: string
-): Promise<{ data: null; error: unknown }> {
+): Promise<{ error: unknown }> {
 	const supabase = getSupabaseClient();
-	const { error } = await supabase.from(ITEMS_TABLE).delete().eq('id', id);
-	return { data: null, error };
+	const { data, error } = await supabase
+		.from(ITEMS_TABLE)
+		.delete()
+		.eq('id', id)
+		.select('id');
+	if (error) return { error };
+	if (!data?.length) {
+		return { error: new Error('Delete did not affect any rows. Check RLS policies on relevamiento_items.') };
+	}
+	return { error: null };
 }

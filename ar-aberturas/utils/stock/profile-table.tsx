@@ -88,7 +88,7 @@ export function ProfileTable({
 
 	const handleOpenSeparateDialog = (profile: ProfileItemStock) => {
 		setSelectedProfile(profile);
-		setSelectedWorkId(profile.separated_for_work_id?.toString() || '');
+		setSelectedWorkId(profile.separated_for_work_id ? String(profile.separated_for_work_id) : '');
 		setSeparateDialogOpen(true);
 	};
 
@@ -423,8 +423,8 @@ export function ProfileTable({
 							id="work-select"
 						>
 							{selectedWorkId
-								? works.find((work) => work.id === selectedWorkId)?.locality ||
-									works.find((work) => work.id === selectedWorkId)?.address ||
+								? works.find((work) => String(work.id) === selectedWorkId)?.locality ||
+									works.find((work) => String(work.id) === selectedWorkId)?.address ||
 									`Obra ${selectedWorkId}`
 								: 'Selecciona una obra'}
 							<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -456,9 +456,9 @@ export function ProfileTable({
 									{works.map((work) => (
 										<CommandItem
 											key={work.id}
-											value={work.id}
+											value={`${work.locality || ''} ${work.address || ''} ${work.id}`}
 											onSelect={() => {
-												setSelectedWorkId(work.id);
+												setSelectedWorkId(String(work.id));
 												setWorkSelectDialogOpen(false);
 											}}
 											className="cursor-pointer"
@@ -466,7 +466,7 @@ export function ProfileTable({
 											<Check
 												className={cn(
 													'mr-2 h-4 w-4',
-													selectedWorkId === work.id ? 'opacity-100' : 'opacity-0'
+													String(work.id) === selectedWorkId ? 'opacity-100' : 'opacity-0'
 												)}
 											/>
 											<div className="flex flex-col">

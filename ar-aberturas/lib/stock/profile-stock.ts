@@ -14,6 +14,12 @@ export type ProfileItemStock = {
 	image_path?: string | null;
 	created_at: string | null;
 	last_update: string | null;
+	separated_for_work_id?: number | null;
+	separated_for_work?: {
+		id: string;
+		address?: string | null;
+		locality?: string | null;
+	} | null;
 };
 
 const TABLE = 'profiles';
@@ -23,7 +29,8 @@ export async function listStock(): Promise<{ data: ProfileItemStock[] | null; er
 	const { data, error } = await supabase
 		.from(TABLE)
 		.select(`
-			*
+			*,
+			separated_for_work:separated_for_work_id(id, address, locality)
 		`)
 		.order('created_at', { ascending: false });
 	return { data, error };
@@ -140,6 +147,45 @@ export async function updateProfileQuantity(
 		.update({ profile_quantity: newQuantity, last_update: new Date().toISOString().split('T')[0] })
 		.eq('id', id)
 		.select()
+		.single();
+	return { data, error };
+}
+
+export async function separateProfile(
+	id: number,
+	workId: number
+): Promise<{ data: ProfileItemStock | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.update({
+			separated_for_work_id: workId,
+			last_update: new Date().toISOString().split('T')[0],
+		})
+		.eq('id', id)
+		.select(`
+			*,
+			separated_for_work:separated_for_work_id(id, address, locality)
+		`)
+		.single();
+	return { data, error };
+}
+
+export async function unseparateProfile(
+	id: number
+): Promise<{ data: ProfileItemStock | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.update({
+			separated_for_work_id: null,
+			last_update: new Date().toISOString().split('T')[0],
+		})
+		.eq('id', id)
+		.select(`
+			*,
+			separated_for_work:separated_for_work_id(id, address, locality)
+		`)
 		.single();
 	return { data, error };
 }

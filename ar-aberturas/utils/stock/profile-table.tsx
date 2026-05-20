@@ -1,9 +1,9 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Package, Edit, Trash2, Plus, Minus } from 'lucide-react';
+import { Package, Edit, Trash2, Plus, Minus, Bookmark, BookmarkCheck } from 'lucide-react';
 import { type ProfileItemStock } from '@/lib/stock/profile-stock';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ConfirmUpdateDialog } from '@/utils/stock/confirm-update-dialog';
 import ImageViewer from '@/components/ui/image-viewer';
 import {
@@ -15,13 +15,42 @@ import {
 	AlertDialogAction,
 	AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
-import { formatCreatedAt } from '@/helpers/date/format-date'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { formatCreatedAt } from '@/helpers/date/format-date';
+import { listWorks } from '@/lib/works/works';
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+} from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface ProfileTableProps {
 	filteredStock: ProfileItemStock[];
 	onEdit: (id: number) => void;
 	onDelete: (id: number) => void;
 	onUpdateQuantity: (id: number, newQuantity: number) => Promise<void>;
+	onSeparate?: (id: number, workId: number) => Promise<void>;
+	onUnseparate?: (id: number) => Promise<void>;
 }
 
 export function ProfileTable({
@@ -29,6 +58,8 @@ export function ProfileTable({
 	onEdit,
 	onDelete,
 	onUpdateQuantity,
+	onSeparate,
+	onUnseparate,
 }: ProfileTableProps) {
 	const [updatingId, setUpdatingId] = useState<number | null>(null);
 	const [isUpdating, setIsUpdating] = useState(false);
@@ -39,6 +70,52 @@ export function ProfileTable({
 		currentQty: number;
 	} | null>(null);
 	const [openImageUrl, setOpenImageUrl] = useState<string | null>(null);
+	const [separateDialogOpen, setSeparateDialogOpen] = useState(false);
+	const [selectedProfile, setSelectedProfile] = useState<ProfileItemStock | null>(null);
+	const [selectedWorkId, setSelectedWorkId] = useState<string>('');
+	const [works, setWorks] = useState<any[]>([]);
+	const [workSelectDialogOpen, setWorkSelectDialogOpen] = useState(false);
+
+	useEffect(() => {
+		const loadWorks = async () => {
+			const { data } = await listWorks();
+			if (data) {
+				setWorks(data);
+			}
+		};
+		loadWorks();
+	}, []);
+
+	const handleOpenSeparateDialog = (profile: ProfileItemStock) => {
+		setSelectedProfile(profile);
+		setSelectedWorkId(profile.separated_for_work_id?.toString() || '');
+		setSeparateDialogOpen(true);
+	};
+
+	const handleSeparate = async () => {
+		if (!selectedProfile || !selectedWorkId || !onSeparate) return;
+		try {
+			setIsUpdating(true);
+			setUpdatingId(selectedProfile.id!);
+			await onSeparate(selectedProfile.id!, parseInt(selectedWorkId));
+			setSeparateDialogOpen(false);
+		} finally {
+			setIsUpdating(false);
+			setUpdatingId(null);
+		}
+	};
+
+	const handleUnseparate = async (id: number) => {
+		if (!onUnseparate) return;
+		try {
+			setIsUpdating(true);
+			setUpdatingId(id);
+			await onUnseparate(id);
+		} finally {
+			setIsUpdating(false);
+			setUpdatingId(null);
+		}
+	};
 
 	const handleQuantityAction = (
 		id: number,
@@ -102,6 +179,9 @@ export function ProfileTable({
 								Fecha de creación
 							</th>
 							<th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
+								Separado para obra
+							</th>
+							<th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
 								Acciones
 							</th>
 							<th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -112,7 +192,7 @@ export function ProfileTable({
 					<tbody className="divide-y divide-border">
 						{filteredStock.length === 0 ? (
 							<tr>
-								<td colSpan={10} className="px-6 py-12 text-center">
+								<td colSpan={11} className="px-6 py-12 text-center">
 									<div className="flex flex-col items-center gap-2 text-muted-foreground">
 										<Package className="h-12 w-12 opacity-50" />
 										<p className="text-lg font-medium">No hay items en stock</p>
@@ -123,7 +203,12 @@ export function ProfileTable({
 							filteredStock.map((item) => {
 
 								return (
-									<tr key={item.id} className="hover:bg-secondary/50 transition-colors">
+									<tr
+										key={item.id}
+										className={`hover:bg-secondary/50 transition-colors ${
+											item.separated_for_work_id ? 'bg-yellow-100 dark:bg-yellow-900/20' : ''
+										}`}
+									>
 										<td className="px-2 py-2 whitespace-nowrap">
 											<p className="text-center text-sm text-foreground">{item.line || 'N/A'}</p>
 										</td>
@@ -198,8 +283,49 @@ export function ProfileTable({
 												{formatCreatedAt(item.created_at)}
 											</p>
 										</td>
+										<td className="px-2 py-2 whitespace-nowrap text-center">
+											{item.separated_for_work_id && item.separated_for_work ? (
+												<TooltipProvider>
+													<Tooltip>
+														<TooltipTrigger asChild>
+															<Badge variant="outline" className="bg-yellow-200 dark:bg-yellow-900/30 border-yellow-400 max-w-[150px] truncate cursor-help">
+																{item.separated_for_work.locality || item.separated_for_work.address || 'Obra'}
+															</Badge>
+														</TooltipTrigger>
+														<TooltipContent>
+															<div className="flex flex-col gap-1">
+																{item.separated_for_work.locality && (
+																	<p className="font-medium text">{item.separated_for_work.locality}</p>
+																)}
+																{item.separated_for_work.address && (
+																	<p className="text-sm text-muted-foreground">{item.separated_for_work.address}</p>
+																)}
+															</div>
+														</TooltipContent>
+													</Tooltip>
+												</TooltipProvider>
+											) : (
+												<span className="text-muted-foreground text-sm">-</span>
+											)}
+										</td>
 										<td className="px-6 py-4 whitespace-nowrap text-right">
 											<div className="flex justify-end gap-2">
+												{onSeparate && onUnseparate && (
+													<Button
+														variant="ghost"
+														size="icon"
+														className="h-8 w-8"
+														onClick={() => item.separated_for_work_id ? handleUnseparate(item.id!) : handleOpenSeparateDialog(item)}
+														disabled={isUpdating && updatingId === item.id}
+														title={item.separated_for_work_id ? 'Desmarcar como separado' : 'Marcar como separado'}
+													>
+														{item.separated_for_work_id ? (
+															<BookmarkCheck className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+														) : (
+															<Bookmark className="h-4 w-4" />
+														)}
+													</Button>
+												)}
 												<Button
 													variant="ghost"
 													size="icon"
@@ -279,6 +405,93 @@ export function ProfileTable({
 				onOpenChange={(v) => (v ? null : setOpenImageUrl(null))}
 				src={openImageUrl}
 			/>
+
+			<Dialog open={separateDialogOpen} onOpenChange={setSeparateDialogOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Separar perfil para obra</DialogTitle>
+						<DialogDescription>
+							Selecciona la obra para la cual deseas separar este perfil: <strong>{selectedProfile?.code} {selectedProfile?.line} {selectedProfile?.color}</strong>
+						</DialogDescription>
+					</DialogHeader>
+					<div className="py-4">
+						<Label htmlFor="work-select">Obra</Label>
+						<Button
+							variant="outline"
+							className="w-full justify-between"
+							onClick={() => setWorkSelectDialogOpen(true)}
+							id="work-select"
+						>
+							{selectedWorkId
+								? works.find((work) => work.id === selectedWorkId)?.locality ||
+									works.find((work) => work.id === selectedWorkId)?.address ||
+									`Obra ${selectedWorkId}`
+								: 'Selecciona una obra'}
+							<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+						</Button>
+					</div>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setSeparateDialogOpen(false)}>
+							Cancelar
+						</Button>
+						<Button onClick={handleSeparate} disabled={!selectedWorkId || isUpdating}>
+							{isUpdating ? 'Separando...' : 'Separar'}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			<Dialog open={workSelectDialogOpen} onOpenChange={setWorkSelectDialogOpen}>
+				<DialogContent className="max-w-2xl">
+					<DialogHeader>
+						<DialogTitle>Seleccionar obra</DialogTitle>
+						<DialogDescription>Busca y selecciona la obra para separar el perfil.</DialogDescription>
+					</DialogHeader>
+					<div className="py-4">
+						<Command className="rounded-lg border shadow-md">
+							<CommandInput placeholder="Buscar obra por localidad o dirección..." />
+							<CommandList className="max-h-[400px] overflow-y-auto">
+								<CommandEmpty>No se encontraron obras.</CommandEmpty>
+								<CommandGroup>
+									{works.map((work) => (
+										<CommandItem
+											key={work.id}
+											value={work.id}
+											onSelect={() => {
+												setSelectedWorkId(work.id);
+												setWorkSelectDialogOpen(false);
+											}}
+											className="cursor-pointer"
+										>
+											<Check
+												className={cn(
+													'mr-2 h-4 w-4',
+													selectedWorkId === work.id ? 'opacity-100' : 'opacity-0'
+												)}
+											/>
+											<div className="flex flex-col">
+												<span className="font-medium">
+													{work.locality || 'Sin localidad'}
+												</span>
+												{work.address && (
+													<span className="text-sm text-muted-foreground">
+														{work.address}
+													</span>
+												)}
+											</div>
+										</CommandItem>
+									))}
+								</CommandGroup>
+							</CommandList>
+						</Command>
+					</div>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setWorkSelectDialogOpen(false)}>
+							Cancelar
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</Card>
 	);
 }

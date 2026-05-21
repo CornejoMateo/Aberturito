@@ -62,7 +62,7 @@ export function ProfileTable({
 			await onUpdateQuantity(id, newQuantity);
 			toast({
 				title: 'Cantidad actualizada',
-				description: `La cantidad ha sido ${action === 'increment' ? 'incrementada' : 'decrementada'} a ${newQuantity}.`,
+				description: `La cantidad ha sido ${action === 'increment' ? 'incrementada' : 'disminuida'} a ${newQuantity}.`,
 			});
 		} finally {
 			setIsUpdating(false);

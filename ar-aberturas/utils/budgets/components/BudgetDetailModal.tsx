@@ -132,6 +132,17 @@ export function BudgetDetailModal({
 							</div>
 						</div>
 					</div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            {budget.date_of_sale && (
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground mt-2">Fecha de venta</Label>
+                <p className="text-sm font-semibold">
+                  {formatCreatedAt(budget.date_of_sale)}
+                </p>
+              </div>
+            )}
+          </div>
 
 					<div className="flex justify-end gap-2 pt-4 border-t">
 						<Button variant="outline" onClick={onClose}>

@@ -16,6 +16,7 @@ import {
 	AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 import { formatCreatedAt } from '@/helpers/date/format-date'
+import { toast } from '@/components/ui/use-toast';
 
 interface ProfileTableProps {
 	filteredStock: ProfileItemStock[];
@@ -59,6 +60,10 @@ export function ProfileTable({
 			setIsUpdating(true);
 			setUpdatingId(id);
 			await onUpdateQuantity(id, newQuantity);
+			toast({
+				title: 'Cantidad actualizada',
+				description: `La cantidad ha sido ${action === 'increment' ? 'incrementada' : 'decrementada'} a ${newQuantity}.`,
+			});
 		} finally {
 			setIsUpdating(false);
 			setUpdatingId(null);

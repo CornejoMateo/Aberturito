@@ -137,7 +137,7 @@ export async function updateProfileQuantity(
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.update({ profile_quantity: newQuantity, last_update: new Date().toISOString().split('T')[0] })
+		.update({ quantity: newQuantity, last_update: new Date().toISOString().split('T')[0] })
 		.eq('id', id)
 		.select()
 		.single();

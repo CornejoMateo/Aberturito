@@ -56,7 +56,7 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 	const handleBudgetChange = (budgetId: string) => {
 		setSelectedBudgetId(budgetId);
 
-		const selectedBudget = budgetsAccepted.find((budget) => budget.id === budgetId);
+		const selectedBudget = budgetsAccepted.find((b) => String(b.id) === budgetId);
 
 		if (!selectedBudget) return;
 
@@ -64,6 +64,7 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 			...prev,
 			balance_amount_ars: formatNumber(selectedBudget.amount_ars.toString()),
 			balance_amount_usd: selectedBudget.amount_usd?.toString() || '',
+			usd_current: selectedBudget.usd_quote ? formatNumber(selectedBudget.usd_quote.toString()) : '',
 		}));
 	};
 

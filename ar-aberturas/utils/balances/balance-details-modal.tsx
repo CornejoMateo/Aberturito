@@ -207,6 +207,7 @@ export function BalanceDetailsModal({
 	const summary = calculateBalanceSummary({
 		budgetAmountArs: balance?.balance_amount_ars,
 		budgetAmountUsd: balance?.balance_amount_usd,
+		budgetInitialUsd: balance?.budget?.amount_usd,
 		budgetInitialArs: balance?.budget?.amount_ars,
 		usdCurrent: balance?.usd_current,
 		totalPaidArs: totalPaid,

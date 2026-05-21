@@ -13,6 +13,7 @@ export type Budget = {
 	number?: string | null;
 	amount_ars?: number | null;
 	amount_usd?: number | null;
+	usd_quote?: number | null;
 	version?: string | null;
 	type?: string | null;
 };
@@ -176,6 +177,7 @@ export async function getBudgetsByFolderBudgetIds(
 				created_at,
 				amount_ars,
 				amount_usd,
+				usd_quote,
 				accepted,
 				sold,
 				lost,
@@ -213,6 +215,7 @@ export async function getBudgetsByFolderBudgetIds(
 				created_at: b.created_at,
 				amount_ars: b.amount_ars,
 				amount_usd: b.amount_usd,
+				usd_quote: b.usd_quote,
 				accepted: b.accepted,
 				sold: b.sold,
 				lost: b.lost,
@@ -279,6 +282,7 @@ export async function listBudgetsForReport(): Promise<{
 				...b,
 				amount_ars: b.amount_ars || 0,
 				amount_usd: b.amount_usd || 0,
+				usd_quote: b.usd_quote || 0,
 				folder_budget: folderBudget ? {
 					id: folderBudget.id,
 					work_id: folderBudget.work_id,

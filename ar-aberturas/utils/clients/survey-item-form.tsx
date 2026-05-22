@@ -6,19 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-interface RelevamientoItemFormProps {
+interface SurveyItemFormProps {
 	initialLabel?: string;
 	onSubmit: (label: string) => Promise<void>;
 	onCancel: () => void;
 	isLoading?: boolean;
 }
 
-export function RelevamientoItemForm({
+export function SurveyItemForm({
 	initialLabel = '',
 	onSubmit,
 	onCancel,
 	isLoading = false,
-}: RelevamientoItemFormProps) {
+}: SurveyItemFormProps) {
 	const [label, setLabel] = useState(initialLabel);
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -31,9 +31,9 @@ export function RelevamientoItemForm({
 	return (
 		<form onSubmit={handleSubmit} className="space-y-4">
 			<div className="space-y-2">
-				<Label htmlFor="relevamiento-item-label">Nombre del paso</Label>
+				<Label htmlFor="survey-item-label">Nombre del paso</Label>
 				<Input
-					id="relevamiento-item-label"
+					id="survey-item-label"
 					value={label}
 					onChange={(e) => setLabel(e.target.value)}
 					placeholder="Ej: Premarcos relevados"

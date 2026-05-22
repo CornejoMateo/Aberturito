@@ -24,7 +24,7 @@ import { useAutoSave } from '@/hooks/clients/use-auto-save';
 import { translateError } from '@/lib/error-translator';
 import { useClientWorks } from '@/hooks/clients/use-client-works';
 import { useClientBudgets } from '@/hooks/clients/use-client-budgets';
-import { ClientRelevamientoTab } from './client-relevamiento-tab';
+import { ClientSurveyTab } from './client-survey-tab';
 
 interface ClientDetailsDialogProps {
   client: Client | null;
@@ -269,7 +269,7 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientU
                   </>
                 )}
                 <TabsTrigger value="images">Archivos</TabsTrigger>
-                <TabsTrigger value="relevamiento">Relevamiento</TabsTrigger>
+                <TabsTrigger value="surveys">Relevamiento</TabsTrigger>
               </TabsList>
               
               <div className="mt-2">
@@ -340,8 +340,8 @@ export function ClientDetailsDialog({ client, isOpen, onClose, onEdit, onClientU
                 <TabsContent value="images" className="h-[calc(100%-2.5rem)]">
                   <ClientImagesGallery client={clientData} />
                 </TabsContent>
-                <TabsContent value="relevamiento" className="h-[calc(100%-2.5rem)]">
-                  <ClientRelevamientoTab client={clientData} />
+                <TabsContent value="survey" className="h-[calc(100%-2.5rem)]">
+                  <ClientSurveyTab client={clientData} />
                 </TabsContent>
                 <TabsContent value="balances" className="space-y-4">
                   <ClientBalances 

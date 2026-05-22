@@ -19,21 +19,21 @@ import { ClipboardList, Pencil, Plus, Trash2 } from 'lucide-react';
 
 import { Client } from '@/lib/clients/clients';
 import { BudgetWithWork } from '@/lib/works/balances';
-import { Relevamiento, RelevamientoItem } from '@/lib/relevamientos/relevamientos';
+import { Survey, SurveyItem } from '@/lib/survey/survey';
 import { translateError } from '@/lib/error-translator';
-import { useClientRelevamientos } from '@/hooks/clients/use-client-relevamientos';
+import { useClientSurveys } from '@/hooks/clients/use-client-survey';
 
-import { RelevamientoItemForm } from './relevamiento-item-form';
+import { SurveyItemForm } from './survey-item-form';
 
-interface ClientRelevamientoTabProps {
+interface ClientSurveyTabProps {
 	client: Client;
 }
 
 type ItemDialogState = {
 	open: boolean;
 	mode: 'add' | 'edit';
-	relevamientoId: string | null;
-	item: RelevamientoItem | null;
+	surveyId: string | null;
+	item: SurveyItem | null;
 };
 
 type DeleteItemConfirmState = {
@@ -43,18 +43,18 @@ type DeleteItemConfirmState = {
 
 type DeleteRelConfirmState = {
 	open: boolean;
-	relevamientoId: string | null;
+	surveyId: string | null;
 };
 
 const INITIAL_ITEM_DIALOG: ItemDialogState = {
 	open: false,
 	mode: 'add',
-	relevamientoId: null,
+	surveyId: null,
 	item: null,
 };
 
 const INITIAL_DELETE_ITEM: DeleteItemConfirmState = { open: false, itemId: null };
-const INITIAL_DELETE_REL: DeleteRelConfirmState = { open: false, relevamientoId: null };
+const INITIAL_DELETE_REL: DeleteRelConfirmState = { open: false, surveyId: null };
 
 function getBudgetLabel(budget: BudgetWithWork): string {
 	const parts: string[] = [];
@@ -70,19 +70,19 @@ function getBudgetAddress(budget: BudgetWithWork): string | null {
 	return parts.join(', ') || null;
 }
 
-export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
+export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 	const {
 		soldBudgets,
-		relevamientos,
+		Surveys: surveys,
 		items,
 		isLoading,
 		load,
-		createRelevamiento,
-		removeRelevamiento,
+		createSurvey,
+		removeSurvey,
 		addItem,
 		updateItem,
 		removeItem,
-	} = useClientRelevamientos(client.id);
+	} = useClientSurveys(client.id);
 
 	const [itemDialog, setItemDialog] = useState<ItemDialogState>(INITIAL_ITEM_DIALOG);
 	const [deleteItemConfirm, setDeleteItemConfirm] = useState<DeleteItemConfirmState>(INITIAL_DELETE_ITEM);
@@ -92,22 +92,22 @@ export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
 		load();
 	}, [load]);
 
-	const getRelevamientoForBudget = (budgetId: string): Relevamiento | undefined =>
-		relevamientos.find((r) => r.budget_id === budgetId);
+	const getSurveyForBudget = (budgetId: string): Survey | undefined =>
+		surveys.find((s) => s.budget_id === budgetId);
 
-	const getItemsForRelevamiento = (relevamientoId: string): RelevamientoItem[] =>
+	const getItemsForSurvey = (surveyId: string): SurveyItem[] =>
 		items
-			.filter((i) => i.relevamiento_id === relevamientoId)
+			.filter((i) => i.survey_id === surveyId)
 			.sort((a, b) => a.order - b.order);
 
-	const getProgress = (relevamientoId: string): { done: number; total: number } => {
-		const rel = getItemsForRelevamiento(relevamientoId);
-		return { done: rel.filter((i) => i.completed).length, total: rel.length };
+	const getProgress = (surveyId: string): { done: number; total: number } => {
+		const survey = getItemsForSurvey(surveyId);
+		return { done: survey.filter((i) => i.completed).length, total: survey.length };
 	};
 
-	const handleCreateRelevamiento = async (budgetId: string) => {
+	const handleCreateSurvey = async (budgetId: string) => {
 		try {
-			await createRelevamiento(budgetId);
+			await createSurvey(budgetId);
 			toast({ title: 'Relevamiento creado', description: 'Se creó el relevamiento con los pasos por defecto.' });
 		} catch (err) {
 			toast({
@@ -118,7 +118,7 @@ export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
 		}
 	};
 
-	const handleToggleItem = async (item: RelevamientoItem) => {
+	const handleToggleItem = async (item: SurveyItem) => {
 		try {
 			await updateItem(item.id, { completed: !item.completed });
 		} catch (err) {
@@ -132,8 +132,8 @@ export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
 
 	const handleItemFormSubmit = async (label: string) => {
 		try {
-			if (itemDialog.mode === 'add' && itemDialog.relevamientoId) {
-				await addItem(itemDialog.relevamientoId, label);
+			if (itemDialog.mode === 'add' && itemDialog.surveyId) {
+				await addItem(itemDialog.surveyId, label);
 				toast({ title: 'Paso agregado' });
 			} else if (itemDialog.mode === 'edit' && itemDialog.item) {
 				await updateItem(itemDialog.item.id, { label });
@@ -165,10 +165,10 @@ export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
 		}
 	};
 
-	const handleConfirmDeleteRelevamiento = async () => {
-		if (!deleteRelConfirm.relevamientoId) return;
+	const handleConfirmDeleteSurvey = async () => {
+		if (!deleteRelConfirm.surveyId) return;
 		try {
-			await removeRelevamiento(deleteRelConfirm.relevamientoId);
+			await removeSurvey(deleteRelConfirm.surveyId);
 			toast({ title: 'Relevamiento eliminado' });
 		} catch (err) {
 			toast({
@@ -181,7 +181,7 @@ export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
 		}
 	};
 
-	if (isLoading && !soldBudgets.length && !relevamientos.length) {
+	if (isLoading && !soldBudgets.length && !surveys.length) {
 		return (
 			<div className="py-8 text-center">
 				<p className="text-sm text-muted-foreground">Cargando relevamientos...</p>
@@ -207,7 +207,7 @@ export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
 	return (
 		<div className="space-y-4">
 			{soldBudgets.map((budget: BudgetWithWork) => {
-				const relevamiento = getRelevamientoForBudget(budget.id);
+				const survey = getSurveyForBudget(budget.id);
 				const address = getBudgetAddress(budget);
 				const label = getBudgetLabel(budget);
 
@@ -225,7 +225,7 @@ export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
 									<Badge variant="default" className="text-xs">
 										Vendido
 									</Badge>
-									{relevamiento && (
+									{survey && (
 										<Button
 											variant="ghost"
 											size="icon"
@@ -233,7 +233,7 @@ export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
 											disabled={isLoading}
 											aria-label="Eliminar relevamiento"
 											onClick={() =>
-												setDeleteRelConfirm({ open: true, relevamientoId: relevamiento.id })
+												setDeleteRelConfirm({ open: true, surveyId: survey.id })
 											}
 										>
 											<Trash2 className="h-3.5 w-3.5" />
@@ -244,14 +244,14 @@ export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
 						</CardHeader>
 
 						<CardContent>
-							{!relevamiento ? (
+							{!survey ? (
 								<div className="text-center py-4 space-y-3">
 									<p className="text-xs text-muted-foreground">
 										No hay relevamiento para este presupuesto.
 									</p>
 									<Button
 										size="sm"
-										onClick={() => handleCreateRelevamiento(budget.id)}
+										onClick={() => handleCreateSurvey(budget.id)}
 										disabled={isLoading}
 									>
 										<Plus className="h-4 w-4 mr-1" />
@@ -262,7 +262,7 @@ export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
 								<div className="space-y-3">
 									{/* Progress bar */}
 									{(() => {
-										const { done, total } = getProgress(relevamiento.id);
+										const { done, total } = getProgress(survey.id);
 										return total > 0 ? (
 											<div className="flex items-center gap-2">
 												<div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
@@ -279,13 +279,13 @@ export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
 									})()}
 
 									{/* Steps list */}
-									{getItemsForRelevamiento(relevamiento.id).length === 0 ? (
+									{getItemsForSurvey(survey.id).length === 0 ? (
 										<p className="text-xs text-muted-foreground text-center py-2">
 											No hay pasos. Agregá el primero.
 										</p>
 									) : (
 										<ul className="space-y-2">
-											{getItemsForRelevamiento(relevamiento.id).map((item) => (
+											{getItemsForSurvey(survey.id).map((item) => (
 												<li key={item.id} className="flex items-center gap-3 group">
 													<Checkbox
 														id={`item-${item.id}`}
@@ -312,7 +312,7 @@ export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
 																setItemDialog({
 																	open: true,
 																	mode: 'edit',
-																	relevamientoId: item.relevamiento_id,
+																	surveyId: item.survey_id,
 																	item,
 																})
 															}
@@ -347,7 +347,7 @@ export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
 											setItemDialog({
 												open: true,
 												mode: 'add',
-												relevamientoId: relevamiento.id,
+												surveyId: survey.id,
 												item: null,
 											})
 										}
@@ -378,7 +378,7 @@ export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
 								: 'Modificá el nombre del paso.'}
 						</DialogDescription>
 					</DialogHeader>
-					<RelevamientoItemForm
+					<SurveyItemForm
 						initialLabel={itemDialog.item?.label ?? ''}
 						onSubmit={handleItemFormSubmit}
 						onCancel={() => setItemDialog(INITIAL_ITEM_DIALOG)}
@@ -397,13 +397,13 @@ export function ClientRelevamientoTab({ client }: ClientRelevamientoTabProps) {
 				isLoading={isLoading}
 			/>
 
-			{/* Confirm delete relevamiento */}
+			{/* Confirm delete survey */}
 			<ConfirmDialog
 				open={deleteRelConfirm.open}
 				onOpenChange={(open) => setDeleteRelConfirm({ ...deleteRelConfirm, open })}
 				title="Eliminar relevamiento"
 				description="¿Estás seguro de que querés eliminar este relevamiento y todos sus pasos? Esta acción no se puede deshacer."
-				onConfirm={handleConfirmDeleteRelevamiento}
+				onConfirm={handleConfirmDeleteSurvey}
 				isLoading={isLoading}
 			/>
 		</div>

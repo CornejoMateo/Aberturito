@@ -1,6 +1,6 @@
 import { getSupabaseClient } from '../supabase-client';
 
-export type Relevamiento = {
+export type Survey = {
 	id: string;
 	created_at: string;
 	budget_id: string;
@@ -8,21 +8,21 @@ export type Relevamiento = {
 	notes?: string | null;
 };
 
-export type RelevamientoItem = {
+export type SurveyItem = {
 	id: string;
 	created_at: string;
-	relevamiento_id: string;
+	survey_id: string;
 	label: string;
 	completed: boolean;
 	order: number;
 };
 
-const TABLE = 'relevamientos';
-const ITEMS_TABLE = 'relevamiento_items';
+const TABLE = 'surveys';
+const ITEMS_TABLE = 'survey_items';
 
-export async function getRelevamientosByClientId(
+export async function getSurveysByClientId(
 	clientId: string
-): Promise<{ data: Relevamiento[] | null; error: unknown }> {
+): Promise<{ data: Survey[] | null; error: unknown }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
@@ -32,19 +32,19 @@ export async function getRelevamientosByClientId(
 	return { data, error };
 }
 
-export async function createRelevamiento(
-	relevamiento: Omit<Relevamiento, 'id' | 'created_at'>
-): Promise<{ data: Relevamiento | null; error: unknown }> {
+export async function createSurvey(
+	survey: Omit<Survey, 'id' | 'created_at'>
+): Promise<{ data: Survey | null; error: unknown }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.insert(relevamiento)
+		.insert(survey)
 		.select()
 		.single();
 	return { data, error };
 }
 
-export async function deleteRelevamiento(
+export async function deleteSurvey(
 	id: string
 ): Promise<{ error: unknown }> {
 	const supabase = getSupabaseClient();
@@ -55,27 +55,27 @@ export async function deleteRelevamiento(
 		.select('id');
 	if (error) return { error };
 	if (!data?.length) {
-		return { error: new Error('Delete did not affect any rows. Check RLS policies on relevamientos.') };
+		return { error: new Error('Delete did not affect any rows. Check RLS policies on surveys.') };
 	}
 	return { error: null };
 }
 
-export async function getRelevamientoItemsByRelevamientoIds(
-	relevamientoIds: string[]
-): Promise<{ data: RelevamientoItem[] | null; error: unknown }> {
+export async function getSurveyItemsBySurveyIds(
+	surveyIds: string[]
+): Promise<{ data: SurveyItem[] | null; error: unknown }> {
 	const supabase = getSupabaseClient();
-	if (relevamientoIds.length === 0) return { data: [], error: null };
+	if (surveyIds.length === 0) return { data: [], error: null };
 	const { data, error } = await supabase
 		.from(ITEMS_TABLE)
 		.select('*')
-		.in('relevamiento_id', relevamientoIds)
+		.in('survey_id', surveyIds)
 		.order('order', { ascending: true });
 	return { data, error };
 }
 
-export async function createRelevamientoItem(
-	item: Omit<RelevamientoItem, 'id' | 'created_at'>
-): Promise<{ data: RelevamientoItem | null; error: unknown }> {
+export async function createSurveyItem(
+	item: Omit<SurveyItem, 'id' | 'created_at'>
+): Promise<{ data: SurveyItem | null; error: unknown }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(ITEMS_TABLE)
@@ -85,9 +85,9 @@ export async function createRelevamientoItem(
 	return { data, error };
 }
 
-export async function updateRelevamientoItem(
+export async function updateSurveyItem(
 	id: string,
-	changes: Partial<Pick<RelevamientoItem, 'label' | 'completed' | 'order'>>
+	changes: Partial<Pick<SurveyItem, 'label' | 'completed' | 'order'>>
 ): Promise<{ error: unknown }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
@@ -97,12 +97,12 @@ export async function updateRelevamientoItem(
 		.select('id');
 	if (error) return { error };
 	if (!data?.length) {
-		return { error: new Error('Update did not affect any rows. Check RLS policies on relevamiento_items.') };
+		return { error: new Error('Update did not affect any rows. Check RLS policies on survey_items.') };
 	}
 	return { error: null };
 }
 
-export async function deleteRelevamientoItem(
+export async function deleteSurveyItem(
 	id: string
 ): Promise<{ error: unknown }> {
 	const supabase = getSupabaseClient();
@@ -113,7 +113,7 @@ export async function deleteRelevamientoItem(
 		.select('id');
 	if (error) return { error };
 	if (!data?.length) {
-		return { error: new Error('Delete did not affect any rows. Check RLS policies on relevamiento_items.') };
+		return { error: new Error('Delete did not affect any rows. Check RLS policies on survey_items.') };
 	}
 	return { error: null };
 }

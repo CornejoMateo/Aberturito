@@ -113,7 +113,7 @@ export function AccesoriesTable({
 			await onUpdateQuantity(currentItemId, newQuantity);
 			toast({
 				title: 'Cantidad actualizada',
-				description: `La cantidad se ha ${quantityDialogType === 'increase' ? 'aumentado' : 'disminuido'} a ${newQuantity}`,
+				description: `La cantidad ha sido ${quantityDialogType === 'increase' ? 'incrementada' : 'disminuida'} a ${newQuantity}`,
 			});
 		} finally {
 			setIsUpdating(false);

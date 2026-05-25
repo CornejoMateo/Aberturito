@@ -12,6 +12,7 @@ export type ProfileItemStock = {
 	material: string;
 	image_url?: string | null;
 	image_path?: string | null;
+	image_id?: number | null;
 	created_at: string | null;
 	last_update: string | null;
 };
@@ -22,9 +23,11 @@ export async function listStock(): Promise<{ data: ProfileItemStock[] | null; er
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select(`
+		.select(
+			`
 			*
-		`)
+		`
+		)
 		.order('created_at', { ascending: false });
 	return { data, error };
 }
@@ -40,15 +43,7 @@ export async function getProfileById(
 export async function createProfileStock(
 	item: Partial<ProfileItemStock>
 ): Promise<{ data: ProfileItemStock | null; error: any }> {
-	const requiredFields = [
-		'code',
-		'material',
-		'line',
-		'color',
-		'status',
-		'site',
-		'width',
-	];
+	const requiredFields = ['code', 'material', 'line', 'color', 'status', 'site', 'width'];
 	for (const field of requiredFields) {
 		if (
 			item[field as keyof ProfileItemStock] === undefined ||
@@ -59,26 +54,21 @@ export async function createProfileStock(
 	}
 
 	const supabase = getSupabaseClient();
-
-	const { data: existing, error: searchError } = await supabase
-		.from(TABLE)
-		.select('image_url, image_path')
+	const { data: galleryProfile, error: galleryProfileError } = await supabase
+		.from('gallery_profiles')
+		.select('id')
+		.eq('material_type', item.material)
 		.eq('line', item.line)
 		.eq('code', item.code)
-		.not('image_url', 'is', null)
-		.limit(1);
+		.maybeSingle();
 
-	let image_url = null;
-	let image_path = null;
-	if (existing && existing.length > 0) {
-		image_url = existing[0].image_url;
-		image_path = existing[0].image_path;
+	if (galleryProfileError) {
+		return { data: null, error: galleryProfileError };
 	}
 
 	const payload = {
 		...item,
-		image_url,
-		image_path,
+		image_id: galleryProfile?.id ?? null,
 		last_update: new Date().toISOString().split('T')[0],
 	};
 

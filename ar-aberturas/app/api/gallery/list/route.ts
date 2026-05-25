@@ -46,9 +46,9 @@ export async function GET(req: Request) {
 		const name_line = url.searchParams.get('name_line');
 		const name_code = url.searchParams.get('name_code');
 
-		let query = supabase.from('profiles').select('*').limit(1);
+		let query = supabase.from('gallery_profiles').select('*').limit(1);
 
-		if (material_type) query = query.eq('material', material_type);
+		if (material_type) query = query.eq('material_type', material_type);
 		if (name_line) query = query.eq('line', name_line);
 		if (name_code) query = query.eq('code', name_code);
 

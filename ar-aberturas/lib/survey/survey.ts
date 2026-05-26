@@ -73,6 +73,15 @@ export async function getSurveyItemsBySurveyIds(
 	return { data, error };
 }
 
+export async function getAllSurveys(): Promise<{ data: Survey[] | null; error: unknown }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('*')
+		.order('created_at', { ascending: true });
+	return { data, error };
+}
+
 export async function createSurveyItem(
 	item: Omit<SurveyItem, 'id' | 'created_at'>
 ): Promise<{ data: SurveyItem | null; error: unknown }> {

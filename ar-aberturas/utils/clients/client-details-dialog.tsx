@@ -38,6 +38,7 @@ interface ClientDetailsDialogProps {
 	onClose: () => void;
 	onEdit: () => void;
 	onClientUpdated?: () => void;
+	defaultTab?: string;
 }
 
 export function ClientDetailsDialog({
@@ -46,6 +47,7 @@ export function ClientDetailsDialog({
 	onClose,
 	onEdit,
 	onClientUpdated,
+	defaultTab,
 }: ClientDetailsDialogProps) {
 	const [isWorkFormOpen, setIsWorkFormOpen] = useState(false);
 	const [isBalanceFormOpen, setIsBalanceFormOpen] = useState(false);
@@ -271,7 +273,7 @@ export function ClientDetailsDialog({
 
 					<div className="border-t pt-2">
 						<Tabs
-							defaultValue={user?.role === 'Admin' ? 'info' : 'images'}
+							defaultValue={defaultTab || (user?.role === 'Admin' ? 'info' : 'images')}
 							className="w-full"
 							onValueChange={handleTabChange}
 						>

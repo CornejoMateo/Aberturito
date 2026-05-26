@@ -27,6 +27,7 @@ import { toast } from '../ui/use-toast';
 import { translateError } from '@/lib/error-translator';
 import { getDescription, getTitle } from '@/helpers/stock/stock-management';
 import { STOCK_ADAPTERS } from '@/lib/stock/adapters';
+import { separateProfile, unseparateProfile } from '@/lib/stock/profile-stock';
 
 interface StockManagementProps {
 	materialType?: 'Aluminio' | 'PVC';
@@ -95,6 +96,60 @@ export function StockManagement({
 		if (item) {
 			setEditingItem(item);
 			setIsEditDialogOpen(true);
+		}
+	};
+
+	const handleSeparate = async (id: number, workId: number) => {
+		try {
+			const result = await separateProfile(id, workId);
+			if (result?.error) {
+				const errorMessage = translateError(result.error);
+				toast({
+					title: 'Error',
+					description: errorMessage || 'No se pudo separar el perfil. Intenta nuevamente.',
+					variant: 'destructive',
+				});
+				return;
+			}
+			toast({
+				title: 'Éxito',
+				description: 'Perfil separado correctamente para la obra.',
+			});
+		} catch (error) {
+			const errorMessage = translateError(error);
+			console.error('Error al separar perfil:', error);
+			toast({
+				title: 'Error',
+				description: errorMessage || 'No se pudo separar el perfil. Intenta nuevamente.',
+				variant: 'destructive',
+			});
+		}
+	};
+
+	const handleUnseparate = async (id: number) => {
+		try {
+			const result = await unseparateProfile(id);
+			if (result?.error) {
+				const errorMessage = translateError(result.error);
+				toast({
+					title: 'Error',
+					description: errorMessage || 'No se pudo desmarcar el perfil. Intenta nuevamente.',
+					variant: 'destructive',
+				});
+				return;
+			}
+			toast({
+				title: 'Éxito',
+				description: 'Perfil desmarcado correctamente.',
+			});
+		} catch (error) {
+			const errorMessage = translateError(error);
+			console.error('Error al desmarcar perfil:', error);
+			toast({
+				title: 'Error',
+				description: errorMessage || 'No se pudo desmarcar el perfil. Intenta nuevamente.',
+				variant: 'destructive',
+			});
 		}
 	};
 
@@ -273,6 +328,8 @@ export function StockManagement({
 									});
 								}
 							}}
+							onSeparate={handleSeparate}
+							onUnseparate={handleUnseparate}
 						/>
 					) : (
 						<AccesoriesTable

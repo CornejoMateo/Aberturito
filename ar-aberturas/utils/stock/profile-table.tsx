@@ -34,15 +34,11 @@ import {
 	CommandItem,
 	CommandList,
 } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { toast } from '@/components/ui/use-toast';
+import { getSupabaseClient } from '@/lib/supabase-client';
 
 interface ProfileTableProps {
 	filteredStock: ProfileItemStock[];
@@ -337,17 +333,26 @@ export function ProfileTable({
 												<TooltipProvider>
 													<Tooltip>
 														<TooltipTrigger asChild>
-															<Badge variant="outline" className="bg-yellow-200 dark:bg-yellow-900/30 border-yellow-400 max-w-[150px] truncate cursor-help">
-																{item.separated_for_work.locality || item.separated_for_work.address || 'Obra'}
+															<Badge
+																variant="outline"
+																className="bg-yellow-200 dark:bg-yellow-900/30 border-yellow-400 max-w-[150px] truncate cursor-help"
+															>
+																{item.separated_for_work.locality ||
+																	item.separated_for_work.address ||
+																	'Obra'}
 															</Badge>
 														</TooltipTrigger>
 														<TooltipContent>
 															<div className="flex flex-col gap-1">
 																{item.separated_for_work.locality && (
-																	<p className="font-medium text">{item.separated_for_work.locality}</p>
+																	<p className="font-medium text">
+																		{item.separated_for_work.locality}
+																	</p>
 																)}
 																{item.separated_for_work.address && (
-																	<p className="text-sm text-muted-foreground">{item.separated_for_work.address}</p>
+																	<p className="text-sm text-muted-foreground">
+																		{item.separated_for_work.address}
+																	</p>
 																)}
 															</div>
 														</TooltipContent>
@@ -364,9 +369,17 @@ export function ProfileTable({
 														variant="ghost"
 														size="icon"
 														className="h-8 w-8"
-														onClick={() => item.separated_for_work_id ? handleUnseparate(item.id!) : handleOpenSeparateDialog(item)}
+														onClick={() =>
+															item.separated_for_work_id
+																? handleUnseparate(item.id!)
+																: handleOpenSeparateDialog(item)
+														}
 														disabled={isUpdating && updatingId === item.id}
-														title={item.separated_for_work_id ? 'Desmarcar como separado' : 'Marcar como separado'}
+														title={
+															item.separated_for_work_id
+																? 'Desmarcar como separado'
+																: 'Marcar como separado'
+														}
 													>
 														{item.separated_for_work_id ? (
 															<BookmarkCheck className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
@@ -460,7 +473,10 @@ export function ProfileTable({
 					<DialogHeader>
 						<DialogTitle>Separar perfil para obra</DialogTitle>
 						<DialogDescription>
-							Selecciona la obra para la cual deseas separar este perfil: <strong>{selectedProfile?.code} {selectedProfile?.line} {selectedProfile?.color}</strong>
+							Selecciona la obra para la cual deseas separar este perfil:{' '}
+							<strong>
+								{selectedProfile?.code} {selectedProfile?.line} {selectedProfile?.color}
+							</strong>
 						</DialogDescription>
 					</DialogHeader>
 					<div className="py-4">
@@ -494,7 +510,9 @@ export function ProfileTable({
 				<DialogContent className="max-w-2xl">
 					<DialogHeader>
 						<DialogTitle>Seleccionar obra</DialogTitle>
-						<DialogDescription>Busca y selecciona la obra para separar el perfil.</DialogDescription>
+						<DialogDescription>
+							Busca y selecciona la obra para separar el perfil.
+						</DialogDescription>
 					</DialogHeader>
 					<div className="py-4">
 						<Command className="rounded-lg border shadow-md">
@@ -519,13 +537,9 @@ export function ProfileTable({
 												)}
 											/>
 											<div className="flex flex-col">
-												<span className="font-medium">
-													{work.locality || 'Sin localidad'}
-												</span>
+												<span className="font-medium">{work.locality || 'Sin localidad'}</span>
 												{work.address && (
-													<span className="text-sm text-muted-foreground">
-														{work.address}
-													</span>
+													<span className="text-sm text-muted-foreground">{work.address}</span>
 												)}
 											</div>
 										</CommandItem>

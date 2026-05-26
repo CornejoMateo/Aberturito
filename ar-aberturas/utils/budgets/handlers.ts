@@ -247,6 +247,7 @@ export const budgetHandlers: BudgetHandlers = {
 					number: number,
 					amount_ars: amount,
 					amount_usd: amountUsd,
+					usd_quote: formData.usd_quote ? parseAmount(formData.usd_quote) : editingBudget.usd_quote,
 					created_at: formData.created_at ? new Date(formData.created_at + 'T00:00:00').toISOString() : editingBudget.created_at,
 				},
 				formData.pdf,
@@ -350,6 +351,7 @@ export const budgetHandlers: BudgetHandlers = {
 					number: number,
 					amount_ars: amount,
 					amount_usd: amountUsd,
+					usd_quote: formData.usd_quote ? parseAmount(formData.usd_quote) : null,
 					created_at: formData.created_at ? new Date(formData.created_at + 'T00:00:00').toISOString() : new Date().toISOString(),
 				},
 				formData.pdf,
@@ -368,7 +370,6 @@ export const budgetHandlers: BudgetHandlers = {
 				}
 				return;
 			}
-
 			toast({ title: TOAST_MESSAGES.budgetCreated });
 			setIsCreateOpen(false);
 			refresh();

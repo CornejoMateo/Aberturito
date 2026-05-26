@@ -28,7 +28,7 @@ export function useClientBudgetsState(clientId: string) {
 		workId: FORM_DEFAULTS.workId,
 		pdf: null,
 		created_at: FORM_DEFAULTS.created_at,
-		usdRate: FORM_DEFAULTS.usdRate,
+		usd_quote: FORM_DEFAULTS.usd_quote,
 	});
 	const [deleteBudgetConfirm, setDeleteBudgetConfirm] = useState<DeleteBudgetConfirmState>({
 		open: false,
@@ -164,7 +164,7 @@ export function useClientBudgetsState(clientId: string) {
 			workId: FORM_DEFAULTS.workId,
 			pdf: null,
 			created_at: FORM_DEFAULTS.created_at,
-			usdRate: FORM_DEFAULTS.usdRate,
+			usd_quote: FORM_DEFAULTS.usd_quote,
 		});
 	};
 

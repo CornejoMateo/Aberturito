@@ -43,7 +43,7 @@ export function BudgetFormModal({
 		number: FORM_DEFAULTS.number,
 		amount: FORM_DEFAULTS.amount,
 		amountUsd: FORM_DEFAULTS.amountUsd,
-		usdRate: FORM_DEFAULTS.usdRate,
+		usd_quote: FORM_DEFAULTS.usd_quote,
 		workId: FORM_DEFAULTS.workId,
 		pdf: null,
 		created_at: FORM_DEFAULTS.created_at,
@@ -69,7 +69,7 @@ export function BudgetFormModal({
 				number: budget.number || FORM_DEFAULTS.number,
 				amount: budget.amount_ars?.toString() || FORM_DEFAULTS.amount,
 				amountUsd: budget.amount_usd?.toString() || FORM_DEFAULTS.amountUsd,
-				usdRate: '',
+				usd_quote: budget.usd_quote?.toString() || FORM_DEFAULTS.usd_quote,
 				workId: budget.folder_budget?.work_id ? String(budget.folder_budget.work_id) : FORM_DEFAULTS.workId,
 				pdf: null,
 				created_at: budget.created_at ? new Date(budget.created_at).toISOString().split('T')[0] : FORM_DEFAULTS.created_at,
@@ -95,13 +95,13 @@ export function BudgetFormModal({
 	};
 
 	useEffect(() => {
-		if (formData.amount && formData.usdRate) {
+		if (formData.amount && formData.usd_quote) {
 			const normalizedAmount = formData.amount
 			.replace(/\./g, "") // remove thousand separators
 			.replace(",", ".");   // decimal separator to dot for parsing
 
 			const amountNumber = Number(normalizedAmount);
-			const rateNumber = Number(formData.usdRate);
+			const rateNumber = Number(formData.usd_quote);
 
 			if (!isNaN(amountNumber) && !isNaN(rateNumber)) {
 			const calculatedUsd = (amountNumber / rateNumber).toFixed(2);
@@ -112,7 +112,7 @@ export function BudgetFormModal({
 			}));
 			}
 		}
-	}, [formData.usdRate, formData.amount]);
+	}, [formData.usd_quote, formData.amount]);
 
 	return (
 		<Dialog open={isOpen} onOpenChange={handleClose}>
@@ -215,8 +215,8 @@ export function BudgetFormModal({
 									const formatted = formatNumber(e.target.value);
 
 									setFormData((prev: BudgetFormData) => ({
-									...prev,
-									amount: formatted,
+										...prev,
+										amount: formatted,
 									}));
 								}}
 								placeholder="0"
@@ -229,8 +229,8 @@ export function BudgetFormModal({
 							<Label>Cotización del dólar</Label>
 							<Input
 								type="number"
-								value={formData.usdRate}
-								onChange={(e) => setFormData((prev: BudgetFormData) => ({ ...prev, usdRate: e.target.value }))}
+								value={formData.usd_quote}
+								onChange={(e) => setFormData((prev: BudgetFormData) => ({ ...prev, usd_quote: e.target.value }))}
 							/>
 						</div>
 

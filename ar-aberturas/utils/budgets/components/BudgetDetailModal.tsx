@@ -100,22 +100,20 @@ export function BudgetDetailModal({
 							</p>
 						</div>
 						<div>
-							<Label className="text-sm font-medium text-muted-foreground mt-2">Fecha de emisión</Label>
+							<Label className="text-sm font-medium text-muted-foreground">Cotización USD</Label>
 							<p className="text-sm font-semibold">
-								{formatCreatedAt(budget.created_at)}
+								{budget.usd_quote ? formatCurrency(budget.usd_quote) : 'N/A'}
 							</p>
 						</div>
 					</div>
 
 					<div className="grid grid-cols-2 gap-4">
-						{budget.date_of_sale && (
-							<div>
-								<Label className="text-sm font-medium text-muted-foreground mt-2">Fecha de venta</Label>
-								<p className="text-sm font-semibold">
-									{formatCreatedAt(budget.date_of_sale)}
-								</p>
-							</div>
-						)}
+						<div>
+							<Label className="text-sm font-medium text-muted-foreground mt-2">Fecha de emisión</Label>
+							<p className="text-sm font-semibold">
+								{formatCreatedAt(budget.created_at)}
+							</p>
+						</div>
 						<div>
 							<Label className="text-sm font-medium text-muted-foreground">PDF</Label>
 							<div className="flex items-center gap-2 mt-1">
@@ -134,6 +132,17 @@ export function BudgetDetailModal({
 							</div>
 						</div>
 					</div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            {budget.date_of_sale && (
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground mt-2">Fecha de venta</Label>
+                <p className="text-sm font-semibold">
+                  {formatCreatedAt(budget.date_of_sale)}
+                </p>
+              </div>
+            )}
+          </div>
 
 					<div className="flex justify-end gap-2 pt-4 border-t">
 						<Button variant="outline" onClick={onClose}>

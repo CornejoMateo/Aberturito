@@ -16,25 +16,10 @@ export async function GET(req: Request) {
 			const categoryState = url.searchParams.get('categoryState');
 			const code = url.searchParams.get('name_code');
 
-			let table = '';
+			let query = supabase.from('gallery_stock').select('*').limit(1);
 
-			if (categoryState === 'Accesorios') table = 'accesories_category';
-			if (categoryState === 'Herrajes') table = 'ironworks_category';
-			if (categoryState === 'Insumos') table = 'supplies_category';
-
-			let query = supabase.from(table).select('*').limit(1);
-
-			if (categoryState === 'Accesorios') {
-				if (code) query = query.eq('accessory_code', code);
-			}
-
-			if (categoryState === 'Herrajes') {
-				if (code) query = query.eq('ironwork_code', code);
-			}
-
-			if (categoryState === 'Insumos') {
-				if (code) query = query.eq('supply_code', code);
-			}
+			if (categoryState) query = query.eq('category', categoryState);
+			if (code) query = query.eq('code', code);
 
 			const { data, error } = await query;
 			if (error) throw error;
@@ -46,9 +31,9 @@ export async function GET(req: Request) {
 		const name_line = url.searchParams.get('name_line');
 		const name_code = url.searchParams.get('name_code');
 
-		let query = supabase.from('profiles').select('*').limit(1);
+		let query = supabase.from('gallery_profiles').select('*').limit(1);
 
-		if (material_type) query = query.eq('material', material_type);
+		if (material_type) query = query.eq('material_type', material_type);
 		if (name_line) query = query.eq('line', name_line);
 		if (name_code) query = query.eq('code', name_code);
 

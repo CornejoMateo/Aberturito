@@ -10,8 +10,7 @@ export type ProfileItemStock = {
 	site: string;
 	width: number;
 	material: string;
-	image_url?: string | null;
-	image_path?: string | null;
+	image_id?: number | null;
 	created_at: string | null;
 	last_update: string | null;
 	separated_for_work_id?: number | null;
@@ -47,15 +46,7 @@ export async function getProfileById(
 export async function createProfileStock(
 	item: Partial<ProfileItemStock>
 ): Promise<{ data: ProfileItemStock | null; error: any }> {
-	const requiredFields = [
-		'code',
-		'material',
-		'line',
-		'color',
-		'status',
-		'site',
-		'width',
-	];
+	const requiredFields = ['code', 'material', 'line', 'color', 'status', 'site', 'width'];
 	for (const field of requiredFields) {
 		if (
 			item[field as keyof ProfileItemStock] === undefined ||
@@ -66,26 +57,21 @@ export async function createProfileStock(
 	}
 
 	const supabase = getSupabaseClient();
-
-	const { data: existing, error: searchError } = await supabase
-		.from(TABLE)
-		.select('image_url, image_path')
+	const { data: galleryProfile, error: galleryProfileError } = await supabase
+		.from('gallery_profiles')
+		.select('id')
+		.eq('material_type', item.material)
 		.eq('line', item.line)
 		.eq('code', item.code)
-		.not('image_url', 'is', null)
-		.limit(1);
+		.maybeSingle();
 
-	let image_url = null;
-	let image_path = null;
-	if (existing && existing.length > 0) {
-		image_url = existing[0].image_url;
-		image_path = existing[0].image_path;
+	if (galleryProfileError) {
+		return { data: null, error: galleryProfileError };
 	}
 
 	const payload = {
 		...item,
-		image_url,
-		image_path,
+		image_id: galleryProfile?.id ?? null,
 		last_update: new Date().toISOString().split('T')[0],
 	};
 
@@ -106,22 +92,42 @@ export async function updateProfileStock(
 	}
 	const supabase = getSupabaseClient();
 
-	// if the accessory_code is being changed, check for existing image
-	if (changes.code || changes.line) {
-		const { data: existing, error: searchError } = await supabase
-			.from(TABLE)
-			.select('image_url, image_path')
-			.eq('line', changes.line)
-			.eq('code', changes.code)
-			.not('image_url', 'is', null)
-			.limit(1);
+	const needsImageCheck =
+		changes.material !== undefined || changes.line !== undefined || changes.code !== undefined;
 
-		if (existing && existing.length > 0) {
-			changes.image_url = existing[0].image_url;
-			changes.image_path = existing[0].image_path;
-		} else {
-			changes.image_url = null;
-			changes.image_path = null;
+	if (needsImageCheck) {
+		const { data: currentProfile, error: currentProfileError } = await supabase
+			.from(TABLE)
+			.select('material, line, code')
+			.eq('id', id)
+			.single();
+
+		if (currentProfileError) {
+			return { data: null, error: currentProfileError };
+		}
+
+		const nextMaterial = changes.material ?? currentProfile.material;
+		const nextLine = changes.line ?? currentProfile.line;
+		const nextCode = changes.code ?? currentProfile.code;
+
+		const changedMaterial = nextMaterial !== currentProfile.material;
+		const changedLine = nextLine !== currentProfile.line;
+		const changedCode = nextCode !== currentProfile.code;
+
+		if (changedMaterial || changedLine || changedCode) {
+			const { data: galleryProfile, error: galleryProfileError } = await supabase
+				.from('gallery_profiles')
+				.select('id')
+				.eq('material_type', nextMaterial)
+				.eq('line', nextLine)
+				.eq('code', nextCode)
+				.maybeSingle();
+
+			if (galleryProfileError) {
+				return { data: null, error: galleryProfileError };
+			}
+
+			changes.image_id = galleryProfile?.id ?? null;
 		}
 	}
 
@@ -144,7 +150,7 @@ export async function updateProfileQuantity(
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.update({ profile_quantity: newQuantity, last_update: new Date().toISOString().split('T')[0] })
+		.update({ quantity: newQuantity, last_update: new Date().toISOString().split('T')[0] })
 		.eq('id', id)
 		.select()
 		.single();

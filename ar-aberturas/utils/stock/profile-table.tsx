@@ -116,6 +116,52 @@ export function ProfileTable({
 			setUpdatingId(null);
 		}
 	};
+	const [imageUrlsById, setImageUrlsById] = useState<Record<number, string>>({});
+
+	useEffect(() => {
+		let isMounted = true;
+
+		const loadImageUrls = async () => {
+			const imageIds = Array.from(
+				new Set(filteredStock.map((item) => item.image_id).filter((id): id is number => !!id))
+			);
+
+			if (imageIds.length === 0) {
+				if (isMounted) {
+					setImageUrlsById({});
+				}
+				return;
+			}
+
+			const supabase = getSupabaseClient();
+			const { data, error } = await supabase
+				.from('gallery_profiles')
+				.select('id, image_url')
+				.in('id', imageIds);
+
+			if (!isMounted) return;
+
+			if (error) {
+				console.error('Error loading profile images:', error);
+				return;
+			}
+
+			const nextImageUrlsById = (data ?? []).reduce<Record<number, string>>((acc, row) => {
+				if (row.image_url) {
+					acc[row.id] = row.image_url;
+				}
+				return acc;
+			}, {});
+
+			setImageUrlsById(nextImageUrlsById);
+		};
+
+		loadImageUrls();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [filteredStock]);
 
 	const handleQuantityAction = (
 		id: number,
@@ -136,6 +182,10 @@ export function ProfileTable({
 			setIsUpdating(true);
 			setUpdatingId(id);
 			await onUpdateQuantity(id, newQuantity);
+			toast({
+				title: 'Cantidad actualizada',
+				description: `La cantidad ha sido ${action === 'increment' ? 'incrementada' : 'disminuida'} a ${newQuantity}.`,
+			});
 		} finally {
 			setIsUpdating(false);
 			setUpdatingId(null);
@@ -147,7 +197,7 @@ export function ProfileTable({
 	const getItemName = (item: ProfileItemStock) => {
 		return [item.line, item.code, item.color].filter(Boolean).join(' ') || 'este ítem';
 	};
-	
+
 	return (
 		<Card className="bg-card border-border overflow-hidden">
 			<div className="overflow-x-auto">
@@ -201,7 +251,6 @@ export function ProfileTable({
 							</tr>
 						) : (
 							filteredStock.map((item) => {
-
 								return (
 									<tr
 										key={item.id}
@@ -365,11 +414,11 @@ export function ProfileTable({
 										</td>
 										<td className="px-2 py-2 whitespace-nowrap">
 											<div className="flex justify-center">
-												{item.image_url ? (
+												{item.image_id && imageUrlsById[item.image_id] ? (
 													<Button
 														variant="outline"
 														size="sm"
-														onClick={() => setOpenImageUrl(item.image_url!)}
+														onClick={() => setOpenImageUrl(imageUrlsById[item.image_id!])}
 													>
 														Ver
 													</Button>

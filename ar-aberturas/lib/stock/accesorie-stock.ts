@@ -14,8 +14,7 @@ export type AccessoryItemStock = {
 	accessory_quantity: number;
 	accessory_site: string;
 	accessory_material: string;
-	image_url?: string | null;
-	image_path?: string | null;
+	image_id?: number | null;
 	accessory_price: number | null;
 	last_update: string | null;
 };
@@ -45,8 +44,7 @@ export async function listAccesoriesStock(): Promise<{
 			accessory_site,
 			accessory_material,
 			accessory_price,
-			image_url,
-			image_path,
+			image_id,
 			last_update
 		`
 		)
@@ -84,24 +82,20 @@ export async function createAccessoryStock(
 
 	const supabase = getSupabaseClient();
 
-	const { data: existing, error: searchError } = await supabase
-		.from(TABLE)
-		.select('image_url, image_path')
-		.eq('accessory_code', item.accessory_code)
-		.not('image_url', 'is', null)
-		.limit(1);
+	const { data: galleryStock, error: galleryStockError } = await supabase
+		.from('gallery_stock')
+		.select('id')
+		.eq('category', 'Accesorios')
+		.eq('code', item.accessory_code)
+		.maybeSingle();
 
-	let image_url = null;
-	let image_path = null;
-	if (existing && existing.length > 0) {
-		image_url = existing[0].image_url;
-		image_path = existing[0].image_path;
+	if (galleryStockError) {
+		return { data: null, error: galleryStockError };
 	}
 
 	const payload = {
 		...item,
-		image_url,
-		image_path,
+		image_id: galleryStock?.id ?? null,
 		last_update: new Date().toISOString().split('T')[0],
 	};
 
@@ -122,21 +116,35 @@ export async function updateAccessoryStock(
 	}
 	const supabase = getSupabaseClient();
 
-	// if the accessory_code is being changed, check for existing image
-	if (changes.accessory_code) {
-		const { data: existing, error: searchError } = await supabase
-			.from(TABLE)
-			.select('image_url, image_path')
-			.eq('accessory_code', changes.accessory_code)
-			.not('image_url', 'is', null)
-			.limit(1);
+	const needsImageCheck = changes.accessory_code !== undefined;
 
-		if (existing && existing.length > 0) {
-			changes.image_url = existing[0].image_url;
-			changes.image_path = existing[0].image_path;
-		} else {
-			changes.image_url = null;
-			changes.image_path = null;
+	if (needsImageCheck) {
+		const { data: currentAccessory, error: currentAccessoryError } = await supabase
+			.from(TABLE)
+			.select('accessory_code')
+			.eq('id', id)
+			.single();
+
+		if (currentAccessoryError) {
+			return { data: null, error: currentAccessoryError };
+		}
+
+		const nextCode = changes.accessory_code ?? currentAccessory.accessory_code;
+		const changedCode = nextCode !== currentAccessory.accessory_code;
+
+		if (changedCode) {
+			const { data: galleryStock, error: galleryStockError } = await supabase
+				.from('gallery_stock')
+				.select('id')
+				.eq('category', 'Accesorios')
+				.eq('code', nextCode)
+				.maybeSingle();
+
+			if (galleryStockError) {
+				return { data: null, error: galleryStockError };
+			}
+
+			changes.image_id = galleryStock?.id ?? null;
 		}
 	}
 
@@ -159,7 +167,10 @@ export async function updateAccessoryQuantity(
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.update({ accessory_quantity: newQuantity, last_update: new Date().toISOString().split('T')[0] })
+		.update({
+			accessory_quantity: newQuantity,
+			last_update: new Date().toISOString().split('T')[0],
+		})
 		.eq('id', id)
 		.select()
 		.single();

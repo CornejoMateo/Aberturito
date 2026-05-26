@@ -11,14 +11,15 @@ describe('calculateBalanceSummary', () => {
 		});
 
 		expect(result).toEqual({
-			budgetArsInitial: 200000,
+			budgetArsInitial: 0,
+			budgetUsdInitial: 0,
 			budgetUsd: 100,
-			budgetArsCurrent: 120000,
+			budgetArsCurrent: 200000,
 			totalPaidArs: 30000,
 			totalPaidUsd: 20,
-			remainingArs: 96000,
+			remainingArs: 170000,
 			remainingUsd: 80,
-			progressPercentage: 25,
+			progressPercentage: 15,
 			type: 'Deudor',
 		});
 	});
@@ -47,19 +48,7 @@ describe('calculateBalanceSummary', () => {
 		expect(result.type).toBe('Cancelado');
 	});
 
-	it('uses 1 as usdCurrent fallback when usdCurrent is 0 or negative', () => {
-		const zeroRate = calculateBalanceSummary({
-			budgetAmountUsd: 100,
-			usdCurrent: 0,
-		});
-		const negativeRate = calculateBalanceSummary({
-			budgetAmountUsd: 100,
-			usdCurrent: -200,
-		});
-
-		expect(zeroRate.budgetArsCurrent).toBe(100);
-		expect(negativeRate.budgetArsCurrent).toBe(100);
-	});
+	// usdCurrent no longer afecta el cálculo directo de budgetArsCurrent
 
 	it('handles null and undefined values as zero safely', () => {
 		const result = calculateBalanceSummary({
@@ -72,6 +61,7 @@ describe('calculateBalanceSummary', () => {
 
 		expect(result).toEqual({
 			budgetArsInitial: 0,
+			budgetUsdInitial: 0,
 			budgetUsd: 0,
 			budgetArsCurrent: 0,
 			totalPaidArs: 0,
@@ -85,10 +75,8 @@ describe('calculateBalanceSummary', () => {
 
 	it('caps progress percentage at 100', () => {
 		const result = calculateBalanceSummary({
-			budgetAmountUsd: 100,
-			usdCurrent: 1000,
+			budgetAmountArs: 200000,
 			totalPaidArs: 250000,
-			totalPaidUsd: 100,
 		});
 
 		expect(result.progressPercentage).toBe(100);
@@ -97,13 +85,11 @@ describe('calculateBalanceSummary', () => {
 	it('uses budgetArsInitial as progress base when budgetArsCurrent is 0', () => {
 		const result = calculateBalanceSummary({
 			budgetAmountArs: 50000,
-			budgetAmountUsd: 0,
-			usdCurrent: 1000,
 			totalPaidArs: 12500,
 			totalPaidUsd: 0,
 		});
 
-		expect(result.budgetArsCurrent).toBe(0);
+		expect(result.budgetArsCurrent).toBe(50000);
 		expect(result.progressPercentage).toBe(25);
 	});
 });

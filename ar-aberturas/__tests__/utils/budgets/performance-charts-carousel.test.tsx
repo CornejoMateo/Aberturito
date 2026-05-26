@@ -17,6 +17,8 @@ jest.mock('recharts', () => ({
 describe('PerformanceChartsCarousel', () => {
   const metrics = {
     totalBudgets: 10,
+    totalSales: 4,
+    averageSaleDelayDays: 12.34,
     budgetsByMonth: [{ month: 'Ene', presupuestos: 10, vendidos: 4, perdidos: 2 }],
     budgetsByAmount: [{ amountRange: '$ 0 - 10.000', count: 2 }],
     budgetsByAmountChosen: [{ amountRange: '$ 0 - 10.000', count: 1 }],
@@ -51,6 +53,13 @@ describe('PerformanceChartsCarousel', () => {
     render(<PerformanceChartsCarousel metrics={metrics} />);
 
     expect(screen.getByText('Presupuestos totales por monto')).toBeInTheDocument();
+  });
+
+  it('renders the sale delay metric card', () => {
+    render(<PerformanceChartsCarousel metrics={metrics} />);
+
+    expect(screen.getByText('Promedio')).toBeInTheDocument();
+    expect(screen.getByText('12.34 días')).toBeInTheDocument();
   });
 
   it('shows empty state when totals are zero', () => {

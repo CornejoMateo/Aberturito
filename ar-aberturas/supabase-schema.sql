@@ -297,6 +297,8 @@ create table if not exists public.budgets (
   amount_usd numeric null,
   sold boolean null,
   lost boolean null,
+  usd_quote numeric null,
+  date_of_sale timestamp with time zone null,
   constraint budgets_pkey primary key (id),
   constraint budgets_folder_budget_id_fkey foreign KEY (folder_budget_id) references folder_budgets (id) on update CASCADE on delete CASCADE
 ) TABLESPACE pg_default;

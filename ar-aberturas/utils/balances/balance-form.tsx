@@ -12,13 +12,14 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { Balance, BudgetWithWork } from '@/lib/works/balances';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { formatNumber, parseArsToNumber } from '@/utils/budgets/utils';
 
 interface BalanceFormProps {
 	clientId: string;
@@ -27,16 +28,25 @@ interface BalanceFormProps {
 	onCancel: () => void;
 }
 
+interface BalanceFormData {
+	contract_date_usd: string;
+	start_date?: string | Date;
+	usd_current: string;
+	notes: string | null;
+	balance_amount_usd: string;
+	balance_amount_ars: string;
+}
+
 export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFormProps) {
 	const [selectedBudgetId, setSelectedBudgetId] = useState<string>('');
 	const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-	const [formData, setFormData] = useState<Partial<Balance>>({
-		contract_date_usd: undefined,
+	const [formData, setFormData] = useState<BalanceFormData>({
+		contract_date_usd: '',
 		start_date: undefined,
-		usd_current: undefined,
+		usd_current: '',
 		notes: null,
-		balance_amount_usd: null,
-		balance_amount_ars: null,
+		balance_amount_usd: '',
+		balance_amount_ars: '',
 	});
 
 	const budgetsAccepted = useMemo(() => {
@@ -46,14 +56,15 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 	const handleBudgetChange = (budgetId: string) => {
 		setSelectedBudgetId(budgetId);
 
-		const selectedBudget = budgetsAccepted.find((budget) => budget.id === budgetId);
+		const selectedBudget = budgetsAccepted.find((b) => String(b.id) === budgetId);
 
 		if (!selectedBudget) return;
 
 		setFormData((prev) => ({
 			...prev,
-			balance_amount_ars: selectedBudget.amount_ars,
-			balance_amount_usd: selectedBudget.amount_usd,
+			balance_amount_ars: formatNumber(selectedBudget.amount_ars.toString()),
+			balance_amount_usd: selectedBudget.amount_usd?.toString() || '',
+			usd_current: selectedBudget.usd_quote ? formatNumber(selectedBudget.usd_quote.toString()) : '',
 		}));
 	};
 
@@ -63,12 +74,12 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 		const balanceData: Omit<Balance, 'id' | 'created_at'> = {
 			client_id: clientId,
 			budget_id: selectedBudgetId || null,
-			start_date: formData.start_date ? format(formData.start_date, 'yyyy-MM-dd') : undefined,
-			contract_date_usd: formData.contract_date_usd || null,
-			usd_current: formData.usd_current || null,
+			start_date: formData.start_date ? format(formData.start_date as Date, 'yyyy-MM-dd') : undefined,
+			contract_date_usd: formData.contract_date_usd ? parseArsToNumber(formData.contract_date_usd) : null,
+			usd_current: formData.usd_current ? parseArsToNumber(formData.usd_current) : null,
 			notes: formData.notes && formData.notes.length > 0 ? formData.notes : null,
-			balance_amount_usd: formData.balance_amount_usd || null,
-			balance_amount_ars: formData.balance_amount_ars || null,
+			balance_amount_usd: formData.balance_amount_usd ? parseFloat(formData.balance_amount_usd) : null,
+			balance_amount_ars: formData.balance_amount_ars ? parseArsToNumber(formData.balance_amount_ars) : null,
 		};
 
 		await onSubmit(balanceData);
@@ -76,13 +87,32 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
-		const numericFields = ['budget', 'contract_date_usd'];
 
 		setFormData((prev) => ({
 			...prev,
-			[name]: numericFields.includes(name) ? (value ? parseFloat(value) : null) : value,
+			[name]: value,
 		}));
 	};
+
+	useEffect(() => {
+		if (formData.balance_amount_ars && formData.usd_current) {
+			const normalizedAmount = formData.balance_amount_ars
+			.replace(/\./g, "") // remove thousand separators
+			.replace(",", ".");   // decimal separator to dot for parsing
+
+			const amountNumber = Number(normalizedAmount);
+			const rateNumber = parseArsToNumber(formData.usd_current);
+			
+			if (!isNaN(amountNumber) && !isNaN(rateNumber)) {
+			const calculatedUsd = (amountNumber / rateNumber).toFixed(2);
+
+			setFormData((prev) => ({
+				...prev,
+				balance_amount_usd: calculatedUsd,
+			}));
+			}
+		}
+	}, [formData.usd_current, formData.balance_amount_ars]);
 
 	return (
 		<form onSubmit={handleSubmit} className="space-y-4">
@@ -152,10 +182,16 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 					<Input
 						id="contract_date_usd"
 						name="contract_date_usd"
-						type="number"
+						type="text"
 						step="0.01"
 						value={formData.contract_date_usd || ''}
-						onChange={handleChange}
+						onChange={(e) => {
+							const formatted = formatNumber(e.target.value);
+							setFormData((prev) => ({
+								...prev,
+								contract_date_usd: formatted,
+							}));
+						}}
 						placeholder="0.00"
 					/>
 				</div>
@@ -165,10 +201,16 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 					<Input
 						id="usd_current"
 						name="usd_current"
-						type="number"
+						type="text"
 						step="0.01"
 						value={formData.usd_current || ''}
-						onChange={handleChange}
+						onChange={(e) => {
+							const formatted = formatNumber(e.target.value);
+							setFormData((prev) => ({
+								...prev,
+								usd_current: formatted,
+							}));
+						}}
 					/>
 				</div>
 
@@ -177,11 +219,16 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 					<Input
 						id="balance_amount_ars"
 						name="balance_amount_ars"
-						type="number"
-						step="0.01"
+						type="text"
 						value={formData.balance_amount_ars || ''}
-						onChange={handleChange}
-						placeholder="0.00"
+						onChange={(e) => {
+							const formatted = formatNumber(e.target.value);
+							setFormData((prev) => ({
+								...prev,
+								balance_amount_ars: formatted,
+							}));
+						}}
+						placeholder="0"
 					/>
 				</div>
 

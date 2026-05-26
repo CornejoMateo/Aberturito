@@ -17,8 +17,7 @@ export interface StockConfig {
 		site: string;
 		material: string;
 		price: string;
-		image_url: string;
-		image_path?: string;
+		image_id: string;
 		createdAt: string;
 	};
 }
@@ -41,8 +40,7 @@ export const STOCK_CONFIGS: Record<StockCategory, StockConfig> = {
 			site: 'accessory_site',
 			material: 'accessory_material',
 			price: 'accessory_price',
-			image_url: 'image_url',
-			image_path: 'image_path',
+			image_id: 'image_id',
 			createdAt: 'created_at',
 		},
 	},
@@ -63,8 +61,7 @@ export const STOCK_CONFIGS: Record<StockCategory, StockConfig> = {
 			site: 'ironwork_site',
 			material: 'ironwork_material',
 			price: 'ironwork_price',
-			image_url: 'image_url',
-			image_path: 'image_path',
+			image_id: 'image_id',
 			createdAt: 'created_at',
 		},
 	},
@@ -85,8 +82,7 @@ export const STOCK_CONFIGS: Record<StockCategory, StockConfig> = {
 			site: 'supply_site',
 			material: 'supply_material',
 			price: 'supply_price',
-			image_url: 'image_url',
-			image_path: 'image_path',
+			image_id: 'image_id',
 			createdAt: 'created_at',
 		},
 	},

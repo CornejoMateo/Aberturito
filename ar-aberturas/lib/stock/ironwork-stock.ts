@@ -14,8 +14,7 @@ export type IronworkItemStock = {
 	ironwork_quantity: number;
 	ironwork_site: string;
 	ironwork_material: string;
-	image_url?: string | null;
-	image_path?: string | null;
+	image_id?: number | null;
 	ironwork_price: number | null;
 	last_update: string | null;
 };
@@ -45,8 +44,7 @@ export async function listIronworksStock(): Promise<{
 			ironwork_site,
 			ironwork_material,
 			ironwork_price,
-			image_url,
-			image_path,
+			image_id,
 			last_update
 		`
 		)
@@ -67,24 +65,20 @@ export async function createIronworkStock(
 ): Promise<{ data: IronworkItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 
-	const { data: existing, error: searchError } = await supabase
-		.from(TABLE)
-		.select('image_url, image_path')
-		.eq('ironwork_code', item.ironwork_code)
-		.not('image_url', 'is', null)
-		.limit(1);
+	const { data: galleryStock, error: galleryStockError } = await supabase
+		.from('gallery_stock')
+		.select('id')
+		.eq('category', 'Herrajes')
+		.eq('code', item.ironwork_code)
+		.maybeSingle();
 
-	let image_url = null;
-	let image_path = null;
-	if (existing && existing.length > 0) {
-		image_url = existing[0].image_url;
-		image_path = existing[0].image_path;
+	if (galleryStockError) {
+		return { data: null, error: galleryStockError };
 	}
 
 	const payload = {
 		...item,
-		image_url,
-		image_path,
+		image_id: galleryStock?.id ?? null,
 		last_update: new Date().toISOString().split('T')[0],
 	};
 
@@ -97,23 +91,44 @@ export async function updateIronworkStock(
 	id: number,
 	changes: Partial<IronworkItemStock>
 ): Promise<{ data: IronworkItemStock | null; error: any }> {
+	if (!id) {
+		return {
+			data: null,
+			error: new Error('El herraje no pudo ser actualizado.'),
+		};
+	}
+
 	const supabase = getSupabaseClient();
 
-	// if the ironwork_code is being changed, check for existing image
-	if (changes.ironwork_code) {
-		const { data: existing, error: searchError } = await supabase
-			.from(TABLE)
-			.select('image_url, image_path')
-			.eq('ironwork_code', changes.ironwork_code)
-			.not('image_url', 'is', null)
-			.limit(1);
+	const needsImageCheck = changes.ironwork_code !== undefined;
 
-		if (existing && existing.length > 0) {
-			changes.image_url = existing[0].image_url;
-			changes.image_path = existing[0].image_path;
-		} else {
-			changes.image_url = null;
-			changes.image_path = null;
+	if (needsImageCheck) {
+		const { data: currentIronwork, error: currentIronworkError } = await supabase
+			.from(TABLE)
+			.select('ironwork_code')
+			.eq('id', id)
+			.single();
+
+		if (currentIronworkError) {
+			return { data: null, error: currentIronworkError };
+		}
+
+		const nextCode = changes.ironwork_code ?? currentIronwork.ironwork_code;
+		const changedCode = nextCode !== currentIronwork.ironwork_code;
+
+		if (changedCode) {
+			const { data: galleryStock, error: galleryStockError } = await supabase
+				.from('gallery_stock')
+				.select('id')
+				.eq('category', 'Herrajes')
+				.eq('code', nextCode)
+				.maybeSingle();
+
+			if (galleryStockError) {
+				return { data: null, error: galleryStockError };
+			}
+
+			changes.image_id = galleryStock?.id ?? null;
 		}
 	}
 

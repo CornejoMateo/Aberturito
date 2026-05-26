@@ -35,8 +35,6 @@ interface BalanceInformationProps {
 	summary: BalanceSummary;
 
 	formatDate: (dateStr: string | null | undefined) => string;
-
-	onUpdated?: () => void;
 }
 
 export function BalanceInformation({
@@ -49,7 +47,6 @@ export function BalanceInformation({
 	totalPaidUsd,
 	summary,
 	formatDate,
-	onUpdated,
 }: BalanceInformationProps) {
 	const [open, setOpen] = useState(false);
 
@@ -88,7 +85,6 @@ export function BalanceInformation({
 
 			setOpen(false);
 
-			onUpdated?.();
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : 'Error al actualizar el presupuesto';
 			toast({
@@ -164,7 +160,7 @@ export function BalanceInformation({
 						</p>
 
 						<p className="text-xs text-muted-foreground">
-							{formatCurrencyUSD(summary.budgetUsd)}
+							{formatCurrencyUSD(summary.budgetUsdInitial)}
 						</p>
 					</div>
 				</div>

@@ -41,7 +41,7 @@ export interface BudgetFormData {
 	number: string;
 	amount: string;
 	amountUsd: string;
-	usdRate: string;
+	usd_quote: string;
 	workId: string;
 	pdf: File | null;
 	created_at: string;

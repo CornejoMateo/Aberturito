@@ -13,8 +13,10 @@ export interface SalesMetrics {
 	chosenAverageTicket: number; // Average amount of chosen budgets (accepted)
 	totalAverageTicket: number; // Average amount of all budgets
 	lostAverageTicket: number; // Average amount of lost budgets
+	totalLost: number; // Total count of lost budgets
 	clientsWithBudget: number; 
-	budgetsByMonth: Array<{ month: string; presupuestos: number; vendidos: number }>;
+	budgetsByMonth: Array<{ month: string; presupuestos: number; vendidos: number; date_sale: number; perdidos: number }>;
+	averageSaleDelayDays: number;
 	budgetsByAmount: Array<{ amountRange: string; count: number }>;
 	budgetsByAmountChosen: Array<{ amountRange: string; count: number }>;
 	budgetsByAmountSold: Array<{ amountRange: string; count: number }>;
@@ -61,8 +63,10 @@ export const DEFAULT_METRICS: SalesMetrics = {
 	chosenAverageTicket: 0,
 	totalAverageTicket: 0,
 	lostAverageTicket: 0,
+	totalLost: 0,
 	clientsWithBudget: 0,
 	budgetsByMonth: [],
+	averageSaleDelayDays: 0,
 	budgetsByAmount: [],
 	budgetsByAmountChosen: [],
 	budgetsByAmountSold: [],

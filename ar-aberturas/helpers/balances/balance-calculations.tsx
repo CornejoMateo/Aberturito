@@ -5,10 +5,12 @@ interface BalanceCalculationInput {
 	totalPaidArs?: number | null;
 	totalPaidUsd?: number | null;
 	budgetInitialArs?: number | null;
+	budgetInitialUsd?: number | null;
 }
 
 export interface BalanceSummary {
 	budgetArsInitial: number;
+	budgetUsdInitial: number;
 	budgetUsd: number;
 	budgetArsCurrent: number;
 	totalPaidArs: number;
@@ -17,13 +19,13 @@ export interface BalanceSummary {
 	remainingUsd: number;
 	progressPercentage: number;
 	type: string;
-	budgetInitialArs?: number | null;	
 }
 
 const toSafeNumber = (value?: number | null) => Number(value) || 0;
 
 export function calculateBalanceSummary(input: BalanceCalculationInput): BalanceSummary {
 	const budgetArsInitial = toSafeNumber(input.budgetInitialArs);
+	const budgetUsdInitial = toSafeNumber(input.budgetInitialUsd);
 	const budgetUsd = toSafeNumber(input.budgetAmountUsd);
 	const budgetArsCurrent = toSafeNumber(input.budgetAmountArs);
 	const totalPaidArs = toSafeNumber(input.totalPaidArs);
@@ -37,6 +39,7 @@ export function calculateBalanceSummary(input: BalanceCalculationInput): Balance
 
 	return {
 		budgetArsInitial,
+		budgetUsdInitial,
 		budgetUsd,
 		budgetArsCurrent,
 		totalPaidArs,

@@ -44,9 +44,12 @@ export type BudgetWithWork = {
 	created_at: string;
 	amount_ars: number;
 	amount_usd: number;
+	usd_quote?: number | null;
+	date_of_sale?: string | null;
 	accepted?: boolean | null;
 	sold?: boolean | null;
 	lost?: boolean | null;
+	date_of_sale?: string | null;
 	pdf_url?: string | null;
 	pdf_path?: string | null;
 	number?: string | null;
@@ -69,7 +72,7 @@ export async function listBalances(): Promise<{ data: BalanceWithBudget[] | null
 	const { data, error } = await supabase
 		.from(TABLE)
 		.select(
-			'*, budget:budgets(id, amount_ars, amount_usd, number, type, folder_budget:folder_budgets(work:works(address, locality)))'
+			'*, budget:budgets(id, amount_ars, amount_usd, usd_quote ,number, type, folder_budget:folder_budgets(work:works(address, locality)))'
 		)
 		.order('created_at', { ascending: false });
 	return { data, error };
@@ -85,7 +88,7 @@ export async function listBalancesForReport(): Promise<{
 		.select(
 			`*,
 			client:clients(id, name, last_name),
-			budget:budgets(id, amount_ars, amount_usd, number, type, folder_budget:folder_budgets(work:works(address, locality)))`
+			budget:budgets(id, amount_ars, amount_usd, usd_quote, number, type, folder_budget:folder_budgets(work:works(address, locality)))`
 		)
 		.order('created_at', { ascending: false });
 	return { data, error };
@@ -98,7 +101,7 @@ export async function getBalanceById(
 	const { data, error } = await supabase
 		.from(TABLE)
 		.select(
-			'*, budget:budgets(id, amount_ars, amount_usd, number, type, folder_budget:folder_budgets(work:works(address, locality)))'
+			'*, budget:budgets(id, amount_ars, amount_usd, usd_quote, number, type, folder_budget:folder_budgets(work:works(address, locality)))'
 		)
 		.eq('id', id)
 		.single();
@@ -117,6 +120,7 @@ export async function getBalancesByClientId(
 				id,
 				amount_ars,
 				amount_usd,
+				usd_quote,
 				number,
 				type,
 				folder_budget:folder_budgets (

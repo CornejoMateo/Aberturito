@@ -3,7 +3,7 @@ export const formatCurrency = (amount: number | null | undefined) => {
 	return new Intl.NumberFormat('es-AR', {
 		style: 'currency',
 		currency: 'ARS',
-		minimumFractionDigits: 2,
+		minimumFractionDigits: 3,
 	}).format(amount);
 };
 
@@ -12,7 +12,7 @@ export const formatCurrencyUSD = (amount: number | null | undefined) => {
 	return new Intl.NumberFormat('es-AR', {
 		style: 'currency',
 		currency: 'USD',
-		minimumFractionDigits: 2,
+		minimumFractionDigits: 3,
 	}).format(amount);
 };
 

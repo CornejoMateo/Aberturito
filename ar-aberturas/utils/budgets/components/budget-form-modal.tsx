@@ -2,7 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -50,11 +56,13 @@ export function BudgetFormModal({
 	});
 
 	const selectedWork = works.find((w) => String(w.id) === formData.workId);
-	const selectedWorkLabel = formData.workId === 'none'
-		? 'Sin obra'
-		: selectedWork
-			? ([selectedWork.address, selectedWork.locality].filter(Boolean).join(' - ') || `Obra ${selectedWork.id}`)
-			: undefined;
+	const selectedWorkLabel =
+		formData.workId === 'none'
+			? 'Sin obra'
+			: selectedWork
+				? [selectedWork.address, selectedWork.locality].filter(Boolean).join(' - ') ||
+					`Obra ${selectedWork.id}`
+				: undefined;
 
 	const resetForm = (data?: Partial<BudgetFormData>) => {
 		setFormData({ ...FORM_DEFAULTS, ...data, pdf: data?.pdf ?? null });
@@ -67,12 +75,16 @@ export function BudgetFormModal({
 				type: budget.type || FORM_DEFAULTS.type,
 				version: budget.version || FORM_DEFAULTS.version,
 				number: budget.number || FORM_DEFAULTS.number,
-				amount: budget.amount_ars?.toString() || FORM_DEFAULTS.amount,
+				amount: budget.amount_ars?.toLocaleString('es-AR') || FORM_DEFAULTS.amount,
 				amountUsd: budget.amount_usd?.toString() || FORM_DEFAULTS.amountUsd,
-				usd_quote: budget.usd_quote?.toString() || FORM_DEFAULTS.usd_quote,
-				workId: budget.folder_budget?.work_id ? String(budget.folder_budget.work_id) : FORM_DEFAULTS.workId,
+				usd_quote: budget.usd_quote?.toLocaleString('es-AR') || FORM_DEFAULTS.usd_quote,
+				workId: budget.folder_budget?.work_id
+					? String(budget.folder_budget.work_id)
+					: FORM_DEFAULTS.workId,
 				pdf: null,
-				created_at: budget.created_at ? new Date(budget.created_at).toISOString().split('T')[0] : FORM_DEFAULTS.created_at,
+				created_at: budget.created_at
+					? new Date(budget.created_at).toISOString().split('T')[0]
+					: FORM_DEFAULTS.created_at,
 			});
 		} else if (isOpen) {
 			resetForm();
@@ -97,19 +109,19 @@ export function BudgetFormModal({
 	useEffect(() => {
 		if (formData.amount && formData.usd_quote) {
 			const normalizedAmount = formData.amount
-			.replace(/\./g, "") // remove thousand separators
-			.replace(",", ".");   // decimal separator to dot for parsing
+				.replace(/\./g, '') // remove thousand separators
+				.replace(',', '.'); // decimal separator to dot for parsing
 
 			const amountNumber = Number(normalizedAmount);
 			const rateNumber = Number(formData.usd_quote);
 
 			if (!isNaN(amountNumber) && !isNaN(rateNumber)) {
-			const calculatedUsd = (amountNumber / rateNumber).toFixed(2);
+				const calculatedUsd = (amountNumber / rateNumber).toFixed(2);
 
-			setFormData((prev) => ({
-				...prev,
-				amountUsd: calculatedUsd,
-			}));
+				setFormData((prev) => ({
+					...prev,
+					amountUsd: calculatedUsd,
+				}));
 			}
 		}
 	}, [formData.usd_quote, formData.amount]);
@@ -118,20 +130,22 @@ export function BudgetFormModal({
 		<Dialog open={isOpen} onOpenChange={handleClose}>
 			<DialogContent className="max-w-2xl">
 				<DialogHeader>
-					<DialogTitle>
-						{mode === 'edit' ? 'Editar Presupuesto' : 'Nuevo Presupuesto'}
-					</DialogTitle>
+					<DialogTitle>{mode === 'edit' ? 'Editar Presupuesto' : 'Nuevo Presupuesto'}</DialogTitle>
 					<DialogDescription>
-						{mode === 'edit' ? 'Modifica los detalles del presupuesto.' : 'Completa los campos para crear un nuevo presupuesto.'}
+						{mode === 'edit'
+							? 'Modifica los detalles del presupuesto.'
+							: 'Completa los campos para crear un nuevo presupuesto.'}
 					</DialogDescription>
 				</DialogHeader>
-				
+
 				<form onSubmit={handleSubmit} className="space-y-4">
 					<div className="grid gap-2">
 						<Label>Tipo</Label>
-						<Select 
-							value={formData.type} 
-							onValueChange={(value) => setFormData((prev: BudgetFormData) => ({ ...prev, type: value }))}
+						<Select
+							value={formData.type}
+							onValueChange={(value) =>
+								setFormData((prev: BudgetFormData) => ({ ...prev, type: value }))
+							}
 						>
 							<SelectTrigger className="w-full">
 								<SelectValue placeholder="Seleccionar tipo" />
@@ -148,9 +162,11 @@ export function BudgetFormModal({
 
 					<div className="grid gap-2">
 						<Label>Variante</Label>
-						<Select 
-							value={formData.version} 
-							onValueChange={(value) => setFormData((prev: BudgetFormData) => ({ ...prev, version: value }))}
+						<Select
+							value={formData.version}
+							onValueChange={(value) =>
+								setFormData((prev: BudgetFormData) => ({ ...prev, version: value }))
+							}
 						>
 							<SelectTrigger className="w-full">
 								<SelectValue placeholder="Seleccionar variante" />
@@ -167,14 +183,14 @@ export function BudgetFormModal({
 
 					<div className="grid gap-2">
 						<Label>Obra</Label>
-						<Select 
-							value={formData.workId} 
-							onValueChange={(value) => setFormData((prev: BudgetFormData) => ({ ...prev, workId: value }))}
+						<Select
+							value={formData.workId}
+							onValueChange={(value) =>
+								setFormData((prev: BudgetFormData) => ({ ...prev, workId: value }))
+							}
 						>
 							<SelectTrigger className="w-full">
-								<SelectValue placeholder="Seleccionar obra">
-									{selectedWorkLabel}
-								</SelectValue>
+								<SelectValue placeholder="Seleccionar obra">{selectedWorkLabel}</SelectValue>
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="none">Sin obra</SelectItem>
@@ -192,7 +208,9 @@ export function BudgetFormModal({
 						<Input
 							type="date"
 							value={formData.created_at}
-							onChange={(e) => setFormData((prev: BudgetFormData) => ({ ...prev, created_at: e.target.value }))}
+							onChange={(e) =>
+								setFormData((prev: BudgetFormData) => ({ ...prev, created_at: e.target.value }))
+							}
 						/>
 					</div>
 
@@ -202,7 +220,9 @@ export function BudgetFormModal({
 							<Input
 								type="text"
 								value={formData.number}
-								onChange={(e) => setFormData((prev: BudgetFormData) => ({ ...prev, number: e.target.value }))}
+								onChange={(e) =>
+									setFormData((prev: BudgetFormData) => ({ ...prev, number: e.target.value }))
+								}
 								placeholder="Ej: 123 o 1-2-A"
 							/>
 						</div>
@@ -225,12 +245,14 @@ export function BudgetFormModal({
 					</div>
 
 					<div className="grid grid-cols-2 gap-4">
-						<div className='grid gap-2'>
+						<div className="grid gap-2">
 							<Label>Cotización del dólar</Label>
 							<Input
 								type="number"
 								value={formData.usd_quote}
-								onChange={(e) => setFormData((prev: BudgetFormData) => ({ ...prev, usd_quote: e.target.value }))}
+								onChange={(e) =>
+									setFormData((prev: BudgetFormData) => ({ ...prev, usd_quote: e.target.value }))
+								}
 							/>
 						</div>
 
@@ -239,28 +261,32 @@ export function BudgetFormModal({
 							<Input
 								type="number"
 								value={formData.amountUsd}
-								onChange={(e) => setFormData((prev: BudgetFormData) => ({ ...prev, amountUsd: e.target.value }))}
+								onChange={(e) =>
+									setFormData((prev: BudgetFormData) => ({ ...prev, amountUsd: e.target.value }))
+								}
 								placeholder="0"
 							/>
 						</div>
 					</div>
 
 					<div className="grid gap-2">
-						<Label>PDF {mode === 'edit' && '(Opcional - dejar vacío para mantener el actual)'}</Label>
+						<Label>
+							PDF {mode === 'edit' && '(Opcional - dejar vacío para mantener el actual)'}
+						</Label>
 						<Input
 							type="file"
 							accept="application/pdf"
-							onChange={(e) => setFormData((prev: BudgetFormData) => ({ ...prev, pdf: e.target.files?.[0] ?? null }))}
+							onChange={(e) =>
+								setFormData((prev: BudgetFormData) => ({
+									...prev,
+									pdf: e.target.files?.[0] ?? null,
+								}))
+							}
 						/>
 					</div>
 
 					<div className="flex justify-end gap-2 pt-4">
-						<Button
-							type="button"
-							variant="outline"
-							onClick={handleClose}
-							disabled={isLoading}
-						>
+						<Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
 							Cancelar
 						</Button>
 						<Button type="submit" disabled={isLoading}>

@@ -40,6 +40,7 @@ interface BalanceFormData {
 export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFormProps) {
 	const [selectedBudgetId, setSelectedBudgetId] = useState<string>('');
 	const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+	const [isAutoCalculating, setIsAutoCalculating] = useState(true);
 	const [formData, setFormData] = useState<BalanceFormData>({
 		contract_date_usd: '',
 		start_date: undefined,
@@ -59,6 +60,8 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 		const selectedBudget = budgetsAccepted.find((b) => String(b.id) === budgetId);
 
 		if (!selectedBudget) return;
+
+		setIsAutoCalculating(false);
 
 		setFormData((prev) => ({
 			...prev,
@@ -105,6 +108,7 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 	};
 
 	useEffect(() => {
+		if (!isAutoCalculating) return;
 		if (formData.balance_amount_ars && formData.usd_current) {
 			const normalizedAmount = formData.balance_amount_ars
 				.replace(/\./g, '') // remove thousand separators
@@ -114,7 +118,7 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 			const rateNumber = parseArsToNumber(formData.usd_current);
 
 			if (!isNaN(amountNumber) && !isNaN(rateNumber)) {
-				const calculatedUsd = (amountNumber / rateNumber).toFixed(2);
+				const calculatedUsd = (amountNumber / rateNumber).toFixed(3);
 
 				setFormData((prev) => ({
 					...prev,
@@ -122,7 +126,7 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 				}));
 			}
 		}
-	}, [formData.usd_current, formData.balance_amount_ars]);
+	}, [formData.usd_current, formData.balance_amount_ars, isAutoCalculating]);
 
 	return (
 		<form onSubmit={handleSubmit} className="space-y-4">
@@ -217,6 +221,7 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 						value={formData.usd_current || ''}
 						onChange={(e) => {
 							const formatted = formatNumber(e.target.value);
+							setIsAutoCalculating(true);
 							setFormData((prev) => ({
 								...prev,
 								usd_current: formatted,
@@ -233,6 +238,7 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 						type="text"
 						value={formData.balance_amount_ars || ''}
 						onChange={(e) => {
+							setIsAutoCalculating(true);
 							const formatted = formatNumber(e.target.value);
 							setFormData((prev) => ({
 								...prev,

@@ -97,6 +97,7 @@ export function BudgetFormModal({
 			...formData,
 			amount: parseArsToNumber(formData.amount).toString(),
 			amountUsd: formData.amountUsd ? parseFloat(formData.amountUsd).toString() : '',
+			usd_quote: formData.usd_quote ? parseArsToNumber(formData.usd_quote).toString() : '',
 		};
 		await onSubmit(dataToSend);
 	};
@@ -248,7 +249,7 @@ export function BudgetFormModal({
 						<div className="grid gap-2">
 							<Label>Cotización del dólar</Label>
 							<Input
-								type="number"
+								type="text"
 								value={formData.usd_quote}
 								onChange={(e) =>
 									setFormData((prev: BudgetFormData) => ({ ...prev, usd_quote: e.target.value }))

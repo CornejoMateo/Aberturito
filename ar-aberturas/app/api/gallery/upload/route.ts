@@ -3,6 +3,13 @@ import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
 
 export async function POST(req: Request) {
+	let uploadedFilePath = '';
+	let galleryProfileId: string | null = null;
+	let galleryStockId: string | null = null;
+	const supabase = createClient(
+		process.env.NEXT_PUBLIC_SUPABASE_URL!,
+		process.env.SUPABASE_SERVICE_ROLE_KEY!
+	);
 	try {
 		const formData = await req.formData();
 		const file = formData.get('file') as File;
@@ -36,64 +43,26 @@ export async function POST(req: Request) {
 			}
 		}
 
-		const supabase = createClient(
-			process.env.NEXT_PUBLIC_SUPABASE_URL!,
-			process.env.SUPABASE_SERVICE_ROLE_KEY!
-		);
-
 		// Check if there are matching rows BEFORE uploading
 		let path = '';
 		let table = '';
+		let columnCode = '';
 		let matchingRows;
 		if (categoryState === 'Accesorios') {
 			path = 'accesories';
 			table = 'accesories_category';
-			const { data, error } = await supabase
-				.from('accesories_category')
-				.select('id')
-				.eq('accessory_code', name_code);
-			if (error) throw error;
-			matchingRows = data;
+			columnCode = 'accessory_code';
 		} else if (categoryState === 'Herrajes') {
 			path = 'ironworks';
 			table = 'ironworks_category';
-			const { data, error } = await supabase
-				.from('ironworks_category')
-				.select('id')
-				.eq('ironwork_code', name_code);
-			if (error) throw error;
-			matchingRows = data;
+			columnCode = 'ironwork_code';
 		} else if (categoryState === 'Perfiles') {
 			path = 'profiles';
 			table = 'profiles';
-			const { data, error } = await supabase
-				.from('profiles')
-				.select('id')
-				.eq('material', material_type)
-				.eq('line', name_line)
-				.eq('code', name_code);
-			if (error) throw error;
-			matchingRows = data;
 		} else if (categoryState === 'Insumos') {
 			path = 'supplies';
 			table = 'supplies_category';
-			const { data, error } = await supabase
-				.from('supplies_category')
-				.select('id')
-				.eq('supply_code', name_code);
-			if (error) throw error;
-			matchingRows = data;
-		}
-
-		// If no matching rows found, don't upload
-		if (!matchingRows || matchingRows.length === 0) {
-			return NextResponse.json(
-				{
-					success: false,
-					error: 'No se encontraron registros que coincidan con los campos proporcionados.',
-				},
-				{ status: 404 }
-			);
+			columnCode = 'supply_code';
 		}
 
 		const arrayBuffer = await file.arrayBuffer();
@@ -108,6 +77,7 @@ export async function POST(req: Request) {
 		const fileName = `${crypto.randomUUID()}.${ext}`;
 
 		const filePath = `${path}/${fileName}`;
+		uploadedFilePath = filePath;
 
 		const { error: uploadError } = await supabase.storage
 			.from('images')
@@ -123,29 +93,87 @@ export async function POST(req: Request) {
 		const image_url = publicUrl.publicUrl;
 		const image_path = filePath;
 
+		if (categoryState === 'Perfiles') {
+			const { data: galleryProfile, error: uploadGalleryError } = await supabase
+				.from('gallery_profiles')
+				.insert({
+					line: name_line,
+					code: name_code,
+					material_type: material_type,
+					image_url: image_url,
+					image_path: image_path,
+				})
+				.select('id')
+				.single();
+			if (uploadGalleryError) throw uploadGalleryError;
+			galleryProfileId = galleryProfile.id;
+
+			// For profiles, we need to find matching rows based on material_type and name_line
+			const { data: profileData, error: profileError } = await supabase
+				.from('profiles')
+				.select('id')
+				.eq('material', material_type)
+				.eq('line', name_line)
+				.eq('code', name_code);
+			if (profileError) throw profileError;
+			matchingRows = profileData;
+		} else {
+			const { data: galleryStock, error: uploadGalleryError } = await supabase
+				.from('gallery_stock')
+				.insert({
+					code: name_code,
+					category: categoryState,
+					image_url: image_url,
+					image_path: image_path,
+				})
+				.select('id')
+				.single();
+			if (uploadGalleryError) throw uploadGalleryError;
+			galleryStockId = galleryStock.id;
+
+			const { data: stockData, error: stockError } = await supabase
+				.from(table)
+				.select('id')
+				.eq(columnCode, name_code);
+
+			if (stockError) throw stockError;
+			matchingRows = stockData;
+		}
+
 		// Update the matching rows with the new image URL (reuse matchingRows from earlier check)
-		const idsToUpdate = matchingRows.map((row: any) => row.id);
+		const idsToUpdate = (matchingRows ?? []).map((row: any) => row.id);
 
-		const { error } = await supabase
-			.from(table)
-			.update({
-				image_url,
-				image_path,
-				last_update: new Date().toISOString().split('T')[0],
-			})
-			.in('id', idsToUpdate);
-
-		if (error) {
-			if (categoryState === 'Accesorios') {
-				console.error('Error updating accessories with new image URL:', error);
-			} else if (categoryState === 'Herrajes') {
-				console.error('Error updating ironworks with new image URL:', error);
-			} else if (categoryState === 'Insumos') {
-				console.error('Error updating supplies with new image URL:', error);
-			} else {
-				console.error('Error updating profiles with new image URL:', error);
+		if (categoryState === 'Perfiles') {
+			const { error: errorProfiles } = await supabase
+				.from(table)
+				.update({
+					image_id: galleryProfileId,
+					last_update: new Date().toISOString().split('T')[0],
+				})
+				.in('id', idsToUpdate);
+			if (errorProfiles) {
+				console.error('Error updating profiles with new image URL:', errorProfiles);
+				throw errorProfiles;
 			}
-			throw error;
+		} else {
+			const { error } = await supabase
+				.from(table)
+				.update({
+					image_id: galleryStockId,
+					last_update: new Date().toISOString().split('T')[0],
+				})
+				.in('id', idsToUpdate);
+
+			if (error) {
+				if (categoryState === 'Accesorios') {
+					console.error('Error updating accessories with new image URL:', error);
+				} else if (categoryState === 'Herrajes') {
+					console.error('Error updating ironworks with new image URL:', error);
+				} else if (categoryState === 'Insumos') {
+					console.error('Error updating supplies with new image URL:', error);
+				}
+				throw error;
+			}
 		}
 
 		return NextResponse.json({
@@ -154,6 +182,33 @@ export async function POST(req: Request) {
 			image_path,
 		});
 	} catch (err) {
+		if (uploadedFilePath) {
+			const { error: cleanupStorageError } = await supabase.storage
+				.from('images')
+				.remove([uploadedFilePath]);
+			if (cleanupStorageError) {
+				console.error('Error cleaning up uploaded image after failure:', cleanupStorageError);
+			}
+		}
+
+		if (galleryProfileId) {
+			const { error: cleanupGalleryError } = await supabase
+				.from('gallery_profiles')
+				.delete()
+				.eq('id', galleryProfileId);
+			if (cleanupGalleryError) {
+				console.error('Error cleaning up gallery profile after failure:', cleanupGalleryError);
+			}
+		} else if (galleryStockId) {
+			const { error: cleanupGalleryError } = await supabase
+				.from('gallery_stock')
+				.delete()
+				.eq('id', galleryStockId);
+			if (cleanupGalleryError) {
+				console.error('Error cleaning up gallery stock after failure:', cleanupGalleryError);
+			}
+		}
+
 		console.error(err);
 		return NextResponse.json({ success: false, error: 'Error al subir imagen' }, { status: 500 });
 	}

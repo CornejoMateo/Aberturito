@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Package, Edit, Trash2, Plus, Minus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ImageViewer from '@/components/ui/image-viewer';
 import {
 	AlertDialog,
@@ -29,6 +29,7 @@ import type { IronworkItemStock } from '@/lib/stock/ironwork-stock';
 import type { SupplyItemStock } from '@/lib/stock/supplies-stock';
 import { useIsMobile } from '@/components/ui/use-mobile';
 import { formatCreatedAt } from '@/helpers/date/format-date';
+import { getSupabaseClient } from '@/lib/supabase-client';
 
 interface AccesoriesTableProps {
 	categoryState: StockCategory;
@@ -54,6 +55,7 @@ export function AccesoriesTable({
 	const [quantityChange, setQuantityChange] = useState<number | ''>('');
 	const [currentItemId, setCurrentItemId] = useState<number | null>(null);
 	const [currentItemTotal, setCurrentItemTotal] = useState<number>(0);
+	const [imageUrlsById, setImageUrlsById] = useState<Record<number, string>>({});
 
 	const isMobile = useIsMobile();
 	const isAutorized = user?.role === 'Admin' || user?.role === 'Ventas';
@@ -128,6 +130,54 @@ export function AccesoriesTable({
 
 	const config = STOCK_CONFIGS[categoryState];
 	const keys = config.fields;
+
+	useEffect(() => {
+		let isMounted = true;
+
+		const loadImageUrls = async () => {
+			const imageIds = Array.from(
+				new Set(
+					filteredStock
+						.map((item) => (item as any)[keys.image_id] as number | null | undefined)
+						.filter((id): id is number => typeof id === 'number' && id > 0)
+				)
+			);
+
+			if (imageIds.length === 0) {
+				if (isMounted) setImageUrlsById({});
+				return;
+			}
+
+			const supabase = getSupabaseClient();
+			const { data, error } = await supabase
+				.from('gallery_stock')
+				.select('id, image_url')
+				.in('id', imageIds);
+
+			if (!isMounted) return;
+
+			if (error) {
+				console.error('Error loading stock images:', error);
+				setImageUrlsById({});
+				return;
+			}
+
+			const nextImageUrlsById = (data ?? []).reduce<Record<number, string>>((acc, row) => {
+				if (row.image_url) {
+					acc[row.id] = row.image_url;
+				}
+				return acc;
+			}, {});
+
+			setImageUrlsById(nextImageUrlsById);
+		};
+
+		loadImageUrls();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [filteredStock, keys.image_id]);
 
 	return (
 		<Card className="bg-card border-border overflow-hidden">
@@ -363,17 +413,24 @@ export function AccesoriesTable({
 										</td>
 										<td className="px-2 py-2 whitespace-nowrap">
 											<div className="flex justify-center">
-												{(item as any)[keys.image_url] ? (
+												{(() => {
+													const imageId = (item as any)[keys.image_id] as number | null | undefined;
+													const imageUrl = imageId ? imageUrlsById[imageId] : null;
+
+													if (!imageId || !imageUrl) {
+														return <span className="text-muted-foreground text-sm">No tiene</span>;
+													}
+
+													return (
 													<Button
 														variant="outline"
 														size="sm"
-														onClick={() => setOpenImageUrl((item as any)[keys.image_url]!)}
+														onClick={() => setOpenImageUrl(imageUrl)}
 													>
 														Ver
 													</Button>
-												) : (
-													<span className="text-muted-foreground text-sm">No tiene</span>
-												)}
+													);
+												})()}
 											</div>
 										</td>
 									</tr>

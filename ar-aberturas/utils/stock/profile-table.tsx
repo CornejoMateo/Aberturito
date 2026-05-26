@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Package, Edit, Trash2, Plus, Minus } from 'lucide-react';
 import { type ProfileItemStock } from '@/lib/stock/profile-stock';
 import { useState } from 'react';
+import { useEffect } from 'react';
 import { ConfirmUpdateDialog } from '@/utils/stock/confirm-update-dialog';
 import ImageViewer from '@/components/ui/image-viewer';
 import {
@@ -15,8 +16,9 @@ import {
 	AlertDialogAction,
 	AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
-import { formatCreatedAt } from '@/helpers/date/format-date'
+import { formatCreatedAt } from '@/helpers/date/format-date';
 import { toast } from '@/components/ui/use-toast';
+import { getSupabaseClient } from '@/lib/supabase-client';
 
 interface ProfileTableProps {
 	filteredStock: ProfileItemStock[];
@@ -40,6 +42,52 @@ export function ProfileTable({
 		currentQty: number;
 	} | null>(null);
 	const [openImageUrl, setOpenImageUrl] = useState<string | null>(null);
+	const [imageUrlsById, setImageUrlsById] = useState<Record<number, string>>({});
+
+	useEffect(() => {
+		let isMounted = true;
+
+		const loadImageUrls = async () => {
+			const imageIds = Array.from(
+				new Set(filteredStock.map((item) => item.image_id).filter((id): id is number => !!id))
+			);
+
+			if (imageIds.length === 0) {
+				if (isMounted) {
+					setImageUrlsById({});
+				}
+				return;
+			}
+
+			const supabase = getSupabaseClient();
+			const { data, error } = await supabase
+				.from('gallery_profiles')
+				.select('id, image_url')
+				.in('id', imageIds);
+
+			if (!isMounted) return;
+
+			if (error) {
+				console.error('Error loading profile images:', error);
+				return;
+			}
+
+			const nextImageUrlsById = (data ?? []).reduce<Record<number, string>>((acc, row) => {
+				if (row.image_url) {
+					acc[row.id] = row.image_url;
+				}
+				return acc;
+			}, {});
+
+			setImageUrlsById(nextImageUrlsById);
+		};
+
+		loadImageUrls();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [filteredStock]);
 
 	const handleQuantityAction = (
 		id: number,
@@ -75,7 +123,7 @@ export function ProfileTable({
 	const getItemName = (item: ProfileItemStock) => {
 		return [item.line, item.code, item.color].filter(Boolean).join(' ') || 'este ítem';
 	};
-	
+
 	return (
 		<Card className="bg-card border-border overflow-hidden">
 			<div className="overflow-x-auto">
@@ -126,7 +174,6 @@ export function ProfileTable({
 							</tr>
 						) : (
 							filteredStock.map((item) => {
-
 								return (
 									<tr key={item.id} className="hover:bg-secondary/50 transition-colors">
 										<td className="px-2 py-2 whitespace-nowrap">
@@ -244,11 +291,11 @@ export function ProfileTable({
 										</td>
 										<td className="px-2 py-2 whitespace-nowrap">
 											<div className="flex justify-center">
-												{item.image_url ? (
+												{item.image_id && imageUrlsById[item.image_id] ? (
 													<Button
 														variant="outline"
 														size="sm"
-														onClick={() => setOpenImageUrl(item.image_url!)}
+														onClick={() => setOpenImageUrl(imageUrlsById[item.image_id!])}
 													>
 														Ver
 													</Button>

@@ -13,8 +13,7 @@ export type SupplyItemStock = {
 	supply_quantity: number;
 	supply_site: string;
 	supply_material: string;
-	image_url?: string | null;
-	image_path?: string | null;
+	image_id: number | null;
 	supply_price: number | null;
 	created_at?: string | null;
 	last_update?: string | null;
@@ -41,8 +40,7 @@ export async function listSuppliesStock(): Promise<{ data: SupplyItemStock[] | n
 			supply_site,
 			supply_material,
 			supply_price,
-			image_url,
-			image_path,
+			image_id,
 			created_at,
 			last_update
 		`
@@ -64,24 +62,20 @@ export async function createSupplyStock(
 ): Promise<{ data: SupplyItemStock | null; error: any }> {
 	const supabase = getSupabaseClient();
 
-	const { data: existing, error: searchError } = await supabase
-		.from(TABLE)
-		.select('image_url, image_path')
-		.eq('supply_code', item.supply_code)
-		.not('image_url', 'is', null)
-		.limit(1);
+	const { data: galleryStock, error: galleryStockError } = await supabase
+		.from('gallery_stock')
+		.select('id')
+		.eq('category', 'Insumos')
+		.eq('code', item.supply_code)
+		.maybeSingle();
 
-	let image_url = null;
-	let image_path = null;
-	if (existing && existing.length > 0) {
-		image_url = existing[0].image_url;
-		image_path = existing[0].image_path;
+	if (galleryStockError) {
+		return { data: null, error: galleryStockError };
 	}
 
 	const payload = {
 		...item,
-		image_url,
-		image_path,
+		image_id: galleryStock?.id ?? null,
 		last_update: new Date().toISOString().split('T')[0],
 	};
 
@@ -93,23 +87,44 @@ export async function updateSupplyStock(
 	id: number,
 	changes: Partial<SupplyItemStock>
 ): Promise<{ data: SupplyItemStock | null; error: any }> {
+	if (!id) {
+		return {
+			data: null,
+			error: new Error('El insumo no pudo ser actualizado.'),
+		};
+	}
+
 	const supabase = getSupabaseClient();
 
-	// if the supply code is being changed, check for existing image
-	if (changes.supply_code) {
-		const { data: existing, error: searchError } = await supabase
-			.from(TABLE)
-			.select('image_url, image_path')
-			.eq('supply_code', changes.supply_code)
-			.not('image_url', 'is', null)
-			.limit(1);
+	const needsImageCheck = changes.supply_code !== undefined;
 
-		if (existing && existing.length > 0) {
-			changes.image_url = existing[0].image_url;
-			changes.image_path = existing[0].image_path;
-		} else {
-			changes.image_url = null;
-			changes.image_path = null;
+	if (needsImageCheck) {
+		const { data: currentSupply, error: currentSupplyError } = await supabase
+			.from(TABLE)
+			.select('supply_code')
+			.eq('id', id)
+			.single();
+
+		if (currentSupplyError) {
+			return { data: null, error: currentSupplyError };
+		}
+
+		const nextCode = changes.supply_code ?? currentSupply.supply_code;
+		const changedCode = nextCode !== currentSupply.supply_code;
+
+		if (changedCode) {
+			const { data: galleryStock, error: galleryStockError } = await supabase
+				.from('gallery_stock')
+				.select('id')
+				.eq('category', 'Insumos')
+				.eq('code', nextCode)
+				.maybeSingle();
+
+			if (galleryStockError) {
+				return { data: null, error: galleryStockError };
+			}
+
+			changes.image_id = galleryStock?.id ?? null;
 		}
 	}
 

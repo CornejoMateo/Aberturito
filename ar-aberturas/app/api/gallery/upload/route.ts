@@ -5,6 +5,7 @@ import sharp from 'sharp';
 export async function POST(req: Request) {
 	let uploadedFilePath = '';
 	let galleryProfileId: string | null = null;
+	let galleryStockId: string | null = null;
 	const supabase = createClient(
 		process.env.NEXT_PUBLIC_SUPABASE_URL!,
 		process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -45,50 +46,23 @@ export async function POST(req: Request) {
 		// Check if there are matching rows BEFORE uploading
 		let path = '';
 		let table = '';
+		let columnCode = '';
 		let matchingRows;
 		if (categoryState === 'Accesorios') {
 			path = 'accesories';
 			table = 'accesories_category';
-			const { data, error } = await supabase
-				.from('accesories_category')
-				.select('id')
-				.eq('accessory_code', name_code);
-			if (error) throw error;
-			matchingRows = data;
+			columnCode = 'accessory_code';
 		} else if (categoryState === 'Herrajes') {
 			path = 'ironworks';
 			table = 'ironworks_category';
-			const { data, error } = await supabase
-				.from('ironworks_category')
-				.select('id')
-				.eq('ironwork_code', name_code);
-			if (error) throw error;
-			matchingRows = data;
+			columnCode = 'ironwork_code';
 		} else if (categoryState === 'Perfiles') {
 			path = 'profiles';
 			table = 'profiles';
 		} else if (categoryState === 'Insumos') {
 			path = 'supplies';
 			table = 'supplies_category';
-			const { data, error } = await supabase
-				.from('supplies_category')
-				.select('id')
-				.eq('supply_code', name_code);
-			if (error) throw error;
-			matchingRows = data;
-		}
-
-		if (categoryState !== 'Perfiles') {
-			// If no matching rows found, don't upload
-			if (!matchingRows || matchingRows.length === 0) {
-				return NextResponse.json(
-					{
-						success: false,
-						error: 'No se encontraron registros que coincidan con los campos proporcionados.',
-					},
-					{ status: 404 }
-				);
-			}
+			columnCode = 'supply_code';
 		}
 
 		const arrayBuffer = await file.arrayBuffer();
@@ -143,6 +117,27 @@ export async function POST(req: Request) {
 				.eq('code', name_code);
 			if (profileError) throw profileError;
 			matchingRows = profileData;
+		} else {
+			const { data: galleryStock, error: uploadGalleryError } = await supabase
+				.from('gallery_stock')
+				.insert({
+					code: name_code,
+					category: categoryState,
+					image_url: image_url,
+					image_path: image_path,
+				})
+				.select('id')
+				.single();
+			if (uploadGalleryError) throw uploadGalleryError;
+			galleryStockId = galleryStock.id;
+
+			const { data: stockData, error: stockError } = await supabase
+				.from(table)
+				.select('id')
+				.eq(columnCode, name_code);
+
+			if (stockError) throw stockError;
+			matchingRows = stockData;
 		}
 
 		// Update the matching rows with the new image URL (reuse matchingRows from earlier check)
@@ -164,8 +159,7 @@ export async function POST(req: Request) {
 			const { error } = await supabase
 				.from(table)
 				.update({
-					image_url,
-					image_path,
+					image_id: galleryStockId,
 					last_update: new Date().toISOString().split('T')[0],
 				})
 				.in('id', idsToUpdate);
@@ -204,6 +198,14 @@ export async function POST(req: Request) {
 				.eq('id', galleryProfileId);
 			if (cleanupGalleryError) {
 				console.error('Error cleaning up gallery profile after failure:', cleanupGalleryError);
+			}
+		} else if (galleryStockId) {
+			const { error: cleanupGalleryError } = await supabase
+				.from('gallery_stock')
+				.delete()
+				.eq('id', galleryStockId);
+			if (cleanupGalleryError) {
+				console.error('Error cleaning up gallery stock after failure:', cleanupGalleryError);
 			}
 		}
 

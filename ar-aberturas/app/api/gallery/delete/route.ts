@@ -9,6 +9,8 @@ export async function DELETE(req: Request) {
 		const line_name = searchParams.get('line_name')!;
 		let material_type = '';
 		let imagePath: string | null = null;
+		let tableImages = 'gallery_stock';
+		let columnCode = '';
 		if (categoryState !== 'Perfiles') {
 			if (!code_name) {
 				return NextResponse.json(
@@ -34,15 +36,19 @@ export async function DELETE(req: Request) {
 		let table = '';
 		if (categoryState === 'Accesorios') {
 			table = 'accesories_category';
+			columnCode = 'accessory_code';
 		}
 		if (categoryState === 'Herrajes') {
 			table = 'ironworks_category';
+			columnCode = 'ironwork_code';
 		}
 		if (categoryState === 'Perfiles') {
 			table = 'profiles';
+			tableImages = 'gallery_profiles';
 		}
 		if (categoryState === 'Insumos') {
 			table = 'supplies_category';
+			columnCode = 'supply_code';
 		}
 
 		let rows: Array<{ id: string; image_path: string | null }> = [];
@@ -54,7 +60,7 @@ export async function DELETE(req: Request) {
 				{ data: profileRows, error: profileError },
 			] = await Promise.all([
 				supabase
-					.from('gallery_profiles')
+					.from(tableImages)
 					.select('id, image_path')
 					.eq('line', line_name)
 					.eq('code', code_name)
@@ -94,35 +100,40 @@ export async function DELETE(req: Request) {
 				}
 			}
 		} else {
-			const query = supabase.from(table).select('id, image_path');
+			const [{ data: galleryRows, error: galleryError }, { data: stockRows, error: stockError }] =
+				await Promise.all([
+					supabase
+						.from(tableImages)
+						.select('id, image_path')
+						.eq('category', categoryState)
+						.eq('code', code_name),
+					supabase.from(table).select('id').eq(columnCode, code_name),
+				]);
 
-			if (categoryState === 'Accesorios') {
-				query.eq('accessory_code', code_name);
-			} else if (categoryState === 'Herrajes') {
-				query.eq('ironwork_code', code_name);
-			} else if (categoryState === 'Insumos') {
-				query.eq('supply_code', code_name);
-			}
+			if (galleryError) throw galleryError;
+			if (stockError) throw stockError;
 
-			const { data: fetchedRows, error } = await query;
+			rows = galleryRows ?? [];
+			ids = (stockRows ?? []).map((row) => row.id);
+			imagePath = rows[0]?.image_path ?? null;
 
-			if (error) throw error;
+			const { error: deleteGalleryError } = await supabase
+				.from(tableImages)
+				.delete()
+				.eq('code', code_name)
+				.eq('category', categoryState);
 
-			if (!fetchedRows || fetchedRows.length === 0) {
-				return NextResponse.json({ success: true });
-			}
+			if (deleteGalleryError) throw deleteGalleryError;
 
-			rows = fetchedRows;
-			imagePath = rows[0].image_path;
-			ids = rows.map((row) => row.id);
+			if (ids.length > 0) {
+				const { error: updateError } = await supabase
+					.from(table)
+					.update({ image_id: null })
+					.in('id', ids);
 
-			const { error: updateError } = await supabase
-				.from(table)
-				.update({ image_url: null, image_path: null })
-				.in('id', ids);
-
-			if (updateError) {
-				return NextResponse.json({ success: false, error: updateError.message }, { status: 500 });
+				if (updateError) {
+					return NextResponse.json({ success: false, error: updateError.message }, { status: 500 });
+				}
 			}
 		}
 

@@ -16,7 +16,7 @@ import {
 	AlertDialogAction,
 	AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
-import { formatCreatedAt } from '@/helpers/date/format-date'
+import { formatCreatedAt } from '@/helpers/date/format-date';
 import { toast } from '@/components/ui/use-toast';
 import { getSupabaseClient } from '@/lib/supabase-client';
 
@@ -123,7 +123,7 @@ export function ProfileTable({
 	const getItemName = (item: ProfileItemStock) => {
 		return [item.line, item.code, item.color].filter(Boolean).join(' ') || 'este ítem';
 	};
-	
+
 	return (
 		<Card className="bg-card border-border overflow-hidden">
 			<div className="overflow-x-auto">
@@ -174,7 +174,6 @@ export function ProfileTable({
 							</tr>
 						) : (
 							filteredStock.map((item) => {
-
 								return (
 									<tr key={item.id} className="hover:bg-secondary/50 transition-colors">
 										<td className="px-2 py-2 whitespace-nowrap">
@@ -292,11 +291,11 @@ export function ProfileTable({
 										</td>
 										<td className="px-2 py-2 whitespace-nowrap">
 											<div className="flex justify-center">
-												{item.image_id && (imageUrlsById[item.image_id] || item.image_url) ? (
+												{item.image_id && imageUrlsById[item.image_id] ? (
 													<Button
 														variant="outline"
 														size="sm"
-														onClick={() => setOpenImageUrl(imageUrlsById[item.image_id!] ?? item.image_url!)}
+														onClick={() => setOpenImageUrl(imageUrlsById[item.image_id!])}
 													>
 														Ver
 													</Button>

@@ -16,25 +16,10 @@ export async function GET(req: Request) {
 			const categoryState = url.searchParams.get('categoryState');
 			const code = url.searchParams.get('name_code');
 
-			let table = '';
+			let query = supabase.from('gallery_stock').select('*').limit(1);
 
-			if (categoryState === 'Accesorios') table = 'accesories_category';
-			if (categoryState === 'Herrajes') table = 'ironworks_category';
-			if (categoryState === 'Insumos') table = 'supplies_category';
-
-			let query = supabase.from(table).select('*').limit(1);
-
-			if (categoryState === 'Accesorios') {
-				if (code) query = query.eq('accessory_code', code);
-			}
-
-			if (categoryState === 'Herrajes') {
-				if (code) query = query.eq('ironwork_code', code);
-			}
-
-			if (categoryState === 'Insumos') {
-				if (code) query = query.eq('supply_code', code);
-			}
+			if (categoryState) query = query.eq('category', categoryState);
+			if (code) query = query.eq('code', code);
 
 			const { data, error } = await query;
 			if (error) throw error;

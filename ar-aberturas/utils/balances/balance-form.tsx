@@ -40,6 +40,7 @@ interface BalanceFormData {
 export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFormProps) {
 	const [selectedBudgetId, setSelectedBudgetId] = useState<string>('');
 	const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+	const [isAutoCalculating, setIsAutoCalculating] = useState(true);
 	const [formData, setFormData] = useState<BalanceFormData>({
 		contract_date_usd: '',
 		start_date: undefined,
@@ -60,11 +61,15 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 
 		if (!selectedBudget) return;
 
+		setIsAutoCalculating(false);
+
 		setFormData((prev) => ({
 			...prev,
-			balance_amount_ars: formatNumber(selectedBudget.amount_ars.toString()),
+			balance_amount_ars: formatNumber(selectedBudget.amount_ars.toLocaleString('es-AR')),
 			balance_amount_usd: selectedBudget.amount_usd?.toString() || '',
-			usd_current: selectedBudget.usd_quote ? formatNumber(selectedBudget.usd_quote.toString()) : '',
+			usd_current: selectedBudget.usd_quote
+				? formatNumber(selectedBudget.usd_quote.toLocaleString('es-AR'))
+				: '',
 		}));
 	};
 
@@ -74,12 +79,20 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 		const balanceData: Omit<Balance, 'id' | 'created_at'> = {
 			client_id: clientId,
 			budget_id: selectedBudgetId || null,
-			start_date: formData.start_date ? format(formData.start_date as Date, 'yyyy-MM-dd') : undefined,
-			contract_date_usd: formData.contract_date_usd ? parseArsToNumber(formData.contract_date_usd) : null,
+			start_date: formData.start_date
+				? format(formData.start_date as Date, 'yyyy-MM-dd')
+				: undefined,
+			contract_date_usd: formData.contract_date_usd
+				? parseArsToNumber(formData.contract_date_usd)
+				: null,
 			usd_current: formData.usd_current ? parseArsToNumber(formData.usd_current) : null,
 			notes: formData.notes && formData.notes.length > 0 ? formData.notes : null,
-			balance_amount_usd: formData.balance_amount_usd ? parseFloat(formData.balance_amount_usd) : null,
-			balance_amount_ars: formData.balance_amount_ars ? parseArsToNumber(formData.balance_amount_ars) : null,
+			balance_amount_usd: formData.balance_amount_usd
+				? parseFloat(formData.balance_amount_usd)
+				: null,
+			balance_amount_ars: formData.balance_amount_ars
+				? parseArsToNumber(formData.balance_amount_ars)
+				: null,
 		};
 
 		await onSubmit(balanceData);
@@ -95,24 +108,25 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 	};
 
 	useEffect(() => {
+		if (!isAutoCalculating) return;
 		if (formData.balance_amount_ars && formData.usd_current) {
 			const normalizedAmount = formData.balance_amount_ars
-			.replace(/\./g, "") // remove thousand separators
-			.replace(",", ".");   // decimal separator to dot for parsing
+				.replace(/\./g, '') // remove thousand separators
+				.replace(',', '.'); // decimal separator to dot for parsing
 
 			const amountNumber = Number(normalizedAmount);
 			const rateNumber = parseArsToNumber(formData.usd_current);
-			
-			if (!isNaN(amountNumber) && !isNaN(rateNumber)) {
-			const calculatedUsd = (amountNumber / rateNumber).toFixed(2);
 
-			setFormData((prev) => ({
-				...prev,
-				balance_amount_usd: calculatedUsd,
-			}));
+			if (!isNaN(amountNumber) && !isNaN(rateNumber)) {
+				const calculatedUsd = (amountNumber / rateNumber).toFixed(3);
+
+				setFormData((prev) => ({
+					...prev,
+					balance_amount_usd: calculatedUsd,
+				}));
 			}
 		}
-	}, [formData.usd_current, formData.balance_amount_ars]);
+	}, [formData.usd_current, formData.balance_amount_ars, isAutoCalculating]);
 
 	return (
 		<form onSubmit={handleSubmit} className="space-y-4">
@@ -133,7 +147,8 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 								const budgetType = budget.type || 'Sin tipo';
 								return (
 									<SelectItem key={budget.id} value={String(budget.id)}>
-										{locality} - {address} - {budgetNumber} - {budgetType} (${budget.amount_ars.toLocaleString('es-AR')})
+										{locality} - {address} - {budgetNumber} - {budgetType} ($
+										{budget.amount_ars.toLocaleString('es-AR')})
 									</SelectItem>
 								);
 							})}
@@ -206,6 +221,7 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 						value={formData.usd_current || ''}
 						onChange={(e) => {
 							const formatted = formatNumber(e.target.value);
+							setIsAutoCalculating(true);
 							setFormData((prev) => ({
 								...prev,
 								usd_current: formatted,
@@ -222,6 +238,7 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 						type="text"
 						value={formData.balance_amount_ars || ''}
 						onChange={(e) => {
+							setIsAutoCalculating(true);
 							const formatted = formatNumber(e.target.value);
 							setFormData((prev) => ({
 								...prev,
@@ -244,11 +261,10 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 						placeholder="0.00"
 					/>
 				</div>
-
 			</div>
 
 			<NotesInput
-				value={formData.notes|| ''}
+				value={formData.notes || ''}
 				onChange={(value) => setFormData((prev) => ({ ...prev, notes: value ? value : null }))}
 				placeholder="Agregar notas sobre este saldo (opcional)"
 				rows={3}

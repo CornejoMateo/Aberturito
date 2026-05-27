@@ -9,6 +9,7 @@ export type Claim = {
 	work_zone?: string | null;
 	work_locality?: string | null;
 	work_address?: string | null;
+	work_hood?: string | null;
 	daily?: boolean | null;
 	alum_pvc?: string | null;
 	attend?: string | null;

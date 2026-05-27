@@ -236,6 +236,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 				description,
 				resolved: false,
 				work_zone: workData.zone || null,
+				work_hood: workData.hood || null,
 				work_locality: workData.locality || null,
 				work_address: workData.address || null,
 			};

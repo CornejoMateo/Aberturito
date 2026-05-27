@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
-import { ClipboardList, CheckCircle } from 'lucide-react';
+import { ClipboardList, CheckCircle, ArrowRight, Calendar } from 'lucide-react';
 import { Client, listClients } from '@/lib/clients/clients';
 import { Survey, SurveyItem, getAllSurveys, getSurveyItemsBySurveyIds, updateSurveyItem } from '@/lib/survey/survey';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
@@ -149,6 +149,32 @@ export function SurveyBoard() {
 	const handleClientClick = (client: Client) => {
 		setSelectedClient(client);
 		setIsClientDialogOpen(true);
+	};
+
+	const getDueDateStatus = (survey: Survey, allItemsCompleted: boolean) => {
+		if (allItemsCompleted || !survey.due_date) {
+			return { color: 'text-foreground', daysRemaining: null };
+		}
+
+		const dueDate = new Date(survey.due_date);
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		dueDate.setHours(0, 0, 0, 0);
+
+		const diffTime = dueDate.getTime() - today.getTime();
+		const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+		if (daysRemaining <= 3) {
+			return { color: 'text-red-500', daysRemaining };
+		} else if (daysRemaining <= 7) {
+			return { color: 'text-yellow-500', daysRemaining };
+		}
+		return { color: 'text-foreground', daysRemaining };
+	};
+
+	const formatDate = (dateString: string) => {
+		const date = new Date(dateString);
+		return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 	};
 
 	const handleDragStart = (e: React.DragEvent, clientWithSurvey: ClientWithSurvey) => {
@@ -427,31 +453,54 @@ export function SurveyBoard() {
 								{column.clients.length === 0 ? (
 									<p className="text-xs text-muted-foreground text-center py-4">Sin clientes</p>
 								) : (
-									column.clients.map((clientWithSurvey) => (
-										<Card
-											key={clientWithSurvey.survey.id}
-											className="p-3 bg-secondary/50 border-border hover:border-primary/50 transition-colors cursor-pointer"
-											onClick={() => handleClientClick(clientWithSurvey.client)}
-											draggable
-											onDragStart={(e) => handleDragStart(e, clientWithSurvey)}
-										>
-											<div className="space-y-2">
-												<div className="flex items-center justify-between">
-													<h4 className="font-medium text-foreground text-sm">
-														{clientWithSurvey.client.last_name} {clientWithSurvey.client.name}
-													</h4>
+									column.clients.map((clientWithSurvey) => {
+										const allItemsCompleted = clientWithSurvey.items.every((i) => i.completed);
+										const { color, daysRemaining } = getDueDateStatus(clientWithSurvey.survey, allItemsCompleted);
+
+										return (
+											<Card
+												key={clientWithSurvey.survey.id}
+												className="p-3 bg-secondary/50 border-border hover:border-primary/50 transition-colors cursor-pointer"
+												onClick={() => handleClientClick(clientWithSurvey.client)}
+												draggable
+												onDragStart={(e) => handleDragStart(e, clientWithSurvey)}
+											>
+												<div className="space-y-2">
+													<div className="flex items-center justify-between">
+														<h4 className="font-medium text-foreground text-sm">
+															{clientWithSurvey.client.last_name} {clientWithSurvey.client.name}
+														</h4>
+													</div>
+													{clientWithSurvey.client.locality && (
+														<p className="text-xs text-muted-foreground">{clientWithSurvey.client.locality}</p>
+													)}
+													{clientWithSurvey.survey.due_date && (
+														<div className="flex items-center gap-1 text-xs">
+															<div className="flex items-center gap-1 text-muted-foreground">
+																<Calendar className="h-3 w-3" />
+																<span>{formatDate(clientWithSurvey.survey.created_at)}</span>
+															</div>
+															<ArrowRight className="h-3 w-3 text-muted-foreground" />
+															<div className={`flex items-center gap-1 ${color}`}>
+																<Calendar className="h-3 w-3" />
+																<span>{formatDate(clientWithSurvey.survey.due_date)}</span>
+															</div>
+														</div>
+													)}
+													<div className="flex items-center gap-2">
+														<Badge variant="outline" className="text-xs">
+															{clientWithSurvey.items.filter((i) => i.completed).length}/{clientWithSurvey.items.length} pasos
+														</Badge>
+														{daysRemaining !== null && !allItemsCompleted && (
+															<Badge variant="outline" className={`text-xs ${color}`}>
+																{daysRemaining <= 0 ? 'Vencido' : `${daysRemaining} días`}
+															</Badge>
+														)}
+													</div>
 												</div>
-												{clientWithSurvey.client.locality && (
-													<p className="text-xs text-muted-foreground">{clientWithSurvey.client.locality}</p>
-												)}
-												<div className="flex items-center gap-2">
-													<Badge variant="outline" className="text-xs">
-														{clientWithSurvey.items.filter((i) => i.completed).length}/{clientWithSurvey.items.length} pasos
-													</Badge>
-												</div>
-											</div>
-										</Card>
-									))
+											</Card>
+										);
+									})
 								)}
 							</div>
 						</Card>

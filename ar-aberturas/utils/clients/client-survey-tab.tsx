@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,11 +17,14 @@ import {
 } from '@/components/ui/dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from '@/components/ui/use-toast';
-import { ClipboardList, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Calendar as CalendarIcon, ClipboardList, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 import { Client } from '@/lib/clients/clients';
 import { BudgetWithWork } from '@/lib/works/balances';
-import { Survey, SurveyItem } from '@/lib/survey/survey';
+import { Survey, SurveyItem, updateSurvey } from '@/lib/survey/survey';
 import { translateError } from '@/lib/error-translator';
 import { useClientSurveys } from '@/hooks/clients/use-client-survey';
 
@@ -46,6 +51,12 @@ type DeleteRelConfirmState = {
 	surveyId: string | null;
 };
 
+type DueDateDialogState = {
+	open: boolean;
+	surveyId: string | null;
+	currentDueDate: Date | null;
+};
+
 const INITIAL_ITEM_DIALOG: ItemDialogState = {
 	open: false,
 	mode: 'add',
@@ -55,6 +66,7 @@ const INITIAL_ITEM_DIALOG: ItemDialogState = {
 
 const INITIAL_DELETE_ITEM: DeleteItemConfirmState = { open: false, itemId: null };
 const INITIAL_DELETE_REL: DeleteRelConfirmState = { open: false, surveyId: null };
+const INITIAL_DUE_DATE: DueDateDialogState = { open: false, surveyId: null, currentDueDate: null };
 
 function getBudgetLabel(budget: BudgetWithWork): string {
 	const parts: string[] = [];
@@ -87,6 +99,7 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 	const [itemDialog, setItemDialog] = useState<ItemDialogState>(INITIAL_ITEM_DIALOG);
 	const [deleteItemConfirm, setDeleteItemConfirm] = useState<DeleteItemConfirmState>(INITIAL_DELETE_ITEM);
 	const [deleteRelConfirm, setDeleteRelConfirm] = useState<DeleteRelConfirmState>(INITIAL_DELETE_REL);
+	const [dueDateDialog, setDueDateDialog] = useState<DueDateDialogState>(INITIAL_DUE_DATE);
 
 	useEffect(() => {
 		load();
@@ -181,6 +194,24 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 		}
 	};
 
+	const handleDueDateSave = async (dueDate: Date | null) => {
+		if (!dueDateDialog.surveyId) return;
+		try {
+			// Convert Date to ISO string for database
+			const finalDueDate = dueDate ? dueDate.toISOString().split('T')[0] : null;
+			await updateSurvey(dueDateDialog.surveyId, { due_date: finalDueDate });
+			toast({ title: 'Fecha de vencimiento actualizada' });
+			setDueDateDialog(INITIAL_DUE_DATE);
+			load();
+		} catch (err) {
+			toast({
+				variant: 'destructive',
+				title: 'Error',
+				description: translateError(err) || 'No se pudo actualizar la fecha de vencimiento.',
+			});
+		}
+	};
+
 	if (isLoading && !soldBudgets.length && !surveys.length) {
 		return (
 			<div className="py-8 text-center">
@@ -226,18 +257,36 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 										Vendido
 									</Badge>
 									{survey && (
-										<Button
-											variant="ghost"
-											size="icon"
-											className="h-7 w-7 text-muted-foreground hover:text-destructive"
-											disabled={isLoading}
-											aria-label="Eliminar relevamiento"
-											onClick={() =>
-												setDeleteRelConfirm({ open: true, surveyId: survey.id })
-											}
-										>
-											<Trash2 className="h-3.5 w-3.5" />
-										</Button>
+										<>
+											<Button
+												variant="ghost"
+												size="icon"
+												className="h-7 w-7 text-muted-foreground"
+												disabled={isLoading}
+												aria-label="Editar fecha de vencimiento"
+												onClick={() =>
+													setDueDateDialog({
+														open: true,
+														surveyId: survey.id,
+														currentDueDate: survey.due_date ? new Date(survey.due_date) : null,
+													})
+												}
+											>
+												<CalendarIcon className="h-3.5 w-3.5" />
+											</Button>
+											<Button
+												variant="ghost"
+												size="icon"
+												className="h-7 w-7 text-muted-foreground hover:text-destructive"
+												disabled={isLoading}
+												aria-label="Eliminar relevamiento"
+												onClick={() =>
+													setDeleteRelConfirm({ open: true, surveyId: survey.id })
+												}
+											>
+												<Trash2 className="h-3.5 w-3.5" />
+											</Button>
+										</>
 									)}
 								</div>
 							</div>
@@ -406,6 +455,66 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 				onConfirm={handleConfirmDeleteSurvey}
 				isLoading={isLoading}
 			/>
+
+			{/* Due date dialog */}
+			<Dialog
+				open={dueDateDialog.open}
+				onOpenChange={(open) => !open && setDueDateDialog(INITIAL_DUE_DATE)}
+			>
+				<DialogContent className="sm:max-w-[400px]">
+					<DialogHeader>
+						<DialogTitle>Fecha de vencimiento</DialogTitle>
+						<DialogDescription>
+							Establecé una fecha límite para completar este relevamiento.
+						</DialogDescription>
+					</DialogHeader>
+					<div className="space-y-4">
+						<div>
+							<label htmlFor="due-date" className="text-sm font-medium">
+								Fecha de vencimiento
+							</label>
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button
+										variant="outline"
+										className={cn(
+											'w-full justify-start text-left font-normal mt-1.5',
+											!dueDateDialog.currentDueDate && 'text-muted-foreground'
+										)}
+									>
+										<CalendarIcon className="mr-2 h-4 w-4" />
+										{dueDateDialog.currentDueDate
+											? format(dueDateDialog.currentDueDate, 'PPP', { locale: es })
+											: 'Seleccionar fecha'}
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent className="w-auto p-0" align="start">
+									<Calendar
+										mode="single"
+										selected={dueDateDialog.currentDueDate ?? undefined}
+										onSelect={(date) =>
+											setDueDateDialog({ ...dueDateDialog, currentDueDate: date ?? null })
+										}
+										initialFocus
+										locale={es}
+									/>
+								</PopoverContent>
+							</Popover>
+						</div>
+						<div className="flex justify-end gap-2">
+							<Button
+								variant="outline"
+								onClick={() => setDueDateDialog(INITIAL_DUE_DATE)}
+							>
+								Cancelar
+							</Button>
+							<Button onClick={() => handleDueDateSave(dueDateDialog.currentDueDate)}>
+								Guardar
+							</Button>
+						</div>
+					</div>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }

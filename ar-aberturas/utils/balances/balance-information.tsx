@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pencil } from 'lucide-react';
 import { formatCurrency, formatCurrencyUSD } from '../../helpers/format-prices.tsx/formats';
 import { BalanceSummary } from '../../helpers/balances/balance-calculations';
@@ -16,6 +16,14 @@ import { updateBalance } from '@/lib/works/balances';
 import { formatNumber, parseArsToNumber } from '@/utils/budgets/utils';
 import { toast } from '@/components/ui/use-toast';
 import { translateError } from '@/lib/error-translator';
+
+const formatUsdValue = (amount?: number | null) => {
+	if (amount === null || amount === undefined) return '';
+	return new Intl.NumberFormat('es-AR', {
+		minimumFractionDigits: 3,
+		maximumFractionDigits: 3,
+	}).format(amount);
+};
 
 interface BalanceInformationProps {
 	balanceId: string;
@@ -50,15 +58,18 @@ export function BalanceInformation({
 }: BalanceInformationProps) {
 	const [open, setOpen] = useState(false);
 
-	const [arsValue, setArsValue] = useState(
-		formatNumber(summary.budgetArsCurrent.toString()) || ''
-	);
+	const [arsValue, setArsValue] = useState(summary.budgetArsCurrent.toString() || '');
 
-	const [usdValue, setUsdValue] = useState(
-		summary.budgetUsd?.toString() || ''
-	);
+	const [usdValue, setUsdValue] = useState(formatUsdValue(summary.budgetUsd));
 
 	const [loading, setLoading] = useState(false);
+
+	useEffect(() => {
+		if (!open) return;
+
+		setArsValue(formatCurrency(summary.budgetArsCurrent) || '');
+		setUsdValue(formatUsdValue(summary.budgetUsd));
+	}, [open, summary.budgetArsCurrent, summary.budgetUsd]);
 
 	const handleSave = async () => {
 		try {
@@ -66,14 +77,16 @@ export function BalanceInformation({
 
 			const { error } = await updateBalance(balanceId, {
 				balance_amount_ars: arsValue ? parseArsToNumber(arsValue) : null,
-				balance_amount_usd: usdValue ? Number(usdValue) : null,
+				balance_amount_usd: usdValue ? parseArsToNumber(usdValue) : null,
 			});
 
 			if (error) {
 				toast({
 					variant: 'destructive',
 					title: 'Error al actualizar presupuesto',
-					description: translateError(error) || 'Hubo un problema al actualizar el presupuesto. Intente nuevamente.',
+					description:
+						translateError(error) ||
+						'Hubo un problema al actualizar el presupuesto. Intente nuevamente.',
 				});
 				return;
 			}
@@ -84,9 +97,9 @@ export function BalanceInformation({
 			});
 
 			setOpen(false);
-
 		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : 'Error al actualizar el presupuesto';
+			const errorMessage =
+				err instanceof Error ? err.message : 'Error al actualizar el presupuesto';
 			toast({
 				variant: 'destructive',
 				title: 'Error al actualizar presupuesto',
@@ -109,9 +122,7 @@ export function BalanceInformation({
 							<>
 								<span className="block">{work.locality}</span>
 
-								<span className="text-xs text-muted-foreground">
-									{work.address}
-								</span>
+								<span className="text-xs text-muted-foreground">{work.address}</span>
 							</>
 						) : (
 							'Sin obra asignada'
@@ -120,39 +131,25 @@ export function BalanceInformation({
 				</div>
 
 				<div>
-					<p className="text-xs text-muted-foreground mb-1">
-						Fecha de inicio
-					</p>
+					<p className="text-xs text-muted-foreground mb-1">Fecha de inicio</p>
 
-					<p className="text-sm font-medium">
-						{formatDate(startDate)}
-					</p>
+					<p className="text-sm font-medium">{formatDate(startDate)}</p>
 				</div>
 
 				<div>
-					<p className="text-xs text-muted-foreground mb-1">
-						Dolar en fecha contratacion
-					</p>
+					<p className="text-xs text-muted-foreground mb-1">Dolar en fecha contratacion</p>
 
-					<p className="text-sm font-bold text-blue-600">
-						{formatCurrency(contractDateUsd)}
-					</p>
+					<p className="text-sm font-bold text-blue-600">{formatCurrency(contractDateUsd)}</p>
 				</div>
 
 				<div>
-					<p className="text-xs text-muted-foreground mb-1">
-						Dolar actual
-					</p>
+					<p className="text-xs text-muted-foreground mb-1">Dolar actual</p>
 
-					<p className="text-sm font-bold text-blue-600">
-						{formatCurrency(usdCurrent)}
-					</p>
+					<p className="text-sm font-bold text-blue-600">{formatCurrency(usdCurrent)}</p>
 				</div>
 
 				<div>
-					<p className="text-xs text-muted-foreground mb-1">
-						Presupuesto inicial
-					</p>
+					<p className="text-xs text-muted-foreground mb-1">Presupuesto inicial</p>
 
 					<div className="flex flex-col">
 						<p className="text-sm font-bold text-primary">
@@ -167,9 +164,7 @@ export function BalanceInformation({
 
 				<div>
 					<div className="flex items-center gap-2 mb-1">
-						<p className="text-xs text-muted-foreground">
-							Presupuesto actual
-						</p>
+						<p className="text-xs text-muted-foreground">Presupuesto actual</p>
 
 						<button
 							type="button"
@@ -185,34 +180,24 @@ export function BalanceInformation({
 							{formatCurrency(summary.budgetArsCurrent)}
 						</p>
 
-						<p className="text-xs text-muted-foreground">
-							{formatCurrencyUSD(summary.budgetUsd)}
-						</p>
+						<p className="text-xs text-muted-foreground">{formatCurrencyUSD(summary.budgetUsd)}</p>
 					</div>
 				</div>
 
 				<div>
-					<p className="text-xs text-muted-foreground mb-1">
-						Entregado
-					</p>
+					<p className="text-xs text-muted-foreground mb-1">Entregado</p>
 
 					<div className="flex flex-col">
-						<p className="text-sm font-bold text-green-600">
-							{formatCurrency(totalPaid)}
-						</p>
+						<p className="text-sm font-bold text-green-600">{formatCurrency(totalPaid)}</p>
 
 						{usdCurrent && (
-							<p className="text-xs text-muted-foreground">
-								{formatCurrencyUSD(totalPaidUsd)}
-							</p>
+							<p className="text-xs text-muted-foreground">{formatCurrencyUSD(totalPaidUsd)}</p>
 						)}
 					</div>
 				</div>
 
 				<div>
-					<p className="text-xs text-muted-foreground mb-1">
-						Saldo
-					</p>
+					<p className="text-xs text-muted-foreground mb-1">Saldo</p>
 
 					<div className="flex flex-col">
 						<p className="text-sm font-bold text-orange-600">
@@ -234,13 +219,11 @@ export function BalanceInformation({
 
 					<div className="space-y-4 py-4">
 						<div className="space-y-2">
-							<label className="text-sm font-medium">
-								Monto en pesos
-							</label>
+							<label className="text-sm font-medium">Monto en pesos</label>
 
 							<Input
 								type="text"
-								inputMode="numeric"
+								inputMode="decimal"
 								value={arsValue}
 								onChange={(e) => setArsValue(formatNumber(e.target.value))}
 								placeholder="Ingrese monto en ARS"
@@ -248,24 +231,20 @@ export function BalanceInformation({
 						</div>
 
 						<div className="space-y-2">
-							<label className="text-sm font-medium">
-								Monto en USD
-							</label>
+							<label className="text-sm font-medium">Monto en USD</label>
 
 							<Input
-								type="number"
+								type="text"
+								inputMode="decimal"
 								value={usdValue}
-								onChange={(e) => setUsdValue(e.target.value)}
-								placeholder="Ingrese monto en USD"
+								onChange={(e) => setUsdValue(formatNumber(e.target.value))}
+								placeholder="100.000,800"
 							/>
 						</div>
 					</div>
 
 					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setOpen(false)}
-						>
+						<Button variant="outline" onClick={() => setOpen(false)}>
 							Cancelar
 						</Button>
 

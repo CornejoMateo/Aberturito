@@ -59,7 +59,6 @@ export async function listWorks(): Promise<{ data: Work[] | null; error: any }> 
 			client_last_name: work.clients?.last_name || null,
 		}));
 
-		console.log('Obras con nombres de clientes:', worksWithClientNames);
 		return { data: worksWithClientNames, error: null };
 	} catch (error) {
 		console.error('Error inesperado en listWorks:', error);

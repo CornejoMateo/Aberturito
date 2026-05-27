@@ -366,7 +366,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 
 			toast({
 				title: 'Nota general actualizada',
-				description: translateError(error) || 'La nota general se ha guardado correctamente.',
+				description: 'Se actualizó la nota general de la obra.',
 			});
 		} catch (error) {
 			console.error('Error al guardar la nota general:', error);

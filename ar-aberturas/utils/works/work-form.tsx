@@ -23,6 +23,8 @@ export function WorkForm({ onSubmit, onCancel }: WorkFormProps) {
 	const [formData, setFormData] = useState<Omit<Work, 'id' | 'created_at' | 'client_id'>>({
 		locality: '',
 		address: '',
+		zone: '',
+		hood: '',
 		status: 'pending',
 		architect: '',
 	});
@@ -74,6 +76,17 @@ export function WorkForm({ onSubmit, onCancel }: WorkFormProps) {
 						value={formData.zone || ''}
 						onChange={handleChange}
 						placeholder="Ej: Zona 1"
+					/>
+				</div>
+
+				<div className="space-y-2">
+					<Label htmlFor="hood">Barrio</Label>
+					<Input
+						id="hood"
+						name="hood"
+						value={formData.hood || ''}
+						onChange={handleChange}
+						placeholder="Ej: Barrio San Esteban"
 					/>
 				</div>
 

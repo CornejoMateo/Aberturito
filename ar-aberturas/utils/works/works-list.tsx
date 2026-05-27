@@ -148,6 +148,7 @@ export function WorksList({
 										className="text-base sm:text-lg font-semibold truncate"
 									/>
 									<EditableField
+										label="Localidad"
 										value={work.locality || ''}
 										onSave={async (newValue) => {
 											await handleUpdateWork(work.id, { locality: newValue });
@@ -156,9 +157,20 @@ export function WorksList({
 									/>
 									{work.zone && (
 										<EditableField
+											label="Zona"
 											value={work.zone}
 											onSave={async (newValue) => {
 												await handleUpdateWork(work.id, { zone: newValue });
+											}}
+											className="text-xs sm:text-sm text-muted-foreground truncate"
+										/>
+									)}
+									{work.hood && (
+										<EditableField
+											label="Barrio"
+											value={work.hood}
+											onSave={async (newValue) => {
+												await handleUpdateWork(work.id, { hood: newValue });
 											}}
 											className="text-xs sm:text-sm text-muted-foreground truncate"
 										/>

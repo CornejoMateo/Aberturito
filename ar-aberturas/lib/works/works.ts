@@ -7,6 +7,7 @@ export type Work = {
 	locality?: string | null;
 	address?: string | null;
 	zone?: string | null;
+	hood?: string | null;
 	client_id?: string | null;
 	client_name?: string | null;
 	client_last_name?: string | null;

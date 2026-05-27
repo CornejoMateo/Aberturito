@@ -17,6 +17,7 @@ const mockWork: WorkWithProgress = {
 	address: 'Test 629',
 	locality: 'Córdoba',
 	zone: 'Norte',
+	hood: 'Centro',
 	status: 'in_progress',
 	created_at: '2024-01-15T10:00:00Z',
 	tasks: [
@@ -53,6 +54,7 @@ describe('WorkCard', () => {
 		expect(screen.getByText(/Test 629/)).toBeInTheDocument();
 		expect(screen.getByText(/Córdoba/)).toBeInTheDocument();
 		expect(screen.getByText(/Norte/)).toBeInTheDocument();
+		expect(screen.getByText(/Centro/)).toBeInTheDocument();
 		expect(screen.getByText('15/01/2024')).toBeInTheDocument();
 	});
 

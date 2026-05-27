@@ -14,6 +14,7 @@ export function useWorkChecklistData(workId: string) {
 		locality: string;
 		address: string;
 		zone: string;
+		hood: string;
 		general_note?: string | null;
 	} | null>(null);
 	const [checklists, setChecklists] = useState<Checklist[]>([]);
@@ -31,6 +32,7 @@ export function useWorkChecklistData(workId: string) {
 					locality: work.locality || '',
 					address: work.address || '',
 					zone: work.zone || '',
+					hood: work.hood || '',
 					general_note: work.general_note || null,
 				});
 

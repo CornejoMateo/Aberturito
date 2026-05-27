@@ -161,6 +161,8 @@ create table public.works (
   created_at timestamp with time zone not null default now(),
   locality character varying null,
   address character varying null,
+  zone character varying null,
+  hood character varying null,
   client_id bigint null,
   status character varying null,
   architect character varying null,

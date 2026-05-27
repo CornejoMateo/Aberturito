@@ -29,6 +29,7 @@ import { translateError } from '@/lib/error-translator';
 import { useClientSurveys } from '@/hooks/clients/use-client-survey';
 
 import { SurveyItemForm } from './survey-item-form';
+import { formatCreatedAt } from '@/helpers/date/format-date';
 
 interface ClientSurveyTabProps {
 	client: Client;
@@ -97,8 +98,10 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 	} = useClientSurveys(client.id);
 
 	const [itemDialog, setItemDialog] = useState<ItemDialogState>(INITIAL_ITEM_DIALOG);
-	const [deleteItemConfirm, setDeleteItemConfirm] = useState<DeleteItemConfirmState>(INITIAL_DELETE_ITEM);
-	const [deleteRelConfirm, setDeleteRelConfirm] = useState<DeleteRelConfirmState>(INITIAL_DELETE_REL);
+	const [deleteItemConfirm, setDeleteItemConfirm] =
+		useState<DeleteItemConfirmState>(INITIAL_DELETE_ITEM);
+	const [deleteRelConfirm, setDeleteRelConfirm] =
+		useState<DeleteRelConfirmState>(INITIAL_DELETE_REL);
 	const [dueDateDialog, setDueDateDialog] = useState<DueDateDialogState>(INITIAL_DUE_DATE);
 
 	useEffect(() => {
@@ -109,9 +112,7 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 		surveys.find((s) => s.budget_id === budgetId);
 
 	const getItemsForSurvey = (surveyId: string): SurveyItem[] =>
-		items
-			.filter((i) => i.survey_id === surveyId)
-			.sort((a, b) => a.order - b.order);
+		items.filter((i) => i.survey_id === surveyId).sort((a, b) => a.order - b.order);
 
 	const getProgress = (surveyId: string): { done: number; total: number } => {
 		const survey = getItemsForSurvey(surveyId);
@@ -121,7 +122,10 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 	const handleCreateSurvey = async (budgetId: string) => {
 		try {
 			await createSurvey(budgetId);
-			toast({ title: 'Relevamiento creado', description: 'Se creó el relevamiento con los pasos por defecto.' });
+			toast({
+				title: 'Relevamiento creado',
+				description: 'Se creó el relevamiento con los pasos por defecto.',
+			});
 		} catch (err) {
 			toast({
 				variant: 'destructive',
@@ -248,9 +252,7 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 							<div className="flex items-start justify-between gap-2">
 								<div className="min-w-0">
 									<CardTitle className="text-sm font-semibold">{label}</CardTitle>
-									{address && (
-										<p className="text-xs text-muted-foreground mt-0.5">{address}</p>
-									)}
+									{address && <p className="text-xs text-muted-foreground mt-0.5">{address}</p>}
 								</div>
 								<div className="flex items-center gap-2 flex-shrink-0">
 									<Badge variant="default" className="text-xs">
@@ -280,9 +282,7 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 												className="h-7 w-7 text-muted-foreground hover:text-destructive"
 												disabled={isLoading}
 												aria-label="Eliminar relevamiento"
-												onClick={() =>
-													setDeleteRelConfirm({ open: true, surveyId: survey.id })
-												}
+												onClick={() => setDeleteRelConfirm({ open: true, surveyId: survey.id })}
 											>
 												<Trash2 className="h-3.5 w-3.5" />
 											</Button>
@@ -374,9 +374,7 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 															className="h-6 w-6 text-muted-foreground hover:text-destructive"
 															aria-label="Eliminar paso"
 															disabled={isLoading}
-															onClick={() =>
-																setDeleteItemConfirm({ open: true, itemId: item.id })
-															}
+															onClick={() => setDeleteItemConfirm({ open: true, itemId: item.id })}
 														>
 															<Trash2 className="h-3 w-3" />
 														</Button>
@@ -418,9 +416,7 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 			>
 				<DialogContent className="sm:max-w-[400px]">
 					<DialogHeader>
-						<DialogTitle>
-							{itemDialog.mode === 'add' ? 'Agregar paso' : 'Editar paso'}
-						</DialogTitle>
+						<DialogTitle>{itemDialog.mode === 'add' ? 'Agregar paso' : 'Editar paso'}</DialogTitle>
 						<DialogDescription>
 							{itemDialog.mode === 'add'
 								? 'Ingresá el nombre del nuevo paso del relevamiento.'
@@ -484,7 +480,7 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 									>
 										<CalendarIcon className="mr-2 h-4 w-4" />
 										{dueDateDialog.currentDueDate
-											? format(dueDateDialog.currentDueDate, 'PPP', { locale: es })
+											? formatCreatedAt(dueDateDialog.currentDueDate)
 											: 'Seleccionar fecha'}
 									</Button>
 								</PopoverTrigger>
@@ -502,10 +498,7 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 							</Popover>
 						</div>
 						<div className="flex justify-end gap-2">
-							<Button
-								variant="outline"
-								onClick={() => setDueDateDialog(INITIAL_DUE_DATE)}
-							>
+							<Button variant="outline" onClick={() => setDueDateDialog(INITIAL_DUE_DATE)}>
 								Cancelar
 							</Button>
 							<Button onClick={() => handleDueDateSave(dueDateDialog.currentDueDate)}>

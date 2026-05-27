@@ -161,11 +161,14 @@ create table public.works (
   created_at timestamp with time zone not null default now(),
   locality character varying null,
   address character varying null,
+  zone character varying null,
+  hood character varying null,
   client_id bigint null,
   status character varying null,
   architect character varying null,
   notes character varying[] null,
   balance_id bigint null,
+  due_date date null,
   constraint works_pkey primary key (id),
   constraint works_client_id_fkey foreign KEY (client_id) references clients (id) on update CASCADE on delete CASCADE
 ) TABLESPACE pg_default;

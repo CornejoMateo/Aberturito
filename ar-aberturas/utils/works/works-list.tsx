@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Work, updateWork } from '@/lib/works/works';
+import { Work } from '@/lib/works/works';
 import { getChecklistsByWorkId, createChecklist } from '@/lib/works/checklists';
 import {
 	MapPin,
@@ -83,23 +83,21 @@ export function WorksList({
 		filteredData: filteredClients,
 		paginatedData: currentItems,
 		totalPages,
-		totalItems
-	} = useMemo(() =>
-		paginateAndFilter(
-			initialWorks,
-			searchTerm,
-			currentPage,
-			itemsPerPage,
-			(work, search) => {
+		totalItems,
+	} = useMemo(
+		() =>
+			paginateAndFilter(initialWorks, searchTerm, currentPage, itemsPerPage, (work, search) => {
 				// Filter by search term
-				const matchesSearch = 
+				const matchesSearch =
 					work.address?.toLowerCase().includes(search) ||
 					work.architect?.toLowerCase().includes(search) ||
-					work.status?.toLowerCase().includes(search) || false;
-				
+					work.status?.toLowerCase().includes(search) ||
+					work.locality?.toLowerCase().includes(search) ||
+					work.zone?.toLowerCase().includes(search) ||
+					false;
+
 				return matchesSearch;
-			}
-		),
+			}),
 		[initialWorks, currentPage, itemsPerPage, searchTerm]
 	);
 
@@ -152,12 +150,33 @@ export function WorksList({
 										className="text-base sm:text-lg font-semibold truncate"
 									/>
 									<EditableField
+										label="Localidad"
 										value={work.locality || ''}
 										onSave={async (newValue) => {
 											await handleUpdateWork(work.id, { locality: newValue });
 										}}
 										className="text-xs sm:text-sm text-muted-foreground truncate"
 									/>
+									{work.zone && (
+										<EditableField
+											label="Zona"
+											value={work.zone || ''}
+											onSave={async (newValue) => {
+												await handleUpdateWork(work.id, { zone: newValue });
+											}}
+											className="text-xs sm:text-sm text-muted-foreground truncate"
+										/>
+									)}
+									{work.hood && (
+										<EditableField
+											label="Barrio"
+											value={work.hood || ''}
+											onSave={async (newValue) => {
+												await handleUpdateWork(work.id, { hood: newValue });
+											}}
+											className="text-xs sm:text-sm text-muted-foreground truncate"
+										/>
+									)}
 								</div>
 								<div className="flex flex-row sm:flex-row gap-2 sm:gap-3 items-center justify-between sm:justify-end">
 									<div className="flex items-center justify-end gap-2">

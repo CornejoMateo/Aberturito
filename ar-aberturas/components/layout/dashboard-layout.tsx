@@ -212,8 +212,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 			Admin: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Relevamiento', 'Reportes de Presupuestos', 'Obras', 'Calendario', 'Reportes', 'Ajustes y Diario'],
 			Fabrica: ['Perfiles', 'Accesorios', 'Herrajes', 'Insumos'],
 			Ventas: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Relevamiento', 'Reportes de Presupuestos', 'Calendario'],
-			Marketing: ['Panel', 'Calendario', 'Clientes', 'Relevamiento', 'Reportes', 'Reportes de Presupuestos'],
-			Colocador: ['Obras', 'Ajustes y Diario', 'Clientes', 'Relevamiento'],
+			Marketing: ['Panel', 'Calendario', 'Clientes', 'Reportes', 'Reportes de Presupuestos'],
+			Colocador: ['Obras', 'Ajustes y Diario', 'Clientes'],
 		} as Record<string, string[]>;
 	}, []);
 

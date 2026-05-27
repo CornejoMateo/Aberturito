@@ -11,6 +11,7 @@ import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { translateError } from '@/lib/error-translator';
 import { DEFAULT_SURVEY_STEPS } from '@/constants/survey';
 import { ClientDetailsDialog } from '@/utils/clients/client-details-dialog';
+import { formatCreatedAt } from '@/helpers/date/format-date';
 
 interface ClientWithSurvey {
 	client: Client;
@@ -170,11 +171,6 @@ export function SurveyBoard() {
 			return { color: 'text-yellow-500', daysRemaining };
 		}
 		return { color: 'text-foreground', daysRemaining };
-	};
-
-	const formatDate = (dateString: string) => {
-		const date = new Date(dateString);
-		return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 	};
 
 	const handleDragStart = (e: React.DragEvent, clientWithSurvey: ClientWithSurvey) => {
@@ -478,12 +474,12 @@ export function SurveyBoard() {
 														<div className="flex items-center gap-1 text-xs">
 															<div className="flex items-center gap-1 text-muted-foreground">
 																<Calendar className="h-3 w-3" />
-																<span>{formatDate(clientWithSurvey.survey.created_at)}</span>
+																<span>{formatCreatedAt(clientWithSurvey.survey.created_at)}</span>
 															</div>
 															<ArrowRight className="h-3 w-3 text-muted-foreground" />
 															<div className={`flex items-center gap-1 ${color}`}>
 																<Calendar className="h-3 w-3" />
-																<span>{formatDate(clientWithSurvey.survey.due_date)}</span>
+																<span>{formatCreatedAt(clientWithSurvey.survey.due_date)}</span>
 															</div>
 														</div>
 													)}

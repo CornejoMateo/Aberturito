@@ -41,7 +41,7 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp, onOpenCheckl
 	const statusLabel = statusInfo?.label || 'Pendiente';
 	const statusColor = statusInfo?.color || 'text-gray-400 bg-gray-400/10';
 
-	const canSendNotifications = user?.role === 'Admin' || user?.role === 'Ventas' || user?.role === 'Colocador';
+	const canSendNotifications = user?.role === 'Admin' || user?.role === 'Ventas';
 	const canEditNotes = user?.role === 'Admin' || user?.role === 'Ventas' || user?.role === 'Colocador';
 
 	const handleSaveGeneralNote = async (note: string) => {
@@ -97,6 +97,12 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp, onOpenCheckl
 									{formatCreatedAt(work.created_at)}
 								</span>
 							</div>
+							{work.zone && (
+								<div className="flex items-center gap-2 text-muted-foreground">
+									<span className="text-sm font-medium">Zona:</span>
+									<span>{work.zone}</span>
+								</div>
+							)}
 						</div>
 
 						<div className="space-y-2">

@@ -18,7 +18,7 @@ interface Props {
 	onEdit: (claim: Claim) => void;
 	onDelete: (claim: Claim) => void;
 	onResolve: (claim: Claim) => void;
-    onReOpen: (claim: Claim) => void;
+	onReOpen: (claim: Claim) => void;
 	authorizedUser: boolean;
 	filterType: string;
 	onViewDescription: (description: string) => void;
@@ -31,7 +31,7 @@ export function ClaimsTable({
 	onEdit,
 	onDelete,
 	onResolve,
-    onReOpen,
+	onReOpen,
 	authorizedUser,
 	filterType,
 	onViewDescription,
@@ -51,7 +51,7 @@ export function ClaimsTable({
 					<TableHead className="text-center">Cliente</TableHead>
 					<TableHead className="text-center">Núm. de celular</TableHead>
 					<TableHead className="text-center">Zona/Localidad</TableHead>
-					<TableHead className="text-center">Dirección</TableHead>
+					<TableHead className="text-center">Dirección/Barrio</TableHead>
 					<TableHead className="text-center">Tipo</TableHead>
 					<TableHead className="lg:table-cell text-center">Descripción</TableHead>
 					{authorizedUser && <TableHead className="text-center">Atendido por</TableHead>}
@@ -112,6 +112,9 @@ export function ClaimsTable({
 							</TableCell>
 							<TableCell className="text-center">
 								<div className="max-w-xs truncate">{claim.work_address || '-'}</div>
+								{claim.work_hood && (
+									<div className="text-muted-foreground text-xs">{claim.work_hood}</div>
+								)}
 							</TableCell>
 							<TableCell className="text-center">
 								<Badge variant="outline">{claim.alum_pvc || '-'}</Badge>

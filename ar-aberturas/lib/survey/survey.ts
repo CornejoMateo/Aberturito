@@ -6,6 +6,7 @@ export type Survey = {
 	budget_id: string;
 	client_id: string;
 	notes?: string | null;
+	due_date?: string | null;
 };
 
 export type SurveyItem = {
@@ -60,6 +61,25 @@ export async function deleteSurvey(
 	return { error: null };
 }
 
+export async function updateSurvey(
+	id: string,
+	changes: Partial<Pick<Survey, 'notes' | 'due_date'>>
+): Promise<{ error: unknown }> {
+	const supabase = getSupabaseClient();
+	console.log('updateSurvey - id:', id, 'changes:', changes.due_date);
+	const { data, error } = await supabase
+		.from(TABLE)
+		.update({ due_date: changes.due_date })
+		.eq('id', id)
+		.select('id');
+	console.log('updateSurvey - data:', data, 'error:', error);
+	if (error) return { error };
+	if (!data?.length) {
+		return { error: new Error('Update did not affect any rows. Check RLS policies on surveys.') };
+	}
+	return { error: null };
+}
+
 export async function getSurveyItemsBySurveyIds(
 	surveyIds: string[]
 ): Promise<{ data: SurveyItem[] | null; error: unknown }> {
@@ -70,6 +90,15 @@ export async function getSurveyItemsBySurveyIds(
 		.select('*')
 		.in('survey_id', surveyIds)
 		.order('order', { ascending: true });
+	return { data, error };
+}
+
+export async function getAllSurveys(): Promise<{ data: Survey[] | null; error: unknown }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('*')
+		.order('created_at', { ascending: true });
 	return { data, error };
 }
 

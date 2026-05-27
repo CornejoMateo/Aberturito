@@ -11,7 +11,7 @@ interface AddressLinkProps {
 }
 
 export function AddressLink({ address, locality, className }: AddressLinkProps) {
-  if (!address && !locality) {
+  if (!address) {
     return <span className={cn('text-muted-foreground', className)}>Dirección no especificada</span>;
   }
 

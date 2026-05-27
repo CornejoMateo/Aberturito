@@ -77,10 +77,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 		}
 	}, [fetchedChecklists]);
 
-	const toggleChecklistItem = async (
-		checklistId: string,
-		itemIndex: number,
-	) => {
+	const toggleChecklistItem = async (checklistId: string, itemIndex: number) => {
 		// Update local state optimistically
 		const updatedChecklists = checklists.map((checklist) => {
 			if (checklist.id === checklistId) {
@@ -238,7 +235,8 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 				attend: null,
 				description,
 				resolved: false,
-				work_zone: null,
+				work_zone: workData.zone || null,
+				work_hood: workData.hood || null,
 				work_locality: workData.locality || null,
 				work_address: workData.address || null,
 			};
@@ -355,28 +353,29 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 
 	const handleSaveGeneralNote = async (note: string) => {
 		if (!workData) return;
-		
+
 		setIsUpdatingNote(true);
 		try {
 			const { error } = await updateWorkGeneralNote(workData.id, note.trim() || null);
-			
+
 			if (error) {
 				throw error;
 			}
 
 			// Reload data to update the UI
 			reload();
-			
+
 			toast({
 				title: 'Nota general actualizada',
-				description: translateError(error) || 'La nota general se ha guardado correctamente.',	
+				description: 'Se actualizó la nota general de la obra.',
 			});
 		} catch (error) {
 			console.error('Error al guardar la nota general:', error);
 			const errorMessage = translateError(error);
 			toast({
 				title: 'Error al guardar nota',
-				description: errorMessage || 'No se pudo guardar la nota general. Por favor, intenta nuevamente.',
+				description:
+					errorMessage || 'No se pudo guardar la nota general. Por favor, intenta nuevamente.',
 				variant: 'destructive',
 			});
 		} finally {

@@ -31,22 +31,30 @@ interface WorkCardProps {
 	onUpdateGeneralNote?: (workId: string, note: string) => Promise<void>;
 }
 
-export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp, onOpenChecklist, onUpdateGeneralNote }: WorkCardProps) {
+export function WorkCard({
+	work,
+	user,
+	onOpenEmail,
+	onOpenWhatsApp,
+	onOpenChecklist,
+	onUpdateGeneralNote,
+}: WorkCardProps) {
 	const [isPostItModalOpen, setIsPostItModalOpen] = useState(false);
 	const [isUpdatingNote, setIsUpdatingNote] = useState(false);
-	
+
 	const statusInfo = statusConfig.find((s) => s.value === work.status);
 
 	const StatusIcon = statusInfo?.icon || Clock;
 	const statusLabel = statusInfo?.label || 'Pendiente';
 	const statusColor = statusInfo?.color || 'text-gray-400 bg-gray-400/10';
 
-	const canSendNotifications = user?.role === 'Admin' || user?.role === 'Ventas' || user?.role === 'Colocador';
-	const canEditNotes = user?.role === 'Admin' || user?.role === 'Ventas' || user?.role === 'Colocador';
+	const canSendNotifications = user?.role === 'Admin' || user?.role === 'Ventas';
+	const canEditNotes =
+		user?.role === 'Admin' || user?.role === 'Ventas' || user?.role === 'Colocador';
 
 	const handleSaveGeneralNote = async (note: string) => {
 		if (!onUpdateGeneralNote) return;
-		
+
 		setIsUpdatingNote(true);
 		try {
 			await onUpdateGeneralNote(work.id, note);
@@ -83,7 +91,7 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp, onOpenCheckl
 							</p>
 						</div>
 
-						<div className="grid gap-2 md:grid-cols-3 text-sm">
+						<div className="grid gap-2 md:grid-cols-4 text-sm">
 							<div className="flex items-center text-muted-foreground">
 								<AddressLink
 									address={work.address || null}
@@ -93,10 +101,20 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp, onOpenCheckl
 							</div>
 							<div className="flex items-center gap-2 text-muted-foreground">
 								<Calendar className="h-4 w-4 flex-shrink-0" />
-								<span>
-									{formatCreatedAt(work.created_at)}
-								</span>
+								<span>{formatCreatedAt(work.created_at)}</span>
 							</div>
+							{work.zone && (
+								<div className="flex items-center gap-2 text-muted-foreground">
+									<span className="text-sm font-medium">Zona:</span>
+									<span>{work.zone}</span>
+								</div>
+							)}
+							{work.hood && (
+								<div className="flex items-center gap-2 text-muted-foreground">
+									<span className="text-sm font-medium">Barrio:</span>
+									<span>{work.hood}</span>
+								</div>
+							)}
 						</div>
 
 						<div className="space-y-2">
@@ -123,16 +141,22 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp, onOpenCheckl
 						</ChecklistCompletionModal>
 
 						{(user?.role === 'Admin' || user?.role === 'Ventas') && (
-							<Button variant="outline" size="sm" onClick={() => {onOpenChecklist(work)}}>
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => {
+									onOpenChecklist(work);
+								}}
+							>
 								<List className="mr-2 h-4 w-4" />
 								Agregar checklists
 							</Button>
 						)}
 
 						{canEditNotes && (
-							<Button 
-								variant="outline" 
-								size="sm" 
+							<Button
+								variant="outline"
+								size="sm"
 								onClick={() => setIsPostItModalOpen(true)}
 								className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
 							>
@@ -142,27 +166,27 @@ export function WorkCard({ work, user, onOpenEmail, onOpenWhatsApp, onOpenCheckl
 						)}
 
 						{canSendNotifications && (
-                            <>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => onOpenEmail(work)}
-                                    title="Enviar notificación por email"
-                                >
-                                    <Mail className="mr-2 h-4 w-4" />
-                                    Email
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => onOpenWhatsApp(work)}
-                                    title="Enviar notificación por WhatsApp"
-                                    className="border-green-600 text-green-600 hover:bg-green-50"
-                                >
-                                    <MessageCircle className="mr-2 h-4 w-4" />
-                                    WhatsApp
-                                </Button>
-                            </>
+							<>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => onOpenEmail(work)}
+									title="Enviar notificación por email"
+								>
+									<Mail className="mr-2 h-4 w-4" />
+									Email
+								</Button>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => onOpenWhatsApp(work)}
+									title="Enviar notificación por WhatsApp"
+									className="border-green-600 text-green-600 hover:bg-green-50"
+								>
+									<MessageCircle className="mr-2 h-4 w-4" />
+									WhatsApp
+								</Button>
+							</>
 						)}
 
 						{work.hasNotes && (

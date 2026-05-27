@@ -161,6 +161,8 @@ create table public.works (
   created_at timestamp with time zone not null default now(),
   locality character varying null,
   address character varying null,
+  zone character varying null,
+  hood character varying null,
   client_id bigint null,
   status character varying null,
   architect character varying null,
@@ -314,6 +316,7 @@ create table if not exists public.claims (
   resolution_date date null,
   work_locality text null,
   work_address text null,
+  work_hood text null,
   constraint claims_pkey primary key (id)
 ) TABLESPACE pg_default;
 
@@ -359,6 +362,7 @@ create table public.surveys (
   budget_id bigint not null,
   client_id bigint not null,
   notes text null,
+  due_date date null,
   constraint surveys_pkey primary key (id),
   constraint surveys_budget_id_unique unique (budget_id),
   constraint surveys_budget_id_fkey foreign KEY (budget_id) references budgets (id) on update CASCADE on delete CASCADE,

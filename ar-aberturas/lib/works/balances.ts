@@ -26,6 +26,7 @@ export type BalanceWithBudget = Balance & {
 			work: {
 				address: string;
 				locality: string;
+				zone?: string;
 			};
 		};
 	} | null;
@@ -49,7 +50,6 @@ export type BudgetWithWork = {
 	accepted?: boolean | null;
 	sold?: boolean | null;
 	lost?: boolean | null;
-	date_of_sale?: string | null;
 	pdf_url?: string | null;
 	pdf_path?: string | null;
 	number?: string | null;
@@ -61,6 +61,7 @@ export type BudgetWithWork = {
 		work: {
 			address: string;
 			locality: string;
+			zone: string;
 		};
 	};
 };
@@ -114,7 +115,8 @@ export async function getBalancesByClientId(
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select(`
+		.select(
+			`
 			*,
 			budget:budgets (
 				id,
@@ -126,14 +128,16 @@ export async function getBalancesByClientId(
 				folder_budget:folder_budgets (
 					work:works (
 						address,
-						locality
+						locality,
+						zone
 					)
 				)
 			)
-		`)
+		`
+		)
 		.eq('client_id', clientId)
 		.order('created_at', { ascending: false });
-	
+
 	return { data, error };
 }
 
@@ -153,9 +157,10 @@ export async function getBudgetsByClientId(
 					id,
 					work_id,
 					work:works!inner (
-					address,
-					locality,
-					client_id
+						address,
+						locality,
+						zone,
+						client_id
 					)
 				)
 			`
@@ -184,6 +189,7 @@ export async function getBudgetsByClientId(
 					work: {
 						address: work.address,
 						locality: work.locality,
+						zone: work.zone,
 					},
 				},
 			};

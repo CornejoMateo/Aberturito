@@ -43,7 +43,10 @@ export function SurveyBoard() {
 	const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
 	const loadSurveys = async () => {
-		if (!clients.length) return;
+		if (!clients.length) {
+			setClientsWithSurveys([]);
+			return;
+		}
 		setIsLoading(true);
 		try {
 			// Fetch all surveys at once instead of per client
@@ -173,7 +176,7 @@ export function SurveyBoard() {
 			if (targetStep === 'Sin pasos pendientes') {
 				const itemsToUpdate = draggedClient.items
 					.filter((item) => !item.completed)
-					.map((item) => ({ id: item.id, completed: true }));
+					.map((item) => ({ id: item.id, completed: true, originalCompleted: item.completed }));
 
 				if (itemsToUpdate.length === 0) {
 					toast({
@@ -183,18 +186,37 @@ export function SurveyBoard() {
 					return;
 				}
 
-				// Update each item
-				for (const item of itemsToUpdate) {
-					const { error } = await updateSurveyItem(item.id, { completed: true });
-					if (error) throw error;
+				// Store original states for rollback
+				const originalStates = itemsToUpdate.map((item) => ({
+					id: item.id,
+					completed: item.originalCompleted,
+				}));
+
+				// Update each item with rollback on failure
+				const successfulUpdates: string[] = [];
+				try {
+					for (const item of itemsToUpdate) {
+						const { error } = await updateSurveyItem(item.id, { completed: true });
+						if (error) throw error;
+						successfulUpdates.push(item.id);
+					}
+
+					toast({
+						title: 'Relevamiento actualizado',
+						description: `El cliente se movió a "Sin pasos pendientes" y ${itemsToUpdate.length} paso(s) fueron marcados como completados.`,
+					});
+
+					loadSurveys();
+				} catch (err) {
+					// Rollback successful updates
+					for (const itemId of successfulUpdates) {
+						const original = originalStates.find((s) => s.id === itemId);
+						if (original) {
+							await updateSurveyItem(itemId, { completed: original.completed });
+						}
+					}
+					throw err;
 				}
-
-				toast({
-					title: 'Relevamiento actualizado',
-					description: `El cliente se movió a "Sin pasos pendientes" y ${itemsToUpdate.length} paso(s) fueron marcados como completados.`,
-				});
-
-				loadSurveys();
 				return;
 			}
 
@@ -214,16 +236,18 @@ export function SurveyBoard() {
 			
 			// Find the current step (first uncompleted item)
 			const currentUncompletedItem = draggedClient.items.find((item) => !item.completed);
-			const currentOrder = currentUncompletedItem ? currentUncompletedItem.order : draggedClient.items.length;
+			const currentOrder = currentUncompletedItem
+				? currentUncompletedItem.order
+				: Number.POSITIVE_INFINITY;
 
-			let itemsToUpdate: Array<{ id: string; completed: boolean }>;
+			let itemsToUpdate: Array<{ id: string; completed: boolean; originalCompleted: boolean }>;
 			let message: string;
 
 			if (targetOrder > currentOrder) {
 				// Moving forward: mark items up to target as completed
 				itemsToUpdate = draggedClient.items
 					.filter((item) => item.order <= targetOrder && !item.completed)
-					.map((item) => ({ id: item.id, completed: true }));
+					.map((item) => ({ id: item.id, completed: true, originalCompleted: item.completed }));
 
 				if (itemsToUpdate.length === 0) {
 					toast({
@@ -238,14 +262,14 @@ export function SurveyBoard() {
 				// Moving backward: unmark items after target
 				itemsToUpdate = draggedClient.items
 					.filter((item) => item.order > targetOrder)
-					.map((item) => ({ id: item.id, completed: false }));
+					.map((item) => ({ id: item.id, completed: false, originalCompleted: item.completed }));
 
 				// Also ensure the target step is unmarked if it was marked
 				const targetItemAlreadyUnmarked = !draggedClient.items.find((item) => item.order === targetOrder)?.completed;
 				if (!targetItemAlreadyUnmarked) {
 					const targetItem = draggedClient.items.find((item) => item.order === targetOrder);
 					if (targetItem) {
-						itemsToUpdate.push({ id: targetItem.id, completed: false });
+						itemsToUpdate.push({ id: targetItem.id, completed: false, originalCompleted: targetItem.completed });
 					}
 				}
 
@@ -267,19 +291,38 @@ export function SurveyBoard() {
 				return;
 			}
 
-			// Update each item
-			for (const item of itemsToUpdate) {
-				const { error } = await updateSurveyItem(item.id, { completed: item.completed });
-				if (error) throw error;
+			// Store original states for rollback
+			const originalStates = itemsToUpdate.map((item) => ({
+				id: item.id,
+				completed: item.originalCompleted,
+			}));
+
+			// Update each item with rollback on failure
+			const successfulUpdates: string[] = [];
+			try {
+				for (const item of itemsToUpdate) {
+					const { error } = await updateSurveyItem(item.id, { completed: item.completed });
+					if (error) throw error;
+					successfulUpdates.push(item.id);
+				}
+
+				toast({
+					title: 'Relevamiento actualizado',
+					description: message,
+				});
+
+				// Reload surveys to reflect changes
+				loadSurveys();
+			} catch (err) {
+				// Rollback successful updates
+				for (const itemId of successfulUpdates) {
+					const original = originalStates.find((s) => s.id === itemId);
+					if (original) {
+						await updateSurveyItem(itemId, { completed: original.completed });
+					}
+				}
+				throw err;
 			}
-
-			toast({
-				title: 'Relevamiento actualizado',
-				description: message,
-			});
-
-			// Reload surveys to reflect changes
-			loadSurveys();
 		} catch (err) {
 			console.error('Error updating survey:', err);
 			toast({

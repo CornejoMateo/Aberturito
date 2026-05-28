@@ -49,6 +49,7 @@ export function WorksOpenings() {
 				item.address?.toLowerCase().includes(search) ||
 				item.client_name?.toLowerCase().includes(search) ||
 				item.client_last_name?.toLowerCase().includes(search) ||
+				item.locality?.toLowerCase().includes(search) ||
 				false;
 
 			return matchesStatus && matchesSearch;

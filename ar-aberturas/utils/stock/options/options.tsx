@@ -18,7 +18,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog';
-import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2, Pencil } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { OptionDialog } from './option-add';
 import { toast } from '@/components/ui/use-toast';
@@ -41,13 +41,25 @@ interface OptionsModalProps {
 }
 
 export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalProps) {
-	// Estados para abrir los diálogos de agregar
+	// State for opening add dialogs
 	const [isAddLineOpen, setIsAddLineOpen] = useState(false);
 	const [isAddColorOpen, setIsAddColorOpen] = useState(false);
 	const [isAddCodeOpen, setIsAddCodeOpen] = useState(false);
 	const [isAddSiteOpen, setIsAddSiteOpen] = useState(false);
 
-	// Estados para controlar qué secciones están abiertas
+	// State for edit dialogs
+	const [isEditLineOpen, setIsEditLineOpen] = useState(false);
+	const [isEditColorOpen, setIsEditColorOpen] = useState(false);
+	const [isEditCodeOpen, setIsEditCodeOpen] = useState(false);
+	const [isEditSiteOpen, setIsEditSiteOpen] = useState(false);
+
+	// State for storing data to edit
+	const [editingLine, setEditingLine] = useState<LineOption | undefined>(undefined);
+	const [editingColor, setEditingColor] = useState<ColorOption | undefined>(undefined);
+	const [editingCode, setEditingCode] = useState<CodeOption | undefined>(undefined);
+	const [editingSite, setEditingSite] = useState<SiteOption | undefined>(undefined);
+
+	// State for controlling which sections are open
 	const [openSections, setOpenSections] = useState({
 		lines: true,
 		codes: true,
@@ -62,7 +74,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 		}));
 	};
 
-	// AlertDialog for delete option
+	// State for delete option dialog
 	const [deleteDialog, setDeleteDialog] = useState<{
 		open: boolean;
 		table: string;
@@ -78,7 +90,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 		listOptions('lines').then((res) => (res.data ?? []) as LineOption[])
 	);
 
-	// Filtrar líneas según materialType
+	// Filter lines by materialType
 	const filteredLines = materialType
 		? lines.filter((line) => line.opening === materialType)
 		: lines;
@@ -91,7 +103,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 		listOptions('codes').then((res) => (res.data ?? []) as CodeOption[])
 	);
 
-	// Filtrar códigos según las líneas del materialType actual
+	// Filter codes by lines of the current materialType
 	const filteredCodes = materialType
 		? codes.filter((code) => filteredLines.some((line) => line.name_line === code.line_name))
 		: codes;
@@ -104,7 +116,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 		listOptions('colors').then((res) => (res.data ?? []) as ColorOption[])
 	);
 
-	// Filtrar colores según las líneas del materialType actual
+	// Filter colors by lines of the current materialType
 	const filteredColors = materialType
 		? colors.filter((color) => filteredLines.some((line) => line.name_line === color.line_name))
 		: colors;
@@ -169,6 +181,26 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 		}
 	};
 
+	const handleEditLine = (line: LineOption) => {
+		setEditingLine(line);
+		setIsEditLineOpen(true);
+	};
+
+	const handleEditCode = (code: CodeOption) => {
+		setEditingCode(code);
+		setIsEditCodeOpen(true);
+	};
+
+	const handleEditColor = (color: ColorOption) => {
+		setEditingColor(color);
+		setIsEditColorOpen(true);
+	};
+
+	const handleEditSite = (site: SiteOption) => {
+		setEditingSite(site);
+		setIsEditSiteOpen(true);
+	};
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
@@ -217,6 +249,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										<tr className="border-b">
 											<th className="text-left p-1">Linea</th>
 											<th className="text-left p-1">Abertura</th>
+											<th className="text-center p-1">Editar</th>
 											<th className="text-center p-1">Eliminar</th>
 										</tr>
 									</thead>
@@ -225,6 +258,16 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 											<tr key={`${line.id}-${line.name_line}-${idx}`} className="border-b">
 												<td className="p-1">{line.name_line}</td>
 												<td className="p-1">{line.opening}</td>
+												<td className="p-1 text-center">
+													<Button
+														variant="ghost"
+														size="icon"
+														className="mx-auto"
+														onClick={() => handleEditLine(line)}
+													>
+														<Pencil className="w-4 h-4" />
+													</Button>
+												</td>
 												<td className="p-1 text-center">
 													<Button
 														variant="ghost"
@@ -287,6 +330,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										<tr className="border-b">
 											<th className="text-left p-1">Código</th>
 											<th className="text-left p-1">Línea</th>
+											<th className="text-center p-1">Editar</th>
 											<th className="text-center p-1">Eliminar</th>
 										</tr>
 									</thead>
@@ -295,6 +339,16 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 											<tr key={`${code.id}-${code.name_code}-${idx}`} className="border-b">
 												<td className="p-1">{code.name_code}</td>
 												<td className="p-1">{code.line_name}</td>
+												<td className="p-1 text-center">
+													<Button
+														variant="ghost"
+														size="icon"
+														className="mx-auto"
+														onClick={() => handleEditCode(code)}
+													>
+														<Pencil className="w-4 h-4" />
+													</Button>
+												</td>
 												<td className="p-1 text-center">
 													<Button
 														variant="ghost"
@@ -357,6 +411,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										<tr className="border-b">
 											<th className="text-left p-1">Color</th>
 											<th className="text-left p-1">Línea</th>
+											<th className="text-center p-1">Editar</th>
 											<th className="text-center p-1">Eliminar</th>
 										</tr>
 									</thead>
@@ -365,6 +420,16 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 											<tr key={`${color.id}-${color.name_color}-${idx}`} className="border-b">
 												<td className="p-1">{color.name_color}</td>
 												<td className="p-1">{color.line_name}</td>
+												<td className="p-1 text-center">
+													<Button
+														variant="ghost"
+														size="icon"
+														className="mx-auto"
+														onClick={() => handleEditColor(color)}
+													>
+														<Pencil className="w-4 h-4" />
+													</Button>
+												</td>
 												<td className="p-1 text-center">
 													<Button
 														variant="ghost"
@@ -425,6 +490,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 									<thead>
 										<tr className="border-b">
 											<th className="text-left p-1">Ubicación</th>
+											<th className="text-center p-1">Editar</th>
 											<th className="text-center p-1">Eliminar</th>
 										</tr>
 									</thead>
@@ -432,6 +498,16 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										{sites.map((site: SiteOption) => (
 											<tr key={`${site.id}-${site.name_site}`} className="border-b">
 												<td className="p-1">{site.name_site}</td>
+												<td className="p-1 text-center">
+													<Button
+														variant="ghost"
+														size="icon"
+														className="mx-auto"
+														onClick={() => handleEditSite(site)}
+													>
+														<Pencil className="w-4 h-4" />
+													</Button>
+												</td>
 												<td className="p-1 text-center">
 													<Button
 														variant="ghost"
@@ -457,6 +533,95 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 						</CollapsibleContent>
 					</Collapsible>
 				</div>
+
+				{/* Edit dialogs */}
+				<OptionDialog
+					open={isEditLineOpen}
+					onOpenChange={setIsEditLineOpen}
+					initialData={editingLine}
+					onSave={async (option) => {
+						const oldLineName = editingLine?.name_line;
+						const newLineName = (option as LineOption).name_line;
+
+						// Update lines state
+						const updatedLines = lines.map((l) =>
+							l.id === option.id ? (option as LineOption) : l
+						);
+						updateLines(updatedLines);
+						localStorage.setItem('lines', JSON.stringify(updatedLines));
+
+						// If line name changed, update codes and colors
+						if (oldLineName && newLineName && oldLineName !== newLineName) {
+							const updatedCodes = codes.map((c) =>
+								c.line_name === oldLineName ? { ...c, line_name: newLineName } : c
+							);
+							updateCodes(updatedCodes);
+							localStorage.setItem('codes', JSON.stringify(updatedCodes));
+
+							const updatedColors = colors.map((c) =>
+								c.line_name === oldLineName ? { ...c, line_name: newLineName } : c
+							);
+							updateColors(updatedColors);
+							localStorage.setItem('colors', JSON.stringify(updatedColors));
+						}
+
+						setEditingLine(undefined);
+					}}
+					triggerButton={false}
+					table="lines"
+					materialType={materialType}
+				/>
+
+				<OptionDialog
+					open={isEditCodeOpen}
+					onOpenChange={setIsEditCodeOpen}
+					initialData={editingCode}
+					onSave={async (option) => {
+						const updated = codes.map((c) =>
+							c.id === option.id ? (option as CodeOption) : c
+						);
+						updateCodes(updated);
+						localStorage.setItem('codes', JSON.stringify(updated));
+						setEditingCode(undefined);
+					}}
+					triggerButton={false}
+					table="codes"
+					materialType={materialType}
+				/>
+
+				<OptionDialog
+					open={isEditColorOpen}
+					onOpenChange={setIsEditColorOpen}
+					initialData={editingColor}
+					onSave={async (option) => {
+						const updated = colors.map((c) =>
+							c.id === option.id ? (option as ColorOption) : c
+						);
+						updateColors(updated);
+						localStorage.setItem('colors', JSON.stringify(updated));
+						setEditingColor(undefined);
+					}}
+					triggerButton={false}
+					table="colors"
+					materialType={materialType}
+				/>
+
+				<OptionDialog
+					open={isEditSiteOpen}
+					onOpenChange={setIsEditSiteOpen}
+					initialData={editingSite}
+					onSave={async (option) => {
+						const updated = sites.map((s) =>
+							s.id === option.id ? (option as SiteOption) : s
+						);
+						updateSites(updated);
+						localStorage.setItem('sites', JSON.stringify(updated));
+						setEditingSite(undefined);
+					}}
+					triggerButton={false}
+					table="sites"
+					materialType={materialType}
+				/>
 
 				{/* AlertDialog for delete option */}
 				<AlertDialog

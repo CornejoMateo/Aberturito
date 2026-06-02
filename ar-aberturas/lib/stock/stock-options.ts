@@ -83,3 +83,56 @@ export async function deleteOption(
 		return { success: false, error: error.message, data: null };
 	}
 }
+
+export async function updateOption<T>(
+	table: string,
+	id: number,
+	item: Partial<T>
+): Promise<{ data: T | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(table)
+		.update(item as any)
+		.eq('id', id)
+		.select()
+		.single();
+	return { data, error };
+}
+
+export async function updateLineWithDependencies(
+	id: number,
+	oldLineName: string,
+	newLineName: string
+): Promise<{ success: boolean; error?: any }> {
+	const supabase = getSupabaseClient();
+
+	try {
+		// Update the line
+		const { error: lineError } = await supabase
+			.from('lines')
+			.update({ name_line: newLineName })
+			.eq('id', id);
+
+		if (lineError) throw lineError;
+
+		// Update all codes that reference the old line name
+		const { error: codesError } = await supabase
+			.from('codes')
+			.update({ line_name: newLineName })
+			.eq('line_name', oldLineName);
+
+		if (codesError) throw codesError;
+
+		// Update all colors that reference the old line name
+		const { error: colorsError } = await supabase
+			.from('colors')
+			.update({ line_name: newLineName })
+			.eq('line_name', oldLineName);
+
+		if (colorsError) throw colorsError;
+
+		return { success: true };
+	} catch (error: any) {
+		return { success: false, error };
+	}
+}

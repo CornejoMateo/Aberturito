@@ -61,6 +61,20 @@ export async function createOption<T>(
 	return { data, error };
 }
 
+export async function updateOption<T>(
+	table: string,
+	id: number,
+	item: Partial<T>
+): Promise<{ data: T | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(table)
+		.update(item as any)
+		.eq('id', id)
+		.select('*');
+	return { data: data && data.length > 0 ? (data[0] as T) : null, error };
+}
+
 export async function deleteOption(
 	table: string,
 	id: number,

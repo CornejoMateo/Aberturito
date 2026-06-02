@@ -18,7 +18,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog';
-import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2, Edit } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { OptionDialog } from './option-add';
 import { toast } from '@/components/ui/use-toast';
@@ -46,6 +46,12 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 	const [isAddColorOpen, setIsAddColorOpen] = useState(false);
 	const [isAddCodeOpen, setIsAddCodeOpen] = useState(false);
 	const [isAddSiteOpen, setIsAddSiteOpen] = useState(false);
+
+	// States for editing options
+	const [editingLine, setEditingLine] = useState<LineOption | null>(null);
+	const [editingCode, setEditingCode] = useState<CodeOption | null>(null);
+	const [editingColor, setEditingColor] = useState<ColorOption | null>(null);
+	const [editingSite, setEditingSite] = useState<SiteOption | null>(null);
 
 	// Estados para controlar qué secciones están abiertas
 	const [openSections, setOpenSections] = useState({
@@ -217,7 +223,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										<tr className="border-b">
 											<th className="text-left p-1">Linea</th>
 											<th className="text-left p-1">Abertura</th>
-											<th className="text-center p-1">Eliminar</th>
+											<th className="text-center p-1">Acciones</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -226,21 +232,29 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 												<td className="p-1">{line.name_line}</td>
 												<td className="p-1">{line.opening}</td>
 												<td className="p-1 text-center">
-													<Button
-														variant="ghost"
-														size="icon"
-														className="mx-auto"
-														onClick={() =>
-															setDeleteDialog({
-																open: true,
-																table: 'lines',
-																id: line.id,
-																label: line.name_line ?? '',
-															})
-														}
-													>
-														<Trash2 className="w-4 h-4 text-destructive" />
-													</Button>
+													<div className="flex gap-2 justify-center">
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() => setEditingLine(line)}
+														>
+															<Edit className="w-4 h-4 text-primary" />
+														</Button>
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() =>
+																setDeleteDialog({
+																	open: true,
+																	table: 'lines',
+																	id: line.id,
+																	label: line.name_line ?? '',
+																})
+															}
+														>
+															<Trash2 className="w-4 h-4 text-destructive" />
+														</Button>
+													</div>
 												</td>
 											</tr>
 										))}
@@ -287,7 +301,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										<tr className="border-b">
 											<th className="text-left p-1">Código</th>
 											<th className="text-left p-1">Línea</th>
-											<th className="text-center p-1">Eliminar</th>
+											<th className="text-center p-1">Acciones</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -296,21 +310,29 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 												<td className="p-1">{code.name_code}</td>
 												<td className="p-1">{code.line_name}</td>
 												<td className="p-1 text-center">
-													<Button
-														variant="ghost"
-														size="icon"
-														className="mx-auto"
-														onClick={() =>
-															setDeleteDialog({
-																open: true,
-																table: 'codes',
-																id: code.id,
-																label: code.name_code ?? '',
-															})
-														}
-													>
-														<Trash2 className="w-4 h-4 text-destructive" />
-													</Button>
+													<div className="flex gap-2 justify-center">
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() => setEditingCode(code)}
+														>
+															<Edit className="w-4 h-4 text-primary" />
+														</Button>
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() =>
+																setDeleteDialog({
+																	open: true,
+																	table: 'codes',
+																	id: code.id,
+																	label: code.name_code ?? '',
+																})
+															}
+														>
+															<Trash2 className="w-4 h-4 text-destructive" />
+														</Button>
+													</div>
 												</td>
 											</tr>
 										))}
@@ -357,7 +379,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										<tr className="border-b">
 											<th className="text-left p-1">Color</th>
 											<th className="text-left p-1">Línea</th>
-											<th className="text-center p-1">Eliminar</th>
+											<th className="text-center p-1">Acciones</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -366,21 +388,29 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 												<td className="p-1">{color.name_color}</td>
 												<td className="p-1">{color.line_name}</td>
 												<td className="p-1 text-center">
-													<Button
-														variant="ghost"
-														size="icon"
-														className="mx-auto"
-														onClick={() =>
-															setDeleteDialog({
-																open: true,
-																table: 'colors',
-																id: color.id,
-																label: color.name_color ?? '',
-															})
-														}
-													>
-														<Trash2 className="w-4 h-4 text-destructive" />
-													</Button>
+													<div className="flex gap-2 justify-center">
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() => setEditingColor(color)}
+														>
+															<Edit className="w-4 h-4 text-primary" />
+														</Button>
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() =>
+																setDeleteDialog({
+																	open: true,
+																	table: 'colors',
+																	id: color.id,
+																	label: color.name_color ?? '',
+																})
+															}
+														>
+															<Trash2 className="w-4 h-4 text-destructive" />
+														</Button>
+													</div>
 												</td>
 											</tr>
 										))}
@@ -425,7 +455,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 									<thead>
 										<tr className="border-b">
 											<th className="text-left p-1">Ubicación</th>
-											<th className="text-center p-1">Eliminar</th>
+											<th className="text-center p-1">Acciones</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -433,21 +463,29 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 											<tr key={`${site.id}-${site.name_site}`} className="border-b">
 												<td className="p-1">{site.name_site}</td>
 												<td className="p-1 text-center">
-													<Button
-														variant="ghost"
-														size="icon"
-														className="mx-auto"
-														onClick={() =>
-															setDeleteDialog({
-																open: true,
-																table: 'sites',
-																id: site.id,
-																label: site.name_site ?? '',
-															})
-														}
-													>
-														<Trash2 className="w-4 h-4 text-destructive" />
-													</Button>
+													<div className="flex gap-2 justify-center">
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() => setEditingSite(site)}
+														>
+															<Edit className="w-4 h-4 text-primary" />
+														</Button>
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() =>
+																setDeleteDialog({
+																	open: true,
+																	table: 'sites',
+																	id: site.id,
+																	label: site.name_site ?? '',
+																})
+															}
+														>
+															<Trash2 className="w-4 h-4 text-destructive" />
+														</Button>
+													</div>
 												</td>
 											</tr>
 										))}
@@ -457,6 +495,77 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 						</CollapsibleContent>
 					</Collapsible>
 				</div>
+
+				{/* AlertDialog for delete option */}
+				{/* Edit Dialogs for options */}
+				<OptionDialog
+					open={!!editingLine}
+					onOpenChange={(open) => {
+						if (!open) setEditingLine(null);
+					}}
+					materialType={materialType}
+					onSave={async (option) => {
+						const updated = lines
+							.map((l) => (l.id === editingLine?.id ? (option as LineOption) : l))
+							.sort((a, b) => a.name_line.localeCompare(b.name_line));
+						localStorage.setItem('lines', JSON.stringify(updated));
+						updateLines(updated);
+						setEditingLine(null);
+					}}
+					triggerButton={false}
+					table="lines"
+					editingItem={editingLine}
+				/>
+
+				<OptionDialog
+					open={!!editingCode}
+					onOpenChange={(open) => {
+						if (!open) setEditingCode(null);
+					}}
+					onSave={async (option) => {
+						const updated = codes.map((c) => (c.id === editingCode?.id ? (option as CodeOption) : c));
+						localStorage.setItem('codes', JSON.stringify(updated));
+						updateCodes(updated);
+						setEditingCode(null);
+					}}
+					triggerButton={false}
+					table="codes"
+					materialType={materialType}
+					editingItem={editingCode}
+				/>
+
+				<OptionDialog
+					open={!!editingColor}
+					onOpenChange={(open) => {
+						if (!open) setEditingColor(null);
+					}}
+					onSave={async (option) => {
+						const updated = colors.map((c) => (c.id === editingColor?.id ? (option as ColorOption) : c));
+						localStorage.setItem('colors', JSON.stringify(updated));
+						updateColors(updated);
+						setEditingColor(null);
+					}}
+					triggerButton={false}
+					table="colors"
+					materialType={materialType}
+					editingItem={editingColor}
+				/>
+
+				<OptionDialog
+					open={!!editingSite}
+					onOpenChange={(open) => {
+						if (!open) setEditingSite(null);
+					}}
+					onSave={async (option) => {
+						const updated = sites.map((s) => (s.id === editingSite?.id ? (option as SiteOption) : s));
+						localStorage.setItem('sites', JSON.stringify(updated));
+						updateSites(updated);
+						setEditingSite(null);
+					}}
+					triggerButton={false}
+					table="sites"
+					editingItem={editingSite}
+				/>
 
 				{/* AlertDialog for delete option */}
 				<AlertDialog

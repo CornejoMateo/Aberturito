@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/select';
 import {
 	createOption,
+	updateOption,
 	type LineOption,
 	CodeOption,
 	ColorOption,
@@ -41,6 +42,7 @@ interface OptionFormDialogProps {
 	triggerButton?: boolean;
 	materialType?: 'Aluminio' | 'PVC';
 	table?: 'lines' | 'codes' | 'colors' | 'sites';
+	editingItem?: LineOption | CodeOption | ColorOption | SiteOption | null;
 }
 
 export function OptionDialog({
@@ -50,6 +52,7 @@ export function OptionDialog({
 	onSave,
 	triggerButton = true,
 	materialType = 'Aluminio',
+	editingItem = null,
 }: OptionFormDialogProps) {
 	const [option, setOption] = useState('');
 	const [dependence, setDependence] = useState('');
@@ -57,31 +60,62 @@ export function OptionDialog({
 	const [title, setTitle] = useState('');
 	const [name, setName] = useState('');
 	const [optionName, setOptionName] = useState('');
+	const isEditing = !!editingItem;
 
 	React.useEffect(() => {
 		if (table === 'lines') {
-			setTitle('Agregar Linea');
+			setTitle(isEditing ? 'Editar Línea' : 'Agregar Linea');
 			setName('Nombre de la línea');
+			setOptionName('Línea');
 		} else if (table === 'codes') {
-			setTitle('Agregar Código');
+			setTitle(isEditing ? 'Editar Código' : 'Agregar Código');
 			setName('Nombre del código');
+			setOptionName('Código');
 		} else if (table === 'colors') {
-			setTitle('Agregar Color');
+			setTitle(isEditing ? 'Editar Color' : 'Agregar Color');
 			setName('Nombre del color');
+			setOptionName('Color');
 		} else if (table === 'sites') {
-			setTitle('Agregar Ubicación');
+			setTitle(isEditing ? 'Editar Ubicación' : 'Agregar Ubicación');
 			setName('Nombre de la ubicación');
+			setOptionName('Ubicación');
 		} else {
-			setTitle('Agregar opción');
+			setTitle(isEditing ? 'Editar opción' : 'Agregar opción');
 		}
-	}, [table]);
+	}, [table, isEditing]);
 
-	// Set default value for 'Abertura' select when dialog opens for lines
+	// Load existing data into form when editing, or clear form when creating new
 	React.useEffect(() => {
-		if (open && table === 'lines') {
+		if (open && isEditing) {
+			if (table === 'lines' && 'name_line' in editingItem) {
+				setOption(editingItem.name_line);
+				setDependence(editingItem.opening);
+			} else if (table === 'codes' && 'name_code' in editingItem) {
+				setOption(editingItem.name_code);
+				setDependence(editingItem.line_name);
+			} else if (table === 'colors' && 'name_color' in editingItem) {
+				setOption(editingItem.name_color);
+				setDependence(editingItem.line_name);
+			} else if (table === 'sites' && 'name_site' in editingItem) {
+				setOption(editingItem.name_site);
+			}
+		} else if (open && !isEditing) {
+			// Clear form when opening for new option
+			setOption('');
+			if (table === 'lines') {
+				setDependence(materialType || 'Aluminio');
+			} else {
+				setDependence('');
+			}
+		}
+	}, [open, editingItem, isEditing, table, materialType]);
+
+	// Set default value for 'Abertura' select when dialog opens for lines (solo si no es edición)
+	React.useEffect(() => {
+		if (open && table === 'lines' && !isEditing) {
 			setDependence(materialType || 'Aluminio');
 		}
-	}, [open, table, materialType]);
+	}, [open, table, materialType, isEditing]);
 
 	const handleSave = async () => {
 		if (!option) {
@@ -102,32 +136,52 @@ export function OptionDialog({
 			fields.name_line = option ?? '';
 			fields.opening = dependence ?? '';
 			fieldName = 'línea';
-			successMessage = 'Línea guardada correctamente';
+			successMessage = isEditing ? 'Línea actualizada correctamente' : 'Línea guardada correctamente';
 			setOptionName('Linea');
 		} else if (tableName === 'codes') {
 			fields.name_code = option ?? '';
 			fields.line_name = dependence ?? '';
 			fieldName = 'código';
-			successMessage = 'Código guardado correctamente';
+			successMessage = isEditing ? 'Código actualizado correctamente' : 'Código guardado correctamente';
 			setOptionName('Código');
 		} else if (tableName === 'colors') {
 			fields.name_color = option ?? '';
 			fields.line_name = dependence ?? '';
 			fieldName = 'color';
-			successMessage = 'Color guardado correctamente';
+			successMessage = isEditing ? 'Color actualizado correctamente' : 'Color guardado correctamente';
 			setOptionName('Color');
 		} else if (tableName === 'sites') {
 			fields.name_site = option ?? '';
 			fieldName = 'ubicación';
-			successMessage = 'Ubicación guardada correctamente';
+			successMessage = isEditing ? 'Ubicación actualizada correctamente' : 'Ubicación guardada correctamente';
 			setOptionName('Ubicación');
 		}
-		const { data, error } = await createOption(tableName ?? '', fields);
+
+		let data: any = null;
+		let error: any = null;
+
+		if (isEditing && editingItem && 'id' in editingItem) {
+			// Modo edición - actualizar los campos editados
+			const result = await updateOption(tableName ?? '', editingItem.id, fields);
+			data = result.data;
+			error = result.error;
+
+			// Si no hay error pero tampoco data, usamos los datos editados
+			if (!error && !data) {
+				data = { ...editingItem, ...fields };
+			}
+		} else {
+			// Mode creation
+			const result = await createOption(tableName ?? '', fields);
+			data = result.data;
+			error = result.error;
+		}
+
 		if (error) {
 			console.error('Supabase error:', error);
 			let errorMessage = translateError(error);
 			toast({
-				title: 'Error al guardar',
+				title: isEditing ? 'Error al actualizar' : 'Error al guardar',
 				description: errorMessage,
 				variant: 'destructive',
 				duration: 5000,
@@ -163,8 +217,10 @@ export function OptionDialog({
 
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader className="flex-shrink-0">
-					<DialogTitle>Agregar nueva opción</DialogTitle>
-					<DialogDescription>Ingrese los datos</DialogDescription>
+					<DialogTitle>{isEditing ? 'Editar opción' : 'Agregar nueva opción'}</DialogTitle>
+					<DialogDescription>
+						{isEditing ? 'Actualice los datos' : 'Ingrese los datos'}
+					</DialogDescription>
 				</DialogHeader>
 
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2">
@@ -216,7 +272,7 @@ export function OptionDialog({
 						Cancelar
 					</Button>
 					<Button onClick={handleSave} className="w-full sm:w-auto">
-						Guardar
+						{isEditing ? 'Actualizar' : 'Guardar'}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

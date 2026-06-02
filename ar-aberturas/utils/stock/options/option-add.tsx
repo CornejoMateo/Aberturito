@@ -26,7 +26,6 @@ import {
 import {
 	createOption,
 	updateOption,
-	updateLineWithDependencies,
 	type LineOption,
 	CodeOption,
 	ColorOption,
@@ -132,24 +131,32 @@ export function OptionDialog({
 			fields.name_line = option ?? '';
 			fields.opening = dependence ?? '';
 			fieldName = 'línea';
-			successMessage = isEditMode ? 'Línea actualizada correctamente' : 'Línea guardada correctamente';
+			successMessage = isEditMode
+				? 'Línea actualizada correctamente'
+				: 'Línea guardada correctamente';
 			setOptionName('Linea');
 		} else if (tableName === 'codes') {
 			fields.name_code = option ?? '';
 			fields.line_name = dependence ?? '';
 			fieldName = 'código';
-			successMessage = isEditMode ? 'Código actualizado correctamente' : 'Código guardado correctamente';
+			successMessage = isEditMode
+				? 'Código actualizado correctamente'
+				: 'Código guardado correctamente';
 			setOptionName('Código');
 		} else if (tableName === 'colors') {
 			fields.name_color = option ?? '';
 			fields.line_name = dependence ?? '';
 			fieldName = 'color';
-			successMessage = isEditMode ? 'Color actualizado correctamente' : 'Color guardado correctamente';
+			successMessage = isEditMode
+				? 'Color actualizado correctamente'
+				: 'Color guardado correctamente';
 			setOptionName('Color');
 		} else if (tableName === 'sites') {
 			fields.name_site = option ?? '';
 			fieldName = 'ubicación';
-			successMessage = isEditMode ? 'Ubicación actualizada correctamente' : 'Ubicación guardada correctamente';
+			successMessage = isEditMode
+				? 'Ubicación actualizada correctamente'
+				: 'Ubicación guardada correctamente';
 			setOptionName('Ubicación');
 		}
 
@@ -159,51 +166,9 @@ export function OptionDialog({
 		if (isEditMode && initialData) {
 			// Handle update
 			const id = initialData.id;
-
-			// Special case for lines: cascade changes to codes and colors
-			if (tableName === 'lines') {
-				const oldLineName = (initialData as LineOption).name_line;
-				const newLineName = fields.name_line;
-
-				if (oldLineName !== newLineName) {
-					const result = await updateLineWithDependencies(id, oldLineName, newLineName);
-					if (result.error) {
-						console.error('Error updating line with dependencies:', result.error);
-						let errorMessage = translateError(result.error);
-						toast({
-							title: 'Error al actualizar',
-							description: errorMessage,
-							variant: 'destructive',
-							duration: 5000,
-						});
-						return;
-					}
-					// Also update opening field after successful line name change
-					const openingResult = await updateOption(tableName ?? '', id, { opening: fields.opening });
-					if (openingResult.error) {
-						console.error('Error updating opening:', openingResult.error);
-						let errorMessage = translateError(openingResult.error);
-						toast({
-							title: 'Error al actualizar',
-							description: errorMessage,
-							variant: 'destructive',
-							duration: 5000,
-						});
-						return;
-					}
-					data = { ...initialData, ...fields };
-				} else {
-					// Only update opening if line name didn't change
-					const updateResult = await updateOption(tableName ?? '', id, { opening: fields.opening });
-					data = updateResult.data;
-					error = updateResult.error;
-				}
-			} else {
-				// Regular update for codes, colors, sites
-				const updateResult = await updateOption(tableName ?? '', id, fields);
-				data = updateResult.data;
-				error = updateResult.error;
-			}
+			const updateResult = await updateOption(tableName ?? '', id, fields);
+			data = updateResult.data;
+			error = updateResult.error;
 		} else {
 			// Handle create
 			const createResult = await createOption(tableName ?? '', fields);
@@ -252,7 +217,9 @@ export function OptionDialog({
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader className="flex-shrink-0">
 					<DialogTitle>{isEditMode ? 'Editar opción' : 'Agregar nueva opción'}</DialogTitle>
-					<DialogDescription>{isEditMode ? 'Modifique los datos' : 'Ingrese los datos'}</DialogDescription>
+					<DialogDescription>
+						{isEditMode ? 'Modifique los datos' : 'Ingrese los datos'}
+					</DialogDescription>
 				</DialogHeader>
 
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2">

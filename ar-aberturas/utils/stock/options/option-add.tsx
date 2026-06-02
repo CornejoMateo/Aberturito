@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/select';
 import {
 	createOption,
+	updateOption,
 	type LineOption,
 	CodeOption,
 	ColorOption,
@@ -41,6 +42,7 @@ interface OptionFormDialogProps {
 	triggerButton?: boolean;
 	materialType?: 'Aluminio' | 'PVC';
 	table?: 'lines' | 'codes' | 'colors' | 'sites';
+	initialData?: LineOption | CodeOption | ColorOption | SiteOption;
 }
 
 export function OptionDialog({
@@ -50,6 +52,7 @@ export function OptionDialog({
 	onSave,
 	triggerButton = true,
 	materialType = 'Aluminio',
+	initialData,
 }: OptionFormDialogProps) {
 	const [option, setOption] = useState('');
 	const [dependence, setDependence] = useState('');
@@ -57,24 +60,25 @@ export function OptionDialog({
 	const [title, setTitle] = useState('');
 	const [name, setName] = useState('');
 	const [optionName, setOptionName] = useState('');
+	const isEditMode = !!initialData;
 
 	React.useEffect(() => {
 		if (table === 'lines') {
-			setTitle('Agregar Linea');
+			setTitle(isEditMode ? 'Editar Linea' : 'Agregar Linea');
 			setName('Nombre de la línea');
 		} else if (table === 'codes') {
-			setTitle('Agregar Código');
+			setTitle(isEditMode ? 'Editar Código' : 'Agregar Código');
 			setName('Nombre del código');
 		} else if (table === 'colors') {
-			setTitle('Agregar Color');
+			setTitle(isEditMode ? 'Editar Color' : 'Agregar Color');
 			setName('Nombre del color');
 		} else if (table === 'sites') {
-			setTitle('Agregar Ubicación');
+			setTitle(isEditMode ? 'Editar Ubicación' : 'Agregar Ubicación');
 			setName('Nombre de la ubicación');
 		} else {
-			setTitle('Agregar opción');
+			setTitle(isEditMode ? 'Editar opción' : 'Agregar opción');
 		}
-	}, [table]);
+	}, [table, isEditMode]);
 
 	// Set default value for 'Abertura' select when dialog opens for lines
 	React.useEffect(() => {
@@ -82,6 +86,31 @@ export function OptionDialog({
 			setDependence(materialType || 'Aluminio');
 		}
 	}, [open, table, materialType]);
+
+	// Populate form fields when editing
+	React.useEffect(() => {
+		if (initialData) {
+			if (table === 'lines') {
+				setOption((initialData as LineOption).name_line);
+				setDependence((initialData as LineOption).opening);
+				setOptionName('Linea');
+			} else if (table === 'codes') {
+				setOption((initialData as CodeOption).name_code);
+				setDependence((initialData as CodeOption).line_name);
+				setOptionName('Código');
+			} else if (table === 'colors') {
+				setOption((initialData as ColorOption).name_color);
+				setDependence((initialData as ColorOption).line_name);
+				setOptionName('Color');
+			} else if (table === 'sites') {
+				setOption((initialData as SiteOption).name_site);
+				setOptionName('Ubicación');
+			}
+		} else {
+			setOption('');
+			setDependence('');
+		}
+	}, [initialData, table]);
 
 	const handleSave = async () => {
 		if (!option) {
@@ -102,32 +131,56 @@ export function OptionDialog({
 			fields.name_line = option ?? '';
 			fields.opening = dependence ?? '';
 			fieldName = 'línea';
-			successMessage = 'Línea guardada correctamente';
+			successMessage = isEditMode
+				? 'Línea actualizada correctamente'
+				: 'Línea guardada correctamente';
 			setOptionName('Linea');
 		} else if (tableName === 'codes') {
 			fields.name_code = option ?? '';
 			fields.line_name = dependence ?? '';
 			fieldName = 'código';
-			successMessage = 'Código guardado correctamente';
+			successMessage = isEditMode
+				? 'Código actualizado correctamente'
+				: 'Código guardado correctamente';
 			setOptionName('Código');
 		} else if (tableName === 'colors') {
 			fields.name_color = option ?? '';
 			fields.line_name = dependence ?? '';
 			fieldName = 'color';
-			successMessage = 'Color guardado correctamente';
+			successMessage = isEditMode
+				? 'Color actualizado correctamente'
+				: 'Color guardado correctamente';
 			setOptionName('Color');
 		} else if (tableName === 'sites') {
 			fields.name_site = option ?? '';
 			fieldName = 'ubicación';
-			successMessage = 'Ubicación guardada correctamente';
+			successMessage = isEditMode
+				? 'Ubicación actualizada correctamente'
+				: 'Ubicación guardada correctamente';
 			setOptionName('Ubicación');
 		}
-		const { data, error } = await createOption(tableName ?? '', fields);
+
+		let data: any = null;
+		let error: any = null;
+
+		if (isEditMode && initialData) {
+			// Handle update
+			const id = initialData.id;
+			const updateResult = await updateOption(tableName ?? '', id, fields);
+			data = updateResult.data;
+			error = updateResult.error;
+		} else {
+			// Handle create
+			const createResult = await createOption(tableName ?? '', fields);
+			data = createResult.data;
+			error = createResult.error;
+		}
+
 		if (error) {
 			console.error('Supabase error:', error);
 			let errorMessage = translateError(error);
 			toast({
-				title: 'Error al guardar',
+				title: isEditMode ? 'Error al actualizar' : 'Error al guardar',
 				description: errorMessage,
 				variant: 'destructive',
 				duration: 5000,
@@ -163,8 +216,10 @@ export function OptionDialog({
 
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader className="flex-shrink-0">
-					<DialogTitle>Agregar nueva opción</DialogTitle>
-					<DialogDescription>Ingrese los datos</DialogDescription>
+					<DialogTitle>{isEditMode ? 'Editar opción' : 'Agregar nueva opción'}</DialogTitle>
+					<DialogDescription>
+						{isEditMode ? 'Modifique los datos' : 'Ingrese los datos'}
+					</DialogDescription>
 				</DialogHeader>
 
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2">

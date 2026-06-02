@@ -178,6 +178,19 @@ export function OptionDialog({
 						});
 						return;
 					}
+					// Also update opening field after successful line name change
+					const openingResult = await updateOption(tableName ?? '', id, { opening: fields.opening });
+					if (openingResult.error) {
+						console.error('Error updating opening:', openingResult.error);
+						let errorMessage = translateError(openingResult.error);
+						toast({
+							title: 'Error al actualizar',
+							description: errorMessage,
+							variant: 'destructive',
+							duration: 5000,
+						});
+						return;
+					}
 					data = { ...initialData, ...fields };
 				} else {
 					// Only update opening if line name didn't change

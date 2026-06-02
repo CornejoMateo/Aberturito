@@ -121,7 +121,14 @@ export async function updateLineWithDependencies(
 			.update({ line_name: newLineName })
 			.eq('line_name', oldLineName);
 
-		if (codesError) throw codesError;
+		if (codesError) {
+			// Rollback line update
+			await supabase
+				.from('lines')
+				.update({ name_line: oldLineName })
+				.eq('id', id);
+			throw codesError;
+		}
 
 		// Update all colors that reference the old line name
 		const { error: colorsError } = await supabase
@@ -129,7 +136,18 @@ export async function updateLineWithDependencies(
 			.update({ line_name: newLineName })
 			.eq('line_name', oldLineName);
 
-		if (colorsError) throw colorsError;
+		if (colorsError) {
+			// Rollback both line and codes updates
+			await supabase
+				.from('lines')
+				.update({ name_line: oldLineName })
+				.eq('id', id);
+			await supabase
+				.from('codes')
+				.update({ line_name: oldLineName })
+				.eq('line_name', newLineName);
+			throw colorsError;
+		}
 
 		return { success: true };
 	} catch (error: any) {

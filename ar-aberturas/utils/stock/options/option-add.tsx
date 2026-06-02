@@ -29,18 +29,22 @@ import {
 	CodeOption,
 	ColorOption,
 	SiteOption,
+	updateOption,
 } from '@/lib/stock/stock-options';
 import React from 'react';
 import { LineSelect } from '@/components/stock/line-select';
 import { translateError } from '@/lib/error-translator';
 
+type OptionItem = LineOption | CodeOption | ColorOption | SiteOption;
+
 interface OptionFormDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	onSave?: (option: LineOption | CodeOption | ColorOption | SiteOption) => Promise<void>;
+	onSave?: (option: OptionItem) => Promise<void>;
 	triggerButton?: boolean;
 	materialType?: 'Aluminio' | 'PVC';
 	table?: 'lines' | 'codes' | 'colors' | 'sites';
+	optionToEdit?: OptionItem | null;
 }
 
 export function OptionDialog({
@@ -50,6 +54,7 @@ export function OptionDialog({
 	onSave,
 	triggerButton = true,
 	materialType = 'Aluminio',
+	optionToEdit = null,
 }: OptionFormDialogProps) {
 	const [option, setOption] = useState('');
 	const [dependence, setDependence] = useState('');
@@ -57,34 +62,75 @@ export function OptionDialog({
 	const [title, setTitle] = useState('');
 	const [name, setName] = useState('');
 	const [optionName, setOptionName] = useState('');
+	const isEditMode = Boolean(optionToEdit);
+
+	const resetForm = React.useCallback(() => {
+		if (table === 'lines') {
+			setDependence((optionToEdit as LineOption | null)?.opening || materialType || 'Aluminio');
+			setOption((optionToEdit as LineOption | null)?.name_line || '');
+			return;
+		}
+
+		if (table === 'codes') {
+			setDependence((optionToEdit as CodeOption | null)?.line_name || '');
+			setOption((optionToEdit as CodeOption | null)?.name_code || '');
+			return;
+		}
+
+		if (table === 'colors') {
+			setDependence((optionToEdit as ColorOption | null)?.line_name || '');
+			setOption((optionToEdit as ColorOption | null)?.name_color || '');
+			return;
+		}
+
+		if (table === 'sites') {
+			setDependence('');
+			setOption((optionToEdit as SiteOption | null)?.name_site || '');
+			return;
+		}
+
+		setOption('');
+		setDependence('');
+	}, [materialType, optionToEdit, table]);
+
+	React.useEffect(() => {
+		setTableName(table);
+	}, [table]);
 
 	React.useEffect(() => {
 		if (table === 'lines') {
-			setTitle('Agregar Linea');
+			setTitle(isEditMode ? 'Editar Línea' : 'Agregar Línea');
 			setName('Nombre de la línea');
+			setOptionName('Línea');
 		} else if (table === 'codes') {
-			setTitle('Agregar Código');
+			setTitle(isEditMode ? 'Editar Código' : 'Agregar Código');
 			setName('Nombre del código');
+			setOptionName('Código');
 		} else if (table === 'colors') {
-			setTitle('Agregar Color');
+			setTitle(isEditMode ? 'Editar Color' : 'Agregar Color');
 			setName('Nombre del color');
+			setOptionName('Color');
 		} else if (table === 'sites') {
-			setTitle('Agregar Ubicación');
+			setTitle(isEditMode ? 'Editar Ubicación' : 'Agregar Ubicación');
 			setName('Nombre de la ubicación');
+			setOptionName('Ubicación');
 		} else {
-			setTitle('Agregar opción');
+			setTitle(isEditMode ? 'Editar opción' : 'Agregar opción');
 		}
-	}, [table]);
+	}, [isEditMode, table]);
 
-	// Set default value for 'Abertura' select when dialog opens for lines
 	React.useEffect(() => {
-		if (open && table === 'lines') {
-			setDependence(materialType || 'Aluminio');
+		if (open) {
+			resetForm();
+			return;
 		}
-	}, [open, table, materialType]);
+
+		setOption('');
+		setDependence('');
+	}, [open, resetForm]);
 
 	const handleSave = async () => {
-		if (!option) {
+		if (!option.trim()) {
 			toast({
 				title: 'Error de validación',
 				description: 'El nombre es obligatorio',
@@ -96,33 +142,26 @@ export function OptionDialog({
 		}
 
 		let fields: any = {};
-		let fieldName: string = '';
 		let successMessage: string = '';
 		if (tableName === 'lines') {
-			fields.name_line = option ?? '';
+			fields.name_line = option.trim();
 			fields.opening = dependence ?? '';
-			fieldName = 'línea';
-			successMessage = 'Línea guardada correctamente';
-			setOptionName('Linea');
+			successMessage = isEditMode ? 'Línea actualizada correctamente' : 'Línea guardada correctamente';
 		} else if (tableName === 'codes') {
-			fields.name_code = option ?? '';
+			fields.name_code = option.trim();
 			fields.line_name = dependence ?? '';
-			fieldName = 'código';
-			successMessage = 'Código guardado correctamente';
-			setOptionName('Código');
+			successMessage = isEditMode ? 'Código actualizado correctamente' : 'Código guardado correctamente';
 		} else if (tableName === 'colors') {
-			fields.name_color = option ?? '';
+			fields.name_color = option.trim();
 			fields.line_name = dependence ?? '';
-			fieldName = 'color';
-			successMessage = 'Color guardado correctamente';
-			setOptionName('Color');
+			successMessage = isEditMode ? 'Color actualizado correctamente' : 'Color guardado correctamente';
 		} else if (tableName === 'sites') {
-			fields.name_site = option ?? '';
-			fieldName = 'ubicación';
-			successMessage = 'Ubicación guardada correctamente';
-			setOptionName('Ubicación');
+			fields.name_site = option.trim();
+			successMessage = isEditMode ? 'Ubicación actualizada correctamente' : 'Ubicación guardada correctamente';
 		}
-		const { data, error } = await createOption(tableName ?? '', fields);
+		const { data, error } = optionToEdit
+			? await updateOption(tableName ?? '', optionToEdit.id, fields)
+			: await createOption(tableName ?? '', fields);
 		if (error) {
 			console.error('Supabase error:', error);
 			let errorMessage = translateError(error);
@@ -163,7 +202,7 @@ export function OptionDialog({
 
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader className="flex-shrink-0">
-					<DialogTitle>Agregar nueva opción</DialogTitle>
+					<DialogTitle>{title}</DialogTitle>
 					<DialogDescription>Ingrese los datos</DialogDescription>
 				</DialogHeader>
 
@@ -216,7 +255,7 @@ export function OptionDialog({
 						Cancelar
 					</Button>
 					<Button onClick={handleSave} className="w-full sm:w-auto">
-						Guardar
+						{isEditMode ? 'Guardar cambios' : 'Guardar'}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

@@ -18,7 +18,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog';
-import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Pencil, Trash2 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { OptionDialog } from './option-add';
 import { toast } from '@/components/ui/use-toast';
@@ -34,6 +34,9 @@ import {
 import { useOptions } from '@/hooks/use-options';
 import { translateError } from '@/lib/error-translator';
 
+type OptionTable = 'lines' | 'codes' | 'colors' | 'sites';
+type StockOption = LineOption | CodeOption | ColorOption | SiteOption;
+
 interface OptionsModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
@@ -46,6 +49,11 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 	const [isAddColorOpen, setIsAddColorOpen] = useState(false);
 	const [isAddCodeOpen, setIsAddCodeOpen] = useState(false);
 	const [isAddSiteOpen, setIsAddSiteOpen] = useState(false);
+	const [editingOption, setEditingOption] = useState<{
+		open: boolean;
+		table: OptionTable;
+		option: StockOption | null;
+	}>({ open: false, table: 'lines', option: null });
 
 	// Estados para controlar qué secciones están abiertas
 	const [openSections, setOpenSections] = useState({
@@ -60,6 +68,55 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 			...prev,
 			[section]: !prev[section],
 		}));
+	};
+
+	const closeEditDialog = () => setEditingOption({ open: false, table: 'lines', option: null });
+
+	const commitOptions = (table: OptionTable, nextOptions: StockOption[]) => {
+		if (table === 'lines') {
+			const sorted = (nextOptions as LineOption[]).sort((a, b) => a.name_line.localeCompare(b.name_line));
+			updateLines(sorted);
+			localStorage.setItem('lines', JSON.stringify(sorted));
+			return;
+		}
+
+		if (table === 'codes') {
+			updateCodes(nextOptions as CodeOption[]);
+			localStorage.setItem('codes', JSON.stringify(nextOptions));
+			return;
+		}
+
+		if (table === 'colors') {
+			updateColors(nextOptions as ColorOption[]);
+			localStorage.setItem('colors', JSON.stringify(nextOptions));
+			return;
+		}
+
+		updateSites(nextOptions as SiteOption[]);
+		localStorage.setItem('sites', JSON.stringify(nextOptions));
+	};
+
+	const handleOptionSaved = (table: OptionTable, option: StockOption, isEdit: boolean) => {
+		if (table === 'lines') {
+			const next = isEdit ? lines.map((item) => (item.id === option.id ? (option as LineOption) : item)) : [...lines, option as LineOption];
+			commitOptions(table, next);
+			return;
+		}
+
+		if (table === 'codes') {
+			const next = isEdit ? codes.map((item) => (item.id === option.id ? (option as CodeOption) : item)) : [option as CodeOption, ...codes];
+			commitOptions(table, next);
+			return;
+		}
+
+		if (table === 'colors') {
+			const next = isEdit ? colors.map((item) => (item.id === option.id ? (option as ColorOption) : item)) : [option as ColorOption, ...colors];
+			commitOptions(table, next);
+			return;
+		}
+
+		const next = isEdit ? sites.map((item) => (item.id === option.id ? (option as SiteOption) : item)) : [option as SiteOption, ...sites];
+		commitOptions(table, next);
 	};
 
 	// AlertDialog for delete option
@@ -170,7 +227,8 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
+		<>
+			<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
 				<DialogHeader>
 					<DialogTitle>Administrar opciones</DialogTitle>
@@ -217,7 +275,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										<tr className="border-b">
 											<th className="text-left p-1">Linea</th>
 											<th className="text-left p-1">Abertura</th>
-											<th className="text-center p-1">Eliminar</th>
+											<th className="text-center p-1">Acciones</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -226,21 +284,33 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 												<td className="p-1">{line.name_line}</td>
 												<td className="p-1">{line.opening}</td>
 												<td className="p-1 text-center">
-													<Button
-														variant="ghost"
-														size="icon"
-														className="mx-auto"
-														onClick={() =>
-															setDeleteDialog({
-																open: true,
-																table: 'lines',
-																id: line.id,
-																label: line.name_line ?? '',
-															})
-														}
-													>
-														<Trash2 className="w-4 h-4 text-destructive" />
-													</Button>
+													<div className="flex items-center justify-center gap-1">
+														<Button
+															variant="ghost"
+															size="icon"
+															className="mx-auto"
+															onClick={() =>
+																setEditingOption({ open: true, table: 'lines', option: line })
+															}
+														>
+															<Pencil className="w-4 h-4 text-primary" />
+														</Button>
+														<Button
+															variant="ghost"
+															size="icon"
+															className="mx-auto"
+															onClick={() =>
+																setDeleteDialog({
+																	open: true,
+																	table: 'lines',
+																	id: line.id,
+																	label: line.name_line ?? '',
+																})
+															}
+														>
+															<Trash2 className="w-4 h-4 text-destructive" />
+														</Button>
+													</div>
 												</td>
 											</tr>
 										))}
@@ -287,7 +357,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										<tr className="border-b">
 											<th className="text-left p-1">Código</th>
 											<th className="text-left p-1">Línea</th>
-											<th className="text-center p-1">Eliminar</th>
+											<th className="text-center p-1">Acciones</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -296,21 +366,33 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 												<td className="p-1">{code.name_code}</td>
 												<td className="p-1">{code.line_name}</td>
 												<td className="p-1 text-center">
-													<Button
-														variant="ghost"
-														size="icon"
-														className="mx-auto"
-														onClick={() =>
-															setDeleteDialog({
-																open: true,
-																table: 'codes',
-																id: code.id,
-																label: code.name_code ?? '',
-															})
-														}
-													>
-														<Trash2 className="w-4 h-4 text-destructive" />
-													</Button>
+													<div className="flex items-center justify-center gap-1">
+														<Button
+															variant="ghost"
+															size="icon"
+															className="mx-auto"
+															onClick={() =>
+																setEditingOption({ open: true, table: 'codes', option: code })
+															}
+														>
+															<Pencil className="w-4 h-4 text-primary" />
+														</Button>
+														<Button
+															variant="ghost"
+															size="icon"
+															className="mx-auto"
+															onClick={() =>
+																setDeleteDialog({
+																	open: true,
+																	table: 'codes',
+																	id: code.id,
+																	label: code.name_code ?? '',
+																})
+															}
+														>
+															<Trash2 className="w-4 h-4 text-destructive" />
+														</Button>
+													</div>
 												</td>
 											</tr>
 										))}
@@ -357,7 +439,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 										<tr className="border-b">
 											<th className="text-left p-1">Color</th>
 											<th className="text-left p-1">Línea</th>
-											<th className="text-center p-1">Eliminar</th>
+											<th className="text-center p-1">Acciones</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -366,21 +448,33 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 												<td className="p-1">{color.name_color}</td>
 												<td className="p-1">{color.line_name}</td>
 												<td className="p-1 text-center">
-													<Button
-														variant="ghost"
-														size="icon"
-														className="mx-auto"
-														onClick={() =>
-															setDeleteDialog({
-																open: true,
-																table: 'colors',
-																id: color.id,
-																label: color.name_color ?? '',
-															})
-														}
-													>
-														<Trash2 className="w-4 h-4 text-destructive" />
-													</Button>
+													<div className="flex items-center justify-center gap-1">
+														<Button
+															variant="ghost"
+															size="icon"
+															className="mx-auto"
+															onClick={() =>
+																setEditingOption({ open: true, table: 'colors', option: color })
+															}
+														>
+															<Pencil className="w-4 h-4 text-primary" />
+														</Button>
+														<Button
+															variant="ghost"
+															size="icon"
+															className="mx-auto"
+															onClick={() =>
+																setDeleteDialog({
+																	open: true,
+																	table: 'colors',
+																	id: color.id,
+																	label: color.name_color ?? '',
+																})
+															}
+														>
+															<Trash2 className="w-4 h-4 text-destructive" />
+														</Button>
+													</div>
 												</td>
 											</tr>
 										))}
@@ -425,7 +519,7 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 									<thead>
 										<tr className="border-b">
 											<th className="text-left p-1">Ubicación</th>
-											<th className="text-center p-1">Eliminar</th>
+											<th className="text-center p-1">Acciones</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -433,21 +527,33 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 											<tr key={`${site.id}-${site.name_site}`} className="border-b">
 												<td className="p-1">{site.name_site}</td>
 												<td className="p-1 text-center">
-													<Button
-														variant="ghost"
-														size="icon"
-														className="mx-auto"
-														onClick={() =>
-															setDeleteDialog({
-																open: true,
-																table: 'sites',
-																id: site.id,
-																label: site.name_site ?? '',
-															})
-														}
-													>
-														<Trash2 className="w-4 h-4 text-destructive" />
-													</Button>
+													<div className="flex items-center justify-center gap-1">
+														<Button
+															variant="ghost"
+															size="icon"
+															className="mx-auto"
+															onClick={() =>
+																setEditingOption({ open: true, table: 'sites', option: site })
+															}
+														>
+															<Pencil className="w-4 h-4 text-primary" />
+														</Button>
+														<Button
+															variant="ghost"
+															size="icon"
+															className="mx-auto"
+															onClick={() =>
+																setDeleteDialog({
+																	open: true,
+																	table: 'sites',
+																	id: site.id,
+																	label: site.name_site ?? '',
+																})
+															}
+														>
+															<Trash2 className="w-4 h-4 text-destructive" />
+														</Button>
+													</div>
 												</td>
 											</tr>
 										))}
@@ -491,13 +597,29 @@ export function OptionsModal({ materialType, open, onOpenChange }: OptionsModalP
 						variant="outline"
 						onClick={() => {
 							onOpenChange(false);
-							window.location.reload(); 
+							window.location.reload();
 						}}
 					>
 						Cerrar
 					</Button>
 				</DialogFooter>
 			</DialogContent>
-		</Dialog>
+			</Dialog>
+
+			<OptionDialog
+				open={editingOption.open}
+				onOpenChange={(open) => {
+					if (!open) closeEditDialog();
+				}}
+				materialType={materialType}
+				table={editingOption.table}
+				optionToEdit={editingOption.option}
+				triggerButton={false}
+				onSave={async (option) => {
+					handleOptionSaved(editingOption.table, option, true);
+					closeEditDialog();
+				}}
+			/>
+		</>
 	);
 }

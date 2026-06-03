@@ -137,23 +137,30 @@ export function SurveyBoard() {
 		// Create columns with fixed order for default steps
 		const columnData: Column[] = [];
 
-		// First, add default steps in fixed order
+		// First, always add default steps in fixed order (even if empty)
 		DEFAULT_SURVEY_STEPS.forEach((stepName) => {
-			if (stepMap.has(stepName)) {
-				columnData.push({
-					stepName,
-					clients: stepMap.get(stepName) ?? [],
-				});
-				stepMap.delete(stepName);
-			}
-		});
-
-		// Then, add any additional steps dynamically
-		Array.from(stepMap.entries()).forEach(([stepName, clients]) => {
 			columnData.push({
 				stepName,
-				clients,
+				clients: stepMap.get(stepName) ?? [],
 			});
+			stepMap.delete(stepName);
+		});
+
+		// Always add "Sin pasos pendientes" column (even if empty)
+		columnData.push({
+			stepName: 'Sin pasos pendientes',
+			clients: stepMap.get('Sin pasos pendientes') ?? [],
+		});
+		stepMap.delete('Sin pasos pendientes');
+
+		// Then, add any additional steps dynamically (only if they have clients)
+		Array.from(stepMap.entries()).forEach(([stepName, clients]) => {
+			if (clients.length > 0) {
+				columnData.push({
+					stepName,
+					clients,
+				});
+			}
 		});
 
 		setColumns(columnData);

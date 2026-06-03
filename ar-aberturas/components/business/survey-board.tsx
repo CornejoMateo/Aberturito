@@ -109,12 +109,14 @@ export function SurveyBoard() {
 				// Find the first uncompleted step
 				const currentStep = sortedItems.find((item) => !item.completed)?.label ?? null;
 
+				const surveyTags = tagsResults[i].data ?? [];
+
 				surveyData.push({
 					client,
 					survey,
 					items: sortedItems,
 					currentStep,
-					tags: tagsResults[i].data ?? [],
+					tags: surveyTags,
 				});
 			}
 
@@ -521,7 +523,7 @@ export function SurveyBoard() {
 														<h4 className="font-medium text-foreground text-sm">
 															{clientWithSurvey.client.last_name} {clientWithSurvey.client.name}
 														</h4>
-														<TagSelector surveyId={clientWithSurvey.survey.id} />
+														<TagSelector surveyId={clientWithSurvey.survey.id} onChange={loadSurveys} assignedTags={clientWithSurvey.tags} />
 													</div>
 													{clientWithSurvey.client.locality && (
 														<p className="text-xs text-muted-foreground">

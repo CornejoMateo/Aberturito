@@ -12,11 +12,13 @@ import { translateError } from '@/lib/error-translator';
 interface TagSelectorProps {
 	surveyId: string;
 	disabled?: boolean;
+	onChange?: () => void;
+	assignedTags?: SurveyTag[];
 }
 
-export function TagSelector({ surveyId, disabled }: TagSelectorProps) {
+export function TagSelector({ surveyId, disabled, onChange, assignedTags: propAssignedTags }: TagSelectorProps) {
 	const [tags, setTags] = useState<SurveyTag[]>([]);
-	const [assignedTags, setAssignedTags] = useState<SurveyTag[]>([]);
+	const [assignedTags, setAssignedTags] = useState<SurveyTag[]>(propAssignedTags ?? []);
 	const [isLoading, setIsLoading] = useState(false);
 	const [open, setOpen] = useState(false);
 
@@ -41,6 +43,12 @@ export function TagSelector({ surveyId, disabled }: TagSelectorProps) {
 		loadTags();
 	}, [surveyId]);
 
+	useEffect(() => {
+		if (propAssignedTags) {
+			setAssignedTags(propAssignedTags);
+		}
+	}, [propAssignedTags]);
+
 	const handleToggleTag = async (tag: SurveyTag) => {
 		const isAssigned = assignedTags.some((t) => t.id === tag.id);
 		setIsLoading(true);
@@ -55,6 +63,7 @@ export function TagSelector({ surveyId, disabled }: TagSelectorProps) {
 				if (error) throw error;
 				setAssignedTags([...assignedTags, tag]);
 			}
+			onChange?.();
 		} catch (err) {
 			toast({
 				variant: 'destructive',
@@ -79,6 +88,7 @@ export function TagSelector({ surveyId, disabled }: TagSelectorProps) {
 					size="sm"
 					className="h-7 px-2 gap-1"
 					disabled={disabled || isLoading}
+					onClick={(e) => e.stopPropagation()}
 				>
 					<TagIcon className="h-3.5 w-3.5" />
 					{assignedTags.length > 0 && <span className="text-xs">{assignedTags.length}</span>}
@@ -100,7 +110,10 @@ export function TagSelector({ surveyId, disabled }: TagSelectorProps) {
 									<button
 										key={tag.id}
 										type="button"
-										onClick={() => handleToggleTag(tag)}
+										onClick={(e) => {
+											e.stopPropagation();
+											handleToggleTag(tag);
+										}}
 										disabled={isLoading}
 										className={`w-full flex items-center justify-between p-2 rounded text-sm transition-colors ${
 											isAssigned ? 'bg-secondary' : 'hover:bg-secondary/50'

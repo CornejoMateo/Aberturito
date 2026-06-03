@@ -78,12 +78,12 @@ export async function getTagsForSurvey(
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(ASSIGNMENTS_TABLE)
-		.select('tag')
+		.select('survey_tags(*)')
 		.eq('survey_id', surveyId);
 	
 	if (error) return { data: null, error };
 	
-	const tags = data?.map((assignment: any) => assignment.tag).filter(Boolean) ?? [];
+	const tags = data?.map((assignment: any) => assignment.survey_tags).filter(Boolean) ?? [];
 	return { data: tags, error: null };
 }
 

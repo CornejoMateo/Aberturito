@@ -502,6 +502,15 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 							</Popover>
 						</div>
 						<div className="flex justify-end gap-2">
+							{dueDateDialog.currentDueDate && (
+								<Button
+									variant="ghost"
+									onClick={() => handleDueDateSave(null)}
+									className="text-destructive hover:text-destructive"
+								>
+									Quitar fecha
+								</Button>
+							)}
 							<Button variant="outline" onClick={() => setDueDateDialog(INITIAL_DUE_DATE)}>
 								Cancelar
 							</Button>

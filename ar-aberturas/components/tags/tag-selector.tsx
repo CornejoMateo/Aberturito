@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Tag as TagIcon, X } from 'lucide-react';
-import { SurveyTag, getAllTags, assignTagToSurvey, removeTagFromSurvey, getTagsForSurvey } from '@/lib/tags/tags';
+import { SurveyTag, getAllTags, assignTagToSurvey, removeTagFromSurvey } from '@/lib/tags/tags';
 import { TAG_COLORS } from '@/constants/tags';
 import { toast } from '@/components/ui/use-toast';
 import { translateError } from '@/lib/error-translator';
@@ -25,13 +25,8 @@ export function TagSelector({ surveyId, disabled, onChange, assignedTags: propAs
 	const loadTags = async () => {
 		setIsLoading(true);
 		try {
-			const [{ data: allTags }, { data: surveyTags }] = await Promise.all([
-				getAllTags(),
-				getTagsForSurvey(surveyId),
-			]);
-			
+			const { data: allTags } = await getAllTags();
 			if (allTags) setTags(allTags);
-			if (surveyTags) setAssignedTags(surveyTags);
 		} catch (err) {
 			console.error('Error loading tags:', err);
 		} finally {
@@ -39,9 +34,12 @@ export function TagSelector({ surveyId, disabled, onChange, assignedTags: propAs
 		}
 	};
 
-	useEffect(() => {
-		loadTags();
-	}, [surveyId]);
+	const handleOpenChange = (newOpen: boolean) => {
+		setOpen(newOpen);
+		if (newOpen && tags.length === 0) {
+			loadTags();
+		}
+	};
 
 	useEffect(() => {
 		if (propAssignedTags) {
@@ -81,7 +79,7 @@ export function TagSelector({ surveyId, disabled, onChange, assignedTags: propAs
 	};
 
 	return (
-		<Popover open={open} onOpenChange={setOpen}>
+		<Popover open={open} onOpenChange={handleOpenChange}>
 			<PopoverTrigger asChild>
 				<Button
 					variant="ghost"

@@ -80,11 +80,35 @@ export async function getTagsForSurvey(
 		.from(ASSIGNMENTS_TABLE)
 		.select('survey_tags(*)')
 		.eq('survey_id', surveyId);
-	
+
 	if (error) return { data: null, error };
-	
+
 	const tags = data?.map((assignment: any) => assignment.survey_tags).filter(Boolean) ?? [];
 	return { data: tags, error: null };
+}
+
+export async function getTagsForSurveys(
+	surveyIds: string[]
+): Promise<{ data: Record<string, SurveyTag[]>; error: unknown }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(ASSIGNMENTS_TABLE)
+		.select('survey_id, survey_tags(*)')
+		.in('survey_id', surveyIds);
+
+	if (error) return { data: {}, error };
+
+	const tagsBySurveyId: Record<string, SurveyTag[]> = {};
+	data?.forEach((assignment: any) => {
+		if (assignment.survey_tags) {
+			if (!tagsBySurveyId[assignment.survey_id]) {
+				tagsBySurveyId[assignment.survey_id] = [];
+			}
+			tagsBySurveyId[assignment.survey_id].push(assignment.survey_tags);
+		}
+	});
+
+	return { data: tagsBySurveyId, error: null };
 }
 
 export async function assignTagToSurvey(

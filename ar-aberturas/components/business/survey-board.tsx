@@ -22,7 +22,7 @@ import { formatCreatedAt } from '@/helpers/date/format-date';
 import { differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
 import { TagSelector } from '@/components/tags/tag-selector';
 import { TagManagerDialog } from '@/components/tags/tag-manager-dialog';
-import { SurveyTag, getTagsForSurvey } from '@/lib/tags/tags';
+import { SurveyTag, getTagsForSurveys } from '@/lib/tags/tags';
 import { TAG_COLORS } from '@/constants/tags';
 
 interface ClientWithSurvey {
@@ -92,9 +92,9 @@ export function SurveyBoard() {
 			const { data: allItems, error: itemsError } = await getSurveyItemsBySurveyIds(surveyIds);
 			if (itemsError) throw itemsError;
 
-			// Fetch all tags for surveys at once
-			const tagsPromises = surveyIds.map((id) => getTagsForSurvey(id));
-			const tagsResults = await Promise.all(tagsPromises);
+			// Fetch all tags for surveys at once using batched query
+			const { data: tagsBySurveyId, error: tagsError } = await getTagsForSurveys(surveyIds);
+			if (tagsError) throw tagsError;
 
 			const surveyData: ClientWithSurvey[] = [];
 
@@ -109,7 +109,7 @@ export function SurveyBoard() {
 				// Find the first uncompleted step
 				const currentStep = sortedItems.find((item) => !item.completed)?.label ?? null;
 
-				const surveyTags = tagsResults[i].data ?? [];
+				const surveyTags = tagsBySurveyId[survey.id] ?? [];
 
 				surveyData.push({
 					client,

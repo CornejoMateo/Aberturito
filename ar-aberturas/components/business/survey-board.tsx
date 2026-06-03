@@ -6,12 +6,19 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import { ClipboardList, CheckCircle, ArrowRight, Calendar } from 'lucide-react';
 import { Client, listClients } from '@/lib/clients/clients';
-import { Survey, SurveyItem, getAllSurveys, getSurveyItemsBySurveyIds, updateSurveyItem } from '@/lib/survey/survey';
+import {
+	Survey,
+	SurveyItem,
+	getAllSurveys,
+	getSurveyItemsBySurveyIds,
+	updateSurveyItem,
+} from '@/lib/survey/survey';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { translateError } from '@/lib/error-translator';
 import { DEFAULT_SURVEY_STEPS } from '@/constants/survey';
 import { ClientDetailsDialog } from '@/utils/clients/client-details-dialog';
 import { formatCreatedAt } from '@/helpers/date/format-date';
+import { differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
 
 interface ClientWithSurvey {
 	client: Client;
@@ -26,7 +33,12 @@ interface Column {
 }
 
 export function SurveyBoard() {
-	const { data: clients, loading, error, refresh } = useOptimizedRealtime<Client>(
+	const {
+		data: clients,
+		loading,
+		error,
+		refresh,
+	} = useOptimizedRealtime<Client>(
 		'clients',
 		async () => {
 			const { data } = await listClients();
@@ -157,13 +169,9 @@ export function SurveyBoard() {
 			return { color: 'text-foreground', daysRemaining: null };
 		}
 
-		const dueDate = new Date(survey.due_date);
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
-		dueDate.setHours(0, 0, 0, 0);
-
-		const diffTime = dueDate.getTime() - today.getTime();
-		const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+		const today = startOfDay(new Date());
+		const dueDate = parseISO(survey.due_date.split('T')[0]);
+		const daysRemaining = differenceInCalendarDays(dueDate, today);
 
 		if (daysRemaining <= 3) {
 			return { color: 'text-red-500', daysRemaining };
@@ -244,7 +252,7 @@ export function SurveyBoard() {
 
 			// Find the target step in the client's survey items
 			const targetItem = draggedClient.items.find((item) => item.label === targetStep);
-			
+
 			if (!targetItem) {
 				toast({
 					variant: 'destructive',
@@ -255,7 +263,7 @@ export function SurveyBoard() {
 			}
 
 			const targetOrder = targetItem.order;
-			
+
 			// Find the current step (first uncompleted item)
 			const currentUncompletedItem = draggedClient.items.find((item) => !item.completed);
 			const currentOrder = currentUncompletedItem
@@ -287,11 +295,17 @@ export function SurveyBoard() {
 					.map((item) => ({ id: item.id, completed: false, originalCompleted: item.completed }));
 
 				// Also ensure the target step is unmarked if it was marked
-				const targetItemAlreadyUnmarked = !draggedClient.items.find((item) => item.order === targetOrder)?.completed;
+				const targetItemAlreadyUnmarked = !draggedClient.items.find(
+					(item) => item.order === targetOrder
+				)?.completed;
 				if (!targetItemAlreadyUnmarked) {
 					const targetItem = draggedClient.items.find((item) => item.order === targetOrder);
 					if (targetItem) {
-						itemsToUpdate.push({ id: targetItem.id, completed: false, originalCompleted: targetItem.completed });
+						itemsToUpdate.push({
+							id: targetItem.id,
+							completed: false,
+							originalCompleted: targetItem.completed,
+						});
 					}
 				}
 
@@ -357,7 +371,6 @@ export function SurveyBoard() {
 		}
 	};
 
-
 	if (loading && !clients.length) {
 		return (
 			<div className="flex items-center justify-center h-64">
@@ -389,7 +402,9 @@ export function SurveyBoard() {
 				<Card className="p-6 bg-card border-border">
 					<div className="flex items-center justify-between">
 						<div>
-							<p className="text-sm font-medium text-muted-foreground">Total clientes con relevamiento</p>
+							<p className="text-sm font-medium text-muted-foreground">
+								Total clientes con relevamiento
+							</p>
 							<p className="text-2xl font-bold text-foreground mt-2">{clientsWithSurveys.length}</p>
 						</div>
 						<div className="rounded-lg bg-secondary p-3 text-chart-1">
@@ -441,7 +456,9 @@ export function SurveyBoard() {
 						>
 							{/* Column Header */}
 							<div className="p-4 border-b border-border">
-								<h3 className="font-semibold text-foreground text-sm truncate">{column.stepName}</h3>
+								<h3 className="font-semibold text-foreground text-sm truncate">
+									{column.stepName}
+								</h3>
 							</div>
 
 							{/* Column Content */}
@@ -451,7 +468,10 @@ export function SurveyBoard() {
 								) : (
 									column.clients.map((clientWithSurvey) => {
 										const allItemsCompleted = clientWithSurvey.items.every((i) => i.completed);
-										const { color, daysRemaining } = getDueDateStatus(clientWithSurvey.survey, allItemsCompleted);
+										const { color, daysRemaining } = getDueDateStatus(
+											clientWithSurvey.survey,
+											allItemsCompleted
+										);
 
 										return (
 											<Card
@@ -468,14 +488,21 @@ export function SurveyBoard() {
 														</h4>
 													</div>
 													{clientWithSurvey.client.locality && (
-														<p className="text-xs text-muted-foreground">{clientWithSurvey.client.locality}</p>
+														<p className="text-xs text-muted-foreground">
+															{clientWithSurvey.client.locality}
+														</p>
 													)}
+													<div className="flex items-center gap-1 text-muted-foreground text-xs">
+														<Calendar className="h-3 w-3" />
+														<p className="text-xs">Creado el</p>
+														<span>{formatCreatedAt(clientWithSurvey.survey.created_at)}</span>
+													</div>
 													{clientWithSurvey.survey.due_date && (
 														<div className="flex items-center gap-1 text-xs">
-															<div className="flex items-center gap-1 text-muted-foreground">
+															<div className={`flex items-center gap-1`}>
 																<Calendar className="h-3 w-3" />
-																<span>{formatCreatedAt(clientWithSurvey.survey.created_at)}</span>
-															</div>
+																<span>{formatCreatedAt(new Date())}</span>
+															</div>{' '}
 															<ArrowRight className="h-3 w-3 text-muted-foreground" />
 															<div className={`flex items-center gap-1 ${color}`}>
 																<Calendar className="h-3 w-3" />
@@ -485,7 +512,8 @@ export function SurveyBoard() {
 													)}
 													<div className="flex items-center gap-2">
 														<Badge variant="outline" className="text-xs">
-															{clientWithSurvey.items.filter((i) => i.completed).length}/{clientWithSurvey.items.length} pasos
+															{clientWithSurvey.items.filter((i) => i.completed).length}/
+															{clientWithSurvey.items.length} pasos
 														</Badge>
 														{daysRemaining !== null && !allItemsCompleted && (
 															<Badge variant="outline" className={`text-xs ${color}`}>

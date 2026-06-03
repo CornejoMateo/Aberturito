@@ -276,6 +276,10 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 											>
 												<CalendarIcon className="h-3.5 w-3.5" />
 											</Button>
+											<div className="text-xs text-muted-foreground">
+												{survey.due_date ? formatCreatedAt(survey.due_date) : 'No establecida'}
+											</div>
+
 											<Button
 												variant="ghost"
 												size="icon"

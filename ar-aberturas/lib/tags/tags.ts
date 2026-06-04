@@ -1,14 +1,14 @@
 import { getSupabaseClient } from '../supabase-client';
 
 export type SurveyTag = {
-	id: string;
+	id: number;
 	created_at: string;
 	name: string;
 	color: string;
 };
 
 export type SurveyTagAssignment = {
-	id: string;
+	id: number;
 	created_at: string;
 	survey_id: string;
 	tag_id: string;

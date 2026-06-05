@@ -1,4 +1,11 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogDescription,
+	DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +15,13 @@ import { createClientFolder } from '@/lib/clients/clients';
 import { useToast } from '@/components/ui/use-toast';
 import { translateError } from '@/lib/error-translator';
 import { CONTACT_METHODS } from '@/constants/budgets/contact-methods';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 
 interface ClientsAddDialogProps {
 	open: boolean;
@@ -26,12 +39,12 @@ interface ClientsAddDialogProps {
 	onUpdateClient?: (client: any) => Promise<void>;
 }
 
-export function ClientsAddDialog({ 
-	open, 
-	onOpenChange, 
-	onClientAdded, 
-	clientToEdit, 
-	onUpdateClient 
+export function ClientsAddDialog({
+	open,
+	onOpenChange,
+	onClientAdded,
+	clientToEdit,
+	onUpdateClient,
 }: ClientsAddDialogProps) {
 	const { toast } = useToast();
 	const [isLoading, setIsLoading] = useState(false);
@@ -53,7 +66,7 @@ export function ClientsAddDialog({
 			locality: '',
 			contact_method: '',
 		});
-	}
+	};
 
 	useEffect(() => {
 		if (!clientToEdit && open) {
@@ -65,7 +78,13 @@ export function ClientsAddDialog({
 		const { id, value } = e.target;
 		setFormData((prev) => ({
 			...prev,
-			[id === 'clientName' ? 'name' : id === 'clientLastName' ? 'last_name' : id === 'phone' ? 'phone_number' : id]: value,
+			[id === 'clientName'
+				? 'name'
+				: id === 'clientLastName'
+					? 'last_name'
+					: id === 'phone'
+						? 'phone_number'
+						: id]: value,
 		}));
 	};
 
@@ -93,7 +112,7 @@ export function ClientsAddDialog({
 				// Update existing client
 				await onUpdateClient({
 					...clientToEdit,
-					...payload
+					...payload,
 				});
 				toast({
 					title: 'Cliente actualizado',
@@ -134,6 +153,19 @@ export function ClientsAddDialog({
 		}
 	};
 
+	useEffect(() => {
+		if (clientToEdit) {
+			setFormData({
+				name: clientToEdit.name || '',
+				last_name: clientToEdit.last_name || '',
+				email: clientToEdit.email || '',
+				phone_number: clientToEdit.phone_number || '',
+				locality: clientToEdit.locality || '',
+				contact_method: clientToEdit.contact_method || '',
+			});
+		}
+	}, [clientToEdit]);
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="bg-card max-w-2xl">
@@ -142,8 +174,8 @@ export function ClientsAddDialog({
 						{clientToEdit ? 'Editar cliente' : 'Registrar nuevo cliente'}
 					</DialogTitle>
 					<DialogDescription className="text-muted-foreground">
-						{clientToEdit 
-							? 'Actualice los datos del cliente' 
+						{clientToEdit
+							? 'Actualice los datos del cliente'
 							: 'Complete los datos del cliente para agregarlo al sistema'}
 					</DialogDescription>
 				</DialogHeader>
@@ -153,26 +185,48 @@ export function ClientsAddDialog({
 						<Label htmlFor="clientLastName" className="text-foreground">
 							Apellido
 						</Label>
-						<Input id="clientLastName" value={formData.last_name} onChange={handleInputChange} className="bg-background" />
+						<Input
+							id="clientLastName"
+							value={formData.last_name}
+							onChange={handleInputChange}
+							className="bg-background"
+						/>
 					</div>
 					<div className="grid gap-2">
 						<Label htmlFor="clientName" className="text-foreground">
 							Nombre
 						</Label>
-						<Input id="clientName" value={formData.name} onChange={handleInputChange} className="bg-background" />
+						<Input
+							id="clientName"
+							value={formData.name}
+							onChange={handleInputChange}
+							className="bg-background"
+						/>
 					</div>
 					<div className="grid grid-cols-2 gap-4">
 						<div className="grid gap-2">
 							<Label htmlFor="email" className="text-foreground">
 								Email
 							</Label>
-							<Input id="email" type="email" value={formData.email} onChange={handleInputChange} placeholder="cliente@email.com" className="bg-background" />
+							<Input
+								id="email"
+								type="email"
+								value={formData.email}
+								onChange={handleInputChange}
+								placeholder="cliente@email.com"
+								className="bg-background"
+							/>
 						</div>
 						<div className="grid gap-2">
 							<Label htmlFor="phone" className="text-foreground">
 								Teléfono
 							</Label>
-							<Input id="phone" value={formData.phone_number} onChange={handleInputChange} className="bg-background" />
+							<Input
+								id="phone"
+								value={formData.phone_number}
+								onChange={handleInputChange}
+								className="bg-background"
+							/>
 						</div>
 					</div>
 					<div className="grid grid-cols-2 gap-4">
@@ -180,7 +234,12 @@ export function ClientsAddDialog({
 							<Label htmlFor="locality" className="text-foreground">
 								Localidad
 							</Label>
-							<Input id="locality" value={formData.locality} onChange={handleInputChange} className="bg-background" />
+							<Input
+								id="locality"
+								value={formData.locality}
+								onChange={handleInputChange}
+								className="bg-background"
+							/>
 						</div>
 						<div className="grid gap-2">
 							<Label htmlFor="contact_method" className="text-foreground">

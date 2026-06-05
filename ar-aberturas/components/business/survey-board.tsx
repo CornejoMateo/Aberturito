@@ -3,8 +3,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { ClipboardList, CheckCircle, ArrowRight, Calendar } from 'lucide-react';
+import { ClipboardList, CheckCircle, ArrowRight, Calendar, Tag as TagIcon, Settings } from 'lucide-react';
 import { Client, listClients } from '@/lib/clients/clients';
 import {
 	Survey,
@@ -19,12 +20,17 @@ import { DEFAULT_SURVEY_STEPS } from '@/constants/survey';
 import { ClientDetailsDialog } from '@/utils/clients/client-details-dialog';
 import { formatCreatedAt } from '@/helpers/date/format-date';
 import { differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
+import { TagSelector } from '@/components/tags/tag-selector';
+import { TagManagerDialog } from '@/components/tags/tag-manager-dialog';
+import { SurveyTag, getTagsForSurveys } from '@/lib/tags/tags';
+import { TAG_COLORS } from '@/constants/tags';
 
 interface ClientWithSurvey {
 	client: Client;
 	survey: Survey;
 	items: SurveyItem[];
 	currentStep: string | null;
+	tags: SurveyTag[];
 }
 
 interface Column {
@@ -54,6 +60,7 @@ export function SurveyBoard() {
 	const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
 	const [draggedClient, setDraggedClient] = useState<ClientWithSurvey | null>(null);
 	const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+	const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
 
 	const loadSurveys = async () => {
 		if (!clients.length) {
@@ -85,9 +92,14 @@ export function SurveyBoard() {
 			const { data: allItems, error: itemsError } = await getSurveyItemsBySurveyIds(surveyIds);
 			if (itemsError) throw itemsError;
 
+			// Fetch all tags for surveys at once using batched query
+			const { data: tagsBySurveyId, error: tagsError } = await getTagsForSurveys(surveyIds);
+			if (tagsError) throw tagsError;
+
 			const surveyData: ClientWithSurvey[] = [];
 
-			for (const survey of relevantSurveys) {
+			for (let i = 0; i < relevantSurveys.length; i++) {
+				const survey = relevantSurveys[i];
 				const client = clients.find((c) => c.id === survey.client_id);
 				if (!client) continue;
 
@@ -97,11 +109,14 @@ export function SurveyBoard() {
 				// Find the first uncompleted step
 				const currentStep = sortedItems.find((item) => !item.completed)?.label ?? null;
 
+				const surveyTags = tagsBySurveyId[survey.id] ?? [];
+
 				surveyData.push({
 					client,
 					survey,
 					items: sortedItems,
 					currentStep,
+					tags: surveyTags,
 				});
 			}
 
@@ -137,23 +152,30 @@ export function SurveyBoard() {
 		// Create columns with fixed order for default steps
 		const columnData: Column[] = [];
 
-		// First, add default steps in fixed order
+		// First, always add default steps in fixed order (even if empty)
 		DEFAULT_SURVEY_STEPS.forEach((stepName) => {
-			if (stepMap.has(stepName)) {
-				columnData.push({
-					stepName,
-					clients: stepMap.get(stepName) ?? [],
-				});
-				stepMap.delete(stepName);
-			}
-		});
-
-		// Then, add any additional steps dynamically
-		Array.from(stepMap.entries()).forEach(([stepName, clients]) => {
 			columnData.push({
 				stepName,
-				clients,
+				clients: stepMap.get(stepName) ?? [],
 			});
+			stepMap.delete(stepName);
+		});
+
+		// Always add "Sin pasos pendientes" column (even if empty)
+		columnData.push({
+			stepName: 'Sin pasos pendientes',
+			clients: stepMap.get('Sin pasos pendientes') ?? [],
+		});
+		stepMap.delete('Sin pasos pendientes');
+
+		// Then, add any additional steps dynamically (only if they have clients)
+		Array.from(stepMap.entries()).forEach(([stepName, clients]) => {
+			if (clients.length > 0) {
+				columnData.push({
+					stepName,
+					clients,
+				});
+			}
 		});
 
 		setColumns(columnData);
@@ -179,6 +201,11 @@ export function SurveyBoard() {
 			return { color: 'text-yellow-500', daysRemaining };
 		}
 		return { color: 'text-foreground', daysRemaining };
+	};
+
+	const getColorClass = (colorValue: string) => {
+		const color = TAG_COLORS.find((c) => c.value === colorValue);
+		return color?.bg ?? 'bg-gray-500';
 	};
 
 	const handleDragStart = (e: React.DragEvent, clientWithSurvey: ClientWithSurvey) => {
@@ -391,9 +418,19 @@ export function SurveyBoard() {
 		<div className="space-y-6">
 			{/* Header */}
 			<div className="flex flex-col gap-4">
-				<div>
-					<h2 className="text-2xl font-bold text-foreground text-balance">Relevamiento</h2>
-					<p className="text-muted-foreground mt-1">Estado de relevamientos por cliente</p>
+				<div className="flex items-center justify-between">
+					<div>
+						<h2 className="text-2xl font-bold text-foreground text-balance">Relevamiento</h2>
+						<p className="text-muted-foreground mt-1">Estado de relevamientos por cliente</p>
+					</div>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => setIsTagManagerOpen(true)}
+					>
+						<Settings className="h-4 w-4 mr-2" />
+						Gestionar etiquetas
+					</Button>
 				</div>
 			</div>
 
@@ -486,11 +523,24 @@ export function SurveyBoard() {
 														<h4 className="font-medium text-foreground text-sm">
 															{clientWithSurvey.client.last_name} {clientWithSurvey.client.name}
 														</h4>
+														<TagSelector surveyId={clientWithSurvey.survey.id} onChange={loadSurveys} assignedTags={clientWithSurvey.tags} />
 													</div>
 													{clientWithSurvey.client.locality && (
 														<p className="text-xs text-muted-foreground">
 															{clientWithSurvey.client.locality}
 														</p>
+													)}
+													{clientWithSurvey.tags.length > 0 && (
+														<div className="flex flex-wrap gap-1">
+															{clientWithSurvey.tags.map((tag) => (
+																<Badge
+																	key={tag.id}
+																	className={`text-xs ${getColorClass(tag.color)} text-white border-0`}
+																>
+																	{tag.name}
+																</Badge>
+															))}
+														</div>
 													)}
 													<div className="flex items-center gap-1 text-muted-foreground text-xs">
 														<Calendar className="h-3 w-3" />
@@ -539,6 +589,12 @@ export function SurveyBoard() {
 				onClose={() => setIsClientDialogOpen(false)}
 				onEdit={() => {}}
 				defaultTab="surveys"
+			/>
+
+			{/* Tag Manager Dialog */}
+			<TagManagerDialog
+				open={isTagManagerOpen}
+				onOpenChange={setIsTagManagerOpen}
 			/>
 		</div>
 	);

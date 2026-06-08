@@ -24,8 +24,7 @@ export interface BudgetHandlers {
 	confirmDeleteBudget: (deleteBudgetConfirm: any, refresh: () => void, setIsLoading: (loading: boolean) => void, setDeleteBudgetConfirm: (state: any) => void) => Promise<void>;
 	handleDeleteFolder: (folderId: string, budgetsByFolderId: Map<string, BudgetWithWork[]>, setDeleteFolderConfirm: (state: any) => void) => void;
 	confirmDeleteFolder: (deleteFolderConfirm: any, refresh: () => void, setIsLoading: (loading: boolean) => void, setDeleteFolderConfirm: (state: any) => void) => Promise<void>;
-	handleViewPdf: (budget: BudgetWithWork, setPdfPreview: (state: any) => void, setIsLoading: (loading: boolean) => void) => Promise<void>;
-	closePdfPreview: (pdfPreview: any, setPdfPreview: (state: any) => void) => void;
+	handleViewPdf: (budget: BudgetWithWork, setIsLoading: (loading: boolean) => void) => Promise<void>;
 	handleOpenBudgetDetail: (budget: BudgetWithWork, setBudgetDetailModal: (state: any) => void) => void;
 	closeBudgetDetailModal: (setBudgetDetailModal: (state: any) => void) => void;
 	handleEditBudget: (budget: BudgetWithWork, setEditingBudget: (budget: BudgetWithWork | null) => void, closeBudgetDetailModal: () => void, setEditModalOpen: (open: boolean) => void) => void;
@@ -182,7 +181,7 @@ export const budgetHandlers: BudgetHandlers = {
 		}
 	},
 
-	async handleViewPdf(budget: BudgetWithWork, setPdfPreview: (state: any) => void, setIsLoading: (loading: boolean) => void) {
+	async handleViewPdf(budget: BudgetWithWork, setIsLoading: (loading: boolean) => void) {
 		if (!budget.pdf_path) return;
 
 		try {
@@ -190,7 +189,7 @@ export const budgetHandlers: BudgetHandlers = {
 			const supabase = getSupabaseClient();
 			const { data, error } = await supabase.storage
 				.from('clients')
-				.download(budget.pdf_path);
+				.createSignedUrl(budget.pdf_path, 3600);
 
 			if (error) {
 				toast({
@@ -201,18 +200,12 @@ export const budgetHandlers: BudgetHandlers = {
 				return;
 			}
 
-			const url = URL.createObjectURL(data);
-			setPdfPreview({ open: true, budget, pdfUrl: url });
+			if (data?.signedUrl) {
+				window.open(data.signedUrl, '_blank');
+			}
 		} finally {
 			setIsLoading(false);
 		}
-	},
-
-	closePdfPreview(pdfPreview: any, setPdfPreview: (state: any) => void) {
-		if (pdfPreview.pdfUrl) {
-			URL.revokeObjectURL(pdfPreview.pdfUrl);
-		}
-		setPdfPreview({ open: false, budget: null, pdfUrl: null });
 	},
 
 	handleOpenBudgetDetail(budget: BudgetWithWork, setBudgetDetailModal: (state: any) => void) {

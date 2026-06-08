@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Upload, Trash2, Loader2 } from 'lucide-react';
+import { Upload, Trash2, Loader2, FileText, Video } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { getSupabaseClient } from '@/lib/supabase-client';
 import { translateError } from '@/lib/error-translator';
@@ -20,7 +20,12 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { CLAIM_FILE_TYPES, MAX_FILE_SIZE_CLAIM, formatFileSize } from '@/utils/file-upload-utils';
+import {
+	CLAIM_FILE_TYPES,
+	MAX_FILE_SIZE_CLAIM,
+	formatFileSize,
+	getFileExtension,
+} from '@/utils/file-upload-utils';
 
 interface ClaimImage {
 	id: string;
@@ -56,6 +61,20 @@ export function ClaimImagesGallery({
 	const locationParts = [workLocality, workZone, workAddress]
 		.map((part) => part?.trim())
 		.filter((part): part is string => Boolean(part));
+
+	const getFileKind = (fileName: string) => {
+		const extension = getFileExtension(fileName).toLowerCase();
+
+		if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(extension)) {
+			return 'image';
+		}
+
+		if (['mp4', 'webm', 'ogg', 'mov', 'avi'].includes(extension)) {
+			return 'video';
+		}
+
+		return 'file';
+	};
 
 	const loadImages = async () => {
 		setIsLoading(true);
@@ -211,7 +230,7 @@ export function ClaimImagesGallery({
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
-				<h4 className="text-sm font-medium">Imágenes ({images.length})</h4>
+				<h4 className="text-sm font-medium">Archivos ({images.length})</h4>
 				<div>
 					<input
 						ref={fileInputRef}
@@ -230,7 +249,7 @@ export function ClaimImagesGallery({
 						) : (
 							<>
 								<Upload className="h-4 w-4 mr-2" />
-								Subir imagen
+								Subir archivo
 							</>
 						)}
 					</Button>
@@ -239,47 +258,71 @@ export function ClaimImagesGallery({
 
 			{images.length === 0 ? (
 				<div className="flex items-center justify-center h-32 border-2 border-dashed border-muted-foreground/25 rounded-lg">
-					<p className="text-sm text-muted-foreground">No hay imágenes</p>
+					<p className="text-sm text-muted-foreground">No hay archivos</p>
 				</div>
 			) : (
 				<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-					{images.map((image, index) => (
-						<div
-							key={image.id}
-							className="group relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer"
-							onClick={() => setSelectedImageIndex(index)}
-						>
-							<img src={image.url} alt={image.name} className="w-full h-full object-cover" />
+					{images.map((image, index) => {
+						const fileKind = getFileKind(image.name);
 
-							<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-								<Button
-									size="icon"
-									variant="destructive"
-									className="h-7 w-7"
-									onClick={(e) => {
-										e.stopPropagation();
-										setImageToDelete(image);
-									}}
-								>
-									<Trash2 className="h-3 w-3" />
-								</Button>
-							</div>
+						return (
+							<div
+								key={image.id}
+								className="group relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer"
+								onClick={() => setSelectedImageIndex(index)}
+							>
+								{fileKind === 'image' ? (
+									<img src={image.url} alt={image.name} className="w-full h-full object-cover" />
+								) : fileKind === 'video' ? (
+									<div className="w-full h-full flex items-center justify-center bg-black">
+										<video
+											src={image.url}
+											className="w-full h-full object-cover"
+											muted
+											playsInline
+										/>
+										<div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+											<div className="w-12 h-12 rounded-full bg-white/80 flex items-center justify-center">
+												<div className="w-0 h-0 border-l-[12px] border-l-black border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent ml-1" />
+											</div>
+										</div>
+									</div>
+								) : (
+									<div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted/60">
+										<FileText className="h-12 w-12 text-muted-foreground" />
+									</div>
+								)}
 
-							<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-								{image.title && <p className="text-white text-xs truncate">{image.title}</p>}
-								<p className="text-white text-xs truncate">{formatFileSize(image.size)}</p>
+								<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+									<Button
+										size="icon"
+										variant="destructive"
+										className="h-7 w-7"
+										onClick={(e) => {
+											e.stopPropagation();
+											setImageToDelete(image);
+										}}
+									>
+										<Trash2 className="h-3 w-3" />
+									</Button>
+								</div>
+
+								<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+									{image.title && <p className="text-white text-xs truncate">{image.title}</p>}
+									<p className="text-white text-xs truncate">{formatFileSize(image.size)}</p>
+								</div>
 							</div>
-						</div>
-					))}
+						);
+					})}
 				</div>
 			)}
 
 			<AlertDialog open={!!imageToDelete} onOpenChange={() => setImageToDelete(null)}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>¿Eliminar imagen?</AlertDialogTitle>
+						<AlertDialogTitle>¿Eliminar archivo?</AlertDialogTitle>
 						<AlertDialogDescription>
-							Esta acción no se puede deshacer. La imagen será eliminada permanentemente.
+							Esta acción no se puede deshacer. El archivo será eliminado permanentemente.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
@@ -295,16 +338,25 @@ export function ClaimImagesGallery({
 			</AlertDialog>
 
 			<FileViewerModal
-				files={images.map((image) => ({
-					id: image.id,
-					url: image.url,
-					name: image.name,
-					displayName: image.title,
-					description: image.title,
-					mimetype: 'image/jpeg',
-					size: image.size,
-					uploadedAt: image.uploaded_at,
-				}))}
+				files={images.map((image) => {
+					const fileKind = getFileKind(image.name);
+
+					return {
+						id: image.id,
+						url: image.url,
+						name: image.name,
+						displayName: image.title,
+						description: image.title,
+						mimetype:
+							fileKind === 'image'
+								? 'image/jpeg'
+								: fileKind === 'video'
+									? 'video/mp4'
+									: 'application/octet-stream',
+						size: image.size,
+						uploadedAt: image.uploaded_at,
+					};
+				})}
 				selectedIndex={selectedImageIndex}
 				onSelectedIndexChange={setSelectedImageIndex}
 			/>
@@ -319,9 +371,9 @@ export function ClaimImagesGallery({
 				onDisplayNameChange={setDisplayName}
 				onDescriptionChange={setDescription}
 				onSubmit={handleUploadSubmit}
-				title="Subir imagen"
-				descriptionText="Completa la información de la imagen que deseas subir."
-				submitText="Subir imagen"
+				title="Subir archivo"
+				descriptionText="Completa la información del archivo que deseas subir."
+				submitText="Subir archivo"
 			/>
 		</div>
 	);

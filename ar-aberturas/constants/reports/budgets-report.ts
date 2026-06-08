@@ -21,4 +21,5 @@ export const BUDGET_STATUS = {
 	PENDING: 'Pendiente',
 	ACCEPTED: 'Aceptado',
 	SOLD: 'Vendido',
+	LOST: 'Perdido',
 } as const;

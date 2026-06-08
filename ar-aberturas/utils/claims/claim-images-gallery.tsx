@@ -27,7 +27,7 @@ import {
 	getFileExtension,
 } from '@/utils/file-upload-utils';
 
-interface ClaimImage {
+interface ClaimFile {
 	id: string;
 	name: string;
 	title: string | null;
@@ -53,10 +53,10 @@ export function ClaimImagesGallery({
 	workZone,
 	workAddress,
 }: ClaimImagesGalleryProps) {
-	const [images, setImages] = useState<ClaimImage[]>([]);
+	const [files, setFiles] = useState<ClaimFile[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
-	const [imageToDelete, setImageToDelete] = useState<ClaimImage | null>(null);
-	const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+	const [fileToDelete, setFileToDelete] = useState<ClaimFile | null>(null);
+	const [selectedFileIndex, setSelectedFileIndex] = useState<number | null>(null);
 
 	const locationParts = [workLocality, workZone, workAddress]
 		.map((part) => part?.trim())
@@ -79,9 +79,9 @@ export function ClaimImagesGallery({
 	const loadImages = async () => {
 		setIsLoading(true);
 		try {
-			images.forEach((image) => {
-				if (image.url) {
-					URL.revokeObjectURL(image.url);
+			files.forEach((file) => {
+				if (file.url) {
+					URL.revokeObjectURL(file.url);
 				}
 			});
 
@@ -89,17 +89,17 @@ export function ClaimImagesGallery({
 
 			if (error) {
 				console.error('Error loading images:', error);
-				setImages([]);
+				setFiles([]);
 				return;
 			}
 
 			if (!data || data.length === 0) {
-				setImages([]);
+				setFiles([]);
 				return;
 			}
 
 			const supabase = getSupabaseClient();
-			const imagesWithUrls = await Promise.all(
+			const filesWithUrls = await Promise.all(
 				data.map(async (file) => {
 					try {
 						if (!file.path) {
@@ -132,11 +132,11 @@ export function ClaimImagesGallery({
 				})
 			);
 
-			const validImages = imagesWithUrls.filter((img): img is ClaimImage => img !== null);
-			setImages(validImages);
+			const validFiles = filesWithUrls.filter((file): file is ClaimFile => file !== null);
+			setFiles(validFiles);
 		} catch (error) {
-			console.error('Unexpected error loading images:', error);
-			setImages([]);
+			console.error('Unexpected error loading files:', error);
+			setFiles([]);
 		} finally {
 			setIsLoading(false);
 		}
@@ -178,31 +178,31 @@ export function ClaimImagesGallery({
 		loadImages();
 
 		return () => {
-			images.forEach((image) => {
-				if (image.url) {
-					URL.revokeObjectURL(image.url);
+			files.forEach((file) => {
+				if (file.url) {
+					URL.revokeObjectURL(file.url);
 				}
 			});
 		};
 	}, [claimId]);
 
-	const handleDeleteImage = async () => {
-		if (!imageToDelete) return;
+	const handleDeleteFile = async () => {
+		if (!fileToDelete) return;
 
 		try {
-			const { error } = await deleteClientFile(imageToDelete.id);
+			const { error } = await deleteClientFile(fileToDelete.id);
 
 			if (error) {
 				const errorMessage = translateError(error.message);
 				toast({
 					variant: 'destructive',
-					title: 'Error al eliminar imagen',
+					title: 'Error al eliminar archivo',
 					description: errorMessage,
 				});
 			} else {
 				toast({
-					title: 'Imagen eliminada',
-					description: 'La imagen se eliminó exitosamente.',
+					title: 'Archivo eliminado',
+					description: 'El archivo se eliminó exitosamente.',
 				});
 				await loadImages();
 			}
@@ -215,7 +215,7 @@ export function ClaimImagesGallery({
 				description: translateError(errorMessage),
 			});
 		} finally {
-			setImageToDelete(null);
+			setFileToDelete(null);
 		}
 	};
 
@@ -230,7 +230,7 @@ export function ClaimImagesGallery({
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
-				<h4 className="text-sm font-medium">Archivos ({images.length})</h4>
+				<h4 className="text-sm font-medium">Archivos ({files.length})</h4>
 				<div>
 					<input
 						ref={fileInputRef}
@@ -256,27 +256,27 @@ export function ClaimImagesGallery({
 				</div>
 			</div>
 
-			{images.length === 0 ? (
+			{files.length === 0 ? (
 				<div className="flex items-center justify-center h-32 border-2 border-dashed border-muted-foreground/25 rounded-lg">
 					<p className="text-sm text-muted-foreground">No hay archivos</p>
 				</div>
 			) : (
 				<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-					{images.map((image, index) => {
-						const fileKind = getFileKind(image.name);
+					{files.map((file, index) => {
+						const fileKind = getFileKind(file.name);
 
 						return (
 							<div
-								key={image.id}
+								key={file.id}
 								className="group relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer"
-								onClick={() => setSelectedImageIndex(index)}
+								onClick={() => setSelectedFileIndex(index)}
 							>
 								{fileKind === 'image' ? (
-									<img src={image.url} alt={image.name} className="w-full h-full object-cover" />
+									<img src={file.url} alt={file.name} className="w-full h-full object-cover" />
 								) : fileKind === 'video' ? (
 									<div className="w-full h-full flex items-center justify-center bg-black">
 										<video
-											src={image.url}
+											src={file.url}
 											className="w-full h-full object-cover"
 											muted
 											playsInline
@@ -300,7 +300,7 @@ export function ClaimImagesGallery({
 										className="h-7 w-7"
 										onClick={(e) => {
 											e.stopPropagation();
-											setImageToDelete(image);
+											setFileToDelete(file);
 										}}
 									>
 										<Trash2 className="h-3 w-3" />
@@ -308,8 +308,8 @@ export function ClaimImagesGallery({
 								</div>
 
 								<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-									{image.title && <p className="text-white text-xs truncate">{image.title}</p>}
-									<p className="text-white text-xs truncate">{formatFileSize(image.size)}</p>
+									{file.title && <p className="text-white text-xs truncate">{file.title}</p>}
+									<p className="text-white text-xs truncate">{formatFileSize(file.size)}</p>
 								</div>
 							</div>
 						);
@@ -317,7 +317,7 @@ export function ClaimImagesGallery({
 				</div>
 			)}
 
-			<AlertDialog open={!!imageToDelete} onOpenChange={() => setImageToDelete(null)}>
+			<AlertDialog open={!!fileToDelete} onOpenChange={() => setFileToDelete(null)}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>¿Eliminar archivo?</AlertDialogTitle>
@@ -328,7 +328,7 @@ export function ClaimImagesGallery({
 					<AlertDialogFooter>
 						<AlertDialogCancel>Cancelar</AlertDialogCancel>
 						<AlertDialogAction
-							onClick={handleDeleteImage}
+							onClick={handleDeleteFile}
 							className="bg-destructive hover:bg-destructive/90"
 						>
 							Eliminar
@@ -338,27 +338,27 @@ export function ClaimImagesGallery({
 			</AlertDialog>
 
 			<FileViewerModal
-				files={images.map((image) => {
-					const fileKind = getFileKind(image.name);
+				files={files.map((file) => {
+					const fileKind = getFileKind(file.name);
 
 					return {
-						id: image.id,
-						url: image.url,
-						name: image.name,
-						displayName: image.title,
-						description: image.title,
+						id: file.id,
+						url: file.url,
+						name: file.name,
+						displayName: file.title,
+						description: file.title,
 						mimetype:
 							fileKind === 'image'
 								? 'image/jpeg'
 								: fileKind === 'video'
 									? 'video/mp4'
 									: 'application/octet-stream',
-						size: image.size,
-						uploadedAt: image.uploaded_at,
+						size: file.size,
+						uploadedAt: file.uploaded_at,
 					};
 				})}
-				selectedIndex={selectedImageIndex}
-				onSelectedIndexChange={setSelectedImageIndex}
+				selectedIndex={selectedFileIndex}
+				onSelectedIndexChange={setSelectedFileIndex}
 			/>
 
 			<UploadFileDialog

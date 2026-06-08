@@ -24,12 +24,6 @@ export interface DeleteFolderConfirmState {
 	budgetCount: number;
 }
 
-export interface PdfPreviewState {
-	open: boolean;
-	budget: BudgetWithWork | null;
-	pdfUrl: string | null;
-}
-
 export interface BudgetDetailModalState {
 	open: boolean;
 	budget: BudgetWithWork | null;
@@ -54,7 +48,6 @@ export interface ClientBudgetsTabState {
 	formData: BudgetFormData;
 	deleteBudgetConfirm: DeleteBudgetConfirmState;
 	deleteFolderConfirm: DeleteFolderConfirmState;
-	pdfPreview: PdfPreviewState;
 	isClientBudgetsUpdateModalOpen: boolean;
 	budgetDetailModal: BudgetDetailModalState;
 	editModalOpen: boolean;

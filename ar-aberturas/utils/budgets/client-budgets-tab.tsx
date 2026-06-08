@@ -13,7 +13,6 @@ import { useClientBudgetsState } from '../../hooks/budgets/useClientBudgetsState
 import { budgetHandlers } from './handlers';
 import { FolderCard } from './components/FolderCard';
 import { BudgetDetailModal } from './components/BudgetDetailModal';
-import { PdfPreviewModal } from './components/PdfPreviewModal';
 import { ClientBudgetsTabProps } from './types';
 
 export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }: ClientBudgetsTabProps) {
@@ -29,8 +28,6 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 		setDeleteBudgetConfirm,
 		deleteFolderConfirm,
 		setDeleteFolderConfirm,
-		pdfPreview,
-		setPdfPreview,
 		isClientBudgetsUpdateModalOpen,
 		setIsClientBudgetsUpdateModalOpen,
 		budgetDetailModal,
@@ -86,11 +83,7 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 	};
 
 	const handleViewPdf = (budget: BudgetWithWork) => {
-		budgetHandlers.handleViewPdf(budget, setPdfPreview, setIsLoading);
-	};
-
-	const closePdfPreview = () => {
-		budgetHandlers.closePdfPreview(pdfPreview, setPdfPreview);
+		budgetHandlers.handleViewPdf(budget, setIsLoading);
 	};
 
 	const handleOpenBudgetDetail = (budget: BudgetWithWork) => {
@@ -209,13 +202,6 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 				description={`¿Estás seguro de que quieres eliminar esta carpeta y sus ${deleteFolderConfirm.budgetCount} presupuesto(s)? Esta acción no se puede deshacer.`}
 				onConfirm={confirmDeleteFolder}
 				isLoading={isLoading}
-			/>
-
-			<PdfPreviewModal
-				isOpen={pdfPreview.open}
-				onOpenChange={closePdfPreview}
-				budget={pdfPreview.budget}
-				pdfUrl={pdfPreview.pdfUrl}
 			/>
 
 			<ClientBudgetsDollarUpdateModal

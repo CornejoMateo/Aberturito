@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { formatCurrency } from '@/helpers/format-prices.tsx/formats';
@@ -45,7 +45,7 @@ export function ClientsReport() {
 		loading,
 		refresh,
 	} = useOptimizedRealtime<ClientWithFirstBudget>(
-		'clients_report',
+		'clients',
 		async () => {
 			const { data } = await getClientsWithFirstBudget();
 			return data ?? [];
@@ -65,9 +65,11 @@ export function ClientsReport() {
 		return Array.from(years).sort((a, b) => b - a);
 	}, [clients]);
 
+	const isInitialLoad = useRef(true);
 	// Set default year to current year if available
 	useEffect(() => {
-		if (availableYears.length > 0 && yearFilter === 'all') {
+		if (availableYears.length > 0 && yearFilter === 'all' && isInitialLoad.current) {
+			isInitialLoad.current = false;
 			const currentYear = new Date().getFullYear();
 			if (availableYears.includes(currentYear)) {
 				setYearFilter(String(currentYear));
@@ -75,7 +77,7 @@ export function ClientsReport() {
 				setYearFilter(String(availableYears[0]));
 			}
 		}
-	}, [availableYears, yearFilter]);
+	}, [availableYears]);
 
 	useEffect(() => {
 		if (!clients?.length) {

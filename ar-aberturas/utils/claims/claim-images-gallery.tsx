@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Upload, Trash2, Loader2 } from 'lucide-react';
+import { Upload, Trash2, Loader2, FileText, Video } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { getSupabaseClient } from '@/lib/supabase-client';
 import { translateError } from '@/lib/error-translator';
@@ -20,9 +20,14 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { CLAIM_FILE_TYPES, MAX_FILE_SIZE_CLAIM, formatFileSize } from '@/utils/file-upload-utils';
+import {
+	CLAIM_FILE_TYPES,
+	MAX_FILE_SIZE_CLAIM,
+	formatFileSize,
+	getFileExtension,
+} from '@/utils/file-upload-utils';
 
-interface ClaimImage {
+interface ClaimFile {
 	id: string;
 	name: string;
 	title: string | null;
@@ -48,21 +53,35 @@ export function ClaimImagesGallery({
 	workZone,
 	workAddress,
 }: ClaimImagesGalleryProps) {
-	const [images, setImages] = useState<ClaimImage[]>([]);
+	const [files, setFiles] = useState<ClaimFile[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
-	const [imageToDelete, setImageToDelete] = useState<ClaimImage | null>(null);
-	const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+	const [fileToDelete, setFileToDelete] = useState<ClaimFile | null>(null);
+	const [selectedFileIndex, setSelectedFileIndex] = useState<number | null>(null);
 
 	const locationParts = [workLocality, workZone, workAddress]
 		.map((part) => part?.trim())
 		.filter((part): part is string => Boolean(part));
 
+	const getFileKind = (fileName: string) => {
+		const extension = getFileExtension(fileName).toLowerCase();
+
+		if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(extension)) {
+			return 'image';
+		}
+
+		if (['mp4', 'webm', 'ogg', 'mov', 'avi'].includes(extension)) {
+			return 'video';
+		}
+
+		return 'file';
+	};
+
 	const loadImages = async () => {
 		setIsLoading(true);
 		try {
-			images.forEach((image) => {
-				if (image.url) {
-					URL.revokeObjectURL(image.url);
+			files.forEach((file) => {
+				if (file.url) {
+					URL.revokeObjectURL(file.url);
 				}
 			});
 
@@ -70,17 +89,17 @@ export function ClaimImagesGallery({
 
 			if (error) {
 				console.error('Error loading images:', error);
-				setImages([]);
+				setFiles([]);
 				return;
 			}
 
 			if (!data || data.length === 0) {
-				setImages([]);
+				setFiles([]);
 				return;
 			}
 
 			const supabase = getSupabaseClient();
-			const imagesWithUrls = await Promise.all(
+			const filesWithUrls = await Promise.all(
 				data.map(async (file) => {
 					try {
 						if (!file.path) {
@@ -113,11 +132,11 @@ export function ClaimImagesGallery({
 				})
 			);
 
-			const validImages = imagesWithUrls.filter((img): img is ClaimImage => img !== null);
-			setImages(validImages);
+			const validFiles = filesWithUrls.filter((file): file is ClaimFile => file !== null);
+			setFiles(validFiles);
 		} catch (error) {
-			console.error('Unexpected error loading images:', error);
-			setImages([]);
+			console.error('Unexpected error loading files:', error);
+			setFiles([]);
 		} finally {
 			setIsLoading(false);
 		}
@@ -159,31 +178,31 @@ export function ClaimImagesGallery({
 		loadImages();
 
 		return () => {
-			images.forEach((image) => {
-				if (image.url) {
-					URL.revokeObjectURL(image.url);
+			files.forEach((file) => {
+				if (file.url) {
+					URL.revokeObjectURL(file.url);
 				}
 			});
 		};
 	}, [claimId]);
 
-	const handleDeleteImage = async () => {
-		if (!imageToDelete) return;
+	const handleDeleteFile = async () => {
+		if (!fileToDelete) return;
 
 		try {
-			const { error } = await deleteClientFile(imageToDelete.id);
+			const { error } = await deleteClientFile(fileToDelete.id);
 
 			if (error) {
 				const errorMessage = translateError(error.message);
 				toast({
 					variant: 'destructive',
-					title: 'Error al eliminar imagen',
+					title: 'Error al eliminar archivo',
 					description: errorMessage,
 				});
 			} else {
 				toast({
-					title: 'Imagen eliminada',
-					description: 'La imagen se eliminó exitosamente.',
+					title: 'Archivo eliminado',
+					description: 'El archivo se eliminó exitosamente.',
 				});
 				await loadImages();
 			}
@@ -196,7 +215,7 @@ export function ClaimImagesGallery({
 				description: translateError(errorMessage),
 			});
 		} finally {
-			setImageToDelete(null);
+			setFileToDelete(null);
 		}
 	};
 
@@ -211,7 +230,7 @@ export function ClaimImagesGallery({
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
-				<h4 className="text-sm font-medium">Imágenes ({images.length})</h4>
+				<h4 className="text-sm font-medium">Archivos ({files.length})</h4>
 				<div>
 					<input
 						ref={fileInputRef}
@@ -230,62 +249,86 @@ export function ClaimImagesGallery({
 						) : (
 							<>
 								<Upload className="h-4 w-4 mr-2" />
-								Subir imagen
+								Subir archivo
 							</>
 						)}
 					</Button>
 				</div>
 			</div>
 
-			{images.length === 0 ? (
+			{files.length === 0 ? (
 				<div className="flex items-center justify-center h-32 border-2 border-dashed border-muted-foreground/25 rounded-lg">
-					<p className="text-sm text-muted-foreground">No hay imágenes</p>
+					<p className="text-sm text-muted-foreground">No hay archivos</p>
 				</div>
 			) : (
 				<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-					{images.map((image, index) => (
-						<div
-							key={image.id}
-							className="group relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer"
-							onClick={() => setSelectedImageIndex(index)}
-						>
-							<img src={image.url} alt={image.name} className="w-full h-full object-cover" />
+					{files.map((file, index) => {
+						const fileKind = getFileKind(file.name);
 
-							<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-								<Button
-									size="icon"
-									variant="destructive"
-									className="h-7 w-7"
-									onClick={(e) => {
-										e.stopPropagation();
-										setImageToDelete(image);
-									}}
-								>
-									<Trash2 className="h-3 w-3" />
-								</Button>
-							</div>
+						return (
+							<div
+								key={file.id}
+								className="group relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer"
+								onClick={() => setSelectedFileIndex(index)}
+							>
+								{fileKind === 'image' ? (
+									<img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+								) : fileKind === 'video' ? (
+									<div className="w-full h-full flex items-center justify-center bg-black">
+										<video
+											src={file.url}
+											className="w-full h-full object-cover"
+											muted
+											playsInline
+										/>
+										<div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+											<div className="w-12 h-12 rounded-full bg-white/80 flex items-center justify-center">
+												<div className="w-0 h-0 border-l-[12px] border-l-black border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent ml-1" />
+											</div>
+										</div>
+									</div>
+								) : (
+									<div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted/60">
+										<FileText className="h-12 w-12 text-muted-foreground" />
+									</div>
+								)}
 
-							<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-								{image.title && <p className="text-white text-xs truncate">{image.title}</p>}
-								<p className="text-white text-xs truncate">{formatFileSize(image.size)}</p>
+								<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+									<Button
+										size="icon"
+										variant="destructive"
+										className="h-7 w-7"
+										onClick={(e) => {
+											e.stopPropagation();
+											setFileToDelete(file);
+										}}
+									>
+										<Trash2 className="h-3 w-3" />
+									</Button>
+								</div>
+
+								<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+									{file.title && <p className="text-white text-xs truncate">{file.title}</p>}
+									<p className="text-white text-xs truncate">{formatFileSize(file.size)}</p>
+								</div>
 							</div>
-						</div>
-					))}
+						);
+					})}
 				</div>
 			)}
 
-			<AlertDialog open={!!imageToDelete} onOpenChange={() => setImageToDelete(null)}>
+			<AlertDialog open={!!fileToDelete} onOpenChange={() => setFileToDelete(null)}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>¿Eliminar imagen?</AlertDialogTitle>
+						<AlertDialogTitle>¿Eliminar archivo?</AlertDialogTitle>
 						<AlertDialogDescription>
-							Esta acción no se puede deshacer. La imagen será eliminada permanentemente.
+							Esta acción no se puede deshacer. El archivo será eliminado permanentemente.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
 						<AlertDialogCancel>Cancelar</AlertDialogCancel>
 						<AlertDialogAction
-							onClick={handleDeleteImage}
+							onClick={handleDeleteFile}
 							className="bg-destructive hover:bg-destructive/90"
 						>
 							Eliminar
@@ -295,18 +338,27 @@ export function ClaimImagesGallery({
 			</AlertDialog>
 
 			<FileViewerModal
-				files={images.map((image) => ({
-					id: image.id,
-					url: image.url,
-					name: image.name,
-					displayName: image.title,
-					description: image.title,
-					mimetype: 'image/jpeg',
-					size: image.size,
-					uploadedAt: image.uploaded_at,
-				}))}
-				selectedIndex={selectedImageIndex}
-				onSelectedIndexChange={setSelectedImageIndex}
+				files={files.map((file) => {
+					const fileKind = getFileKind(file.name);
+
+					return {
+						id: file.id,
+						url: file.url,
+						name: file.name,
+						displayName: file.title,
+						description: file.title,
+						mimetype:
+							fileKind === 'image'
+								? 'image/jpeg'
+								: fileKind === 'video'
+									? 'video/mp4'
+									: 'application/octet-stream',
+						size: file.size,
+						uploadedAt: file.uploaded_at,
+					};
+				})}
+				selectedIndex={selectedFileIndex}
+				onSelectedIndexChange={setSelectedFileIndex}
 			/>
 
 			<UploadFileDialog
@@ -319,9 +371,9 @@ export function ClaimImagesGallery({
 				onDisplayNameChange={setDisplayName}
 				onDescriptionChange={setDescription}
 				onSubmit={handleUploadSubmit}
-				title="Subir imagen"
-				descriptionText="Completa la información de la imagen que deseas subir."
-				submitText="Subir imagen"
+				title="Subir archivo"
+				descriptionText="Completa la información del archivo que deseas subir."
+				submitText="Subir archivo"
 			/>
 		</div>
 	);

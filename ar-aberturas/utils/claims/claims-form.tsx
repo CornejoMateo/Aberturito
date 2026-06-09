@@ -13,7 +13,13 @@ import React, { useEffect, useState } from 'react';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Claim } from '@/lib/claims/claims';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { Command, CommandInput, CommandList, CommandEmpty, CommandItem } from '@/components/ui/command';
+import {
+	Command,
+	CommandInput,
+	CommandList,
+	CommandEmpty,
+	CommandItem,
+} from '@/components/ui/command';
 import { Client } from '@/lib/clients/clients';
 import { Work } from '@/lib/works/works';
 import { checklistTypes } from '@/lib/works/checklists.constants';
@@ -80,7 +86,8 @@ export function ClaimsForm({
 								<CommandEmpty>No encontrado</CommandEmpty>
 
 								{clients.map((client) => {
-									const fullName = `${client.name || ''} ${client.last_name || ''}`.trim() || 'Cliente sin nombre';
+									const fullName =
+										`${client.name || ''} ${client.last_name || ''}`.trim() || 'Cliente sin nombre';
 									const searchableValue = `${fullName} ${client.phone_number || ''}`;
 
 									return (
@@ -192,11 +199,13 @@ export function ClaimsForm({
 							<SelectValue placeholder="Seleccionar tipo" />
 						</SelectTrigger>
 						<SelectContent>
-							{types && types.map((type) => (
-								<SelectItem key={type} value={type}>
-									{type}
-								</SelectItem>
-							))}
+							{types &&
+								types.map((type) => (
+									<SelectItem key={type} value={type}>
+										{type}
+									</SelectItem>
+								))}
+							<SelectItem value="Filtraciones">Filtraciones</SelectItem>
 							<SelectItem value="Otro">Otro</SelectItem>
 						</SelectContent>
 					</Select>

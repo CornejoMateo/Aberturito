@@ -98,3 +98,74 @@ export async function createClientFolder(clientId: string) {
 		return { data: null, error: err };
 	}
 }
+
+export type ClientWithFirstBudget = Client & {
+	first_budget_date?: string | null;
+	budget_count?: number;
+	sold_budgets_count?: number;
+	sold_amount_ars?: number;
+	sold_amount_usd?: number;
+};
+
+export async function getClientsWithFirstBudget(): Promise<{ data: ClientWithFirstBudget[] | null; error: any }> {
+	const supabase = getSupabaseClient();
+	
+	// Get all clients with their budgets
+	const { data: clients, error: clientsError } = await supabase
+		.from(TABLE)
+		.select('id, name, last_name, phone_number, locality, email, contact_method, created_at');
+	
+	if (clientsError) return { data: null, error: clientsError };
+	if (!clients) return { data: [], error: null };
+	
+	// Get all budgets with client info
+	const { data: budgets, error: budgetsError } = await supabase
+		.from('budgets')
+		.select(`
+			created_at,
+			amount_ars,
+			amount_usd,
+			sold,
+			folder_budget:folder_budgets!inner (
+				client_id
+			)
+		`)
+		.order('created_at', { ascending: true });
+	
+	if (budgetsError) return { data: null, error: budgetsError };
+	if (!budgets) return { data: [], error: null };
+	
+	// Group budgets by client_id
+	const budgetsByClient = new Map<string, typeof budgets>();
+	
+	budgets.forEach((budget: any) => {
+		const clientId = budget.folder_budget?.client_id;
+		if (clientId) {
+			if (!budgetsByClient.has(clientId)) {
+				budgetsByClient.set(clientId, []);
+			}
+			budgetsByClient.get(clientId)!.push(budget);
+		}
+	});
+	
+	// Build client data with first budget date and stats
+	const result: ClientWithFirstBudget[] = clients.map((client) => {
+		const clientBudgets = budgetsByClient.get(client.id) || [];
+		const firstBudget = clientBudgets[0];
+		
+		const soldBudgets = clientBudgets.filter((b: any) => b.sold);
+		const soldArs = soldBudgets.reduce((sum: number, b: any) => sum + (b.amount_ars || 0), 0);
+		const soldUsd = soldBudgets.reduce((sum: number, b: any) => sum + (b.amount_usd || 0), 0);
+		
+		return {
+			...client,
+			first_budget_date: firstBudget?.created_at || null,
+			budget_count: clientBudgets.length,
+			sold_budgets_count: soldBudgets.length,
+			sold_amount_ars: soldArs,
+			sold_amount_usd: soldUsd,
+		};
+	});
+	
+	return { data: result, error: null };
+}

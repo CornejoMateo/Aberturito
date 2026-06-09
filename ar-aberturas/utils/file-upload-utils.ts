@@ -31,8 +31,8 @@ export const DOCUMENT_TYPES = [
 // All supported file types for clients (images + videos + documents)
 export const CLIENT_FILE_TYPES = [...IMAGE_TYPES, ...VIDEO_TYPES, ...DOCUMENT_TYPES] as const;
 
-// Only image types for claims
-export const CLAIM_FILE_TYPES = IMAGE_TYPES;
+// Supported file types for claims (images, videos and documents)
+export const CLAIM_FILE_TYPES = [...IMAGE_TYPES, ...VIDEO_TYPES, ...DOCUMENT_TYPES] as const;
 
 // File size limits
 export const MAX_FILE_SIZE_CLIENT = 50 * 1024 * 1024; // 50MB

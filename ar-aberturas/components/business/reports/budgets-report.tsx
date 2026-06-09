@@ -117,20 +117,10 @@ export function BudgetsReport() {
 
 		// Filter by status
 		if (statusFilter !== 'all') {
-			if (
-				statusFilter !== BUDGET_STATUS.PENDING &&
-				statusFilter !== BUDGET_STATUS.SOLD &&
-				statusFilter !== BUDGET_STATUS.LOST
-			) {
-				filtered = filtered.filter((r) => {
-					if (statusFilter === BUDGET_STATUS.ACCEPTED) {
-						return r.accepted;
-					}
-					return false;
-				});
-				return filtered;
-			}
-			filtered = filtered.filter((r) => r.status === statusFilter);
+			filtered = filtered.filter((r) => {
+				if (statusFilter === BUDGET_STATUS.ACCEPTED) return r.accepted;
+				return r.status === statusFilter;
+			});
 		}
 
 		// Filter by text

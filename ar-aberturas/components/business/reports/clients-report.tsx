@@ -295,7 +295,7 @@ export function ClientsReport() {
 								}}
 								itemStyle={{ color: 'hsl(var(--foreground))' }}
 							/>
-							<Bar dataKey="clients" radius={[4, 4, 0, 0]}>
+							<Bar dataKey="clients" name="Clientes" radius={[4, 4, 0, 0]}>
 								{chartData.map((entry, index) => (
 									<Cell key={`cell-${index}`} fill={getBarColor(index)} />
 								))}

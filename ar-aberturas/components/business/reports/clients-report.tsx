@@ -5,12 +5,26 @@ import { Card } from '@/components/ui/card';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { formatCurrency } from '@/helpers/format-prices.tsx/formats';
 import { ClientWithFirstBudget, getClientsWithFirstBudget } from '@/lib/clients/clients';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Users, TrendingUp, DollarSign, Calendar } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-
-const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+import {
+	BarChart,
+	Bar,
+	XAxis,
+	YAxis,
+	CartesianGrid,
+	Tooltip,
+	ResponsiveContainer,
+	Cell,
+} from 'recharts';
+import { months } from '@/lib/budgets/budgets';
 
 type ClientChartData = {
 	month: string;
@@ -95,12 +109,13 @@ export function ClientsReport() {
 		}
 
 		// Filter clients by year if selected
-		const filteredClients = yearFilter === 'all' 
-			? clients 
-			: clients.filter((client) => {
-				if (!client.first_budget_date) return false;
-				return new Date(client.first_budget_date).getFullYear() === Number(yearFilter);
-			});
+		const filteredClients =
+			yearFilter === 'all'
+				? clients
+				: clients.filter((client) => {
+						if (!client.first_budget_date) return false;
+						return new Date(client.first_budget_date).getFullYear() === Number(yearFilter);
+					});
 
 		// Calculate stats
 		const totalClients = filteredClients.length;
@@ -123,18 +138,18 @@ export function ClientsReport() {
 
 		// Build chart data - group clients by month
 		const monthMap = new Map<string, number>();
-		MONTHS.forEach((month) => monthMap.set(month, 0));
+		months.forEach((month) => monthMap.set(month, 0));
 
 		filteredClients.forEach((client) => {
 			if (client.first_budget_date) {
 				const date = new Date(client.first_budget_date);
 				const monthIndex = date.getMonth();
-				const monthName = MONTHS[monthIndex];
+				const monthName = months[monthIndex];
 				monthMap.set(monthName, (monthMap.get(monthName) || 0) + 1);
 			}
 		});
 
-		const chartData: ClientChartData[] = MONTHS.map((month) => ({
+		const chartData: ClientChartData[] = months.map((month) => ({
 			month,
 			clients: monthMap.get(month) || 0,
 		}));
@@ -153,7 +168,9 @@ export function ClientsReport() {
 			<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 				<div>
 					<h2 className="text-2xl font-bold text-foreground text-balance">Reporte de Clientes</h2>
-					<p className="text-muted-foreground mt-1">Análisis de adquisición y conversión de clientes</p>
+					<p className="text-muted-foreground mt-1">
+						Análisis de adquisición y conversión de clientes
+					</p>
 				</div>
 
 				<div className="flex gap-2">
@@ -255,7 +272,7 @@ export function ClientsReport() {
 
 			{/* Chart */}
 			<Card className="p-6">
-				<h3 className="text-lg font-semibold mb-4">Clientes por Mes</h3>
+				<h3 className="text-lg font-semibold mb-4">Clientes por mes</h3>
 				{loading ? (
 					<div className="h-[300px] flex items-center justify-center">
 						<p className="text-muted-foreground">Cargando datos...</p>
@@ -268,16 +285,9 @@ export function ClientsReport() {
 					<ResponsiveContainer width="100%" height={300}>
 						<BarChart data={chartData}>
 							<CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-							<XAxis 
-								dataKey="month" 
-								className="text-sm"
-								stroke="hsl(var(--muted-foreground))"
-							/>
-							<YAxis 
-								className="text-sm"
-								stroke="hsl(var(--muted-foreground))"
-							/>
-							<Tooltip 
+							<XAxis dataKey="month" className="text-sm" stroke="hsl(var(--muted-foreground))" />
+							<YAxis className="text-sm" stroke="hsl(var(--muted-foreground))" />
+							<Tooltip
 								contentStyle={{
 									backgroundColor: 'hsl(var(--card))',
 									border: '1px solid hsl(var(--border))',

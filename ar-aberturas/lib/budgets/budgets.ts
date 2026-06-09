@@ -30,25 +30,24 @@ export type BudgetWithWorkAndClient = BudgetWithWork & {
 const TABLE = 'budgets';
 
 export async function getBudgetsCount(): Promise<{ data: number; error: any }> {
-  const supabase = getSupabaseClient();
-  const { count, error } = await supabase
-    .from(TABLE)
-    .select('*', { count: 'exact', head: true });
-  return { data: count || 0, error };
+	const supabase = getSupabaseClient();
+	const { count, error } = await supabase.from(TABLE).select('*', { count: 'exact', head: true });
+	return { data: count || 0, error };
 }
 
-export async function getBudgetsTotalAmount(): Promise<{ data: { totalArs: number; totalUsd: number }; error: any }> {
+export async function getBudgetsTotalAmount(): Promise<{
+	data: { totalArs: number; totalUsd: number };
+	error: any;
+}> {
 	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('amount_ars, amount_usd');
-	
+	const { data, error } = await supabase.from(TABLE).select('amount_ars, amount_usd');
+
 	if (error) return { data: { totalArs: 0, totalUsd: 0 }, error };
 	if (!data) return { data: { totalArs: 0, totalUsd: 0 }, error: null };
-	
+
 	const totalArs = data.reduce((sum, budget) => sum + (budget.amount_ars || 0), 0);
 	const totalUsd = data.reduce((sum, budget) => sum + (budget.amount_usd || 0), 0);
-	
+
 	return { data: { totalArs, totalUsd }, error: null };
 }
 
@@ -88,51 +87,60 @@ export async function getChosenBudgetsCount(): Promise<{ data: number; error: an
 	return { data: count || 0, error };
 }
 
-export async function getSoldBudgetsTotalAmount(): Promise<{ data: { totalArs: number; totalUsd: number }; error: any }> {
+export async function getSoldBudgetsTotalAmount(): Promise<{
+	data: { totalArs: number; totalUsd: number };
+	error: any;
+}> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
 		.select('amount_ars, amount_usd')
 		.eq('sold', true);
-	
+
 	if (error) return { data: { totalArs: 0, totalUsd: 0 }, error };
 	if (!data) return { data: { totalArs: 0, totalUsd: 0 }, error: null };
-	
+
 	const totalArs = data.reduce((sum, budget) => sum + (budget.amount_ars || 0), 0);
 	const totalUsd = data.reduce((sum, budget) => sum + (budget.amount_usd || 0), 0);
-	
+
 	return { data: { totalArs, totalUsd }, error: null };
 }
 
-export async function getLostBudgetsTotalAmount(): Promise<{ data: { totalArs: number; totalUsd: number }; error: any }> {
+export async function getLostBudgetsTotalAmount(): Promise<{
+	data: { totalArs: number; totalUsd: number };
+	error: any;
+}> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
 		.select('amount_ars, amount_usd')
 		.eq('lost', true);
-	
+
 	if (error) return { data: { totalArs: 0, totalUsd: 0 }, error };
 	if (!data) return { data: { totalArs: 0, totalUsd: 0 }, error: null };
-	
+
 	const totalArs = data.reduce((sum, budget) => sum + (budget.amount_ars || 0), 0);
 	const totalUsd = data.reduce((sum, budget) => sum + (budget.amount_usd || 0), 0);
-	
+
 	return { data: { totalArs, totalUsd }, error: null };
 }
 
-export async function getChosenBudgetsTotalAmount(): Promise<{ data: { totalArs: number; totalUsd: number }; error: any }> {
+export async function getChosenBudgetsTotalAmount(): Promise<{
+	data: { totalArs: number; totalUsd: number };
+	error: any;
+}> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
 		.select('amount_ars, amount_usd')
 		.eq('accepted', true);
-	
+
 	if (error) return { data: { totalArs: 0, totalUsd: 0 }, error };
 	if (!data) return { data: { totalArs: 0, totalUsd: 0 }, error: null };
-	
+
 	const totalArs = data.reduce((sum, budget) => sum + (budget.amount_ars || 0), 0);
 	const totalUsd = data.reduce((sum, budget) => sum + (budget.amount_usd || 0), 0);
-	
+
 	return { data: { totalArs, totalUsd }, error: null };
 }
 
@@ -169,7 +177,7 @@ export async function getBudgetsByFolderBudgetIds(
 ): Promise<{ data: BudgetWithWork[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 	if (folderBudgetIds.length === 0) return { data: [], error: null };
-	
+
 	const { data, error } = await supabase
 		.from(TABLE)
 		.select(
@@ -247,64 +255,69 @@ export async function listBudgetsForReport(): Promise<{
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from('budgets')
-		.select(`
+		.select(
+			`
 			*,
 			folder_budget:folder_budgets(
 				client:clients(id, name, last_name),
 				work:works(address, locality)
 			)
-		`)
+		`
+		)
 		.order('created_at', { ascending: false });
-	
+
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
 
-	const result: BudgetWithWorkAndClient[] = data
-		.map((b: any) => {
-			// Handle folder_budget - it can be null, array, or object
-			let folderBudget = null;
-			if (b.folder_budget) {
-				folderBudget = Array.isArray(b.folder_budget) ? b.folder_budget[0] : b.folder_budget;
-			}
+	const result: BudgetWithWorkAndClient[] = data.map((b: any) => {
+		// Handle folder_budget - it can be null, array, or object
+		let folderBudget = null;
+		if (b.folder_budget) {
+			folderBudget = Array.isArray(b.folder_budget) ? b.folder_budget[0] : b.folder_budget;
+		}
 
-			// Handle work - it can be null, array, or object
-			let work = null;
-			if (folderBudget?.work) {
-				work = Array.isArray(folderBudget.work) ? folderBudget.work[0] : folderBudget.work;
-			}
+		// Handle work - it can be null, array, or object
+		let work = null;
+		if (folderBudget?.work) {
+			work = Array.isArray(folderBudget.work) ? folderBudget.work[0] : folderBudget.work;
+		}
 
-			// Handle client - it can be null, array, or object
-			let client = null;
-			if (folderBudget?.client) {
-				client = Array.isArray(folderBudget.client) ? folderBudget.client[0] : folderBudget.client;
-			}
+		// Handle client - it can be null, array, or object
+		let client = null;
+		if (folderBudget?.client) {
+			client = Array.isArray(folderBudget.client) ? folderBudget.client[0] : folderBudget.client;
+		}
 
-			return {
-				...b,
-				amount_ars: b.amount_ars || 0,
-				amount_usd: b.amount_usd || 0,
-				usd_quote: b.usd_quote || 0,
-				folder_budget: folderBudget ? {
-					id: folderBudget.id,
-					work_id: folderBudget.work_id,
-					work: work ? {
-						address: work.address || '',
-						locality: work.locality || '',
-					} : {
-						address: '',
-						locality: '',
+		return {
+			...b,
+			amount_ars: b.amount_ars || 0,
+			amount_usd: b.amount_usd || 0,
+			usd_quote: b.usd_quote || 0,
+			folder_budget: folderBudget
+				? {
+						id: folderBudget.id,
+						work_id: folderBudget.work_id,
+						work: work
+							? {
+									address: work.address || '',
+									locality: work.locality || '',
+								}
+							: {
+									address: '',
+									locality: '',
+								},
+					}
+				: {
+						id: '',
+						work_id: '',
+						work: {
+							address: '',
+							locality: '',
+						},
 					},
-				} : {
-					id: '',
-					work_id: '',
-					work: {
-						address: '',
-						locality: '',
-					},
-				},
-				client: client || null,
-			} as BudgetWithWorkAndClient;
-		});
+			client: client || null,
+		} as BudgetWithWorkAndClient;
+	});
 
 	return { data: result, error: null };
 }
@@ -423,7 +436,20 @@ export async function deleteBudget(id: string): Promise<{ data: null; error: any
 	return { data: null, error };
 }
 
-const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+export const months = [
+	'Ene',
+	'Feb',
+	'Mar',
+	'Abr',
+	'May',
+	'Jun',
+	'Jul',
+	'Ago',
+	'Sep',
+	'Oct',
+	'Nov',
+	'Dic',
+];
 
 export async function getClientsWithBudgetCount(): Promise<{ data: number; error: any }> {
 	const supabase = getSupabaseClient();
@@ -439,20 +465,30 @@ export async function getClientsWithBudgetCount(): Promise<{ data: number; error
 	return { data: uniqueClients.size, error: null };
 }
 
-export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string; presupuestos: number; vendidos: number; date_sale: number; perdidos: number }> | null; error: any }> {
+export async function getBudgetsByMonth(): Promise<{
+	data: Array<{
+		month: string;
+		presupuestos: number;
+		vendidos: number;
+		date_sale: number;
+		perdidos: number;
+	}> | null;
+	error: any;
+}> {
 	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('created_at, sold, lost, date_of_sale');
+	const { data, error } = await supabase.from(TABLE).select('created_at, sold, lost, date_of_sale');
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
 
 	// Group by month and count presupuestos and vendidos
-	const monthMap = new Map<string, { presupuestos: number; vendidos: number; date_sale: number; perdidos: number }>();
+	const monthMap = new Map<
+		string,
+		{ presupuestos: number; vendidos: number; date_sale: number; perdidos: number }
+	>();
 
 	// Inizialize monthMap with all months to ensure they appear in the result even if they have 0 presupuestos/vendidos
-	months.forEach(month => {
+	months.forEach((month) => {
 		monthMap.set(month, { presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0 });
 	});
 
@@ -463,7 +499,12 @@ export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string
 			const monthIndex = date.getMonth();
 			const monthName = months[monthIndex];
 
-			const current = monthMap.get(monthName) || { presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0 };
+			const current = monthMap.get(monthName) || {
+				presupuestos: 0,
+				vendidos: 0,
+				date_sale: 0,
+				perdidos: 0,
+			};
 			current.presupuestos += 1;
 			if (budget.sold) {
 				current.vendidos += 1;
@@ -480,16 +521,21 @@ export async function getBudgetsByMonth(): Promise<{ data: Array<{ month: string
 			const monthIndex = date.getMonth();
 			const monthName = months[monthIndex];
 
-			const current = monthMap.get(monthName) || { presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0 };
+			const current = monthMap.get(monthName) || {
+				presupuestos: 0,
+				vendidos: 0,
+				date_sale: 0,
+				perdidos: 0,
+			};
 			current.date_sale += 1;
 			monthMap.set(monthName, current);
 		}
 	});
 
 	// Convert monthMap to an array and ensure all months are included in the result
-	const result = months.map(month => ({
+	const result = months.map((month) => ({
 		month,
-		...monthMap.get(month)!
+		...monthMap.get(month)!,
 	}));
 
 	return { data: result, error: null };
@@ -536,11 +582,12 @@ const AMOUNT_INTERVALS = [
 	{ label: 'Mayor a 50.000.000', min: 50_000_000, max: Number.POSITIVE_INFINITY },
 ];
 
-export async function getBudgetsByAmountRange(): Promise<{ data: Array<{ amountRange: string; count: number }> | null; error: any }> {
+export async function getBudgetsByAmountRange(): Promise<{
+	data: Array<{ amountRange: string; count: number }> | null;
+	error: any;
+}> {
 	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('amount_ars');
+	const { data, error } = await supabase.from(TABLE).select('amount_ars');
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
@@ -578,12 +625,12 @@ export async function getBudgetsByAmountRange(): Promise<{ data: Array<{ amountR
 	return { data: intervalCounts, error: null };
 }
 
-export async function getBudgetsByAmountRangeChosen(): Promise<{ data: Array<{ amountRange: string; count: number }> | null; error: any }> {
+export async function getBudgetsByAmountRangeChosen(): Promise<{
+	data: Array<{ amountRange: string; count: number }> | null;
+	error: any;
+}> {
 	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('amount_ars')
-		.eq('accepted', true);
+	const { data, error } = await supabase.from(TABLE).select('amount_ars').eq('accepted', true);
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
@@ -621,12 +668,12 @@ export async function getBudgetsByAmountRangeChosen(): Promise<{ data: Array<{ a
 	return { data: intervalCounts, error: null };
 }
 
-export async function getBudgetsByAmountRangeSold(): Promise<{ data: Array<{ amountRange: string; count: number }> | null; error: any }> {
+export async function getBudgetsByAmountRangeSold(): Promise<{
+	data: Array<{ amountRange: string; count: number }> | null;
+	error: any;
+}> {
 	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('amount_ars')
-		.eq('sold', true);
+	const { data, error } = await supabase.from(TABLE).select('amount_ars').eq('sold', true);
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
@@ -664,12 +711,12 @@ export async function getBudgetsByAmountRangeSold(): Promise<{ data: Array<{ amo
 	return { data: intervalCounts, error: null };
 }
 
-export async function getBudgetsByAmountRangeLost(): Promise<{ data: Array<{ amountRange: string; count: number }> | null; error: any }> {
+export async function getBudgetsByAmountRangeLost(): Promise<{
+	data: Array<{ amountRange: string; count: number }> | null;
+	error: any;
+}> {
 	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('amount_ars')
-		.eq('lost', true);
+	const { data, error } = await supabase.from(TABLE).select('amount_ars').eq('lost', true);
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
@@ -707,11 +754,12 @@ export async function getBudgetsByAmountRangeLost(): Promise<{ data: Array<{ amo
 	return { data: intervalCounts, error: null };
 }
 
-export async function getBudgetsByLocation(): Promise<{ data: Array<{ location: string; count: number }> | null; error: any }> {
+export async function getBudgetsByLocation(): Promise<{
+	data: Array<{ location: string; count: number }> | null;
+	error: any;
+}> {
 	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from('folder_budgets')
-		.select('works!inner(locality)');
+	const { data, error } = await supabase.from('folder_budgets').select('works!inner(locality)');
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
@@ -729,17 +777,18 @@ export async function getBudgetsByLocation(): Promise<{ data: Array<{ location: 
 	// Convert to array and sort by count descending
 	const result = Array.from(locationMap, ([location, count]) => ({
 		location,
-		count
+		count,
 	})).sort((a, b) => b.count - a.count);
 
 	return { data: result, error: null };
 }
 
-export async function getClientsByContactMethod(): Promise<{ data: Array<{ method: string; count: number }> | null; error: any }> {
+export async function getClientsByContactMethod(): Promise<{
+	data: Array<{ method: string; count: number }> | null;
+	error: any;
+}> {
 	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from('clients')
-		.select('contact_method');
+	const { data, error } = await supabase.from('clients').select('contact_method');
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
@@ -755,17 +804,18 @@ export async function getClientsByContactMethod(): Promise<{ data: Array<{ metho
 	// Convert to array and sort by count descending
 	const result = Array.from(methodMap, ([method, count]) => ({
 		method,
-		count
+		count,
 	})).sort((a, b) => b.count - a.count);
 
 	return { data: result, error: null };
 }
 
-export async function getBudgetsByMaterial(): Promise<{ data: Array<{ material: string; count: number }> | null; error: any }> {
+export async function getBudgetsByMaterial(): Promise<{
+	data: Array<{ material: string; count: number }> | null;
+	error: any;
+}> {
 	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('type');
+	const { data, error } = await supabase.from(TABLE).select('type');
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
@@ -781,18 +831,18 @@ export async function getBudgetsByMaterial(): Promise<{ data: Array<{ material: 
 	// Convert to array and sort by count descending
 	const result = Array.from(materialMap, ([material, count]) => ({
 		material,
-		count
+		count,
 	})).sort((a, b) => b.count - a.count);
 
 	return { data: result, error: null };
 }
 
-export async function getSoldBudgetsByMaterial(): Promise<{ data: Array<{ material: string; count: number }> | null; error: any }> {
+export async function getSoldBudgetsByMaterial(): Promise<{
+	data: Array<{ material: string; count: number }> | null;
+	error: any;
+}> {
 	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('type')
-		.eq('sold', true);
+	const { data, error } = await supabase.from(TABLE).select('type').eq('sold', true);
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
@@ -808,7 +858,7 @@ export async function getSoldBudgetsByMaterial(): Promise<{ data: Array<{ materi
 	// Convert to array and sort by count descending
 	const result = Array.from(materialMap, ([material, count]) => ({
 		material,
-		count
+		count,
 	})).sort((a, b) => b.count - a.count);
 
 	return { data: result, error: null };
@@ -819,10 +869,7 @@ export async function getSoldBudgetsByMaterialByMonth(): Promise<{
 	error: any;
 }> {
 	const supabase = getSupabaseClient();
-	const { data, error } = await supabase
-		.from(TABLE)
-		.select('created_at, type')
-		.eq('sold', true);
+	const { data, error } = await supabase.from(TABLE).select('created_at, type').eq('sold', true);
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
@@ -838,7 +885,9 @@ export async function getSoldBudgetsByMaterialByMonth(): Promise<{
 
 		const monthName = months[new Date(budget.created_at).getMonth()];
 		const current = monthMap.get(monthName) || { pvc: 0, aluminio: 0 };
-		const material = String(budget.type || '').trim().toLowerCase();
+		const material = String(budget.type || '')
+			.trim()
+			.toLowerCase();
 
 		if (material.includes('pvc')) {
 			current.pvc += 1;

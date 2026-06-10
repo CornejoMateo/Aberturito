@@ -79,11 +79,12 @@ export function BudgetsReport() {
 
 			const next: BudgetReportRow[] = budgets.map((b) => {
 				const clientName = `${b.client?.last_name ?? ''} ${b.client?.name ?? ''}`.trim() || '-';
+				const workZone = b.folder_budget?.work?.zone ?? '';
+				const workHood = b.folder_budget?.work?.hood ?? '';
 				const workLocality = b.folder_budget?.work?.locality ?? '';
 				const workAddress = b.folder_budget?.work?.address ?? '';
-				const work =
-					`${workLocality}${workLocality && workAddress ? ' - ' : ''}${workAddress}`.trim() || '-';
-
+				const workParts = [workZone, workHood, workLocality, workAddress].filter(Boolean);
+				const work = workParts.join(' - ') || '-';
 				const dateRaw = new Date(b.created_at);
 
 				return {

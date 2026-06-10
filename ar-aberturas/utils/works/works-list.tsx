@@ -157,26 +157,22 @@ export function WorksList({
 										}}
 										className="text-xs sm:text-sm text-muted-foreground truncate"
 									/>
-									{work.zone && (
-										<EditableField
-											label="Zona"
-											value={work.zone || ''}
-											onSave={async (newValue) => {
-												await handleUpdateWork(work.id, { zone: newValue });
-											}}
-											className="text-xs sm:text-sm text-muted-foreground truncate"
-										/>
-									)}
-									{work.hood && (
-										<EditableField
-											label="Barrio"
-											value={work.hood || ''}
-											onSave={async (newValue) => {
-												await handleUpdateWork(work.id, { hood: newValue });
-											}}
-											className="text-xs sm:text-sm text-muted-foreground truncate"
-										/>
-									)}
+									<EditableField
+										label="Zona"
+										value={work.zone || ''}
+										onSave={async (newValue) => {
+											await handleUpdateWork(work.id, { zone: newValue });
+										}}
+										className="text-xs sm:text-sm text-muted-foreground truncate"
+									/>
+									<EditableField
+										label="Barrio"
+										value={work.hood || ''}
+										onSave={async (newValue) => {
+											await handleUpdateWork(work.id, { hood: newValue });
+										}}
+										className="text-xs sm:text-sm text-muted-foreground truncate"
+									/>
 								</div>
 								<div className="flex flex-row sm:flex-row gap-2 sm:gap-3 items-center justify-between sm:justify-end">
 									<div className="flex items-center justify-end gap-2">

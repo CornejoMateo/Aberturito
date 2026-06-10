@@ -260,7 +260,7 @@ export async function listBudgetsForReport(): Promise<{
 			*,
 			folder_budget:folder_budgets(
 				client:clients(id, name, last_name),
-				work:works(address, locality)
+				work:works(address, locality, zone, hood)
 			)
 		`
 		)
@@ -301,10 +301,14 @@ export async function listBudgetsForReport(): Promise<{
 							? {
 									address: work.address || '',
 									locality: work.locality || '',
+									zone: work.zone || '',
+									hood: work.hood || '',
 								}
 							: {
 									address: '',
 									locality: '',
+									zone: '',
+									hood: '',
 								},
 					}
 				: {

@@ -62,6 +62,7 @@ export type BudgetWithWork = {
 			address: string;
 			locality: string;
 			zone: string;
+			hood: string;
 		};
 	};
 };

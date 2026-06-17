@@ -16,6 +16,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
+import { formatNumber, parseArsToNumber } from '@/utils/budgets/utils';
 
 type BudgetFilters = {
 	typeFilter: string;
@@ -143,12 +144,13 @@ export function BudgetsFilterDialog({
 						<Label htmlFor="amountMin">Monto mínimo ARS</Label>
 						<Input
 							id="amountMin"
-							type="number"
+							type="text"
 							placeholder="0"
 							value={localFilters.amountMin}
-							onChange={(e) =>
-								setLocalFilters((prev) => ({ ...prev, amountMin: e.target.value }))
-							}
+							onChange={(e) => {
+								const formatted = formatNumber(e.target.value);
+								setLocalFilters((prev) => ({ ...prev, amountMin: formatted }));
+							}}
 							className="bg-background"
 						/>
 					</div>
@@ -157,12 +159,13 @@ export function BudgetsFilterDialog({
 						<Label htmlFor="amountMax">Monto máximo ARS</Label>
 						<Input
 							id="amountMax"
-							type="number"
+							type="text"
 							placeholder="Sin límite"
 							value={localFilters.amountMax}
-							onChange={(e) =>
-								setLocalFilters((prev) => ({ ...prev, amountMax: e.target.value }))
-							}
+							onChange={(e) => {
+								const formatted = formatNumber(e.target.value);
+								setLocalFilters((prev) => ({ ...prev, amountMax: formatted }));
+							}}
 							className="bg-background"
 						/>
 					</div>
@@ -171,12 +174,13 @@ export function BudgetsFilterDialog({
 						<Label htmlFor="amountMinUsd">Monto mínimo USD</Label>
 						<Input
 							id="amountMinUsd"
-							type="number"
+							type="text"
 							placeholder="0"
 							value={localFilters.amountMinUsd}
-							onChange={(e) =>
-								setLocalFilters((prev) => ({ ...prev, amountMinUsd: e.target.value }))
-							}
+							onChange={(e) => {
+								const formatted = formatNumber(e.target.value);
+								setLocalFilters((prev) => ({ ...prev, amountMinUsd: formatted }));
+							}}
 							className="bg-background"
 						/>
 					</div>
@@ -185,12 +189,13 @@ export function BudgetsFilterDialog({
 						<Label htmlFor="amountMaxUsd">Monto máximo USD</Label>
 						<Input
 							id="amountMaxUsd"
-							type="number"
+							type="text"
 							placeholder="Sin límite"
 							value={localFilters.amountMaxUsd}
-							onChange={(e) =>
-								setLocalFilters((prev) => ({ ...prev, amountMaxUsd: e.target.value }))
-							}
+							onChange={(e) => {
+								const formatted = formatNumber(e.target.value);
+								setLocalFilters((prev) => ({ ...prev, amountMaxUsd: formatted }));
+							}}
 							className="bg-background"
 						/>
 					</div>

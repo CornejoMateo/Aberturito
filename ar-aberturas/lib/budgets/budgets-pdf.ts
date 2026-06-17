@@ -39,16 +39,28 @@ export async function generateBudgetsReportPDF(
 
 	if (amountMin && amountMin !== '' || amountMax && amountMax !== '') {
 		const filterText = [];
-		if (amountMin && amountMin !== '') filterText.push(`Mín: $${parseFloat(amountMin).toLocaleString('es-AR')}`);
-		if (amountMax && amountMax !== '') filterText.push(`Máx: $${parseFloat(amountMax).toLocaleString('es-AR')}`);
+		if (amountMin && amountMin !== '') {
+			const min = parseFloat(amountMin.replace(/\./g, '').replace(',', '.'));
+			if (!isNaN(min)) filterText.push(`Mín: $${min.toLocaleString('es-AR')}`);
+		}
+		if (amountMax && amountMax !== '') {
+			const max = parseFloat(amountMax.replace(/\./g, '').replace(',', '.'));
+			if (!isNaN(max)) filterText.push(`Máx: $${max.toLocaleString('es-AR')}`);
+		}
 		pdf.text(`Monto ARS: ${filterText.join(' - ')}`, margin, yOffset);
 		yOffset += 7;
 	}
 
 	if (amountMinUsd && amountMinUsd !== '' || amountMaxUsd && amountMaxUsd !== '') {
 		const filterText = [];
-		if (amountMinUsd && amountMinUsd !== '') filterText.push(`Mín: $${parseFloat(amountMinUsd).toLocaleString('en-US')}`);
-		if (amountMaxUsd && amountMaxUsd !== '') filterText.push(`Máx: $${parseFloat(amountMaxUsd).toLocaleString('en-US')}`);
+		if (amountMinUsd && amountMinUsd !== '') {
+			const min = parseFloat(amountMinUsd.replace(/\./g, '').replace(',', '.'));
+			if (!isNaN(min)) filterText.push(`Mín: $${min.toLocaleString('en-US')}`);
+		}
+		if (amountMaxUsd && amountMaxUsd !== '') {
+			const max = parseFloat(amountMaxUsd.replace(/\./g, '').replace(',', '.'));
+			if (!isNaN(max)) filterText.push(`Máx: $${max.toLocaleString('en-US')}`);
+		}
 		pdf.text(`Monto USD: ${filterText.join(' - ')}`, margin, yOffset);
 		yOffset += 7;
 	}

@@ -34,6 +34,7 @@ import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Download, Filter } from 'lu
 import { listSellers } from '@/lib/sellers/sellers';
 import { BudgetsFilterDialog } from '@/utils/reports/budgets-filter-dialog';
 import { translateError } from '@/lib/error-translator';
+import { parseArsToNumber } from '@/utils/budgets/utils';
 
 const ITEMS_PER_PAGE = 30;
 
@@ -159,13 +160,13 @@ export function BudgetsReport() {
 
 		// Filter by amount range
 		if (amountMin !== '') {
-			const min = parseFloat(amountMin);
+			const min = parseArsToNumber(amountMin);
 			if (!isNaN(min)) {
 				filtered = filtered.filter((r) => r.amountArs >= min);
 			}
 		}
 		if (amountMax !== '') {
-			const max = parseFloat(amountMax);
+			const max = parseArsToNumber(amountMax);
 			if (!isNaN(max)) {
 				filtered = filtered.filter((r) => r.amountArs <= max);
 			}
@@ -173,13 +174,13 @@ export function BudgetsReport() {
 
 		// Filter by USD amount range
 		if (amountMinUsd !== '') {
-			const min = parseFloat(amountMinUsd);
+			const min = parseArsToNumber(amountMinUsd);
 			if (!isNaN(min)) {
 				filtered = filtered.filter((r) => r.amountUsd >= min);
 			}
 		}
 		if (amountMaxUsd !== '') {
-			const max = parseFloat(amountMaxUsd);
+			const max = parseArsToNumber(amountMaxUsd);
 			if (!isNaN(max)) {
 				filtered = filtered.filter((r) => r.amountUsd <= max);
 			}

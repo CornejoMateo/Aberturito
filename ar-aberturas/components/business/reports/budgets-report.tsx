@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import { listSellers } from '@/lib/sellers/sellers';
 
 const ITEMS_PER_PAGE = 30;
 
@@ -46,6 +47,8 @@ type BudgetReportRow = {
 	amountUsd: number;
 	status: string;
 	accepted: boolean;
+	seller: string;
+	sellerId: string;
 };
 
 export function BudgetsReport() {
@@ -55,6 +58,8 @@ export function BudgetsReport() {
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 	const [typeFilter, setTypeFilter] = useState<string>('all');
 	const [statusFilter, setStatusFilter] = useState<string>('all');
+	const [sellerFilter, setSellerFilter] = useState<string>('all');
+	const [sellers, setSellers] = useState<Array<{ id: string; name: string }>>([]);
 	const [currentPage, setCurrentPage] = useState(1);
 
 	const {
@@ -69,6 +74,14 @@ export function BudgetsReport() {
 		},
 		'budgets_report_cache'
 	);
+
+	useEffect(() => {
+		const loadSellers = async () => {
+			const { data } = await listSellers();
+			if (data) setSellers(data);
+		};
+		loadSellers();
+	}, []);
 
 	useEffect(() => {
 		const build = async () => {
@@ -86,6 +99,8 @@ export function BudgetsReport() {
 				const workParts = [workZone, workHood, workLocality, workAddress].filter(Boolean);
 				const work = workParts.join(' - ') || '-';
 				const dateRaw = new Date(b.created_at);
+				const sellerName = b.client?.seller?.name || '-';
+				const sellerId = b.client?.seller?.id || '';
 
 				return {
 					id: String(b.id),
@@ -99,6 +114,8 @@ export function BudgetsReport() {
 					amountUsd: b.amount_usd || 0,
 					status: formatBudgetStatus(b.sold, b.lost),
 					accepted: !!b.accepted,
+					seller: sellerName,
+					sellerId: sellerId,
 				};
 			});
 
@@ -124,6 +141,15 @@ export function BudgetsReport() {
 			});
 		}
 
+		// Filter by seller
+		if (sellerFilter !== 'all') {
+			if (sellerFilter === 'none') {
+				filtered = filtered.filter((r) => !r.sellerId);
+			} else {
+				filtered = filtered.filter((r) => r.sellerId === sellerFilter);
+			}
+		}
+
 		// Filter by text
 		const s = searchTerm.trim().toLowerCase();
 		if (s) {
@@ -133,7 +159,8 @@ export function BudgetsReport() {
 					r.work.toLowerCase().includes(s) ||
 					r.number.toLowerCase().includes(s) ||
 					r.type.toLowerCase().includes(s) ||
-					r.status.toLowerCase().includes(s)
+					r.status.toLowerCase().includes(s) ||
+					r.seller.toLowerCase().includes(s)
 				);
 			});
 		}
@@ -159,7 +186,7 @@ export function BudgetsReport() {
 			if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
 			return 0;
 		});
-	}, [rows, searchTerm, sortField, sortDirection, typeFilter, statusFilter]);
+	}, [rows, searchTerm, sortField, sortDirection, typeFilter, statusFilter, sellerFilter]);
 
 	const totalPages = Math.max(1, Math.ceil(filteredRows.length / ITEMS_PER_PAGE));
 
@@ -235,6 +262,21 @@ export function BudgetsReport() {
 							<SelectItem value={BUDGET_STATUS.ACCEPTED}>{BUDGET_STATUS.ACCEPTED}</SelectItem>
 							<SelectItem value={BUDGET_STATUS.SOLD}>{BUDGET_STATUS.SOLD}</SelectItem>
 							<SelectItem value={BUDGET_STATUS.LOST}>{BUDGET_STATUS.LOST}</SelectItem>
+						</SelectContent>
+					</Select>
+
+					<Select value={sellerFilter} onValueChange={setSellerFilter}>
+						<SelectTrigger className="w-full sm:w-[140px]">
+							<SelectValue placeholder="Vendedor" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">Todos los vendedores</SelectItem>
+							<SelectItem value="none">Sin vendedor</SelectItem>
+							{sellers.map((seller) => (
+								<SelectItem key={seller.id} value={seller.id}>
+									{seller.name}
+								</SelectItem>
+							))}
 						</SelectContent>
 					</Select>
 
@@ -333,19 +375,28 @@ export function BudgetsReport() {
 									{getSortIcon('status')}
 								</div>
 							</TableHead>
+							<TableHead
+								className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
+								onClick={() => handleSort('seller')}
+							>
+								<div className="flex items-center gap-1">
+									Vendedor
+									{getSortIcon('seller')}
+								</div>
+							</TableHead>
 						</TableRow>
 					</TableHeader>
 
 					<TableBody>
 						{loading ? (
 							<TableRow>
-								<TableCell colSpan={9} className="text-center text-muted-foreground">
+								<TableCell colSpan={10} className="text-center text-muted-foreground">
 									Cargando presupuestos...
 								</TableCell>
 							</TableRow>
 						) : filteredRows.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={9} className="text-center text-muted-foreground">
+								<TableCell colSpan={10} className="text-center text-muted-foreground">
 									No hay resultados
 								</TableCell>
 							</TableRow>
@@ -364,6 +415,7 @@ export function BudgetsReport() {
 										{formatCurrencyUSD(r.amountUsd)}
 									</TableCell>
 									<TableCell className="whitespace-nowrap">{r.status}</TableCell>
+									<TableCell className="whitespace-nowrap">{r.seller}</TableCell>
 								</TableRow>
 							))
 						)}

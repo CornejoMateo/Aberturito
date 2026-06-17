@@ -390,13 +390,13 @@ export function BudgetsReport() {
 					<TableBody>
 						{loading ? (
 							<TableRow>
-								<TableCell colSpan={10} className="text-center text-muted-foreground">
+								<TableCell colSpan={9} className="text-center text-muted-foreground">
 									Cargando presupuestos...
 								</TableCell>
 							</TableRow>
 						) : filteredRows.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={10} className="text-center text-muted-foreground">
+								<TableCell colSpan={9} className="text-center text-muted-foreground">
 									No hay resultados
 								</TableCell>
 							</TableRow>

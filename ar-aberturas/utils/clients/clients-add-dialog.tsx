@@ -64,8 +64,18 @@ export function ClientsAddDialog({
 
 	useEffect(() => {
 		const loadSellers = async () => {
-			const { data } = await listSellers();
-			if (data) setSellers(data);
+			try {
+				const { data, error } = await listSellers();
+				if (error) throw error;
+				setSellers(data ?? []);
+			} catch (error) {
+				const message = translateError(error);
+				toast({
+					title: 'Error',
+					description: message,
+					variant: 'destructive',
+				});
+			}
 		};
 		loadSellers();
 	}, []);

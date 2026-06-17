@@ -164,8 +164,7 @@ create table public.clients (
   cover text null,
   contact_method text null,
   seller_id bigint null,
-  constraint clients_pkey primary key (id),
-  constraint clients_seller_id_fkey foreign key (seller_id) references sellers (id) on update cascade on delete set null
+  constraint clients_pkey primary key (id)
 ) TABLESPACE pg_default;
 
 create table public.sellers (
@@ -180,6 +179,10 @@ create table public.sellers (
   contact_method text null,
   constraint sellers_pkey primary key (id)
 ) TABLESPACE pg_default;
+alter table public.clients
+  add constraint clients_seller_id_fkey
+  foreign key (seller_id) references public.sellers (id)
+  on update cascade on delete set null;
 
 {/*
   RECORDAR LOS BUCKETS

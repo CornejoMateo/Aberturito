@@ -36,7 +36,8 @@ export function SellersConfigDialog({ open, onOpenChange }: SellersConfigDialogP
 	} = useOptimizedRealtime<Seller>(
 		'sellers',
 		async () => {
-			const { data } = await listSellers();
+			const { data, error } = await listSellers();
+			if (error) throw error;
 			return data ?? [];
 		},
 		'sellers_cache'
@@ -111,6 +112,12 @@ export function SellersConfigDialog({ open, onOpenChange }: SellersConfigDialogP
 		try {
 			const { error } = await deleteSeller(seller.id);
 			if (error) throw error;
+
+			if (editingSeller?.id === seller.id) {
+				setEditingSeller(null);
+				setSellerName('');
+				setIsAdding(false);
+			}
 
 			toast({
 				title: 'Vendedor eliminado',

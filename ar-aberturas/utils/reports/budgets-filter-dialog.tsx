@@ -46,8 +46,18 @@ export function BudgetsFilterDialog({
 	const [localFilters, setLocalFilters] = useState<BudgetFilters>(filters);
 
 	useEffect(() => {
-		setLocalFilters(filters);
-	}, [filters]);
+	if (!open) return;
+	setLocalFilters(filters);
+}, [
+	open,
+	filters.typeFilter,
+	filters.statusFilter,
+	filters.sellerFilter,
+	filters.amountMin,
+	filters.amountMax,
+	filters.amountMinUsd,
+	filters.amountMaxUsd,
+]);
 
 	const handleApply = () => {
 		onApplyFilters(localFilters);

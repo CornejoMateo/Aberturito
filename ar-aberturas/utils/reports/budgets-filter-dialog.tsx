@@ -23,6 +23,8 @@ type BudgetFilters = {
 	sellerFilter: string;
 	amountMin: string;
 	amountMax: string;
+	amountMinUsd: string;
+	amountMaxUsd: string;
 };
 
 interface BudgetsFilterDialogProps {
@@ -58,6 +60,8 @@ export function BudgetsFilterDialog({
 			sellerFilter: 'all',
 			amountMin: '',
 			amountMax: '',
+			amountMinUsd: '',
+			amountMaxUsd: '',
 		};
 		setLocalFilters(clearedFilters);
 		onApplyFilters(clearedFilters);
@@ -158,6 +162,34 @@ export function BudgetsFilterDialog({
 							value={localFilters.amountMax}
 							onChange={(e) =>
 								setLocalFilters((prev) => ({ ...prev, amountMax: e.target.value }))
+							}
+							className="bg-background"
+						/>
+					</div>
+
+					<div className="grid gap-2">
+						<Label htmlFor="amountMinUsd">Monto mínimo USD</Label>
+						<Input
+							id="amountMinUsd"
+							type="number"
+							placeholder="0"
+							value={localFilters.amountMinUsd}
+							onChange={(e) =>
+								setLocalFilters((prev) => ({ ...prev, amountMinUsd: e.target.value }))
+							}
+							className="bg-background"
+						/>
+					</div>
+
+					<div className="grid gap-2">
+						<Label htmlFor="amountMaxUsd">Monto máximo USD</Label>
+						<Input
+							id="amountMaxUsd"
+							type="number"
+							placeholder="Sin límite"
+							value={localFilters.amountMaxUsd}
+							onChange={(e) =>
+								setLocalFilters((prev) => ({ ...prev, amountMaxUsd: e.target.value }))
 							}
 							className="bg-background"
 						/>

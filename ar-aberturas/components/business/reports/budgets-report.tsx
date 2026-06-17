@@ -64,6 +64,8 @@ export function BudgetsReport() {
 	const [sellers, setSellers] = useState<Array<{ id: string; name: string }>>([]);
 	const [amountMin, setAmountMin] = useState<string>('');
 	const [amountMax, setAmountMax] = useState<string>('');
+	const [amountMinUsd, setAmountMinUsd] = useState<string>('');
+	const [amountMaxUsd, setAmountMaxUsd] = useState<string>('');
 	const [filterDialogOpen, setFilterDialogOpen] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 
@@ -169,6 +171,20 @@ export function BudgetsReport() {
 			}
 		}
 
+		// Filter by USD amount range
+		if (amountMinUsd !== '') {
+			const min = parseFloat(amountMinUsd);
+			if (!isNaN(min)) {
+				filtered = filtered.filter((r) => r.amountUsd >= min);
+			}
+		}
+		if (amountMaxUsd !== '') {
+			const max = parseFloat(amountMaxUsd);
+			if (!isNaN(max)) {
+				filtered = filtered.filter((r) => r.amountUsd <= max);
+			}
+		}
+
 		// Filter by text
 		const s = searchTerm.trim().toLowerCase();
 		if (s) {
@@ -205,7 +221,7 @@ export function BudgetsReport() {
 			if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
 			return 0;
 		});
-	}, [rows, searchTerm, sortField, sortDirection, typeFilter, statusFilter, sellerFilter, amountMin, amountMax]);
+	}, [rows, searchTerm, sortField, sortDirection, typeFilter, statusFilter, sellerFilter, amountMin, amountMax, amountMinUsd, amountMaxUsd]);
 
 	const totalPages = Math.max(1, Math.ceil(filteredRows.length / ITEMS_PER_PAGE));
 
@@ -251,7 +267,7 @@ export function BudgetsReport() {
 	const handleDownloadPDF = async () => {
 		try {
 			const { generateBudgetsReportPDF } = await import('@/lib/budgets/budgets-pdf');
-			await generateBudgetsReportPDF(filteredRows, sellerFilter, amountMin, amountMax);
+			await generateBudgetsReportPDF(filteredRows, sellerFilter, amountMin, amountMax, amountMinUsd, amountMaxUsd);
 		} catch (error) {
 			const message = translateError(error);
 			console.error('Error al generar PDF:', message);
@@ -264,12 +280,16 @@ export function BudgetsReport() {
 		sellerFilter: string;
 		amountMin: string;
 		amountMax: string;
+		amountMinUsd: string;
+		amountMaxUsd: string;
 	}) => {
 		setTypeFilter(filters.typeFilter);
 		setStatusFilter(filters.statusFilter);
 		setSellerFilter(filters.sellerFilter);
 		setAmountMin(filters.amountMin);
 		setAmountMax(filters.amountMax);
+		setAmountMinUsd(filters.amountMinUsd);
+		setAmountMaxUsd(filters.amountMaxUsd);
 	};
 
 	return (
@@ -473,6 +493,8 @@ export function BudgetsReport() {
 					sellerFilter,
 					amountMin,
 					amountMax,
+					amountMinUsd,
+					amountMaxUsd,
 				}}
 				sellers={sellers}
 				onApplyFilters={handleApplyFilters}

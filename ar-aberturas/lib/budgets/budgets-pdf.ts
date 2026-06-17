@@ -5,7 +5,9 @@ export async function generateBudgetsReportPDF(
 	rows: any[],
 	sellerFilter?: string,
 	amountMin?: string,
-	amountMax?: string
+	amountMax?: string,
+	amountMinUsd?: string,
+	amountMaxUsd?: string
 ): Promise<void> {
 	const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape orientation
 	const pageWidth = pdf.internal.pageSize.getWidth();
@@ -40,6 +42,14 @@ export async function generateBudgetsReportPDF(
 		if (amountMin && amountMin !== '') filterText.push(`Mín: $${parseFloat(amountMin).toLocaleString('es-AR')}`);
 		if (amountMax && amountMax !== '') filterText.push(`Máx: $${parseFloat(amountMax).toLocaleString('es-AR')}`);
 		pdf.text(`Monto ARS: ${filterText.join(' - ')}`, margin, yOffset);
+		yOffset += 7;
+	}
+
+	if (amountMinUsd && amountMinUsd !== '' || amountMaxUsd && amountMaxUsd !== '') {
+		const filterText = [];
+		if (amountMinUsd && amountMinUsd !== '') filterText.push(`Mín: $${parseFloat(amountMinUsd).toLocaleString('en-US')}`);
+		if (amountMaxUsd && amountMaxUsd !== '') filterText.push(`Máx: $${parseFloat(amountMaxUsd).toLocaleString('en-US')}`);
+		pdf.text(`Monto USD: ${filterText.join(' - ')}`, margin, yOffset);
 		yOffset += 7;
 	}
 

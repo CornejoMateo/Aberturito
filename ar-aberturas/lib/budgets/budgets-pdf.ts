@@ -3,7 +3,11 @@ import autoTable from 'jspdf-autotable';
 
 export async function generateBudgetsReportPDF(
 	rows: any[],
-	sellerFilter?: string
+	sellerFilter?: string,
+	amountMin?: string,
+	amountMax?: string,
+	amountMinUsd?: string,
+	amountMaxUsd?: string
 ): Promise<void> {
 	const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape orientation
 	const pageWidth = pdf.internal.pageSize.getWidth();
@@ -31,6 +35,36 @@ export async function generateBudgetsReportPDF(
 		pdf.text(`Vendedor: ${sellerName}`, margin, 28);
 	}
 
+	let yOffset = sellerFilter && sellerFilter !== 'all' ? 35 : 28;
+
+	if (amountMin && amountMin !== '' || amountMax && amountMax !== '') {
+		const filterText = [];
+		if (amountMin && amountMin !== '') {
+			const min = parseFloat(amountMin.replace(/\./g, '').replace(',', '.'));
+			if (!isNaN(min)) filterText.push(`Mín: $${min.toLocaleString('es-AR')}`);
+		}
+		if (amountMax && amountMax !== '') {
+			const max = parseFloat(amountMax.replace(/\./g, '').replace(',', '.'));
+			if (!isNaN(max)) filterText.push(`Máx: $${max.toLocaleString('es-AR')}`);
+		}
+		pdf.text(`Monto ARS: ${filterText.join(' - ')}`, margin, yOffset);
+		yOffset += 7;
+	}
+
+	if (amountMinUsd && amountMinUsd !== '' || amountMaxUsd && amountMaxUsd !== '') {
+		const filterText = [];
+		if (amountMinUsd && amountMinUsd !== '') {
+			const min = parseFloat(amountMinUsd.replace(/\./g, '').replace(',', '.'));
+			if (!isNaN(min)) filterText.push(`Mín: $${min.toLocaleString('en-US')}`);
+		}
+		if (amountMaxUsd && amountMaxUsd !== '') {
+			const max = parseFloat(amountMaxUsd.replace(/\./g, '').replace(',', '.'));
+			if (!isNaN(max)) filterText.push(`Máx: $${max.toLocaleString('en-US')}`);
+		}
+		pdf.text(`Monto USD: ${filterText.join(' - ')}`, margin, yOffset);
+		yOffset += 7;
+	}
+
 	// Table data
 	const tableData = rows.map((row) => [
 		row.date,
@@ -53,7 +87,7 @@ export async function generateBudgetsReportPDF(
 	autoTable(pdf, {
 		head: headers,
 		body: tableData,
-		startY: sellerFilter && sellerFilter !== 'all' ? 35 : 28,
+		startY: yOffset,
 		margin: { top: margin, left: margin, right: margin, bottom: margin },
 		styles: {
 			fontSize: 8,

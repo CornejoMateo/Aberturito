@@ -32,6 +32,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Download } from 'lucide-react';
 import { listSellers } from '@/lib/sellers/sellers';
+import { translateError } from '@/lib/error-translator';
 
 const ITEMS_PER_PAGE = 30;
 
@@ -234,7 +235,8 @@ export function BudgetsReport() {
 			const { generateBudgetsReportPDF } = await import('@/lib/budgets/budgets-pdf');
 			await generateBudgetsReportPDF(filteredRows, sellerFilter);
 		} catch (error) {
-			console.error('Error al generar PDF:', error);
+			const message = translateError(error);
+			console.error('Error al generar PDF:', message);
 		}
 	};
 

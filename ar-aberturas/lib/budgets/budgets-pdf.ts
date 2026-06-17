@@ -3,7 +3,9 @@ import autoTable from 'jspdf-autotable';
 
 export async function generateBudgetsReportPDF(
 	rows: any[],
-	sellerFilter?: string
+	sellerFilter?: string,
+	amountMin?: string,
+	amountMax?: string
 ): Promise<void> {
 	const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape orientation
 	const pageWidth = pdf.internal.pageSize.getWidth();
@@ -31,6 +33,16 @@ export async function generateBudgetsReportPDF(
 		pdf.text(`Vendedor: ${sellerName}`, margin, 28);
 	}
 
+	let yOffset = sellerFilter && sellerFilter !== 'all' ? 35 : 28;
+
+	if (amountMin && amountMin !== '' || amountMax && amountMax !== '') {
+		const filterText = [];
+		if (amountMin && amountMin !== '') filterText.push(`Mín: $${parseFloat(amountMin).toLocaleString('es-AR')}`);
+		if (amountMax && amountMax !== '') filterText.push(`Máx: $${parseFloat(amountMax).toLocaleString('es-AR')}`);
+		pdf.text(`Monto ARS: ${filterText.join(' - ')}`, margin, yOffset);
+		yOffset += 7;
+	}
+
 	// Table data
 	const tableData = rows.map((row) => [
 		row.date,
@@ -53,7 +65,7 @@ export async function generateBudgetsReportPDF(
 	autoTable(pdf, {
 		head: headers,
 		body: tableData,
-		startY: sellerFilter && sellerFilter !== 'all' ? 35 : 28,
+		startY: yOffset,
 		margin: { top: margin, left: margin, right: margin, bottom: margin },
 		styles: {
 			fontSize: 8,

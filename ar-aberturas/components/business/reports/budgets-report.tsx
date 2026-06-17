@@ -30,8 +30,9 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Download } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Download, Filter } from 'lucide-react';
 import { listSellers } from '@/lib/sellers/sellers';
+import { BudgetsFilterDialog } from '@/utils/reports/budgets-filter-dialog';
 import { translateError } from '@/lib/error-translator';
 
 const ITEMS_PER_PAGE = 30;
@@ -61,6 +62,9 @@ export function BudgetsReport() {
 	const [statusFilter, setStatusFilter] = useState<string>('all');
 	const [sellerFilter, setSellerFilter] = useState<string>('all');
 	const [sellers, setSellers] = useState<Array<{ id: string; name: string }>>([]);
+	const [amountMin, setAmountMin] = useState<string>('');
+	const [amountMax, setAmountMax] = useState<string>('');
+	const [filterDialogOpen, setFilterDialogOpen] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 
 	const {
@@ -233,11 +237,25 @@ export function BudgetsReport() {
 	const handleDownloadPDF = async () => {
 		try {
 			const { generateBudgetsReportPDF } = await import('@/lib/budgets/budgets-pdf');
-			await generateBudgetsReportPDF(filteredRows, sellerFilter);
+			await generateBudgetsReportPDF(filteredRows, sellerFilter, amountMin, amountMax);
 		} catch (error) {
 			const message = translateError(error);
 			console.error('Error al generar PDF:', message);
 		}
+	};
+
+	const handleApplyFilters = (filters: {
+		typeFilter: string;
+		statusFilter: string;
+		sellerFilter: string;
+		amountMin: string;
+		amountMax: string;
+	}) => {
+		setTypeFilter(filters.typeFilter);
+		setStatusFilter(filters.statusFilter);
+		setSellerFilter(filters.sellerFilter);
+		setAmountMin(filters.amountMin);
+		setAmountMax(filters.amountMax);
 	};
 
 	return (
@@ -251,52 +269,16 @@ export function BudgetsReport() {
 				</div>
 
 				<div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-					<Select value={typeFilter} onValueChange={setTypeFilter}>
-						<SelectTrigger className="w-full sm:w-[140px]">
-							<SelectValue placeholder="Tipo" />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="all">Todos los tipos</SelectItem>
-							<SelectItem value={BUDGET_TYPES.STANDARD}>{BUDGET_TYPES.STANDARD}</SelectItem>
-							<SelectItem value={BUDGET_TYPES.OPTIMAL}>{BUDGET_TYPES.OPTIMAL}</SelectItem>
-							<SelectItem value={BUDGET_TYPES.MINIMAL}>{BUDGET_TYPES.MINIMAL}</SelectItem>
-						</SelectContent>
-					</Select>
-
-					<Select value={statusFilter} onValueChange={setStatusFilter}>
-						<SelectTrigger className="w-full sm:w-[140px]">
-							<SelectValue placeholder="Estado" />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="all">Todos los estados</SelectItem>
-							<SelectItem value={BUDGET_STATUS.PENDING}>{BUDGET_STATUS.PENDING}</SelectItem>
-							<SelectItem value={BUDGET_STATUS.ACCEPTED}>{BUDGET_STATUS.ACCEPTED}</SelectItem>
-							<SelectItem value={BUDGET_STATUS.SOLD}>{BUDGET_STATUS.SOLD}</SelectItem>
-							<SelectItem value={BUDGET_STATUS.LOST}>{BUDGET_STATUS.LOST}</SelectItem>
-						</SelectContent>
-					</Select>
-
-					<Select value={sellerFilter} onValueChange={setSellerFilter}>
-						<SelectTrigger className="w-full sm:w-[140px]">
-							<SelectValue placeholder="Vendedor" />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="all">Todos los vendedores</SelectItem>
-							<SelectItem value="none">Sin vendedor</SelectItem>
-							{sellers.map((seller) => (
-								<SelectItem key={seller.id} value={seller.id}>
-									{seller.name}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-
 					<Input
 						placeholder="Buscar por cliente, obra, número..."
 						value={searchTerm}
 						onChange={(e) => setSearchTerm(e.target.value)}
 						className="w-full sm:w-[300px]"
 					/>
+					<Button variant="outline" onClick={() => setFilterDialogOpen(true)} className="gap-2">
+						<Filter className="h-4 w-4" />
+						Filtrar
+					</Button>
 				</div>
 			</div>
 
@@ -467,6 +449,20 @@ export function BudgetsReport() {
 					</div>
 				) : null}
 			</Card>
+
+			<BudgetsFilterDialog
+				open={filterDialogOpen}
+				onOpenChange={setFilterDialogOpen}
+				filters={{
+					typeFilter,
+					statusFilter,
+					sellerFilter,
+					amountMin,
+					amountMax,
+				}}
+				sellers={sellers}
+				onApplyFilters={handleApplyFilters}
+			/>
 		</div>
 	);
 }

@@ -30,8 +30,9 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Download } from 'lucide-react';
 import { listSellers } from '@/lib/sellers/sellers';
+import { translateError } from '@/lib/error-translator';
 
 const ITEMS_PER_PAGE = 30;
 
@@ -229,6 +230,16 @@ export function BudgetsReport() {
 		return '';
 	};
 
+	const handleDownloadPDF = async () => {
+		try {
+			const { generateBudgetsReportPDF } = await import('@/lib/budgets/budgets-pdf');
+			await generateBudgetsReportPDF(filteredRows, sellerFilter);
+		} catch (error) {
+			const message = translateError(error);
+			console.error('Error al generar PDF:', message);
+		}
+	};
+
 	return (
 		<div className="space-y-6">
 			<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -294,10 +305,16 @@ export function BudgetsReport() {
 					<div className="text-sm text-muted-foreground">
 						{loading ? 'Cargando...' : `${filteredRows.length} presupuesto(s)`}
 					</div>
-					<Button variant="outline" onClick={() => refresh()} className="gap-2">
-						<RefreshCw className="h-4 w-4" />
-						Actualizar
-					</Button>
+					<div className="flex gap-2">
+						<Button variant="outline" onClick={handleDownloadPDF} className="gap-2" disabled={loading || filteredRows.length === 0}>
+							<Download className="h-4 w-4" />
+							Descargar PDF
+						</Button>
+						<Button variant="outline" onClick={() => refresh()} className="gap-2">
+							<RefreshCw className="h-4 w-4" />
+							Actualizar
+						</Button>
+					</div>
 				</div>
 
 				<Table>

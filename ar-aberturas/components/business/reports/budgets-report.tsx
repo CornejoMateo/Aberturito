@@ -155,6 +155,20 @@ export function BudgetsReport() {
 			}
 		}
 
+		// Filter by amount range
+		if (amountMin !== '') {
+			const min = parseFloat(amountMin);
+			if (!isNaN(min)) {
+				filtered = filtered.filter((r) => r.amountArs >= min);
+			}
+		}
+		if (amountMax !== '') {
+			const max = parseFloat(amountMax);
+			if (!isNaN(max)) {
+				filtered = filtered.filter((r) => r.amountArs <= max);
+			}
+		}
+
 		// Filter by text
 		const s = searchTerm.trim().toLowerCase();
 		if (s) {
@@ -191,7 +205,7 @@ export function BudgetsReport() {
 			if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
 			return 0;
 		});
-	}, [rows, searchTerm, sortField, sortDirection, typeFilter, statusFilter, sellerFilter]);
+	}, [rows, searchTerm, sortField, sortDirection, typeFilter, statusFilter, sellerFilter, amountMin, amountMax]);
 
 	const totalPages = Math.max(1, Math.ceil(filteredRows.length / ITEMS_PER_PAGE));
 

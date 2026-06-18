@@ -77,7 +77,9 @@ export function StockManagement({
 		// Apply stock filters (out-of-stock and/or low stock)
 		if (showOutOfStock || showLowStock) {
 			result = result.filter((item: any) => {
-				const quantity = (item as any)[STOCK_CONFIGS.Insumos.fields.quantityLump] ?? adapter.getQuantity(item);
+				const config = STOCK_CONFIGS[category as keyof typeof STOCK_CONFIGS];
+				const quantityField = config?.fields?.quantityLump;
+				const quantity = quantityField ? (item as any)[quantityField] : adapter.getQuantity(item);
 				
 				// Check if item matches out-of-stock filter
 				const matchesOutOfStock = showOutOfStock && quantity === 0;
@@ -87,7 +89,7 @@ export function StockManagement({
 				if (showLowStock && category === 'Insumos') {
 					const threshold = thresholds[item.id];
 					if (threshold) {
-						matchesLowStock = quantity <= threshold.yellow && quantity > threshold.red;
+						matchesLowStock = quantity <= threshold.yellow;
 					}
 				}
 				
@@ -338,7 +340,18 @@ export function StockManagement({
 				{category === 'Insumos' && (
 					<Button
 						variant="outline"
-						onClick={() => generateStockReportPDF(filteredStock, category, showOutOfStock, showLowStock)}
+						onClick={async () => {
+							try {
+								await generateStockReportPDF(filteredStock, category, showOutOfStock, showLowStock);
+							} catch (error) {
+								console.error('Error generating PDF:', error);
+								toast({
+									title: 'Error',
+									description: 'No se pudo generar el PDF. Intenta nuevamente.',
+									variant: 'destructive',
+								});
+							}
+						}}
 						className="h-auto"
 					>
 						<Download className="mr-2 h-4 w-4" />

@@ -55,6 +55,7 @@ export function StockThresholdsDialog({ open, onOpenChange }: StockThresholdsDia
 				// Convert thresholds to map
 				const thresholdsMap = (thresholdsData || []).reduce<Record<number, { yellow: number; red: number }>>(
 					(acc, t) => {
+						if (t.item_category !== 'Insumos') return acc;
 						acc[t.item_id] = {
 							yellow: t.yellow_threshold,
 							red: t.red_threshold,
@@ -98,6 +99,14 @@ export function StockThresholdsDialog({ open, onOpenChange }: StockThresholdsDia
 			toast({
 				title: 'Error',
 				description: 'Los umbrales deben ser números válidos',
+				variant: 'destructive',
+			});
+			return;
+		}
+		if (yellow < 0 || red < 0) {
+			toast({
+				title: 'Error',
+				description: 'Los umbrales no pueden ser negativos',
 				variant: 'destructive',
 			});
 			return;

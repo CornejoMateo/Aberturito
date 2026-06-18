@@ -109,6 +109,11 @@ export async function generateStockReportPDF(
 
 	// Save PDF
 	const filterSuffix = filterText.length > 0 ? `_${filterText.join('_').toLowerCase().replace(/\s+/g, '_')}` : '';
-	const fileName = `stock_${category.toLowerCase()}${filterSuffix}_${new Date().toISOString().split('T')[0]}.pdf`;
+	const now = new Date();
+	const dd = String(now.getDate()).padStart(2, '0');
+	const mm = String(now.getMonth() + 1).padStart(2, '0');
+	const yyyy = now.getFullYear();
+
+	const fileName = `stock_${category.toLowerCase()}${filterSuffix}_${dd}-${mm}-${yyyy}.pdf`;
 	pdf.save(fileName);
 }

@@ -10,6 +10,7 @@ export type Client = {
 	email?: string | null;
 	cover?: string | null;
 	contact_method?: string | null;
+	seller_id?: string | null;
 };
 
 const TABLE = 'clients';
@@ -24,7 +25,7 @@ export async function listClients(): Promise<{ data: Client[] | null; error: any
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
-		.select('name, last_name, id, phone_number, locality, email, contact_method')
+		.select('name, last_name, id, phone_number, locality, email, contact_method, seller_id')
 		.order('created_at', { ascending: false });
 	return { data, error };
 }
@@ -113,7 +114,7 @@ export async function getClientsWithFirstBudget(): Promise<{ data: ClientWithFir
 	// Get all clients with their budgets
 	const { data: clients, error: clientsError } = await supabase
 		.from(TABLE)
-		.select('id, name, last_name, phone_number, locality, email, contact_method, created_at');
+		.select('id, name, last_name, phone_number, locality, email, contact_method, created_at, seller_id');
 	
 	if (clientsError) return { data: null, error: clientsError };
 	if (!clients) return { data: [], error: null };

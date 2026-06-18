@@ -24,6 +24,11 @@ export type BudgetWithWorkAndClient = BudgetWithWork & {
 		id: string;
 		name?: string | null;
 		last_name?: string | null;
+		seller_id?: string | null;
+		seller?: {
+			id: string;
+			name: string;
+		} | null;
 	} | null;
 };
 
@@ -259,7 +264,7 @@ export async function listBudgetsForReport(): Promise<{
 			`
 			*,
 			folder_budget:folder_budgets(
-				client:clients(id, name, last_name),
+				client:clients(id, name, last_name, seller_id),
 				work:works(address, locality, zone, hood)
 			)
 		`
@@ -268,6 +273,30 @@ export async function listBudgetsForReport(): Promise<{
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
+
+	// Get all seller IDs from clients
+	const sellerIds = data
+		.map((b: any) => {
+			const folderBudget = Array.isArray(b.folder_budget) ? b.folder_budget[0] : b.folder_budget;
+			const client = folderBudget?.client ? (Array.isArray(folderBudget.client) ? folderBudget.client[0] : folderBudget.client) : null;
+			return client?.seller_id;
+		})
+		.filter(Boolean);
+
+	// Fetch sellers
+	let sellersMap: Record<string, string> = {};
+	if (sellerIds.length > 0) {
+		const { data: sellers } = await supabase
+			.from('sellers')
+			.select('id, name')
+			.in('id', sellerIds);
+		if (sellers) {
+			sellersMap = sellers.reduce((acc, s) => {
+				acc[s.id] = s.name;
+				return acc;
+			}, {} as Record<string, string>);
+		}
+	}
 
 	const result: BudgetWithWorkAndClient[] = data.map((b: any) => {
 		// Handle folder_budget - it can be null, array, or object
@@ -286,6 +315,15 @@ export async function listBudgetsForReport(): Promise<{
 		let client = null;
 		if (folderBudget?.client) {
 			client = Array.isArray(folderBudget.client) ? folderBudget.client[0] : folderBudget.client;
+		}
+
+		// Add seller info to client
+		let seller = null;
+		if (client?.seller_id && sellersMap[client.seller_id]) {
+			seller = {
+				id: client.seller_id,
+				name: sellersMap[client.seller_id],
+			};
 		}
 
 		return {
@@ -319,7 +357,10 @@ export async function listBudgetsForReport(): Promise<{
 							locality: '',
 						},
 					},
-			client: client || null,
+			client: client ? {
+				...client,
+				seller: seller,
+			} : null,
 		} as BudgetWithWorkAndClient;
 	});
 

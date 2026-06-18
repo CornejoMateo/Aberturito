@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { StockFormDialog } from '../../utils/stock/stock-add-dialog';
 import { StockStats } from '../../utils/stock/stock-stats';
 import { StockFilters } from '../../utils/stock/stock-filters';
+import { generateStockReportPDF } from '@/lib/stock/stock-pdf';
+import { Download } from 'lucide-react';
 import { ProfileTable } from '../../utils/stock/profile-table';
 import { AccesoriesTable } from '@/utils/stock/stock-tables';
 import { AccessoryFormDialog } from '@/utils/stock/accessory-add-dialog';
@@ -57,6 +59,7 @@ export function StockManagement({
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedCategory, setSelectedCategory] = useState(category);
 	const [showOutOfStock, setShowOutOfStock] = useState(false);
+	const [showLowStock, setShowLowStock] = useState(false);
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<any | null>(null);
@@ -71,12 +74,30 @@ export function StockManagement({
 		// First apply the standard filters (search, category, material)
 		let result = filterStockItems(stock, searchTerm, selectedCategory, materialType, category);
 
-		// Then apply the out-of-stock filter if enabled
-		if (showOutOfStock) {
-			result = result.filter((item: any) => adapter.getQuantity(item) === 0);
+		// Apply stock filters (out-of-stock and/or low stock)
+		if (showOutOfStock || showLowStock) {
+			result = result.filter((item: any) => {
+				const quantity = (item as any)[STOCK_CONFIGS.Insumos.fields.quantityLump] ?? adapter.getQuantity(item);
+				
+				// Check if item matches out-of-stock filter
+				const matchesOutOfStock = showOutOfStock && quantity === 0;
+				
+				// Check if item matches low stock filter (only for Insumos)
+				let matchesLowStock = false;
+				if (showLowStock && category === 'Insumos') {
+					const threshold = thresholds[item.id];
+					if (threshold) {
+						matchesLowStock = quantity <= threshold.yellow && quantity > threshold.red;
+					}
+				}
+				
+				// Return true if matches either filter (OR logic)
+				return matchesOutOfStock || matchesLowStock;
+			});
 		}
+
 		return result;
-	}, [stock, searchTerm, selectedCategory, materialType, category, showOutOfStock]);
+	}, [stock, searchTerm, selectedCategory, materialType, category, showOutOfStock, showLowStock, thresholds]);
 
 	const totalPages = Math.ceil(filteredStock.length / itemsPerPage);
 
@@ -302,14 +323,29 @@ export function StockManagement({
 			/>
 
 			{/* Filters */}
-			<StockFilters
-				searchTerm={searchTerm}
-				setSearchTerm={setSearchTerm}
-				selectedCategory={selectedCategory}
-				setSelectedCategory={setSelectedCategory}
-				showOutOfStock={showOutOfStock}
-				setShowOutOfStock={setShowOutOfStock}
-			/>
+			<div className="flex gap-4">
+				<StockFilters
+					searchTerm={searchTerm}
+					setSearchTerm={setSearchTerm}
+					selectedCategory={selectedCategory}
+					setSelectedCategory={setSelectedCategory}
+					showOutOfStock={showOutOfStock}
+					setShowOutOfStock={setShowOutOfStock}
+					showLowStock={showLowStock}
+					setShowLowStock={setShowLowStock}
+					category={category}
+				/>
+				{category === 'Insumos' && (
+					<Button
+						variant="outline"
+						onClick={() => generateStockReportPDF(filteredStock, category, showOutOfStock, showLowStock)}
+						className="h-auto"
+					>
+						<Download className="mr-2 h-4 w-4" />
+						Descargar PDF
+					</Button>
+				)}
+			</div>
 
 			{/* Main table */}
 			{loading ? (

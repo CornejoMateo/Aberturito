@@ -174,7 +174,6 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 										setFormData((prev) => ({ ...prev, date }));
 										setIsCalendarOpen(false);
 									}}
-									disabled={(date) => isBefore(date, startOfDay(new Date()))}
 									initialFocus
 									locale={es}
 								/>

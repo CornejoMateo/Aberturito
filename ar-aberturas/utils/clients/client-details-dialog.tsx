@@ -96,7 +96,7 @@ export function ClientDetailsDialog({
 		}
 	};
 
-	const handleWorkDelete = async (workId: string) => {
+	const handleWorkDelete = async (workId: number) => {
 		try {
 			await remove(workId);
 
@@ -134,7 +134,7 @@ export function ClientDetailsDialog({
 		}
 	};
 
-	const handleWorkUpdate = async (workId: string, updates: Partial<Work>): Promise<Work> => {
+	const handleWorkUpdate = async (workId: number, updates: Partial<Work>): Promise<Work> => {
 		try {
 			const updatedWork = await update(workId, updates);
 			toast({
@@ -381,7 +381,7 @@ export function ClientDetailsDialog({
 						<DialogDescription>Completa los campos para crear una nueva obra.</DialogDescription>
 					</DialogHeader>
 					<WorkForm
-						clientId={client?.id || ''}
+						clientId={client?.id ?? 0}
 						onSubmit={handleWorkCreated}
 						onCancel={() => setIsWorkFormOpen(false)}
 					/>
@@ -395,7 +395,7 @@ export function ClientDetailsDialog({
 						<DialogDescription>Completa los campos para crear un nuevo saldo.</DialogDescription>
 					</DialogHeader>
 					<BalanceForm
-						clientId={client?.id || ''}
+						clientId={client?.id ?? 0}
 						budgets={budgets}
 						onSubmit={handleBalanceCreated}
 						onCancel={() => setIsBalanceFormOpen(false)}

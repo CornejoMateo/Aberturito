@@ -23,22 +23,22 @@ describe('useWorkChecklistData', () => {
 		mockGetWorkById.mockResolvedValue({ data: null, error: null });
 		mockGetChecklistsByWorkId.mockResolvedValue({ data: null, error: null });
 
-		const { result } = renderHook(() => useWorkChecklistData('work-1'));
+		const { result } = renderHook(() => useWorkChecklistData(1));
 
 		expect(result.current.loading).toBe(true);
 	});
 
 	it('should load work, client, and checklists data', async () => {
 		const mockWork = {
-			id: 'work-1',
+			id: 1,
 			locality: 'Buenos Aires',
 			address: 'Calle Falsa 123',
-			client_id: 'client-1',
+			client_id: 1,
 			status: 'in_progress',
 		};
 
 		const mockClient = {
-			id: 'client-1',
+			id: 1,
 			name: 'Juan',
 			last_name: 'Pérez',
 			phone_number: '1234567890',
@@ -46,14 +46,14 @@ describe('useWorkChecklistData', () => {
 
 		const mockChecklists = [
 			{
-				id: 'checklist-1',
-				work_id: 'work-1',
+				id: 1,
+				work_id: 1,
 				name: 'Checklist 1',
 				items: [{ name: 'Item 1', done: false }],
 			},
 			{
-				id: 'checklist-2',
-				work_id: 'work-1',
+				id: 2,
+				work_id: 1,
 				name: 'Checklist 2',
 				items: [{ name: 'Item 2', done: true }],
 			},
@@ -63,14 +63,14 @@ describe('useWorkChecklistData', () => {
 		mockGetClientById.mockResolvedValue({ data: mockClient as any, error: null });
 		mockGetChecklistsByWorkId.mockResolvedValue({ data: mockChecklists as any, error: null });
 
-		const { result } = renderHook(() => useWorkChecklistData('work-1'));
+		const { result } = renderHook(() => useWorkChecklistData(1));
 
 		await waitFor(() => {
 			expect(result.current.loading).toBe(false);
 		});
 
 		expect(result.current.workData).toEqual({
-			id: 'work-1',
+			id: 1,
 			locality: 'Buenos Aires',
 			address: 'Calle Falsa 123',
 		});
@@ -81,12 +81,12 @@ describe('useWorkChecklistData', () => {
 		});
 
 		expect(result.current.checklists).toHaveLength(2);
-		expect(result.current.checklists[0].id).toBe('checklist-1');
+		expect(result.current.checklists[0].id).toBe(1);
 	});
 
 	it('should handle work without client_id', async () => {
 		const mockWork = {
-			id: 'work-1',
+			id: 1,
 			locality: 'Córdoba',
 			address: 'Av. Principal 456',
 			client_id: null,
@@ -95,8 +95,8 @@ describe('useWorkChecklistData', () => {
 
 		const mockChecklists = [
 			{
-				id: 'checklist-1',
-				work_id: 'work-1',
+				id: 1,
+				work_id: 1,
 				name: 'Checklist',
 				items: [],
 			},
@@ -105,14 +105,14 @@ describe('useWorkChecklistData', () => {
 		mockGetWorkById.mockResolvedValue({ data: mockWork as any, error: null });
 		mockGetChecklistsByWorkId.mockResolvedValue({ data: mockChecklists as any, error: null });
 
-		const { result } = renderHook(() => useWorkChecklistData('work-1'));
+		const { result } = renderHook(() => useWorkChecklistData(1));
 
 		await waitFor(() => {
 			expect(result.current.loading).toBe(false);
 		});
 
 		expect(result.current.workData).toEqual({
-			id: 'work-1',
+			id: 1,
 			locality: 'Córdoba',
 			address: 'Av. Principal 456',
 		});
@@ -123,10 +123,10 @@ describe('useWorkChecklistData', () => {
 
 	it('should handle client with only name (no last_name)', async () => {
 		const mockWork = {
-			id: 'work-1',
+			id: 1,
 			locality: 'Rosario',
 			address: 'Calle 1',
-			client_id: 'client-1',
+			client_id: 1,
 			status: 'in_progress',
 		};
 
@@ -141,7 +141,7 @@ describe('useWorkChecklistData', () => {
 		mockGetClientById.mockResolvedValue({ data: mockClient as any, error: null });
 		mockGetChecklistsByWorkId.mockResolvedValue({ data: [], error: null });
 
-		const { result } = renderHook(() => useWorkChecklistData('work-1'));
+		const { result } = renderHook(() => useWorkChecklistData(1));
 
 		await waitFor(() => {
 			expect(result.current.loading).toBe(false);
@@ -155,10 +155,10 @@ describe('useWorkChecklistData', () => {
 
 	it('should handle client with only last_name (no name)', async () => {
 		const mockWork = {
-			id: 'work-1',
+			id: 1,
 			locality: 'Mendoza',
 			address: 'Calle 2',
-			client_id: 'client-1',
+			client_id: 1,
 			status: 'completed',
 		};
 
@@ -173,7 +173,7 @@ describe('useWorkChecklistData', () => {
 		mockGetClientById.mockResolvedValue({ data: mockClient as any, error: null });
 		mockGetChecklistsByWorkId.mockResolvedValue({ data: [], error: null });
 
-		const { result } = renderHook(() => useWorkChecklistData('work-1'));
+		const { result } = renderHook(() => useWorkChecklistData(1));
 
 		await waitFor(() => {
 			expect(result.current.loading).toBe(false);
@@ -187,10 +187,10 @@ describe('useWorkChecklistData', () => {
 
 	it('should handle empty checklists', async () => {
 		const mockWork = {
-			id: 'work-1',
+			id: 1,
 			locality: 'La Plata',
 			address: 'Diagonal 1',
-			client_id: 'client-1',
+			client_id: 1,
 			status: 'pending',
 		};
 
@@ -205,7 +205,7 @@ describe('useWorkChecklistData', () => {
 		mockGetClientById.mockResolvedValue({ data: mockClient as any, error: null });
 		mockGetChecklistsByWorkId.mockResolvedValue({ data: [], error: null });
 
-		const { result } = renderHook(() => useWorkChecklistData('work-1'));
+		const { result } = renderHook(() => useWorkChecklistData(1));
 
 		await waitFor(() => {
 			expect(result.current.loading).toBe(false);
@@ -218,7 +218,7 @@ describe('useWorkChecklistData', () => {
 		mockGetWorkById.mockResolvedValue({ data: null, error: null });
 		mockGetChecklistsByWorkId.mockResolvedValue({ data: [], error: null });
 
-		const { result } = renderHook(() => useWorkChecklistData('work-1'));
+		const { result } = renderHook(() => useWorkChecklistData(1));
 
 		await waitFor(() => {
 			expect(result.current.loading).toBe(false);
@@ -230,10 +230,10 @@ describe('useWorkChecklistData', () => {
 
 	it('should handle null client data when client_id exists', async () => {
 		const mockWork = {
-			id: 'work-1',
+			id: 1,
 			locality: 'Tucumán',
 			address: 'Calle 3',
-			client_id: 'client-1',
+			client_id: 1,
 			status: 'in_progress',
 		};
 
@@ -241,14 +241,14 @@ describe('useWorkChecklistData', () => {
 		mockGetClientById.mockResolvedValue({ data: null, error: null });
 		mockGetChecklistsByWorkId.mockResolvedValue({ data: [], error: null });
 
-		const { result } = renderHook(() => useWorkChecklistData('work-1'));
+		const { result } = renderHook(() => useWorkChecklistData(1));
 
 		await waitFor(() => {
 			expect(result.current.loading).toBe(false);
 		});
 
 		expect(result.current.workData).toEqual({
-			id: 'work-1',
+			id: 1,
 			locality: 'Tucumán',
 			address: 'Calle 3',
 		});
@@ -257,7 +257,7 @@ describe('useWorkChecklistData', () => {
 
 	it('should reload data when reload is called', async () => {
 		const mockWork = {
-			id: 'work-1',
+			id: 1,
 			locality: 'Salta',
 			address: 'Calle 4',
 			client_id: null,
@@ -267,7 +267,7 @@ describe('useWorkChecklistData', () => {
 		mockGetWorkById.mockResolvedValue({ data: mockWork as any, error: null });
 		mockGetChecklistsByWorkId.mockResolvedValue({ data: [], error: null });
 
-		const { result } = renderHook(() => useWorkChecklistData('work-1'));
+		const { result } = renderHook(() => useWorkChecklistData(1));
 
 		await waitFor(() => {
 			expect(result.current.loading).toBe(false);
@@ -286,7 +286,7 @@ describe('useWorkChecklistData', () => {
 
 	it('should handle missing locality and address gracefully', async () => {
 		const mockWork = {
-			id: 'work-1',
+			id: 1,
 			locality: null,
 			address: null,
 			client_id: null,
@@ -296,14 +296,14 @@ describe('useWorkChecklistData', () => {
 		mockGetWorkById.mockResolvedValue({ data: mockWork as any, error: null });
 		mockGetChecklistsByWorkId.mockResolvedValue({ data: [], error: null });
 
-		const { result } = renderHook(() => useWorkChecklistData('work-1'));
+		const { result } = renderHook(() => useWorkChecklistData(1));
 
 		await waitFor(() => {
 			expect(result.current.loading).toBe(false);
 		});
 
 		expect(result.current.workData).toEqual({
-			id: 'work-1',
+			id: 1,
 			locality: '',
 			address: '',
 		});
@@ -311,10 +311,10 @@ describe('useWorkChecklistData', () => {
 
 	it('should handle missing phone_number in client', async () => {
 		const mockWork = {
-			id: 'work-1',
+			id: 1,
 			locality: 'Jujuy',
 			address: 'Calle 5',
-			client_id: 'client-1',
+			client_id: 1,
 			status: 'in_progress',
 		};
 
@@ -329,7 +329,7 @@ describe('useWorkChecklistData', () => {
 		mockGetClientById.mockResolvedValue({ data: mockClient as any, error: null });
 		mockGetChecklistsByWorkId.mockResolvedValue({ data: [], error: null });
 
-		const { result } = renderHook(() => useWorkChecklistData('work-1'));
+		const { result } = renderHook(() => useWorkChecklistData(1));
 
 		await waitFor(() => {
 			expect(result.current.loading).toBe(false);
@@ -348,7 +348,7 @@ describe('useWorkChecklistData', () => {
 		mockGetWorkById.mockResolvedValue({ data: null, error: { message: 'Network error' } as any });
 		mockGetChecklistsByWorkId.mockResolvedValue({ data: [], error: null });
 
-		const { result } = renderHook(() => useWorkChecklistData('work-1'));
+		const { result } = renderHook(() => useWorkChecklistData(1));
 
 		await waitFor(() => {
 			expect(result.current.loading).toBe(false);

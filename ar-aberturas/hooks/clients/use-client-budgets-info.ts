@@ -9,7 +9,7 @@ type ClientBudgetInfo = {
 };
 
 export function useClientBudgetsInfo(clients: Client[]) {
-	const [info, setInfo] = useState<Record<string, ClientBudgetInfo>>({});
+	const [info, setInfo] = useState<Record<number, ClientBudgetInfo>>({});
 	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
@@ -25,7 +25,7 @@ export function useClientBudgetsInfo(clients: Client[]) {
 
 			const clientIds = clients.map((c) => c.id);
 
-			const emptyResult: Record<string, ClientBudgetInfo> = {};
+			const emptyResult: Record<number, ClientBudgetInfo> = {};
 			clients.forEach((c) => {
 				emptyResult[c.id] = { total: 0, chosen: 0 };
 			});
@@ -48,7 +48,7 @@ export function useClientBudgetsInfo(clients: Client[]) {
 				}
 
 				// Map folders by client
-				const foldersByClientId = new Map<string, string[]>();
+				const foldersByClientId = new Map<number, number[]>();
 
 				folders.forEach((f) => {
 					if (!f.client_id) return;
@@ -58,7 +58,7 @@ export function useClientBudgetsInfo(clients: Client[]) {
 				});
 
 				// Aggregate budgets per folder
-				const budgetsByFolder = new Map<string, ClientBudgetInfo>();
+				const budgetsByFolder = new Map<number, ClientBudgetInfo>();
 
 				budgets.forEach((b) => {
 					const folderId = b.folder_budget?.id;
@@ -76,7 +76,7 @@ export function useClientBudgetsInfo(clients: Client[]) {
 				});
 
 				// Final aggregation per client
-				const result: Record<string, ClientBudgetInfo> = {};
+				const result: Record<number, ClientBudgetInfo> = {};
 
 				clients.forEach((client) => {
 					const folderIds = foldersByClientId.get(client.id) ?? [];

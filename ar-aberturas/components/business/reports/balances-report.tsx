@@ -69,7 +69,7 @@ export function BalancesReport() {
 				return;
 			}
 
-			const ids = balances.map((b) => String(b.id));
+			const ids = balances.map((b) => b.id);
 			const { data: totals } = await getTotalsByBalanceIds(ids);
 
 			const next: BalanceReportRow[] = await Promise.all(balances.map(async (b) => {
@@ -97,7 +97,7 @@ export function BalancesReport() {
 				const contractDateRaw = new Date(b.start_date || b.created_at);
 				let usdCurrentToCancel: number | null = null;
 				if (balanceType === BALANCE_TYPES.CANCELLED) {
-					const { data: lastTransactionUsd } = await getLastTransactionUSD(String(b.id));
+					const { data: lastTransactionUsd } = await getLastTransactionUSD(b.id);
 					usdCurrentToCancel = lastTransactionUsd ?? 0;
 				}
 

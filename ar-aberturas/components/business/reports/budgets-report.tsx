@@ -62,7 +62,7 @@ export function BudgetsReport() {
 	const [typeFilter, setTypeFilter] = useState<string>('all');
 	const [statusFilter, setStatusFilter] = useState<string>('all');
 	const [sellerFilter, setSellerFilter] = useState<string>('all');
-	const [sellers, setSellers] = useState<Array<{ id: string; name: string }>>([]);
+	const [sellers, setSellers] = useState<Array<{ id: number; name: string }>>([]);
 	const [amountMin, setAmountMin] = useState<string>('');
 	const [amountMax, setAmountMax] = useState<string>('');
 	const [amountMinUsd, setAmountMinUsd] = useState<string>('');
@@ -108,7 +108,7 @@ export function BudgetsReport() {
 				const work = workParts.join(' - ') || '-';
 				const dateRaw = new Date(b.created_at);
 				const sellerName = b.client?.seller?.name || '-';
-				const sellerId = b.client?.seller?.id || '';
+				const sellerId = String(b.client?.seller?.id ?? '');
 
 				return {
 					id: String(b.id),

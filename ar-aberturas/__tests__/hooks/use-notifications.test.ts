@@ -5,8 +5,8 @@ import * as clientsLib from '@/lib/clients/clients';
 jest.mock('@/lib/clients/clients');
 
 const mockWork = {
-    id: 'work-1',
-    client_id: 'client-1',
+    id: 1,
+    client_id: 1,
     address: 'Calle Test',
     status: 'pending' as const,
     created_at: '2024-01-01',
@@ -16,7 +16,7 @@ const mockWork = {
 };
 
 const mockClient = {
-    id: 'client-1',
+    id: 1,
     name: 'Juan',
     last_name: 'Pérez',
     email: 'juan@test.com',
@@ -60,7 +60,7 @@ describe('useNotifications', () => {
 			expect(result.current.selectedClient).toEqual(mockClient);
 		});
 
-		expect(clientsLib.getClientById).toHaveBeenCalledWith('client-1');
+		expect(clientsLib.getClientById).toHaveBeenCalledWith(1);
 	});
 
 	it('should prepare and open Whatsapp modal correctly', async () => {

@@ -296,6 +296,8 @@ export async function generateChecklistPDF(
 		pdf.setTextColor(0);
 	}
 
-	const fileName = `checklists_obra_${new Date().toISOString().split('T')[0]}.pdf`;
-	pdf.save(fileName);
+	const blob = pdf.output('blob');
+	const url = URL.createObjectURL(blob);
+	window.open(url, '_blank');
+	setTimeout(() => URL.revokeObjectURL(url), 10000);
 }

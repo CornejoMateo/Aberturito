@@ -1,0 +1,191 @@
+import { getSupabaseClient } from '../supabase-client';
+
+export type Claim = {
+	id: number;
+	created_at?: string;
+	client_id?: number | null;
+	client_name?: string | null;
+	client_phone?: string | null;
+	work_zone?: string | null;
+	work_locality?: string | null;
+	work_address?: string | null;
+	work_hood?: string | null;
+	daily?: boolean | null;
+	alum_pvc?: string | null;
+	attend?: string | null;
+	description?: string | null;
+	date?: string | null;
+	resolved?: boolean | null;
+	resolution_date?: string | null;
+};
+
+const TABLE = 'claims';
+
+// type used for mapping claim row with client data, adding client_name and client_phone to the claim row
+type ClaimRowWithClient = Claim & {
+	clients?: {
+		name?: string | null;
+		last_name?: string | null;
+		phone_number?: string | null;
+	} | null;
+};
+
+// function to map claim row with client data to claim with client_name and client_phone
+function mapClaim(row: ClaimRowWithClient): Claim {
+	const firstName = row.clients?.name?.trim() || '';
+	const lastName = row.clients?.last_name?.trim() || '';
+	const fullName = `${firstName} ${lastName}`.trim();
+
+	return {
+		...row,
+		client_name: row.client_name || fullName || null,
+		client_phone: row.client_phone || row.clients?.phone_number || null,
+	};
+}
+
+export async function listClaims(): Promise<{ data: Claim[] | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('*, clients:client_id(name, last_name, phone_number)')
+		.order('date', { ascending: false })
+		.order('created_at', { ascending: false });
+
+	if (error || !data) {
+		return { data: data as Claim[] | null, error };
+	}
+
+	return { data: (data as ClaimRowWithClient[]).map(mapClaim), error: null };
+}
+
+export async function getClaimById(id: number): Promise<{ data: Claim | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('*, clients:client_id(name, last_name, phone_number)')
+		.eq('id', id)
+		.single();
+
+	if (error || !data) {
+		return { data: data as Claim | null, error };
+	}
+
+	return { data: mapClaim(data as ClaimRowWithClient), error: null };
+}
+
+export async function getClaimsByClientName(
+	clientName: string
+): Promise<{ data: Claim[] | null; error: any }> {
+	const { data, error } = await listClaims();
+
+	if (error || !data) {
+		return { data, error };
+	}
+
+	const normalizedSearch = clientName.trim().toLowerCase();
+
+	const filteredClaims = data.filter((claim) =>
+		(claim.client_name || '').toLowerCase().includes(normalizedSearch)
+	);
+
+	return { data: filteredClaims, error: null };
+}
+
+export async function getClaimsByWorkZone(
+	workZone: string
+): Promise<{ data: Claim[] | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('*')
+		.ilike('work_zone', `%${workZone}%`)
+		.order('created_at', { ascending: false });
+	return { data, error };
+}
+
+export async function getPendingClaims(): Promise<{ data: Claim[] | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('*')
+		.eq('resolved', false)
+		.order('date', { ascending: true });
+	return { data, error };
+}
+
+export async function getResolvedClaims(): Promise<{ data: Claim[] | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase
+		.from(TABLE)
+		.select('*')
+		.eq('resolved', true)
+		.order('resolution_date', { ascending: false });
+	return { data, error };
+}
+
+export async function createClaim(
+	claim: Omit<Claim, 'id' | 'created_at'>
+): Promise<{ data: Claim | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const payload = {
+		...claim,
+		created_at: new Date().toISOString(),
+	};
+	const { data, error } = await supabase.from(TABLE).insert(payload).select().single();
+	return { data, error };
+}
+
+export async function updateClaim(
+	id: number,
+	changes: Partial<Claim>
+): Promise<{ data: Claim | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { data, error } = await supabase.from(TABLE).update(changes).eq('id', id).select().single();
+	return { data, error };
+}
+
+export async function resolveClaim(
+	id: number,
+	resolutionDate?: string
+): Promise<{ data: Claim | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const payload = {
+		resolved: true,
+		resolution_date: resolutionDate || new Date().toISOString(),
+	};
+	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();
+	return { data, error };
+}
+
+export async function reopenClaim(id: number): Promise<{ data: Claim | null; error: any }> {
+	const supabase = getSupabaseClient();
+	const payload = {
+		resolved: false,
+		resolution_date: null,
+		attend: null,
+	};
+	const { data, error } = await supabase.from(TABLE).update(payload).eq('id', id).select().single();
+	return { data, error };
+}
+
+export async function deleteClaim(id: number): Promise<{ data: null; error: any }> {
+	const supabase = getSupabaseClient();
+	const { error } = await supabase.from(TABLE).delete().eq('id', id);
+	return { data: null, error };
+}
+
+// method to delete claims that were resolved more than a month ago
+export async function deleteOldClaims(): Promise<{ data: null; error: any }> {
+	const supabase = getSupabaseClient();
+
+	const oneMonthAgo = new Date();
+	oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+	const { error } = await supabase
+		.from(TABLE)
+		.delete()
+		.eq('resolved', true)
+		.lt('resolution_date', oneMonthAgo.toISOString());
+
+	return { data: null, error };
+}

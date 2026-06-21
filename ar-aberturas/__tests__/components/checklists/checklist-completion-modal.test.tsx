@@ -33,8 +33,8 @@ const mockCreateClaim = createClaim as jest.MockedFunction<typeof createClaim>;
 
 const mockChecklists = [
 	{
-		id: '1',
-		work_id: '1',
+		id: 1,
+		work_id: 1,
 		name: 'Checklist 1',
 		description: null,
 		width: 100,
@@ -50,9 +50,9 @@ const mockChecklists = [
 ];
 
 const defaultMockData = {
-	clientData: { id: 'client-123', name: 'John Doe', phone_number: '1234567890' },
-	clientId: 'client-123',
-	workData: { id: '1', locality: 'Buenos Aires', address: 'Street 123' },
+	clientData: { id: 123, name: 'John Doe', phone_number: '1234567890' },
+	clientId: 123,
+	workData: { id: 1, locality: 'Buenos Aires', address: 'Street 123' },
 	checklists: mockChecklists,
 	loading: false,
 	reload: jest.fn(),
@@ -68,7 +68,8 @@ describe('ChecklistCompletionModal', () => {
 	});
 
 	it('should render modal trigger button', () => {
-		render(<ChecklistCompletionModal workId="1" />);
+		render(<ChecklistCompletionModal workId={1} />);
+
 		expect(screen.getByText('Completar Checklists')).toBeInTheDocument();
 	});
 
@@ -78,8 +79,7 @@ describe('ChecklistCompletionModal', () => {
 			loading: true,
 		} as any);
 
-		render(<ChecklistCompletionModal workId="1" />);
-		
+		render(<ChecklistCompletionModal workId={1} />);
 		const button = screen.getByText('Completar Checklists');
 		fireEvent.click(button);
 		
@@ -87,7 +87,7 @@ describe('ChecklistCompletionModal', () => {
 	});
 
 	it('should display checklists when loaded', async () => {
-		render(<ChecklistCompletionModal workId="1" />);
+		render(<ChecklistCompletionModal workId={1} />);
 		
 		const button = screen.getByText('Completar Checklists');
 		fireEvent.click(button);
@@ -98,7 +98,7 @@ describe('ChecklistCompletionModal', () => {
 	});
 
 	it('should display total progress', async () => {
-		render(<ChecklistCompletionModal workId="1" />);
+		render(<ChecklistCompletionModal workId={1} />);
 		
 		const button = screen.getByText('Completar Checklists');
 		fireEvent.click(button);
@@ -115,7 +115,7 @@ describe('ChecklistCompletionModal', () => {
 			checklists: [],
 		} as any);
 
-		render(<ChecklistCompletionModal workId="1" />);
+		render(<ChecklistCompletionModal workId={1} />);
 		
 		const button = screen.getByText('Completar Checklists');
 		fireEvent.click(button);
@@ -126,7 +126,7 @@ describe('ChecklistCompletionModal', () => {
 	});
 
 	it('should update checklist item when toggled', async () => {
-		render(<ChecklistCompletionModal workId="1" />);
+		render(<ChecklistCompletionModal workId={1} />);
 		
 		const button = screen.getByText('Completar Checklists');
 		fireEvent.click(button);
@@ -140,7 +140,7 @@ describe('ChecklistCompletionModal', () => {
 		
 		await waitFor(() => {
 			expect(mockEditChecklist).toHaveBeenCalledWith(
-				'1',
+				1,
 				expect.objectContaining({
 					items: expect.arrayContaining([
 						expect.objectContaining({ name: 'Item 1', done: true }),
@@ -153,7 +153,7 @@ describe('ChecklistCompletionModal', () => {
 	it('should update notes with debounce', async () => {
 		jest.useFakeTimers();
 		
-		render(<ChecklistCompletionModal workId="1" />);
+		render(<ChecklistCompletionModal workId={1} />);
 		
 		const button = screen.getByText('Completar Checklists');
 		fireEvent.click(button);
@@ -170,7 +170,7 @@ describe('ChecklistCompletionModal', () => {
 		
 		await waitFor(() => {
 			expect(mockEditChecklist).toHaveBeenCalledWith(
-				'1',
+				1,
 				expect.objectContaining({ notes: 'Updated note' })
 			);
 		});
@@ -179,7 +179,7 @@ describe('ChecklistCompletionModal', () => {
 	});
 
 	it('should create claim when "Agregar como reclamo" is clicked', async () => {
-		render(<ChecklistCompletionModal workId="1" />);
+		render(<ChecklistCompletionModal workId={1} />);
 		
 		const button = screen.getByText('Completar Checklists');
 		fireEvent.click(button);
@@ -205,7 +205,7 @@ describe('ChecklistCompletionModal', () => {
 	});
 
 	it('should mark all items when "Marcar todo" is clicked', async () => {
-		render(<ChecklistCompletionModal workId="1" />);
+		render(<ChecklistCompletionModal workId={1} />);
 		
 		const button = screen.getByText('Completar Checklists');
 		fireEvent.click(button);
@@ -219,7 +219,7 @@ describe('ChecklistCompletionModal', () => {
 		
 		await waitFor(() => {
 			expect(mockEditChecklist).toHaveBeenCalledWith(
-				'1',
+				1,
 				expect.objectContaining({
 					items: expect.arrayContaining([
 						expect.objectContaining({ done: true }),
@@ -231,7 +231,7 @@ describe('ChecklistCompletionModal', () => {
 	});
 
 	it('should show delete confirmation dialog', async () => {
-		render(<ChecklistCompletionModal workId="1" />);
+		render(<ChecklistCompletionModal workId={1} />);
 		
 		const button = screen.getByText('Completar Checklists');
 		fireEvent.click(button);
@@ -249,7 +249,7 @@ describe('ChecklistCompletionModal', () => {
 	});
 
 	it('should delete checklist when confirmed', async () => {
-		render(<ChecklistCompletionModal workId="work-1" />);
+		render(<ChecklistCompletionModal workId={1} />);
 		
 		const button = screen.getByText('Completar Checklists');
 		fireEvent.click(button);
@@ -269,7 +269,7 @@ describe('ChecklistCompletionModal', () => {
 		fireEvent.click(confirmButton);
 		
 		await waitFor(() => {
-			expect(mockDeleteChecklist).toHaveBeenCalledWith('1');
+			expect(mockDeleteChecklist).toHaveBeenCalledWith(1);
 		});
 	});
 
@@ -280,7 +280,7 @@ describe('ChecklistCompletionModal', () => {
 			reload,
 		} as any);
 
-		render(<ChecklistCompletionModal workId="1" />);
+		render(<ChecklistCompletionModal workId={1} />);
 		
 		const button = screen.getByText('Completar Checklists');
 		fireEvent.click(button);
@@ -291,7 +291,7 @@ describe('ChecklistCompletionModal', () => {
 	});
 
 	it('should render PDF button with client name', async () => {
-		render(<ChecklistCompletionModal workId="1" />);
+		render(<ChecklistCompletionModal workId={1} />);
 		
 		const button = screen.getByText('Completar Checklists');
 		fireEvent.click(button);
@@ -302,7 +302,7 @@ describe('ChecklistCompletionModal', () => {
 	});
 
 	it('should close modal when "Cerrar" button is clicked', async () => {
-		render(<ChecklistCompletionModal workId="1" />);
+		render(<ChecklistCompletionModal workId={1} />);
 		
 		const openButton = screen.getByText('Completar Checklists');
 		fireEvent.click(openButton);

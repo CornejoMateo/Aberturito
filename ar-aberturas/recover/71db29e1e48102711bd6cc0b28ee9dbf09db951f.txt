@@ -1,0 +1,104 @@
+import { render, screen } from '@testing-library/react';
+import { BudgetDetailModal } from '@/utils/budgets/components/BudgetDetailModal';
+import { BudgetWithWork } from '@/lib/works/balances';
+
+jest.mock('@/components/ui/dialog', () => ({
+	Dialog: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+	DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+	DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+	DialogTitle: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+	DialogDescription: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+jest.mock('@/components/ui/button', () => ({
+	Button: ({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
+		<button {...props}>{children}</button>
+	),
+}));
+
+jest.mock('@/components/ui/budget-status-selector', () => ({
+	BudgetStatusSelector: ({ value }: { value: string }) => <div data-testid="budget-status-selector">{value}</div>,
+}));
+
+jest.mock('@/helpers/format-prices.tsx/formats', () => ({
+	formatCurrency: (value: number) => `ARS ${value}`,
+	formatCurrencyUSD: (value: number) => `USD ${value}`,
+}));
+
+jest.mock('@/helpers/date/format-date', () => ({
+	formatCreatedAt: (value: unknown) => `formatted:${String(value)}`,
+}));
+
+describe('BudgetDetailModal', () => {
+	const mockBudget: BudgetWithWork = {
+		id: 1,
+		created_at: '2024-01-10T00:00:00.000Z',
+		amount_ars: 500000,
+		amount_usd: 5000,
+		accepted: false,
+		sold: true,
+		lost: false,
+		date_of_sale: '2024-02-15T00:00:00.000Z',
+		pdf_url: null,
+		pdf_path: null,
+		number: '001',
+		version: 'A',
+		type: 'Presupuesto',
+		folder_budget: {
+			id: 1,
+			work_id: 1,
+			work: {
+				address: 'Test Street 123',
+				locality: 'Buenos Aires',
+				zone: '',
+				hood: '',
+			},
+		},
+	};
+
+	it('shows the sale date when date_of_sale is present', () => {
+		render(
+			<BudgetDetailModal
+				isOpen
+				onOpenChange={jest.fn()}
+				budget={mockBudget}
+				isLoading={false}
+				onEdit={jest.fn()}
+				onChooseBudget={jest.fn()}
+				onViewPdf={jest.fn()}
+				onStatusChange={jest.fn()}
+				onClose={jest.fn()}
+			/>
+		);
+
+		expect(screen.getByText('Fecha de venta')).toBeInTheDocument();
+		expect(screen.getByText('formatted:2024-02-15T00:00:00.000Z')).toBeInTheDocument();
+		expect(screen.getByTestId('budget-status-selector')).toHaveTextContent('sold');
+		expect(screen.getByText('Monto ARS')).toBeInTheDocument();
+		expect(screen.getByText('ARS 500000')).toBeInTheDocument();
+		expect(screen.getByText('Monto USD')).toBeInTheDocument();
+		expect(screen.getByText('USD 5000')).toBeInTheDocument();
+		expect(screen.getByText('Obra')).toBeInTheDocument();
+		expect(screen.getByText('Test Street 123 - Buenos Aires')).toBeInTheDocument();
+		expect(screen.getByText('Fecha de emisión')).toBeInTheDocument();
+		expect(screen.getByText('formatted:2024-01-10T00:00:00.000Z')).toBeInTheDocument();
+	});
+
+	it('does not show the sale date when date_of_sale is null', () => {
+		render(
+			<BudgetDetailModal
+				isOpen
+				onOpenChange={jest.fn()}
+				budget={{ ...mockBudget, date_of_sale: null }}
+				isLoading={false}
+				onEdit={jest.fn()}
+				onChooseBudget={jest.fn()}
+				onViewPdf={jest.fn()}
+				onStatusChange={jest.fn()}
+				onClose={jest.fn()}
+			/>
+		);
+
+		expect(screen.queryByText('Fecha de venta')).not.toBeInTheDocument();
+	});
+});

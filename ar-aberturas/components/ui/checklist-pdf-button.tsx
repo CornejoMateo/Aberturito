@@ -9,7 +9,7 @@ import { getWorkById } from '@/lib/works/works';
 
 type ChecklistPDFButtonProps = {
 	checklists: Checklist[];
-	workId?: string;
+	workId?: number;
 	workLocality?: string;
 	workAddress?: string;
 	clientName?: string;
@@ -27,7 +27,7 @@ export function ChecklistPDFButton({ checklists, workId, clientName, disabled }:
 		try {
 			setIsGenerating(true);
 
-			const { data: work } = await getWorkById(workId || '');
+			const { data: work } = await getWorkById(Number(workId));
 			const workLocality = work?.locality || '';
 			const workAddress = work?.address || '';
 			
@@ -59,7 +59,7 @@ export function ChecklistPDFButton({ checklists, workId, clientName, disabled }:
 			) : (
 				<>
 					<Download className="mr-2 h-4 w-4" />
-					Descargar PDF
+					Vista previa PDF
 				</>
 			)}
 		</Button>

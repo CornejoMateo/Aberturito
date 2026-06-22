@@ -17,9 +17,9 @@ interface BudgetDetailModalProps {
 	budget: BudgetWithWork | null;
 	isLoading: boolean;
 	onEdit: (budget: BudgetWithWork) => void;
-	onChooseBudget: (budgetId: string) => void;
+	onChooseBudget: (budgetId: number) => void;
 	onViewPdf: (budget: BudgetWithWork) => void;
-	onStatusChange: (budgetId: string, newStatus: string) => void;
+	onStatusChange: (budgetId: number, newStatus: string) => void;
 	onClose: () => void;
 }
 

@@ -6,22 +6,22 @@ jest.mock('@/lib/works/checklists');
 
 const mockWorks = [
 	{
-		id: '1',
-		client_id: '1',
+		id: 1,
+		client_id: 1,
 		address: 'Calle 1',
 		status: 'pending' as const,
 		created_at: '2024-01-01',
 	},
 	{
-		id: '2',
-		client_id: '2',
+		id: 2,
+		client_id: 2,
 		address: 'Calle 2',
 		status: 'in_progress' as const,
 		created_at: '2024-01-02',
 	},
 	{
-		id: '3',
-		client_id: '3',
+		id: 3,
+		client_id: 3,
 		address: 'Calle 3',
 		status: 'completed' as const,
 		created_at: '2024-01-03',
@@ -43,16 +43,16 @@ describe('useWorkChecklists', () => {
 
 	it('must be detect works with checklists', async () => {
 		(checklistsLib.getChecklistsByWorkId as jest.Mock)
-			.mockResolvedValueOnce({ data: [{ id: '1' }] }) // work with id 1 has checklists
+			.mockResolvedValueOnce({ data: [{ id: 1 }] }) // work with id 1 has checklists
 			.mockResolvedValueOnce({ data: [] }) // work with id 2 has no checklists
-			.mockResolvedValueOnce({ data: [{ id: '2' }, { id: '3' }] }); // work with id 3 has checklists
+			.mockResolvedValueOnce({ data: [{ id: 2 }, { id: 3 }] }); // work with id 3 has checklists
 
 		const { result } = renderHook(() => useWorkChecklists(mockWorks));
 
 		await waitFor(() => {
-			expect(result.current.workChecklists['1']).toBe(true);
-			expect(result.current.workChecklists['2']).toBe(false);
-			expect(result.current.workChecklists['3']).toBe(true);
+			expect(result.current.workChecklists[1]).toBe(true);
+			expect(result.current.workChecklists[2]).toBe(false);
+			expect(result.current.workChecklists[3]).toBe(true);
 		});
 
 		expect(checklistsLib.getChecklistsByWorkId).toHaveBeenCalledTimes(3);
@@ -67,31 +67,31 @@ describe('useWorkChecklists', () => {
 
 		// Initially all should be loading
 		await waitFor(() => {
-			expect(result.current.loadingChecklists['1']).toBe(true);
-			expect(result.current.loadingChecklists['2']).toBe(true);
-			expect(result.current.loadingChecklists['3']).toBe(true);
+			expect(result.current.loadingChecklists[1]).toBe(true);
+			expect(result.current.loadingChecklists[2]).toBe(true);
+			expect(result.current.loadingChecklists[3]).toBe(true);
 		});
 
 		// After completion, all should be false
 		await waitFor(() => {
-			expect(result.current.loadingChecklists['1']).toBe(false);
-			expect(result.current.loadingChecklists['2']).toBe(false);
-			expect(result.current.loadingChecklists['3']).toBe(false);
+			expect(result.current.loadingChecklists[1]).toBe(false);
+			expect(result.current.loadingChecklists[2]).toBe(false);
+			expect(result.current.loadingChecklists[3]).toBe(false);
 		});
 	});
 
 	it('must be handle errors gracefully', async () => {
 		(checklistsLib.getChecklistsByWorkId as jest.Mock)
-			.mockResolvedValueOnce({ data: [{ id: '1' }] })
+			.mockResolvedValueOnce({ data: [{ id: 1 }] })
 			.mockRejectedValueOnce(new Error('Network error'))
 			.mockResolvedValueOnce({ data: [] });
 
 		const { result } = renderHook(() => useWorkChecklists(mockWorks));
 
 		await waitFor(() => {
-			expect(result.current.workChecklists['1']).toBe(true);
-			expect(result.current.workChecklists['2']).toBe(false); // Error handled
-			expect(result.current.workChecklists['3']).toBe(false);
+			expect(result.current.workChecklists[1]).toBe(true);
+			expect(result.current.workChecklists[2]).toBe(false); // Error handled
+			expect(result.current.workChecklists[3]).toBe(false);
 		});
 	});
 
@@ -103,9 +103,9 @@ describe('useWorkChecklists', () => {
 		const { result } = renderHook(() => useWorkChecklists(mockWorks));
 
 		await waitFor(() => {
-			expect(result.current.workChecklists['1']).toBe(false);
-			expect(result.current.workChecklists['2']).toBe(false);
-			expect(result.current.workChecklists['3']).toBe(false);
+			expect(result.current.workChecklists[1]).toBe(false);
+			expect(result.current.workChecklists[2]).toBe(false);
+			expect(result.current.workChecklists[3]).toBe(false);
 		});
 	});
 

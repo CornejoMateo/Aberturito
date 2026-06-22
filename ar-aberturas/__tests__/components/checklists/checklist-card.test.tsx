@@ -22,8 +22,8 @@ jest.mock('@/hooks/use-file-upload', () => ({
 }));
 
 const mockChecklist: Checklist = {
-	id: '1',
-	work_id: '1',
+	id: 1,
+	work_id: 1,
 	name: 'Test Checklist',
 	description: 'Test description',
 	width: 100,
@@ -51,7 +51,7 @@ const defaultProps = {
 	onEdit: jest.fn(),
 	onDelete: jest.fn(),
 	onAddEntry: jest.fn(),
-	clientId: 'client-123',
+	clientId: 123,
 };
 
 describe('ChecklistCard', () => {
@@ -93,7 +93,7 @@ describe('ChecklistCard', () => {
 		fireEvent.click(checkboxes[0]);
 		
 		expect(defaultProps.onToggleItem).toHaveBeenCalledWith(
-			'1',
+			1,
 			0,
 			mockChecklist.items
 		);
@@ -105,7 +105,7 @@ describe('ChecklistCard', () => {
 		const marcarTodoButton = screen.getByText('Marcar todo');
 		fireEvent.click(marcarTodoButton);
 		
-		expect(defaultProps.onSetAllItems).toHaveBeenCalledWith('1', true);
+		expect(defaultProps.onSetAllItems).toHaveBeenCalledWith(1, true);
 	});
 
 	it('should call onSetAllItems when "Desmarcar todo" is clicked', () => {
@@ -114,7 +114,7 @@ describe('ChecklistCard', () => {
 		const desmarcarTodoButton = screen.getByText('Desmarcar todo');
 		fireEvent.click(desmarcarTodoButton);
 		
-		expect(defaultProps.onSetAllItems).toHaveBeenCalledWith('1', false);
+		expect(defaultProps.onSetAllItems).toHaveBeenCalledWith(1, false);
 	});
 
 	it('should call onUpdateNotes when textarea changes', () => {
@@ -123,7 +123,7 @@ describe('ChecklistCard', () => {
 		const textarea = screen.getByPlaceholderText(/Escribí una nota/i);
 		fireEvent.change(textarea, { target: { value: 'New note' } });
 		
-		expect(defaultProps.onUpdateNotes).toHaveBeenCalledWith('1', 'New note');
+		expect(defaultProps.onUpdateNotes).toHaveBeenCalledWith(1, 'New note');
 	});
 
 	it('should show edit and delete buttons for admin users', () => {
@@ -173,7 +173,7 @@ describe('ChecklistCard', () => {
 	it('should show "Guardando..." when saving notes', () => {
 		const props = {
 			...defaultProps,
-			savingNotes: { '1': true },
+			savingNotes: { 1: true },
 		};
 		render(<ChecklistCard {...props} />);
 		

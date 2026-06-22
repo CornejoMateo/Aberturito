@@ -14,7 +14,7 @@ import { Work } from '@/lib/works/works';
 import { useState } from 'react';
 
 interface WorkFormProps {
-	clientId: string;
+	clientId: number;
 	onSubmit: (work: Omit<Work, 'id' | 'created_at' | 'client_id'>) => Promise<void>;
 	onCancel: () => void;
 }

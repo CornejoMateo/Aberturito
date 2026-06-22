@@ -5,14 +5,14 @@ import { toast } from '@/components/ui/use-toast';
 import { translateError } from '@/lib/error-translator';
 
 export interface ChecklistImage {
-	id: string;
+	id: number;
 	name: string;
 	title: string | null;
 	url: string;
 	uploaded_at: string;
 }
 
-export function useChecklistImages(checklistId: string) {
+export function useChecklistImages(checklistId: number) {
 	const [images, setImages] = useState<ChecklistImage[]>([]);
 	const [loading, setLoading] = useState(false);
 
@@ -55,7 +55,7 @@ export function useChecklistImages(checklistId: string) {
 		}
 	};
 
-	const deleteImage = async (id: string) => {
+	const deleteImage = async (id: number) => {
 		try {
 			const { success, error } = await deleteClientFile(id);
 

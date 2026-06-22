@@ -9,36 +9,36 @@ jest.mock('@/lib/budgets/folder_budgets');
 jest.mock('@/lib/budgets/budgets');
 jest.mock('@/lib/survey/survey');
 
-const mockClientId = '1';
+const mockClientId = 1;
 
-const mockFolderBudgets = [{ id: '10', client_id: mockClientId }];
+const mockFolderBudgets = [{ id: 10, client_id: mockClientId }];
 
 const mockSoldBudget = {
-	id: '100',
+	id: 100,
 	created_at: '2024-01-01',
 	amount_ars: 1000,
 	amount_usd: 1,
 	sold: true,
 	folder_budget: {
-		id: '10',
-		work_id: '200',
+		id: 10,
+		work_id: 200,
 		work: { address: 'Av. Test 123', locality: 'Córdoba' },
 	},
 };
 
-const mockNotSoldBudget = { ...mockSoldBudget, id: '101', sold: false };
+const mockNotSoldBudget = { ...mockSoldBudget, id: 101, sold: false };
 
 const mockSurvey = {
-	id: '1',
+	id: 1,
 	created_at: '2024-01-01',
-	budget_id: '100',
+	budget_id: 100,
 	client_id: mockClientId,
 };
 
 const mockItem = {
-	id: '1',
+	id: 1,
 	created_at: '2024-01-01',
-	survey_id: '1',
+	survey_id: 1,
 	label: 'A la espera de premarco',
 	completed: false,
 	order: 0,
@@ -179,11 +179,11 @@ describe('useClientSurveys', () => {
 		const { result } = renderHook(() => useClientSurveys(mockClientId));
 
 		await act(async () => {
-			await result.current.createSurvey('100');
+			await result.current.createSurvey(100);
 		});
 
 		expect(surveyLib.createSurvey).toHaveBeenCalledWith({
-			budget_id: '100',
+			budget_id: 100,
 			client_id: mockClientId,
 		});
 		expect(surveyLib.createSurveyItem).toHaveBeenCalledTimes(4);
@@ -193,7 +193,7 @@ describe('useClientSurveys', () => {
 		const { result } = renderHook(() => useClientSurveys());
 
 		await act(async () => {
-			await result.current.createSurvey('100');
+			await result.current.createSurvey(100);
 		});
 
 		expect(surveyLib.createSurvey).not.toHaveBeenCalled();
@@ -306,7 +306,7 @@ describe('useClientSurveys', () => {
 	});
 
 	it('adds a new item with correct order', async () => {
-		const newItem = { ...mockItem, id: '2', label: 'Nuevo paso', order: 1 };
+		const newItem = { ...mockItem, id: 2, label: 'Nuevo paso', order: 1 };
 		(surveyLib.createSurveyItem as jest.Mock).mockResolvedValue({
 			data: newItem,
 			error: null,

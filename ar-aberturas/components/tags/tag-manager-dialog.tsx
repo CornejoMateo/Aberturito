@@ -23,7 +23,7 @@ type EditTagState = {
 
 type DeleteTagState = {
 	open: boolean;
-	tagId: string | null;
+	tagId: number | null;
 };
 
 export function TagManagerDialog({ open, onOpenChange }: TagManagerDialogProps) {

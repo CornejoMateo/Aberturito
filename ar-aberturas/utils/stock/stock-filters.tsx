@@ -11,6 +11,8 @@ interface StockFiltersProps {
   selectedCategory: 'Perfiles' | 'Accesorios' | 'Herrajes' | 'Insumos';
   showOutOfStock: boolean;
   setShowOutOfStock: (show: boolean) => void;
+  showLowStock: boolean;
+  setShowLowStock: (show: boolean) => void;
   setSelectedCategory: (category: 'Perfiles' | 'Accesorios' | 'Herrajes' | 'Insumos') => void;
 }
 
@@ -20,6 +22,9 @@ export function StockFilters({
   selectedCategory,
   showOutOfStock,
   setShowOutOfStock,
+  showLowStock,
+  setShowLowStock,
+  category,
 }: StockFiltersProps) {
   return (
     <Card className="p-4 bg-card border-border">
@@ -47,6 +52,20 @@ export function StockFilters({
               <Filter className="h-3.5 w-3.5" />
               <span>Mostrar solo sin stock</span>
             </Button>
+            {selectedCategory === 'Insumos' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  'flex items-center gap-1.5 text-xs h-8 px-2',
+                  showLowStock ? 'bg-yellow-200 text-yellow-900' : 'hover:bg-yellow-100'
+                )}
+                onClick={() => setShowLowStock(!showLowStock)}
+              >
+                <Filter className="h-3.5 w-3.5" />
+                <span>Mostrar solo stock bajo</span>
+              </Button>
+            )}
             {(selectedCategory === 'Accesorios' || selectedCategory === 'Herrajes' || selectedCategory === 'Insumos') && (
               <div className="[&_button]:h-8 [&_button]:text-xs [&_button]:px-2">
                 <UpdatePricesDialog />

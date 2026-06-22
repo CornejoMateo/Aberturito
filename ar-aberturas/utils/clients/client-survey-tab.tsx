@@ -38,23 +38,23 @@ interface ClientSurveyTabProps {
 type ItemDialogState = {
 	open: boolean;
 	mode: 'add' | 'edit';
-	surveyId: string | null;
+	surveyId: number | null;
 	item: SurveyItem | null;
 };
 
 type DeleteItemConfirmState = {
 	open: boolean;
-	itemId: string | null;
+	itemId: number | null;
 };
 
 type DeleteRelConfirmState = {
 	open: boolean;
-	surveyId: string | null;
+	surveyId: number | null;
 };
 
 type DueDateDialogState = {
 	open: boolean;
-	surveyId: string | null;
+	surveyId: number | null;
 	currentDueDate: Date | null;
 };
 
@@ -108,18 +108,18 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 		load();
 	}, [load]);
 
-	const getSurveyForBudget = (budgetId: string): Survey | undefined =>
+	const getSurveyForBudget = (budgetId: number): Survey | undefined =>
 		surveys.find((s) => s.budget_id === budgetId);
 
-	const getItemsForSurvey = (surveyId: string): SurveyItem[] =>
+	const getItemsForSurvey = (surveyId: number): SurveyItem[] =>
 		items.filter((i) => i.survey_id === surveyId).sort((a, b) => a.order - b.order);
 
-	const getProgress = (surveyId: string): { done: number; total: number } => {
+	const getProgress = (surveyId: number): { done: number; total: number } => {
 		const survey = getItemsForSurvey(surveyId);
 		return { done: survey.filter((i) => i.completed).length, total: survey.length };
 	};
 
-	const handleCreateSurvey = async (budgetId: string) => {
+	const handleCreateSurvey = async (budgetId: number) => {
 		try {
 			await createSurvey(budgetId);
 			toast({

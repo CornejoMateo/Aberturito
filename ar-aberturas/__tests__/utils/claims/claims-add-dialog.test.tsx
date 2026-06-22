@@ -37,7 +37,7 @@ describe('ClaimsAddDialog', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		(listClients as jest.Mock).mockResolvedValue({
-			data: [{ id: 'c1', name: 'Juan', last_name: 'Perez', phone_number: '123' }],
+			data: [{ id: 1, name: 'Juan', last_name: 'Perez', phone_number: '123' }],
 			error: null,
 		});
 		(getWorksByClientId as jest.Mock).mockResolvedValue({ data: [], error: null });
@@ -134,7 +134,7 @@ describe('ClaimsAddDialog', () => {
 		await waitFor(() => {
 			expect(createClaim).toHaveBeenCalledWith(
 				expect.objectContaining({
-					client_id: 'c1',
+					client_id: '1',
 					description: 'Test description',
 					daily: false,
 				})

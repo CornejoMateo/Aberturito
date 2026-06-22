@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils';
 import { formatNumber, parseArsToNumber } from '@/utils/budgets/utils';
 
 interface BalanceFormProps {
-	clientId: string;
+	clientId: number;
 	budgets: BudgetWithWork[];
 	onSubmit: (balance: Omit<Balance, 'id' | 'created_at'>) => Promise<void>;
 	onCancel: () => void;
@@ -78,7 +78,7 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 
 		const balanceData: Omit<Balance, 'id' | 'created_at'> = {
 			client_id: clientId,
-			budget_id: selectedBudgetId || null,
+			budget_id: selectedBudgetId ? Number(selectedBudgetId) : null,
 			start_date: formData.start_date
 				? format(formData.start_date as Date, 'yyyy-MM-dd')
 				: undefined,

@@ -39,17 +39,20 @@ import { ClientsAddDialog } from '@/utils/clients/clients-add-dialog';
 import { ClientDetailsDialog } from '../../utils/clients/client-details-dialog';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, FileText } from 'lucide-react';
+import { CheckCircle, FileText, Settings } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/components/provider/auth-provider';
 import { translateError } from '@/lib/error-translator';
 import { useClientBudgetsInfo } from '@/hooks/clients/use-client-budgets-info';
 import { paginateAndFilter } from '@/helpers/clients/pagination';
+import { listSellers, Seller } from '@/lib/sellers/sellers';
+import { SellersConfigDialog } from '@/utils/sellers/sellers-config-dialog';
 
 export function ClientManagement() {
 	const { toast } = useToast();
 	const { user } = useAuth();
 	const colocador = user?.role === 'Colocador';
+	const admin = user?.role === 'Admin';
 
 	const {
 		data: clients,
@@ -72,6 +75,8 @@ export function ClientManagement() {
 	const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
 	const [viewingClient, setViewingClient] = useState<Client | null>(null);
 	const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+	const [sellers, setSellers] = useState<Seller[]>([]);
+	const [isSellersConfigOpen, setIsSellersConfigOpen] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 6;
 
@@ -168,6 +173,10 @@ export function ClientManagement() {
 		setCurrentPage(1);
 	}, [searchTerm]);
 
+	useEffect(() => {
+		listSellers().then(({ data }) => setSellers(data ?? []));
+	}, []);
+
 	return (
 		<div className="space-y-6">
 			{/* Delete Confirmation Dialog */}
@@ -200,37 +209,46 @@ export function ClientManagement() {
 					<h2 className="text-2xl font-bold text-foreground text-balance">Gestión de Clientes</h2>
 					<p className="text-muted-foreground mt-1">Administración de clientes y contactos</p>
 				</div>
-				{!colocador && (
-					<Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
-						<Plus className="h-4 w-4" />
-						Nuevo cliente
-					</Button>
-				)}
+				<div className="flex gap-2">
+					{!colocador && (
+						<Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
+							<Plus className="h-4 w-4" />
+							Nuevo cliente
+						</Button>
+					)}
+					{admin && (
+						<Button variant="outline" onClick={() => setIsSellersConfigOpen(true)} className="gap-2">
+							<Settings className="h-4 w-4" />
+							Configurar vendedores
+						</Button>
+					)}
+				</div>
 				<ClientsAddDialog
 					open={isAddDialogOpen}
 					onOpenChange={setIsAddDialogOpen}
 					onClientAdded={refresh}
+					sellers={sellers}
 				/>
-				{selectedClient && (
-					<ClientsAddDialog
-						open={isEditDialogOpen}
-						onOpenChange={setIsEditDialogOpen}
-						clientToEdit={
-							selectedClient
-								? {
-										id: selectedClient.id || '',
-										name: selectedClient.name || '',
-										last_name: selectedClient.last_name || '',
-										email: selectedClient.email || '',
-										phone_number: selectedClient.phone_number || '',
-										locality: selectedClient.locality || '',
-										contact_method: selectedClient.contact_method || '',
-									}
-								: undefined
-						}
-						onUpdateClient={handleUpdateClient}
-					/>
-				)}
+				<ClientsAddDialog
+					open={isEditDialogOpen}
+					onOpenChange={setIsEditDialogOpen}
+					clientToEdit={
+						selectedClient
+							? {
+									id: selectedClient.id,
+									name: selectedClient.name || '',
+									last_name: selectedClient.last_name || '',
+									email: selectedClient.email || '',
+									phone_number: selectedClient.phone_number || '',
+									locality: selectedClient.locality || '',
+									contact_method: selectedClient.contact_method || '',
+									seller_id: selectedClient.seller_id,
+								}
+							: undefined
+					}
+					onUpdateClient={handleUpdateClient}
+					sellers={sellers}
+				/>
 			</div>
 
 			{/* Stats */}
@@ -441,6 +459,11 @@ export function ClientManagement() {
 				onClose={() => setIsViewDialogOpen(false)}
 				onEdit={handleEditFromView}
 				onClientUpdated={handleClientUpdated}
+			/>
+
+			<SellersConfigDialog
+				open={isSellersConfigOpen}
+				onOpenChange={setIsSellersConfigOpen}
 			/>
 		</div>
 	);

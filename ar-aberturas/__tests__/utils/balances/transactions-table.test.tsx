@@ -14,8 +14,8 @@ jest.mock('@/helpers/format-prices.tsx/formats', () => ({
 
 describe('TransactionsTable', () => {
 	const mockTransaction: BalanceTransaction = {
-		id: '1',
-		balance_id: 'balance-1',
+		id: 1,
+		balance_id: 1,
 		amount: 50000,
 		usd_amount: 300,
 		quote_usd: 150,
@@ -103,7 +103,7 @@ describe('TransactionsTable', () => {
 				mockTransaction,
 				{
 					...mockTransaction,
-					id: '2',
+					id: 2,
 					amount: 75000,
 					payment_method: 'Efectivo',
 					notes: 'Second transaction',
@@ -214,7 +214,7 @@ describe('TransactionsTable', () => {
 				mockTransaction,
 				{
 					...mockTransaction,
-					id: '2',
+					id: 2,
 					amount: 75000,
 					notes: 'Second transaction',
 				},
@@ -328,7 +328,7 @@ describe('TransactionsTable', () => {
 
 			const transactions = paymentMethods.map((method, index) => ({
 				...mockTransaction,
-				id: (index + 1).toString(),
+				id: index + 1,
 				payment_method: method,
 			}));
 

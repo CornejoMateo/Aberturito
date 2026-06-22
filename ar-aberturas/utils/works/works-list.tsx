@@ -35,10 +35,10 @@ import { statusConfig } from '@/constants/type-config';
 
 interface WorksListProps {
 	works: Work[];
-	onDelete?: (workId: string) => Promise<void>;
+	onDelete?: (workId: number) => Promise<void>;
 	onWorkUpdated?: (updatedWork: Work) => void;
 	onCreateWork?: () => void;
-	onUpdate?: (workId: string, updates: Partial<Work>) => Promise<Work>;
+	onUpdate?: (workId: number, updates: Partial<Work>) => Promise<Work>;
 }
 
 export function WorksList({
@@ -48,12 +48,12 @@ export function WorksList({
 	onCreateWork,
 	onUpdate,
 }: WorksListProps) {
-	const [workToDelete, setWorkToDelete] = useState<{ id: string; address: string } | null>(null);
+	const [workToDelete, setWorkToDelete] = useState<{ id: number; address: string } | null>(null);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
-	const [selectedWorkId, setSelectedWorkId] = useState<string | null>(null);
+	const [selectedWorkId, setSelectedWorkId] = useState<number | null>(null);
 	const itemsPerPage = 6;
 
 	const { workChecklists, loadingChecklists } = useWorkChecklists(initialWorks);
@@ -66,7 +66,7 @@ export function WorksList({
 		}
 	};
 
-	const handleUpdateWork = async (workId: string, updates: Partial<Work>) => {
+	const handleUpdateWork = async (workId: number, updates: Partial<Work>) => {
 		if (onUpdate) {
 			try {
 				const updatedWork = await onUpdate(workId, updates);

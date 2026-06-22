@@ -18,15 +18,15 @@ interface ChecklistCardProps {
 	user: any;
 	saving: boolean;
 	loading: boolean;
-	addingClaim: { [key: string]: boolean };
-	savingNotes: { [key: string]: boolean };
-	onUpdateNotes: (checklistId: string, notes: string) => void;
-	onToggleItem: (checklistId: string, itemIndex: number, items: ChecklistItem[]) => void;
-	onSetAllItems: (checklistId: string, done: boolean) => void;
+	addingClaim: Record<number, boolean>;
+	savingNotes: Record<number, boolean>;
+	onUpdateNotes: (checklistId: number, notes: string) => void;
+	onToggleItem: (checklistId: number, itemIndex: number, items: ChecklistItem[]) => void;
+	onSetAllItems: (checklistId: number, done: boolean) => void;
 	onEdit: (checklist: Checklist) => void;
 	onDelete: (checklist: Checklist) => void;
 	onAddEntry: (checklist: Checklist, type: 'claim' | 'daily') => void;
-	clientId?: string | null;
+	clientId?: number | null;
 }
 
 export function ChecklistCard({
@@ -62,7 +62,7 @@ export function ChecklistCard({
 		triggerFileUpload,
 		acceptedFileTypes,
 	} = useFileUpload({
-		clientId: clientId || '',
+		clientId: clientId ?? 0,
 		checklistId: checklist.id,
 		getDefaultDisplayName: (file) => checklist.name || file.name.replace(/\.[^/.]+$/, ''),
 		getDefaultDescription: () => checklist.description || '',

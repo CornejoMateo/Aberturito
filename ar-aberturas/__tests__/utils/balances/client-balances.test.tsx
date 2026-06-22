@@ -31,18 +31,18 @@ const mockUseBalanceHandlers = useBalanceHandlers as jest.MockedFunction<
 
 describe('ClientBalances', () => {
 	const mockBalance = {
-		id: 'balance-1',
-		client_id: 'client-1',
-		budget_id: 'budget-1',
+		id: 1,
+		client_id: 1,
+		budget_id: 1,
 		start_date: '2024-01-01',
 		contract_date_usd: 1000,
 		usd_current: 1100,
 		notes: null,
 		created_at: new Date(),
 		budget: {
-			id: 'budget-1',
-			client_id: 'client-1',
-			folder_id: 'folder-1',
+			id: 1,
+			client_id: 1,
+			folder_id: 1,
 			number: '001',
 			type: 'Presupuesto',
 			amount_ars: 500000,
@@ -53,10 +53,10 @@ describe('ClientBalances', () => {
 			amount_received: 0,
 			created_at: new Date(),
 			folder_budget: {
-				id: 'folder-1',
+				id: 1,
 				work: {
-					id: 'work-1',
-					client_id: 'client-1',
+					id: 1,
+					client_id: 1,
 					locality: 'Buenos Aires',
 					address: 'Test Street 123',
 					type: 'Obra',
@@ -107,7 +107,7 @@ describe('ClientBalances', () => {
 		it('should render search bar', async () => {
 			render(
 				<ClientBalances
-					clientId="client-1"
+					clientId={1}
 					onCreateBalance={mockOnCreateBalance}
 				/>
 			);
@@ -123,7 +123,7 @@ describe('ClientBalances', () => {
 		it('should render create balance button when onCreateBalance is provided', async () => {
 			render(
 				<ClientBalances
-					clientId="client-1"
+					clientId={1}
 					onCreateBalance={mockOnCreateBalance}
 				/>
 			);
@@ -135,7 +135,7 @@ describe('ClientBalances', () => {
 		});
 
 		it('should not render create balance button when onCreateBalance is not provided', async () => {
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				const createButton = screen.queryByRole('button', { name: /Crear Saldo/i });
@@ -151,7 +151,7 @@ describe('ClientBalances', () => {
 				refresh: mockRefresh,
 			} as any);
 
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			expect(screen.getByText(/Cargando saldos/i)).toBeInTheDocument();
 		});
@@ -164,7 +164,7 @@ describe('ClientBalances', () => {
 				refresh: mockRefresh,
 			} as any);
 
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				expect(
@@ -174,7 +174,7 @@ describe('ClientBalances', () => {
 		});
 
 		it('should render balance cards when data is loaded', async () => {
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				expect(screen.getByText('Buenos Aires')).toBeInTheDocument();
@@ -187,14 +187,14 @@ describe('ClientBalances', () => {
 			const user = userEvent.setup();
 			const secondBalance = {
 				...mockBalance,
-				id: 'balance-2',
+				id: 2,
 				budget: {
 					...mockBalance.budget,
 					folder_budget: {
-						id: 'folder-2',
+						id: 2,
 						work: {
-							id: 'work-2',
-							client_id: 'client-1',
+							id: 2,
+							client_id: 1,
 							locality: 'Córdoba',
 							address: 'Other Street 456',
 							type: 'Obra',
@@ -211,7 +211,7 @@ describe('ClientBalances', () => {
 				refresh: mockRefresh,
 			} as any);
 
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				expect(screen.getByText('Buenos Aires')).toBeInTheDocument();
@@ -241,7 +241,7 @@ describe('ClientBalances', () => {
 				refresh: mockRefresh,
 			} as any);
 
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				expect(screen.getByText('Test Street 123')).toBeInTheDocument();
@@ -262,7 +262,7 @@ describe('ClientBalances', () => {
 		it('should clear search results when no match found', async () => {
 			const user = userEvent.setup();
 
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				expect(screen.getByText('Buenos Aires')).toBeInTheDocument();
@@ -287,7 +287,7 @@ describe('ClientBalances', () => {
 		it('should show pagination when results exceed items per page', async () => {
 			const balances = Array.from({ length: 5 }, (_, i) => ({
 				...mockBalance,
-				id: `balance-${i}`,
+				id: i,
 			}));
 
 			mockUseOptimizedRealtime.mockReturnValueOnce({
@@ -297,7 +297,7 @@ describe('ClientBalances', () => {
 				refresh: mockRefresh,
 			} as any);
 
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				const paginationControls = screen.getByText(/Mostrando/i);
@@ -306,7 +306,7 @@ describe('ClientBalances', () => {
 		});
 
 		it('should not show pagination when results are less than items per page', async () => {
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				const paginationControls = screen.queryByText(/Mostrando/i);
@@ -317,7 +317,7 @@ describe('ClientBalances', () => {
 
 	describe('Data Loading', () => {
 		it('should call useOptimizedRealtime with correct parameters', () => {
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			expect(mockUseOptimizedRealtime).toHaveBeenCalledWith(
 				'balances',
@@ -327,10 +327,10 @@ describe('ClientBalances', () => {
 		});
 
 		it('should fetch totals for each balance', async () => {
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
-				expect(mockGetTotalByBalanceId).toHaveBeenCalledWith('balance-1');
+				expect(mockGetTotalByBalanceId).toHaveBeenCalledWith(1);
 			});
 		});
 
@@ -340,7 +340,7 @@ describe('ClientBalances', () => {
 				error: null,
 			});
 
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				expect(screen.getByText('Buenos Aires')).toBeInTheDocument();
@@ -350,7 +350,7 @@ describe('ClientBalances', () => {
 
 	describe('Modal Integration', () => {
 		it('should render balance details modal', async () => {
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				expect(screen.getByTestId('balance-details-modal')).toBeInTheDocument();
@@ -358,7 +358,7 @@ describe('ClientBalances', () => {
 		});
 
 		it('should render dollar update modal', async () => {
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				expect(screen.getByTestId('dollar-update-modal')).toBeInTheDocument();
@@ -366,7 +366,7 @@ describe('ClientBalances', () => {
 		});
 
 		it('should render delete confirmation dialog', async () => {
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				const alertDialog = screen.queryByRole('dialog');
@@ -381,7 +381,7 @@ describe('ClientBalances', () => {
 
 			render(
 				<ClientBalances
-					clientId="client-1"
+					clientId={1}
 					onCreateBalance={mockOnCreateBalance}
 				/>
 			);
@@ -412,7 +412,7 @@ describe('ClientBalances', () => {
 				refresh: mockRefresh,
 			} as any);
 
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				expect(
@@ -424,8 +424,8 @@ describe('ClientBalances', () => {
 		it('should handle multiple balances for same client', async () => {
 			const multipleBalances = [
 				mockBalance,
-				{ ...mockBalance, id: 'balance-2' },
-				{ ...mockBalance, id: 'balance-3' },
+				{ ...mockBalance, id: 2 },
+				{ ...mockBalance, id: 3 },
 			];
 
 			mockUseOptimizedRealtime.mockReturnValueOnce({
@@ -435,7 +435,7 @@ describe('ClientBalances', () => {
 				refresh: mockRefresh,
 			} as any);
 
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				const localityElements = screen.getAllByText('Buenos Aires');
@@ -447,7 +447,7 @@ describe('ClientBalances', () => {
 			const user = userEvent.setup();
 			const balances = Array.from({ length: 5 }, (_, i) => ({
 				...mockBalance,
-				id: `balance-${i}`,
+				id: i,
 			}));
 
 			mockUseOptimizedRealtime.mockReturnValueOnce({
@@ -457,7 +457,7 @@ describe('ClientBalances', () => {
 				refresh: mockRefresh,
 			} as any);
 
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				const paginationControls = screen.getByText(/Mostrando/i);
@@ -479,7 +479,7 @@ describe('ClientBalances', () => {
 
 	describe('Accessibility', () => {
 		it('should have accessible search input', async () => {
-			render(<ClientBalances clientId="client-1" />);
+			render(<ClientBalances clientId={1} />);
 
 			await waitFor(() => {
 				const searchInput = screen.getByPlaceholderText(
@@ -492,7 +492,7 @@ describe('ClientBalances', () => {
 		it('should have accessible create button', async () => {
 			render(
 				<ClientBalances
-					clientId="client-1"
+					clientId={1}
 					onCreateBalance={mockOnCreateBalance}
 				/>
 			);

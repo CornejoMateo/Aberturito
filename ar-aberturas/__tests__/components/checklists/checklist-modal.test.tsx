@@ -13,7 +13,7 @@ const mockOnUpdate = jest.fn();
 const mockOnOpenChange = jest.fn();
 
 const defaultProps = {
-	workId: '1',
+	workId: 1,
 	open: true,
 	onOpenChange: mockOnOpenChange,
 	onSave: mockOnSave,
@@ -33,8 +33,8 @@ describe('ChecklistModal', () => {
 
 	it('should render modal in edit mode when checklistToEdit is provided', () => {
 		const checklist: Checklist = {
-			id: '1',
-			work_id: '1',
+			id: 1,
+			work_id: 1,
 			name: 'Test Checklist',
 			description: null,
 			width: null,
@@ -96,8 +96,8 @@ describe('ChecklistModal', () => {
 
 	it('should show "Cancelar" and update buttons in edit mode', () => {
 		const checklist: Checklist = {
-			id: '1',
-			work_id: '1',
+			id: 1,
+			work_id: 1,
 			name: 'Test',
 			description: null,
 			width: null,
@@ -133,8 +133,8 @@ describe('ChecklistModal', () => {
 
 	it('should call onUpdate when saving in edit mode', async () => {
 		const checklist: Checklist = {
-			id: '1',
-			work_id: '1',
+			id: 1,
+			work_id: 1,
 			name: 'Test',
 			description: null,
 			width: null,
@@ -158,7 +158,7 @@ describe('ChecklistModal', () => {
 		
 		await waitFor(() => {
 			expect(mockOnUpdate).toHaveBeenCalledWith(
-				'1',
+				1,
 				expect.objectContaining({
 					name: 'Test',
 				})
@@ -177,8 +177,8 @@ describe('ChecklistModal', () => {
 
 	it('should close modal when clicking "Cancelar" in edit mode', () => {
 		const checklist: Checklist = {
-			id: '1',
-			work_id: '1',
+			id: 1,
+			work_id: 1,
 			name: 'Test',
 			description: null,
 			width: null,

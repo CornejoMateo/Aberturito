@@ -28,7 +28,7 @@ interface WorkCardProps {
 	onOpenEmail: (work: WorkWithProgress) => void;
 	onOpenWhatsApp: (work: WorkWithProgress) => void;
 	onOpenChecklist: (work: WorkWithProgress) => void;
-	onUpdateGeneralNote?: (workId: string, note: string) => Promise<void>;
+	onUpdateGeneralNote?: (workId: number, note: string) => Promise<void>;
 }
 
 export function WorkCard({

@@ -6,15 +6,15 @@ import * as budgetsLib from '@/lib/budgets/budgets';
 jest.mock('@/lib/budgets/folder_budgets');
 jest.mock('@/lib/budgets/budgets');
 
-const mockClientId = '1';
+const mockClientId = 1;
 const mockFolderBudgets = [
-	{ id: '1', client_id: mockClientId },
-	{ id: '2', client_id: mockClientId },
+	{ id: 1, client_id: mockClientId },
+	{ id: 2, client_id: mockClientId },
 ];
 const mockBudgets = [
-	{ id: '1', folder_budget: { id: '1' } },
-	{ id: '2', folder_budget: { id: '1' } },
-	{ id: '3', folder_budget: { id: '2' } },
+	{ id: 1, folder_budget: { id: 1 } },
+	{ id: 2, folder_budget: { id: 1 } },
+	{ id: 3, folder_budget: { id: 2 } },
 ];
 
 describe('useClientBudgets', () => {
@@ -44,7 +44,7 @@ describe('useClientBudgets', () => {
 		});
 
 		expect(folderBudgetsLib.getFolderBudgetsByClientId).toHaveBeenCalledWith(mockClientId);
-		expect(budgetsLib.getBudgetsByFolderBudgetIds).toHaveBeenCalledWith(['folder-1', 'folder-2']);
+		expect(budgetsLib.getBudgetsByFolderBudgetIds).toHaveBeenCalledWith([1, 2]);
 		expect(result.current.budgets).toEqual(mockBudgets);
 	});
 

@@ -10,8 +10,8 @@ export type SurveyTag = {
 export type SurveyTagAssignment = {
 	id: number;
 	created_at: string;
-	survey_id: string;
-	tag_id: string;
+	survey_id: number;
+	tag_id: number;
 	tag?: SurveyTag;
 };
 
@@ -41,7 +41,7 @@ export async function createTag(
 }
 
 export async function updateTag(
-	id: string,
+	id: number,
 	changes: Partial<Pick<SurveyTag, 'name' | 'color'>>
 ): Promise<{ error: unknown }> {
 	const supabase = getSupabaseClient();
@@ -57,7 +57,7 @@ export async function updateTag(
 	return { error: null };
 }
 
-export async function deleteTag(id: string): Promise<{ error: unknown }> {
+export async function deleteTag(id: number): Promise<{ error: unknown }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TAGS_TABLE)
@@ -73,7 +73,7 @@ export async function deleteTag(id: string): Promise<{ error: unknown }> {
 
 // Survey-tag association operations
 export async function getTagsForSurvey(
-	surveyId: string
+	surveyId: number
 ): Promise<{ data: SurveyTag[] | null; error: unknown }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
@@ -88,8 +88,8 @@ export async function getTagsForSurvey(
 }
 
 export async function getTagsForSurveys(
-	surveyIds: string[]
-): Promise<{ data: Record<string, SurveyTag[]>; error: unknown }> {
+	surveyIds: number[]
+): Promise<{ data: Record<number, SurveyTag[]>; error: unknown }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(ASSIGNMENTS_TABLE)
@@ -98,7 +98,7 @@ export async function getTagsForSurveys(
 
 	if (error) return { data: {}, error };
 
-	const tagsBySurveyId: Record<string, SurveyTag[]> = {};
+	const tagsBySurveyId: Record<number, SurveyTag[]> = {};
 	data?.forEach((assignment: any) => {
 		if (assignment.survey_tags) {
 			if (!tagsBySurveyId[assignment.survey_id]) {
@@ -112,8 +112,8 @@ export async function getTagsForSurveys(
 }
 
 export async function assignTagToSurvey(
-	surveyId: string,
-	tagId: string
+	surveyId: number,
+	tagId: number
 ): Promise<{ error: unknown }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
@@ -128,8 +128,8 @@ export async function assignTagToSurvey(
 }
 
 export async function removeTagFromSurvey(
-	surveyId: string,
-	tagId: string
+	surveyId: number,
+	tagId: number
 ): Promise<{ error: unknown }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
@@ -145,7 +145,7 @@ export async function removeTagFromSurvey(
 	return { error: null };
 }
 
-export async function getSurveysWithTag(tagId: string): Promise<{ data: string[] | null; error: unknown }> {
+export async function getSurveysWithTag(tagId: number): Promise<{ data: number[] | null; error: unknown }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(ASSIGNMENTS_TABLE)

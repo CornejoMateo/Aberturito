@@ -1,28 +1,28 @@
 import { getSupabaseClient } from '../supabase-client';
 
 export type Balance = {
-	id: string;
+	id: number;
 	created_at: string;
 	start_date?: string;
-	budget_id?: string | null;
+	budget_id?: number | null;
 	balance_amount_ars?: number | null;
 	balance_amount_usd?: number | null;
 	contract_date_usd?: number | null;
 	usd_current?: number | null;
-	client_id?: string | null;
+	client_id?: number | null;
 	notes?: string | null;
 };
 
 export type BalanceWithBudget = Balance & {
 	budget?: {
-		id: string;
+		id: number;
 		created_at: string;
 		amount_ars: number;
 		amount_usd: number;
 		number?: string | null;
 		type?: string | null;
 		folder_budget: {
-			id: string;
+			id: number;
 			work: {
 				address: string;
 				locality: string;
@@ -34,14 +34,14 @@ export type BalanceWithBudget = Balance & {
 
 export type BalanceWithBudgetAndClient = BalanceWithBudget & {
 	client?: {
-		id: string;
+		id: number;
 		name?: string | null;
 		last_name?: string | null;
 	} | null;
 };
 
 export type BudgetWithWork = {
-	id: string;
+	id: number;
 	created_at: string;
 	amount_ars: number;
 	amount_usd: number;
@@ -56,14 +56,14 @@ export type BudgetWithWork = {
 	version?: string | null;
 	type?: string | null;
 	folder_budget: {
-		id: string;
-		work_id: string;
+		id: number;
+		work_id: number | null;
 		work: {
-			address: string;
-			locality: string;
-			zone: string;
-			hood: string;
-		};
+			address: string | null;
+			locality: string | null;
+			zone: string | null;
+			hood: string | null;
+		} | null;
 	};
 };
 
@@ -97,7 +97,7 @@ export async function listBalancesForReport(): Promise<{
 }
 
 export async function getBalanceById(
-	id: string
+	id: number
 ): Promise<{ data: BalanceWithBudget | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
@@ -111,7 +111,7 @@ export async function getBalanceById(
 }
 
 export async function getBalancesByClientId(
-	clientId: string
+	clientId: number
 ): Promise<{ data: BalanceWithBudget[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
@@ -121,6 +121,7 @@ export async function getBalancesByClientId(
 			*,
 			budget:budgets (
 				id,
+				created_at,
 				amount_ars,
 				amount_usd,
 				usd_quote,
@@ -143,7 +144,7 @@ export async function getBalancesByClientId(
 }
 
 export async function getBudgetsByClientId(
-	clientId: string
+	clientId: number
 ): Promise<{ data: BudgetWithWork[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 
@@ -152,6 +153,7 @@ export async function getBudgetsByClientId(
 		.select(
 			`
 				id,
+				created_at,
 				amount_ars,
 				amount_usd,
 				folder_budget:folder_budgets!inner (
@@ -182,6 +184,7 @@ export async function getBudgetsByClientId(
 
 			return {
 				id: b.id,
+				created_at: b.created_at,
 				amount_ars: b.amount_ars,
 				amount_usd: b.amount_usd,
 				folder_budget: {
@@ -193,7 +196,7 @@ export async function getBudgetsByClientId(
 						zone: work.zone,
 					},
 				},
-			};
+			} as BudgetWithWork;
 		})
 		.filter((b): b is BudgetWithWork => b !== null);
 
@@ -209,7 +212,7 @@ export async function createBalance(
 }
 
 export async function updateBalance(
-	id: string,
+	id: number,
 	changes: Partial<Omit<Balance, 'id' | 'created_at'>>
 ): Promise<{ data: Balance | null; error: any }> {
 	const supabase = getSupabaseClient();
@@ -217,7 +220,7 @@ export async function updateBalance(
 	return { data, error };
 }
 
-export async function deleteBalance(id: string): Promise<{ data: null; error: any }> {
+export async function deleteBalance(id: number): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };

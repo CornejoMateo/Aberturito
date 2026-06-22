@@ -3,14 +3,14 @@ import { getChecklistsByWorkId, Checklist } from '@/lib/works/checklists';
 import { getWorkById } from '@/lib/works/works';
 import { getClientById } from '@/lib/clients/clients';
 
-export function useWorkChecklistData(workId: string) {
+export function useWorkChecklistData(workId: number) {
 	const [clientData, setClientData] = useState<{
-		id: string;
+		id: number;
 		name: string;
 		phone_number: string;
 	} | null>(null);
 	const [workData, setWorkData] = useState<{
-		id: string;
+		id: number;
 		locality: string;
 		address: string;
 		zone: string;

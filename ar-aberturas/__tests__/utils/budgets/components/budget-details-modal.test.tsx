@@ -31,7 +31,7 @@ jest.mock('@/helpers/date/format-date', () => ({
 
 describe('BudgetDetailModal', () => {
 	const mockBudget: BudgetWithWork = {
-		id: 'budget-1',
+		id: 1,
 		created_at: '2024-01-10T00:00:00.000Z',
 		amount_ars: 500000,
 		amount_usd: 5000,
@@ -45,8 +45,8 @@ describe('BudgetDetailModal', () => {
 		version: 'A',
 		type: 'Presupuesto',
 		folder_budget: {
-			id: 'folder-1',
-			work_id: 'work-1',
+			id: 1,
+			work_id: 1,
 			work: {
 				address: 'Test Street 123',
 				locality: 'Buenos Aires',

@@ -1,18 +1,18 @@
 import { getSupabaseClient } from '../supabase-client';
 
 export type Survey = {
-	id: string;
+	id: number;
 	created_at: string;
-	budget_id: string;
-	client_id: string;
+	budget_id: number;
+	client_id: number;
 	notes?: string | null;
 	due_date?: string | null;
 };
 
 export type SurveyItem = {
-	id: string;
+	id: number;
 	created_at: string;
-	survey_id: string;
+	survey_id: number;
 	label: string;
 	completed: boolean;
 	order: number;
@@ -22,7 +22,7 @@ const TABLE = 'surveys';
 const ITEMS_TABLE = 'survey_items';
 
 export async function getSurveysByClientId(
-	clientId: string
+	clientId: number
 ): Promise<{ data: Survey[] | null; error: unknown }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
@@ -46,7 +46,7 @@ export async function createSurvey(
 }
 
 export async function deleteSurvey(
-	id: string
+	id: number
 ): Promise<{ error: unknown }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
@@ -62,7 +62,7 @@ export async function deleteSurvey(
 }
 
 export async function updateSurvey(
-	id: string,
+	id: number,
 	changes: Partial<Pick<Survey, 'notes' | 'due_date'>>
 ): Promise<{ error: unknown }> {
 	const supabase = getSupabaseClient();
@@ -81,7 +81,7 @@ export async function updateSurvey(
 }
 
 export async function getSurveyItemsBySurveyIds(
-	surveyIds: string[]
+	surveyIds: number[]
 ): Promise<{ data: SurveyItem[] | null; error: unknown }> {
 	const supabase = getSupabaseClient();
 	if (surveyIds.length === 0) return { data: [], error: null };
@@ -115,7 +115,7 @@ export async function createSurveyItem(
 }
 
 export async function updateSurveyItem(
-	id: string,
+	id: number,
 	changes: Partial<Pick<SurveyItem, 'label' | 'completed' | 'order'>>
 ): Promise<{ error: unknown }> {
 	const supabase = getSupabaseClient();
@@ -132,7 +132,7 @@ export async function updateSurveyItem(
 }
 
 export async function deleteSurveyItem(
-	id: string
+	id: number
 ): Promise<{ error: unknown }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase

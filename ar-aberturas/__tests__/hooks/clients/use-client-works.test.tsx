@@ -4,17 +4,17 @@ import { useClientWorks } from '@/hooks/clients/use-client-works';
 
 jest.mock('@/lib/works/works');
 
-const mockClientId = 'client-123';
+const mockClientId = 123;
 const mockWorks = [
     {
-        id: 'work-1',
+        id: 1,
         client_id: mockClientId,
         address: 'Calle 1',
         status: 'pending',
         created_at: '2024-01-01',
     },
     {
-        id: 'work-2',
+        id: 2,
         client_id: mockClientId,
         address: 'Calle 2',
         status: 'in_progress',
@@ -73,7 +73,7 @@ describe('useClientWorks', () => {
 	it('must be create work correctly', async () => {
 		(worksLib.createWork as jest.Mock).mockResolvedValue({ error: null });
 		(worksLib.getWorksByClientId as jest.Mock).mockResolvedValue({
-			data: [...mockWorks, { id: 'work-3', address: 'Calle 3' }],
+			data: [...mockWorks, { id: 3, address: 'Calle 3' }],
 			error: null,
 		});
 
@@ -94,17 +94,17 @@ describe('useClientWorks', () => {
 	it('must be delete work correctly', async () => {
 		(worksLib.deleteWork as jest.Mock).mockResolvedValue({ error: null });
 		(worksLib.getWorksByClientId as jest.Mock).mockResolvedValue({
-			data: mockWorks.filter((w) => w.id !== 'work-1'),
+			data: mockWorks.filter((w) => w.id !== 1),
 			error: null,
 		});
 
 		const { result } = renderHook(() => useClientWorks(mockClientId));
 
 		await act(async () => {
-			await result.current.remove('work-1');
+			await result.current.remove(1);
 		});
 
-		expect(worksLib.deleteWork).toHaveBeenCalledWith('work-1');
+		expect(worksLib.deleteWork).toHaveBeenCalledWith(1);
 	});
 
 	it('must be update work correctly', async () => {
@@ -125,10 +125,10 @@ describe('useClientWorks', () => {
 		});
 
 		await act(async () => {
-			await result.current.update('work-1', updatedData);
+			await result.current.update(1, updatedData);
 		});
 
-		expect(worksLib.updateWork).toHaveBeenCalledWith('work-1', updatedData);
+		expect(worksLib.updateWork).toHaveBeenCalledWith(1, updatedData);
 		expect(result.current.works[0]).toMatchObject({
 			...mockWorks[0],
 			...updatedData,
@@ -145,7 +145,7 @@ describe('useClientWorks', () => {
 
 		await expect(
 			act(async () => {
-				await result.current.update('work-1', { status: 'completed' });
+				await result.current.update(1, { status: 'completed' });
 			})
 		).rejects.toThrow();
 	});

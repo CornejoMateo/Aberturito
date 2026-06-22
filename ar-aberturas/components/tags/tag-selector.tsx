@@ -10,7 +10,7 @@ import { toast } from '@/components/ui/use-toast';
 import { translateError } from '@/lib/error-translator';
 
 interface TagSelectorProps {
-	surveyId: string;
+	surveyId: number;
 	disabled?: boolean;
 	onChange?: () => void;
 	assignedTags?: SurveyTag[];

@@ -33,7 +33,7 @@ interface ClientBudgetsDollarUpdateModalProps {
 	isOpen: boolean;
 	onOpenChange: (open: boolean) => void;
 	budgets: BudgetWithWork[];
-	clientId: string;
+	clientId: number;
 	onUpdateConfirmed: (newUsdRate: number) => Promise<void>;
 }
 

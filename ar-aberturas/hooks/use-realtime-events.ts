@@ -5,7 +5,7 @@ interface CacheEntry<T> {
 	data: T[];
 }
 
-export function useRealtimeEvents<T extends { id: string }>(
+export function useRealtimeEvents<T extends { id: number }>(
 	table: string,
 	fetchFromDb: () => Promise<T[]>,
 	cacheKey?: string

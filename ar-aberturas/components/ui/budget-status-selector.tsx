@@ -3,7 +3,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { BUDGET_STATUS_OPTIONS, BUDGET_STATUS_COLORS, BUDGET_STATUS_LABELS } from '@/constants/budget-status';
-import { getStatusIcon } from '@/helpers/budgets/status-helpers';
+import { getStatusIcon } from '@/helpers/budget/status-helpers';
 
 interface BudgetStatusSelectorProps {
 	value?: string;

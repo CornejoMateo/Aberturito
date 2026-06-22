@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { StockFormDialog } from '../../utils/stock/stock-add-dialog';
 import { StockStats } from '../../utils/stock/stock-stats';
 import { StockFilters } from '../../utils/stock/stock-filters';
+import { generateStockReportPDF } from '@/lib/stock/stock-pdf';
+import { Download } from 'lucide-react';
 import { ProfileTable } from '../../utils/stock/profile-table';
 import { AccesoriesTable } from '@/utils/stock/stock-tables';
 import { AccessoryFormDialog } from '@/utils/stock/accessory-add-dialog';
@@ -28,6 +30,9 @@ import { translateError } from '@/lib/error-translator';
 import { getDescription, getTitle } from '@/helpers/stock/stock-management';
 import { STOCK_ADAPTERS } from '@/lib/stock/adapters';
 import { separateProfile, unseparateProfile } from '@/lib/stock/profile-stock';
+import { StockThresholdsDialog } from '@/utils/stock/stock-thresholds-dialog';
+import { listStockThresholds } from '@/lib/stock/stock-thresholds';
+import { useAuth } from '@/components/provider/auth-provider';
 
 interface StockManagementProps {
 	materialType?: 'Aluminio' | 'PVC';
@@ -38,6 +43,7 @@ export function StockManagement({
 	materialType = 'Aluminio',
 	category = 'Perfiles',
 }: StockManagementProps) {
+	const { user } = useAuth();
 	// Get adapter for current category
 	const adapter = STOCK_ADAPTERS[category] || STOCK_ADAPTERS['Perfiles'];
 	const tableName =
@@ -53,24 +59,47 @@ export function StockManagement({
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedCategory, setSelectedCategory] = useState(category);
 	const [showOutOfStock, setShowOutOfStock] = useState(false);
+	const [showLowStock, setShowLowStock] = useState(false);
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<any | null>(null);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [isPhotoGalleryOpen, setIsPhotoGalleryOpen] = useState(false);
+	const [isThresholdsDialogOpen, setIsThresholdsDialogOpen] = useState(false);
+	const [thresholds, setThresholds] = useState<Record<number, { yellow: number; red: number }>>({});
 	const itemsPerPage = 10;
 
 	const filteredStock = useMemo(() => {
 		// First apply the standard filters (search, category, material)
 		let result = filterStockItems(stock, searchTerm, selectedCategory, materialType, category);
 
-		// Then apply the out-of-stock filter if enabled
-		if (showOutOfStock) {
-			result = result.filter((item: any) => adapter.getQuantity(item) === 0);
+		// Apply stock filters (out-of-stock and/or low stock)
+		if (showOutOfStock || showLowStock) {
+			result = result.filter((item: any) => {
+				const config = STOCK_CONFIGS[category as keyof typeof STOCK_CONFIGS];
+				const quantityField = config?.fields?.quantityLump;
+				const quantity = quantityField ? (item as any)[quantityField] : adapter.getQuantity(item);
+				
+				// Check if item matches out-of-stock filter
+				const matchesOutOfStock = showOutOfStock && quantity === 0;
+				
+				// Check if item matches low stock filter (only for Insumos)
+				let matchesLowStock = false;
+				if (showLowStock && category === 'Insumos') {
+					const threshold = thresholds[item.id];
+					if (threshold) {
+						matchesLowStock = quantity <= threshold.yellow;
+					}
+				}
+				
+				// Return true if matches either filter (OR logic)
+				return matchesOutOfStock || matchesLowStock;
+			});
 		}
+
 		return result;
-	}, [stock, searchTerm, selectedCategory, materialType, category, showOutOfStock]);
+	}, [stock, searchTerm, selectedCategory, materialType, category, showOutOfStock, showLowStock, thresholds]);
 
 	const totalPages = Math.ceil(filteredStock.length / itemsPerPage);
 
@@ -90,6 +119,33 @@ export function StockManagement({
 			new Date(b.created_at || b.last_update || 0).getTime() -
 			new Date(a.created_at || a.last_update || 0).getTime()
 	)[0];
+
+	// Load thresholds when category is Insumos
+	useEffect(() => {
+		if (category !== 'Insumos') return;
+
+		const loadThresholds = async () => {
+			const { data, error } = await listStockThresholds();
+			if (error) {
+				console.error('Error loading thresholds:', error);
+				return;
+			}
+
+			const thresholdsMap = (data || []).reduce<Record<number, { yellow: number; red: number }>>(
+				(acc, t) => {
+					acc[t.item_id] = {
+						yellow: t.yellow_threshold,
+						red: t.red_threshold,
+					};
+					return acc;
+				},
+				{}
+			);
+			setThresholds(thresholdsMap);
+		};
+
+		loadThresholds();
+	}, [category, stock]);
 
 	const handleEdit = (id: number) => {
 		const item = stock.find((s) => s.id === id);
@@ -172,6 +228,13 @@ export function StockManagement({
 						<Button variant="default" onClick={() => setIsModalOpen(true)} className="gap-2">
 							<Settings className="h-5 w-5" />
 							Ajustar opciones
+						</Button>
+					)}
+
+					{category === 'Insumos' && user?.role === 'Admin' && (
+						<Button variant="default" onClick={() => setIsThresholdsDialogOpen(true)} className="gap-2">
+							<Settings className="h-5 w-5" />
+							Configurar Umbrales
 						</Button>
 					)}
 
@@ -262,14 +325,39 @@ export function StockManagement({
 			/>
 
 			{/* Filters */}
-			<StockFilters
-				searchTerm={searchTerm}
-				setSearchTerm={setSearchTerm}
-				selectedCategory={selectedCategory}
-				setSelectedCategory={setSelectedCategory}
-				showOutOfStock={showOutOfStock}
-				setShowOutOfStock={setShowOutOfStock}
-			/>
+			<div className="flex gap-4">
+				<StockFilters
+					searchTerm={searchTerm}
+					setSearchTerm={setSearchTerm}
+					selectedCategory={selectedCategory}
+					setSelectedCategory={setSelectedCategory}
+					showOutOfStock={showOutOfStock}
+					setShowOutOfStock={setShowOutOfStock}
+					showLowStock={showLowStock}
+					setShowLowStock={setShowLowStock}
+				/>
+				{category === 'Insumos' && (
+					<Button
+						variant="outline"
+						onClick={async () => {
+							try {
+								await generateStockReportPDF(filteredStock, category, showOutOfStock, showLowStock);
+							} catch (error) {
+								console.error('Error generating PDF:', error);
+								toast({
+									title: 'Error',
+									description: 'No se pudo generar el PDF. Intenta nuevamente.',
+									variant: 'destructive',
+								});
+							}
+						}}
+						className="h-auto"
+					>
+						<Download className="mr-2 h-4 w-4" />
+						Descargar PDF
+					</Button>
+				)}
+			</div>
 
 			{/* Main table */}
 			{loading ? (
@@ -335,6 +423,7 @@ export function StockManagement({
 						<AccesoriesTable
 							categoryState={category as StockCategory}
 							filteredStock={currentItems}
+							thresholds={thresholds}
 							onEdit={(id) => {
 								const it = (stock || []).find((s: any) => s.id === id);
 								if (it) {
@@ -517,6 +606,13 @@ export function StockManagement({
 						</div>
 					)}
 				</>
+			)}
+
+			{category === 'Insumos' && (
+				<StockThresholdsDialog
+					open={isThresholdsDialogOpen}
+					onOpenChange={setIsThresholdsDialogOpen}
+				/>
 			)}
 		</div>
 	);

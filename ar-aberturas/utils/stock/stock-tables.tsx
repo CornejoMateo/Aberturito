@@ -28,8 +28,10 @@ import type { AccessoryItemStock } from '@/lib/stock/accesorie-stock';
 import type { IronworkItemStock } from '@/lib/stock/ironwork-stock';
 import type { SupplyItemStock } from '@/lib/stock/supplies-stock';
 import { useIsMobile } from '@/components/ui/use-mobile';
+import { getRowClassName } from '@/helpers/stock/stock-row-class';
 import { formatCreatedAt } from '@/helpers/date/format-date';
 import { getSupabaseClient } from '@/lib/supabase-client';
+import { getStockThresholdByItem } from '@/lib/stock/stock-thresholds';
 
 interface AccesoriesTableProps {
 	categoryState: StockCategory;
@@ -37,6 +39,7 @@ interface AccesoriesTableProps {
 	onEdit: (id: number) => void;
 	onDelete: (id: number) => void;
 	onUpdateQuantity: (id: number, newQuantity: number, field?: string) => Promise<void>;
+	thresholds?: Record<number, { yellow: number; red: number }>;
 }
 
 export function AccesoriesTable({
@@ -45,6 +48,7 @@ export function AccesoriesTable({
 	onEdit,
 	onDelete,
 	onUpdateQuantity,
+	thresholds = {},
 }: AccesoriesTableProps) {
 	const { user } = useAuth();
 	const [openImageUrl, setOpenImageUrl] = useState<string | null>(null);
@@ -250,9 +254,11 @@ export function AccesoriesTable({
 								const total =
 									((item as any)[keys.quantityForLump] ?? 0) *
 										((item as any)[keys.quantityLump] ?? 0) || 0;
+								// For thresholds, use quantity_lump (number of bundles/lumps), not total or quantity_for_lump
+								const quantityForThreshold = (item as any)[keys.quantityLump] ?? (item as any)[keys.quantity] ?? total;
 								return (
 									<tr key={(item as any).id} className={`${
-										(item as any)[keys.quantity] === 0 ? 'bg-red-300' : 'hover:bg-secondary/50 transition-colors'
+										getRowClassName((item as any).id, quantityForThreshold, categoryState, thresholds)
 									}`}>
 										<td className="px-2 py-2 whitespace-nowrap">
 											<p className="text-center text-sm text-foreground">

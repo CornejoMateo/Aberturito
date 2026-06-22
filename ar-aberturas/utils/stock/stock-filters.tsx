@@ -14,7 +14,6 @@ interface StockFiltersProps {
   showLowStock: boolean;
   setShowLowStock: (show: boolean) => void;
   setSelectedCategory: (category: 'Perfiles' | 'Accesorios' | 'Herrajes' | 'Insumos') => void;
-  category?: 'Perfiles' | 'Accesorios' | 'Herrajes' | 'Insumos';
 }
 
 export function StockFilters({
@@ -53,7 +52,7 @@ export function StockFilters({
               <Filter className="h-3.5 w-3.5" />
               <span>Mostrar solo sin stock</span>
             </Button>
-            {category === 'Insumos' && (
+            {selectedCategory === 'Insumos' && (
               <Button
                 variant="ghost"
                 size="sm"

@@ -335,7 +335,6 @@ export function StockManagement({
 					setShowOutOfStock={setShowOutOfStock}
 					showLowStock={showLowStock}
 					setShowLowStock={setShowLowStock}
-					category={category}
 				/>
 				{category === 'Insumos' && (
 					<Button

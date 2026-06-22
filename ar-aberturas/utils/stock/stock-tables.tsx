@@ -28,6 +28,7 @@ import type { AccessoryItemStock } from '@/lib/stock/accesorie-stock';
 import type { IronworkItemStock } from '@/lib/stock/ironwork-stock';
 import type { SupplyItemStock } from '@/lib/stock/supplies-stock';
 import { useIsMobile } from '@/components/ui/use-mobile';
+import { getRowClassName } from '@/helpers/stock/stock-row-class';
 import { formatCreatedAt } from '@/helpers/date/format-date';
 import { getSupabaseClient } from '@/lib/supabase-client';
 import { getStockThresholdByItem } from '@/lib/stock/stock-thresholds';
@@ -488,30 +489,4 @@ export function AccesoriesTable({
 			/>
 		</Card>
 	);
-}
-
-function getRowClassName(
-	itemId: number,
-	quantity: number,
-	category: StockCategory,
-	thresholds: Record<number, { yellow: number; red: number }>
-): string {
-	// Only apply custom thresholds for Insumos category
-	if (category !== 'Insumos') {
-		return quantity === 0 ? 'bg-red-300' : 'hover:bg-secondary/50 transition-colors';
-	}
-
-	const threshold = thresholds[itemId];
-	if (!threshold) {
-		// Default behavior if no threshold configured
-		return quantity === 0 ? 'bg-red-300' : 'hover:bg-secondary/50 transition-colors';
-	}
-
-	if (quantity <= threshold.red) {
-		return 'bg-red-300';
-	}
-	if (quantity <= threshold.yellow) {
-		return 'bg-yellow-300';
-	}
-	return 'hover:bg-secondary/50 transition-colors';
 }

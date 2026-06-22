@@ -463,11 +463,7 @@ export function SurveyBoard() {
 			</div>
 
 			{/* Board */}
-			{isLoading ? (
-				<div className="flex items-center justify-center h-64">
-					<p className="text-muted-foreground">Cargando relevamientos...</p>
-				</div>
-			) : columns.length === 0 ? (
+			{columns.length === 0 ? (
 				<Card className="p-12">
 					<div className="text-center space-y-4">
 						<ClipboardList className="h-12 w-12 text-muted-foreground mx-auto" />

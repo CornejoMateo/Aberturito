@@ -161,14 +161,6 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 		}
 	};
 
-	if (isLoading && !soldBudgets.length && !surveys.length) {
-		return (
-			<div className="py-8 text-center">
-				<p className="text-sm text-muted-foreground">Cargando relevamientos...</p>
-			</div>
-		);
-	}
-
 	if (!soldBudgets.length) {
 		return (
 			<Card className="p-6">

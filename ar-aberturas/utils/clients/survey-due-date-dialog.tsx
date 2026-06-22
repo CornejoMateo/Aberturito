@@ -36,6 +36,7 @@ export function SurveyDueDateDialog({ dialog, onOpenChange, onSave, onDateSelect
 						<Popover>
 							<PopoverTrigger asChild>
 								<Button
+									id="due-date"
 									variant="outline"
 									className={cn(
 										'w-full justify-start text-left font-normal mt-1.5',

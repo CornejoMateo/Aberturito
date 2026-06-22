@@ -21,12 +21,14 @@ import { Calendar as CalendarIcon, ClipboardList, Pencil, Plus, Trash2 } from 'l
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { EventFormModal } from '@/utils/calendar/event-form-modal';
 
 import { Client } from '@/lib/clients/clients';
 import { BudgetWithWork } from '@/lib/works/balances';
 import { Survey, SurveyItem, updateSurvey } from '@/lib/survey/survey';
 import { translateError } from '@/lib/error-translator';
 import { useClientSurveys } from '@/hooks/clients/use-client-survey';
+import { createEvent } from '@/lib/calendar/events';
 
 import { SurveyItemForm } from './survey-item-form';
 import { formatCreatedAt } from '@/helpers/date/format-date';
@@ -58,6 +60,13 @@ type DueDateDialogState = {
 	currentDueDate: Date | null;
 };
 
+type EventDialogState = {
+	open: boolean;
+	stepLabel: string;
+	clientName: string;
+	clientLocality: string;
+};
+
 const INITIAL_ITEM_DIALOG: ItemDialogState = {
 	open: false,
 	mode: 'add',
@@ -68,6 +77,12 @@ const INITIAL_ITEM_DIALOG: ItemDialogState = {
 const INITIAL_DELETE_ITEM: DeleteItemConfirmState = { open: false, itemId: null };
 const INITIAL_DELETE_REL: DeleteRelConfirmState = { open: false, surveyId: null };
 const INITIAL_DUE_DATE: DueDateDialogState = { open: false, surveyId: null, currentDueDate: null };
+const INITIAL_EVENT_DIALOG: EventDialogState = {
+	open: false,
+	stepLabel: '',
+	clientName: '',
+	clientLocality: '',
+};
 
 function getBudgetLabel(budget: BudgetWithWork): string {
 	const parts: string[] = [];
@@ -103,6 +118,7 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 	const [deleteRelConfirm, setDeleteRelConfirm] =
 		useState<DeleteRelConfirmState>(INITIAL_DELETE_REL);
 	const [dueDateDialog, setDueDateDialog] = useState<DueDateDialogState>(INITIAL_DUE_DATE);
+	const [eventDialog, setEventDialog] = useState<EventDialogState>(INITIAL_EVENT_DIALOG);
 
 	useEffect(() => {
 		load();
@@ -372,6 +388,78 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 														>
 															<Pencil className="h-3 w-3" />
 														</Button>
+														<EventFormModal
+															onSave={async (eventData) => {
+																try {
+																	const dateStr =
+																		typeof eventData.date === 'string'
+																			? eventData.date
+																			: eventData.date instanceof Date
+																				? `${eventData.date.getDate()}-${eventData.date.getMonth() + 1}-${eventData.date.getFullYear()}`
+																				: '';
+
+																	const [day, month, year] = dateStr.split('-').map(Number);
+																	const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+
+																	const { data: newEvent, error } = await createEvent({
+																		title: eventData.title || 'Sin título',
+																		type: eventData.type,
+																		description: eventData.description,
+																		client: eventData.client,
+																		location: eventData.location,
+																		address: eventData.address,
+																		date: formattedDate,
+																		remember: eventData.remember,
+																	});
+
+																	if (error) {
+																		console.error('Error al crear el evento:', error);
+																		toast({
+																			title: 'Error',
+																			description: 'No se pudo crear el evento.',
+																			variant: 'destructive',
+																		});
+																		return false;
+																	}
+
+																	if (newEvent) {
+																		toast({
+																			title: 'Evento creado',
+																			description: 'El evento se ha creado correctamente',
+																		});
+																		return true;
+																	}
+
+																	return false;
+																} catch (error) {
+																	console.error('Error inesperado al crear el evento:', error);
+																	toast({
+																		title: 'Error',
+																		description: 'No se pudo crear el evento.',
+																		variant: 'destructive',
+																	});
+																	return false;
+																}
+															}}
+															initialData={{
+																title: item.label,
+																type: 'medicion',
+																client: `${client.last_name} ${client.name}`,
+																location: client.locality || '',
+																address: '',
+																description: '',
+															}}
+														>
+															<Button
+																variant="ghost"
+																size="icon"
+																className="h-6 w-6"
+																aria-label="Crear evento"
+																disabled={isLoading}
+															>
+																<CalendarIcon className="h-3 w-3" />
+															</Button>
+														</EventFormModal>
 														<Button
 															variant="ghost"
 															size="icon"

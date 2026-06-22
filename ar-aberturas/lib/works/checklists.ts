@@ -7,9 +7,9 @@ export type ChecklistItem = {
 };
 
 export type Checklist = {
-	id: string;
+	id: number;
 	created_at?: string;
-	work_id?: string | null;
+	work_id?: number | null;
 	items?: ChecklistItem[] | null;
 	description?: string | null;
 	progress?: number | null;
@@ -34,7 +34,7 @@ export async function listChecklists(): Promise<{ data: Checklist[] | null; erro
 }
 
 export async function getChecklistById(
-	id: string
+	id: number
 ): Promise<{ data: Checklist | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
@@ -54,7 +54,7 @@ export async function createChecklist(
 }
 
 export async function editChecklist(
-	id: string,
+	id: number,
 	changes: Partial<Checklist>
 ): Promise<{ data: Checklist | null; error: any }> {
 	const supabase = getSupabaseClient();
@@ -66,14 +66,14 @@ export async function editChecklist(
 	return { data, error };
 }
 
-export async function deleteChecklist(id: string): Promise<{ data: null; error: any }> {
+export async function deleteChecklist(id: number): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };
 }
 
 export async function getChecklistsByWorkId(
-	workId: string
+	workId: number
 ): Promise<{ data: Checklist[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
@@ -85,7 +85,7 @@ export async function getChecklistsByWorkId(
 }
 
 export async function getChecklistsByWorkIds(
-	workIds: string[]
+	workIds: number[]
 ): Promise<{ data: Checklist[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 	if (workIds.length === 0) return { data: [], error: null };

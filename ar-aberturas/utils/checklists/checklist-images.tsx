@@ -15,14 +15,14 @@ import { useChecklistImages } from '@/hooks/checklists/use-checklist-images';
 import { FileViewerModal } from '@/components/ui/file-viewer-modal';
 
 interface Props {
-	checklistId: string;
+	checklistId: number;
 }
 
 export function ChecklistImages({ checklistId }: Props) {
 	const { images, loading, deleteImage } = useChecklistImages(checklistId);
 
 	const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-	const [imageToDelete, setImageToDelete] = useState<string | null>(null);
+	const [imageToDelete, setImageToDelete] = useState<number | null>(null);
 
 	if (images.length === 0 && !loading) return null;
 

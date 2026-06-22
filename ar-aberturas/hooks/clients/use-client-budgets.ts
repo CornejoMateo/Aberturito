@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { getFolderBudgetsByClientId } from '@/lib/budgets/folder_budgets';
 import { getBudgetsByFolderBudgetIds } from '@/lib/budgets/budgets';
 import { BudgetWithWork } from '@/lib/works/balances';
 
-export function useClientBudgets(clientId?: string) {
+export function useClientBudgets(clientId?: number) {
 	const [budgets, setBudgets] = useState<BudgetWithWork[]>([]);
 
-	const loadBudgets = async () => {
+	const loadBudgets = useCallback(async () => {
 		if (!clientId) return;
 
 		try {
@@ -25,7 +25,7 @@ export function useClientBudgets(clientId?: string) {
 			console.error(error);
 			setBudgets([]);
 		}
-	};
+	}, [clientId]);
 
 	return { budgets, loadBudgets };
 }

@@ -19,7 +19,7 @@ import { Loader2, MessageCircle, MapPin, Clock, User, AlertCircle, Smartphone } 
 import { format } from 'date-fns';
 
 interface Client {
-	id: string;
+	id: number;
 	name?: string | null;
 	last_name?: string | null;
 	email?: string | null;
@@ -27,10 +27,10 @@ interface Client {
 }
 
 interface Work {
-	id: string;
+	id: number;
 	locality?: string | null;
 	address?: string | null;
-	client_id?: string | null;
+	client_id?: number | null;
 	client_name?: string | null;
 	client_last_name?: string | null;
 }
@@ -44,8 +44,8 @@ interface WhatsAppNotificationModalProps {
 }
 
 interface WhatsAppData {
-	clientId: string;
-	workId: string;
+	clientId: number;
+	workId: number;
 	phoneNumber: string;
 	message: string;
 	scheduledDate?: string;
@@ -92,7 +92,7 @@ export function WhatsAppNotificationModal({
 			setError(null);
 
 			const whatsappData: WhatsAppData = {
-				clientId: client?.id || '',
+				clientId: client?.id ?? 0,
 				workId: work.id,
 				phoneNumber: phoneNumber,
 				message: formData.message || generateDefaultMessage(),

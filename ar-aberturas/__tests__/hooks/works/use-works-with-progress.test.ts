@@ -8,15 +8,15 @@ jest.mock('@/lib/works/checklists');
 
 const mockWorks = [
 	{
-		id: '1',
-		client_id: '1',
+		id: 1,
+		client_id: 1,
 		address: 'Calle 1',
 		status: 'pending' as const,
 		created_at: '2024-01-01',
 	},
 	{
-		id: '2',
-		client_id: '2',
+		id: 2,
+		client_id: 2,
 		address: 'Calle 2',
 		status: 'in_progress' as const,
 		created_at: '2024-01-02',
@@ -25,8 +25,8 @@ const mockWorks = [
 
 const mockChecklists = [
 	{
-		id: '1',
-		work_id: '1',
+		id: 1,
+		work_id: 1,
 		name: 'Checklist 1',
 		notes: 'Nota importante',
 		items: [
@@ -36,8 +36,8 @@ const mockChecklists = [
 		],
 	},
 	{
-		id: '2',
-		work_id: '1',
+		id: 2,
+		work_id: 1,
 		name: 'Checklist 2',
 		notes: '',
 		items: [
@@ -46,8 +46,8 @@ const mockChecklists = [
 		],
 	},
 	{
-		id: '3',
-		work_id: '2',
+		id: 3,
+		work_id: 2,
 		name: 'Checklist 3',
 		notes: null,
 		items: [
@@ -83,12 +83,12 @@ describe('useWorksWithProgress', () => {
 		expect(result.current.works).toHaveLength(2);
 
 
-		const work1 = result.current.works.find((w) => w.id === '1');
+		const work1 = result.current.works.find((w) => w.id === 1);
 		expect(work1?.progress).toBe(40);
 		expect(work1?.tasks).toHaveLength(5);
 		expect(work1?.hasNotes).toBe(true);
 
-		const work2 = result.current.works.find((w) => w.id === '2');
+		const work2 = result.current.works.find((w) => w.id === 2);
 		expect(work2?.progress).toBe(100);
 		expect(work2?.tasks).toHaveLength(3);
 		expect(work2?.hasNotes).toBe(false);
@@ -143,15 +143,15 @@ describe('useWorksWithProgress', () => {
 
 	it('should calculate progress correctly with different task statuses', async () => {
 		const worksWithDifferentProgress = [
-			{ id: 'work-a', client_id: 'client-a', address: 'A', status: 'pending' as const, created_at: '2024-01-01' },
-			{ id: 'work-b', client_id: 'client-b', address: 'B', status: 'pending' as const, created_at: '2024-01-02' },
-			{ id: 'work-c', client_id: 'client-c', address: 'C', status: 'pending' as const, created_at: '2024-01-03' },
+			{ id: 1, client_id: 1, address: 'A', status: 'pending' as const, created_at: '2024-01-01' },
+			{ id: 2, client_id: 2, address: 'B', status: 'pending' as const, created_at: '2024-01-02' },
+			{ id: 3, client_id: 3, address: 'C', status: 'pending' as const, created_at: '2024-01-03' },
 		];
 
 		const checklistsWithDifferentProgress = [
 			{
-				id: 'cl-a',
-				work_id: 'work-a',
+				id: 1,
+				work_id: 1,
 				name: 'CL A',
 				notes: '',
 				items: [
@@ -162,8 +162,8 @@ describe('useWorksWithProgress', () => {
 				],
 			},
 			{
-				id: 'cl-b',
-				work_id: 'work-b',
+				id: 2,
+				work_id: 2,
 				name: 'CL B',
 				notes: '',
 				items: [
@@ -172,8 +172,8 @@ describe('useWorksWithProgress', () => {
 				],
 			}, 
 			{
-				id: 'cl-c',
-				work_id: 'work-c',
+				id: 3,
+				work_id: 3,
 				name: 'CL C',
 				notes: '',
 				items: [
@@ -198,9 +198,9 @@ describe('useWorksWithProgress', () => {
 
 		await waitFor(() => expect(result.current.loading).toBe(false));
 
-		const workA = result.current.works.find((w) => w.id === 'work-a');
-		const workB = result.current.works.find((w) => w.id === 'work-b');
-		const workC = result.current.works.find((w) => w.id === 'work-c');
+		const workA = result.current.works.find((w) => w.id === 1);
+		const workB = result.current.works.find((w) => w.id === 2);
+		const workC = result.current.works.find((w) => w.id === 3);
 
 		expect(workA?.progress).toBe(100);
 		expect(workB?.progress).toBe(0);
@@ -209,21 +209,21 @@ describe('useWorksWithProgress', () => {
 
 	it('It should correctly detect if there are notes.', async () => {
 		const worksWithNotes = [
-			{ id: 'work-1', client_id: 'c1', address: 'A', status: 'pending' as const, created_at: '2024-01-01' },
-			{ id: 'work-2', client_id: 'c2', address: 'B', status: 'pending' as const, created_at: '2024-01-02' },
+			{ id: 1, client_id: 1, address: 'A', status: 'pending' as const, created_at: '2024-01-01' },
+			{ id: 2, client_id: 2, address: 'B', status: 'pending' as const, created_at: '2024-01-02' },
 		];
 
 		const checklistsWithNotes = [
 			{
-				id: 'cl-1',
-				work_id: 'work-1',
+				id: 1,
+				work_id: 1,
 				name: 'CL 1',
 				notes: '   ',
 				items: [],
 			},
 			{
-				id: 'cl-2',
-				work_id: 'work-2',
+				id: 2,
+				work_id: 2,
 				name: 'CL 2',
 				notes: 'Nota real',
 				items: [],
@@ -244,8 +244,8 @@ describe('useWorksWithProgress', () => {
 
 		await waitFor(() => expect(result.current.loading).toBe(false));
 
-		const work1 = result.current.works.find((w) => w.id === 'work-1');
-		const work2 = result.current.works.find((w) => w.id === 'work-2');
+		const work1 = result.current.works.find((w) => w.id === 1);
+		const work2 = result.current.works.find((w) => w.id === 2);
 
 		expect(work1?.hasNotes).toBe(false); 
 		expect(work2?.hasNotes).toBe(true);

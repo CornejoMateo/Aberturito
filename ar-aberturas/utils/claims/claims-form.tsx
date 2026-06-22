@@ -57,7 +57,7 @@ export function ClaimsForm({
 	const types = Object.values(checklistTypes);
 
 	useEffect(() => {
-		const match = clients.find((client) => client.id === formData.client_id) ?? null;
+		const match = clients.find((client) => String(client.id) === formData.client_id) ?? null;
 		setSelected(match);
 	}, [clients, formData.client_id]);
 
@@ -96,7 +96,7 @@ export function ClaimsForm({
 											value={searchableValue}
 											onSelect={() => {
 												setSelected(client);
-												onSelectChange('client_id', client.id);
+												onSelectChange('client_id', String(client.id));
 												setOpen(false);
 											}}
 										>

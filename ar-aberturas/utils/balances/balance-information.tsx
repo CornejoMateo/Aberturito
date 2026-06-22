@@ -26,7 +26,7 @@ const formatUsdValue = (amount?: number | null) => {
 };
 
 interface BalanceInformationProps {
-	balanceId: string;
+	balanceId: number;
 
 	work?: {
 		locality?: string | null;

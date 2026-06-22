@@ -7,7 +7,7 @@ export interface BudgetFolderVM extends FolderBudget {
 }
 
 export interface ClientBudgetsTabProps {
-	clientId: string;
+	clientId: number;
 	works: Work[];
 	loadWorks: () => void;
 	onBudgetsChange: (budgets: BudgetWithWork[]) => void;
@@ -15,12 +15,12 @@ export interface ClientBudgetsTabProps {
 
 export interface DeleteBudgetConfirmState {
 	open: boolean;
-	budgetId: string | null;
+	budgetId: number | null;
 }
 
 export interface DeleteFolderConfirmState {
 	open: boolean;
-	folderId: string | null;
+	folderId: number | null;
 	budgetCount: number;
 }
 
@@ -43,7 +43,7 @@ export interface BudgetFormData {
 
 export interface ClientBudgetsTabState {
 	isLoading: boolean;
-	openFolders: Record<string, boolean>;
+	openFolders: Record<number, boolean>;
 	isCreateOpen: boolean;
 	formData: BudgetFormData;
 	deleteBudgetConfirm: DeleteBudgetConfirmState;

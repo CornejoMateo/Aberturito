@@ -10,8 +10,8 @@ jest.mock('@/utils/checklists/checklist-completion-modal', () => ({
 }));
 
 const mockWork: WorkWithProgress = {
-	id: 'work-1',
-	client_id: '1',
+	id: 1,
+	client_id: 1,
 	client_name: 'Juan',
 	client_last_name: 'Pérez',
 	address: 'Test 629',

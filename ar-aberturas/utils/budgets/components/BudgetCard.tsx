@@ -16,8 +16,8 @@ interface BudgetCardProps {
 	budget: BudgetWithWork;
 	folder: BudgetFolderVM;
 	isLoading: boolean;
-	onChooseBudget: (budgetId: string) => void;
-	onDeleteBudget: (budgetId: string) => void;
+	onChooseBudget: (budgetId: number) => void;
+	onDeleteBudget: (budgetId: number) => void;
 	onViewPdf: (budget: BudgetWithWork) => void;
 	onOpenDetail: (budget: BudgetWithWork) => void;
 }

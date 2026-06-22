@@ -250,7 +250,7 @@ export function SurveyBoard() {
 				}));
 
 				// Update each item with rollback on failure
-				const successfulUpdates: string[] = [];
+				const successfulUpdates: number[] = [];
 				try {
 					for (const item of itemsToUpdate) {
 						const { error } = await updateSurveyItem(item.id, { completed: true });
@@ -297,7 +297,7 @@ export function SurveyBoard() {
 				? currentUncompletedItem.order
 				: Number.POSITIVE_INFINITY;
 
-			let itemsToUpdate: Array<{ id: string; completed: boolean; originalCompleted: boolean }>;
+			let itemsToUpdate: Array<{ id: number; completed: boolean; originalCompleted: boolean }>;
 			let message: string;
 
 			if (targetOrder > currentOrder) {
@@ -361,7 +361,7 @@ export function SurveyBoard() {
 			}));
 
 			// Update each item with rollback on failure
-			const successfulUpdates: string[] = [];
+			const successfulUpdates: number[] = [];
 			try {
 				for (const item of itemsToUpdate) {
 					const { error } = await updateSurveyItem(item.id, { completed: item.completed });

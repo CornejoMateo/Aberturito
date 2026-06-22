@@ -2,19 +2,19 @@ import { getSupabaseClient } from '../supabase-client';
 import { ChecklistItem } from './checklists';
 
 export type Work = {
-	id: string;
+	id: number;
 	created_at?: string;
 	locality?: string | null;
 	address?: string | null;
 	zone?: string | null;
 	hood?: string | null;
-	client_id?: string | null;
+	client_id?: number | null;
 	client_name?: string | null;
 	client_last_name?: string | null;
 	status?: string | null;
 	architect?: string | null;
 	general_note?: string | null;
-	balance_id?: string | null;
+	balance_id?: number | null;
 	clients?: {
 		name: string;
 		last_name: string;
@@ -69,7 +69,7 @@ export async function listWorks(): Promise<{ data: Work[] | null; error: any }> 
 	}
 }
 
-export async function getWorkById(id: string): Promise<{ data: Work | null; error: any }> {
+export async function getWorkById(id: number): Promise<{ data: Work | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
@@ -102,7 +102,7 @@ export async function createWork(
 }
 
 export async function updateWork(
-	id: string,
+	id: number,
 	changes: Partial<Work>
 ): Promise<{ data: Work | null; error: any }> {
 	const supabase = getSupabaseClient();
@@ -110,14 +110,14 @@ export async function updateWork(
 	return { data, error };
 }
 
-export async function deleteWork(id: string): Promise<{ data: null; error: any }> {
+export async function deleteWork(id: number): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };
 }
 
 export async function getWorksByClientId(
-	clientId: string
+	clientId: number
 ): Promise<{ data: Work[] | null; error: any }> {
 	try {
 		console.log('Buscando obras para el cliente ID:', clientId);
@@ -174,7 +174,7 @@ export async function getWorksInProgressCount(): Promise<{ data: number | null; 
 }
 
 export async function updateWorkGeneralNote(
-	id: string,
+	id: number,
 	generalNote: string | null
 ): Promise<{ data: Work | null; error: any }> {
 	try {

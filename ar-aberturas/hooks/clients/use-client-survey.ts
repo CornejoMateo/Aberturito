@@ -17,7 +17,7 @@ import {
 
 import { DEFAULT_SURVEY_STEPS } from '@/constants/survey';
 
-export function useClientSurveys(clientId?: string) {
+export function useClientSurveys(clientId?: number) {
 	const [soldBudgets, setSoldBudgets] = useState<BudgetWithWork[]>([]);
 	const [Surveys, setSurveys] = useState<Survey[]>([]);
 	const [items, setItems] = useState<SurveyItem[]>([]);
@@ -71,7 +71,7 @@ export function useClientSurveys(clientId?: string) {
 	}, [clientId]);
 
 	const createSurvey = useCallback(
-		async (budgetId: string) => {
+		async (budgetId: number) => {
 			if (!clientId) return;
 			setIsLoading(true);
 			try {
@@ -103,7 +103,7 @@ export function useClientSurveys(clientId?: string) {
 		[clientId, load]
 	);
 
-	const removeSurvey = useCallback(async (SurveyId: string) => {
+	const removeSurvey = useCallback(async (SurveyId: number) => {
 		setIsLoading(true);
 		try {
 			const { error } = await deleteSurveyLib(SurveyId);
@@ -119,7 +119,7 @@ export function useClientSurveys(clientId?: string) {
 	}, []);
 
 	const addItem = useCallback(
-		async (SurveyId: string, label: string) => {
+		async (SurveyId: number, label: string) => {
 			setIsLoading(true);
 			try {
 				const currentItems = items.filter((i) => i.survey_id === SurveyId);
@@ -145,7 +145,7 @@ export function useClientSurveys(clientId?: string) {
 
 	const updateItem = useCallback(
 		async (
-			itemId: string,
+			itemId: number,
 			changes: Partial<Pick<SurveyItem, 'label' | 'completed' | 'order'>>
 		) => {
 			try {
@@ -161,7 +161,7 @@ export function useClientSurveys(clientId?: string) {
 		[]
 	);
 
-	const removeItem = useCallback(async (itemId: string) => {
+	const removeItem = useCallback(async (itemId: number) => {
 		try {
 			const { error } = await deleteSurveyItemLib(itemId);
 			if (error) throw error;

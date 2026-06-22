@@ -2,9 +2,9 @@ import { getSupabaseClient } from '../supabase-client';
 import { BudgetWithWork } from '../works/balances';
 
 export type Budget = {
-	id: string;
+	id: number;
 	created_at: string;
-	folder_budget_id?: string | null;
+	folder_budget_id?: number | null;
 	accepted?: boolean | null;
 	sold?: boolean | null;
 	lost?: boolean | null;
@@ -21,12 +21,12 @@ export type Budget = {
 
 export type BudgetWithWorkAndClient = BudgetWithWork & {
 	client?: {
-		id: string;
+		id: number;
 		name?: string | null;
 		last_name?: string | null;
-		seller_id?: string | null;
+		seller_id?: number | null;
 		seller?: {
-			id: string;
+			id: number;
 			name: string;
 		} | null;
 	} | null;
@@ -159,14 +159,14 @@ export async function listBudgets(): Promise<{ data: Budget[] | null; error: any
 	return { data, error };
 }
 
-export async function getBudgetById(id: string): Promise<{ data: Budget | null; error: any }> {
+export async function getBudgetById(id: number): Promise<{ data: Budget | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
 	return { data, error };
 }
 
 export async function getBudgetsByFolderBudgetId(
-	folderBudgetId: string
+	folderBudgetId: number
 ): Promise<{ data: Budget[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
@@ -178,7 +178,7 @@ export async function getBudgetsByFolderBudgetId(
 }
 
 export async function getBudgetsByFolderBudgetIds(
-	folderBudgetIds: string[]
+	folderBudgetIds: number[]
 ): Promise<{ data: BudgetWithWork[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 	if (folderBudgetIds.length === 0) return { data: [], error: null };
@@ -203,7 +203,7 @@ export async function getBudgetsByFolderBudgetIds(
 				folder_budget:folder_budgets!inner (
 					id,
 					work_id,
-					work:works!inner (
+					work:works (
 						address,
 						locality
 					)
@@ -222,7 +222,6 @@ export async function getBudgetsByFolderBudgetIds(
 			if (!folderBudget) return null;
 
 			const work = Array.isArray(folderBudget.work) ? folderBudget.work[0] : folderBudget.work;
-			if (!work) return null;
 
 			return {
 				id: b.id,
@@ -241,10 +240,12 @@ export async function getBudgetsByFolderBudgetIds(
 				folder_budget: {
 					id: folderBudget.id,
 					work_id: folderBudget.work_id,
-					work: {
-						address: work.address,
-						locality: work.locality,
-					},
+					work: work
+						? {
+								address: work.address || '',
+								locality: work.locality || '',
+							}
+						: null,
 				},
 			} as BudgetWithWork;
 		})
@@ -278,23 +279,27 @@ export async function listBudgetsForReport(): Promise<{
 	const sellerIds = data
 		.map((b: any) => {
 			const folderBudget = Array.isArray(b.folder_budget) ? b.folder_budget[0] : b.folder_budget;
-			const client = folderBudget?.client ? (Array.isArray(folderBudget.client) ? folderBudget.client[0] : folderBudget.client) : null;
+			const client = folderBudget?.client
+				? Array.isArray(folderBudget.client)
+					? folderBudget.client[0]
+					: folderBudget.client
+				: null;
 			return client?.seller_id;
 		})
 		.filter(Boolean);
 
 	// Fetch sellers
-	let sellersMap: Record<string, string> = {};
+	let sellersMap: Record<number, string> = {};
 	if (sellerIds.length > 0) {
-		const { data: sellers } = await supabase
-			.from('sellers')
-			.select('id, name')
-			.in('id', sellerIds);
+		const { data: sellers } = await supabase.from('sellers').select('id, name').in('id', sellerIds);
 		if (sellers) {
-			sellersMap = sellers.reduce((acc, s) => {
-				acc[s.id] = s.name;
-				return acc;
-			}, {} as Record<string, string>);
+			sellersMap = sellers.reduce(
+				(acc, s) => {
+					acc[s.id] = s.name;
+					return acc;
+				},
+				{} as Record<number, string>
+			);
 		}
 	}
 
@@ -350,17 +355,19 @@ export async function listBudgetsForReport(): Promise<{
 								},
 					}
 				: {
-						id: '',
-						work_id: '',
+						id: 0,
+						work_id: 0,
 						work: {
 							address: '',
 							locality: '',
 						},
 					},
-			client: client ? {
-				...client,
-				seller: seller,
-			} : null,
+			client: client
+				? {
+						...client,
+						seller: seller,
+					}
+				: null,
 		} as BudgetWithWorkAndClient;
 	});
 
@@ -370,7 +377,7 @@ export async function listBudgetsForReport(): Promise<{
 export async function createBudget(
 	budget: Omit<Budget, 'id' | 'pdf_url' | 'pdf_path'>,
 	pdfFile: File | null,
-	clientId: string
+	clientId: number
 ): Promise<{ data: Budget | null; error: any }> {
 	const supabase = getSupabaseClient();
 	let payload: any = { ...budget };
@@ -422,7 +429,7 @@ export async function createBudget(
 }
 
 export async function updateBudget(
-	id: string,
+	id: number,
 	changes: Partial<Omit<Budget, 'id' | 'created_at'>>
 ): Promise<{ data: Budget | null; error: any }> {
 	const supabase = getSupabaseClient();
@@ -431,10 +438,10 @@ export async function updateBudget(
 }
 
 export async function editBudget(
-	id: string,
+	id: number,
 	changes: Partial<Omit<Budget, 'id'>>,
 	pdfFile: File | null,
-	clientId: string
+	clientId: number
 ): Promise<{ data: Budget | null; error: any }> {
 	const supabase = getSupabaseClient();
 	let payload: any = { ...changes };
@@ -475,7 +482,7 @@ export async function editBudget(
 	return { data, error };
 }
 
-export async function deleteBudget(id: string): Promise<{ data: null; error: any }> {
+export async function deleteBudget(id: number): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };
@@ -954,8 +961,8 @@ export async function getSoldBudgetsByMaterialByMonth(): Promise<{
 }
 
 export async function chooseBudgetForClient(
-	budgetId: string,
-	folderBudgetIds: string[]
+	budgetId: number,
+	folderBudgetIds: number[]
 ): Promise<{ error: any }> {
 	const supabase = getSupabaseClient();
 	if (folderBudgetIds.length === 0) return { error: null };

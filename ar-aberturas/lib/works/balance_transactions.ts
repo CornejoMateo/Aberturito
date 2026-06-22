@@ -1,9 +1,9 @@
 import { getSupabaseClient } from '../supabase-client';
 
 export type BalanceTransaction = {
-	id: string;
+	id: number;
 	created_at: string;
-	balance_id?: string | null;
+	balance_id?: number | null;
 	date?: string | null;
 	amount?: number | null;
 	quote_usd?: number | null;
@@ -25,7 +25,7 @@ export async function listTransactions(): Promise<{ data: BalanceTransaction[] |
 }
 
 // No va a hacer falta seguramente
-export async function getTransactionById(id: string): Promise<{ data: BalanceTransaction | null; error: any }> {
+export async function getTransactionById(id: number): Promise<{ data: BalanceTransaction | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
@@ -35,7 +35,7 @@ export async function getTransactionById(id: string): Promise<{ data: BalanceTra
 	return { data, error };
 }
 
-export async function getTransactionsByBalanceId(balanceId: string): Promise<{ data: BalanceTransaction[] | null; error: any }> {
+export async function getTransactionsByBalanceId(balanceId: number): Promise<{ data: BalanceTransaction[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)
@@ -58,7 +58,7 @@ export async function createTransaction(
 }
 
 export async function updateTransaction(
-	id: string,
+	id: number,
 	changes: Partial<Omit<BalanceTransaction, 'id' | 'created_at'>>
 ): Promise<{ data: BalanceTransaction | null; error: any }> {
 	const supabase = getSupabaseClient();
@@ -71,7 +71,7 @@ export async function updateTransaction(
 	return { data, error };
 }
 
-export async function deleteTransaction(id: string): Promise<{ data: null; error: any }> {
+export async function deleteTransaction(id: number): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { error } = await supabase
 		.from(TABLE)
@@ -80,7 +80,7 @@ export async function deleteTransaction(id: string): Promise<{ data: null; error
 	return { data: null, error };
 }
 
-export async function getTotalByBalanceId(balanceId: string): Promise<{
+export async function getTotalByBalanceId(balanceId: number): Promise<{
 	data: { totalAmount: number, totalAmountUSD: number} | null;
 	error: any;
 }> {
@@ -101,7 +101,7 @@ export async function getTotalByBalanceId(balanceId: string): Promise<{
 }
 
 export async function getTotalsByBalanceIds(
-	balanceIds: string[]
+	balanceIds: number[]
 ): Promise<{ data: Record<string, { totalAmount: number; totalAmountUSD: number }> | null; error: any }> {
 	if (!balanceIds.length) return { data: {}, error: null };
 	const supabase = getSupabaseClient();
@@ -126,7 +126,7 @@ export async function getTotalsByBalanceIds(
 	return { data: totals, error: null };
 }
 
-export async function getLastTransactionUSD(id: string): Promise<{ data: number | null; error: any }> {
+export async function getLastTransactionUSD(id: number): Promise<{ data: number | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase
 		.from(TABLE)

@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { WorkForm } from '@/utils/works/work-form';
 import userEvent from '@testing-library/user-event';
 
-const mockClientId = '1';
+const mockClientId = 1;
 const mockOnSubmit = jest.fn();
 const mockOnCancel = jest.fn();
 

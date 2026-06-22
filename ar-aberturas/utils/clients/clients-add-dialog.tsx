@@ -22,24 +22,24 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import { listSellers } from '@/lib/sellers/sellers';
-import { Seller } from '@/lib/sellers/sellers';
+import type { Seller } from '@/lib/sellers/sellers';
 
 interface ClientsAddDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onClientAdded?: () => void;
 	clientToEdit?: {
-		id: string;
+		id: number;
 		name: string | null;
 		last_name: string | null;
 		email?: string | null;
 		phone_number?: string | null;
 		locality?: string | null;
 		contact_method?: string | null;
-		seller_id?: string | null;
+		seller_id?: number | null;
 	};
 	onUpdateClient?: (client: any) => Promise<void>;
+	sellers: Seller[];
 }
 
 export function ClientsAddDialog({
@@ -48,10 +48,10 @@ export function ClientsAddDialog({
 	onClientAdded,
 	clientToEdit,
 	onUpdateClient,
+	sellers,
 }: ClientsAddDialogProps) {
 	const { toast } = useToast();
 	const [isLoading, setIsLoading] = useState(false);
-	const [sellers, setSellers] = useState<Seller[]>([]);
 	const [formData, setFormData] = useState({
 		name: clientToEdit?.name || '',
 		last_name: clientToEdit?.last_name || '',
@@ -61,24 +61,6 @@ export function ClientsAddDialog({
 		contact_method: clientToEdit?.contact_method || '',
 		seller_id: clientToEdit?.seller_id || '',
 	});
-
-	useEffect(() => {
-		const loadSellers = async () => {
-			try {
-				const { data, error } = await listSellers();
-				if (error) throw error;
-				setSellers(data ?? []);
-			} catch (error) {
-				const message = translateError(error);
-				toast({
-					title: 'Error',
-					description: message,
-					variant: 'destructive',
-				});
-			}
-		};
-		loadSellers();
-	}, []);
 
 	const resetForm = () => {
 		setFormData({
@@ -137,7 +119,7 @@ export function ClientsAddDialog({
 				phone_number: formData.phone_number || null,
 				locality: formData.locality || null,
 				contact_method: formData.contact_method || null,
-				seller_id: formData.seller_id || null,
+				seller_id: formData.seller_id ? Number(formData.seller_id) : null,
 			};
 
 			if (clientToEdit && onUpdateClient) {
@@ -194,10 +176,10 @@ export function ClientsAddDialog({
 				phone_number: clientToEdit.phone_number || '',
 				locality: clientToEdit.locality || '',
 				contact_method: clientToEdit.contact_method || '',
-				seller_id: clientToEdit.seller_id || 'none',
+				seller_id: clientToEdit.seller_id != null ? String(clientToEdit.seller_id) : 'none',
 			});
 		}
-	}, [clientToEdit]);
+	}, [clientToEdit?.id]);
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -296,14 +278,17 @@ export function ClientsAddDialog({
 						<Label htmlFor="seller" className="text-foreground">
 							Vendedor responsable
 						</Label>
-						<Select value={formData.seller_id || 'none'} onValueChange={handleSellerChange}>
+						<Select
+							value={formData.seller_id != null ? String(formData.seller_id) : 'none'}
+							onValueChange={handleSellerChange}
+						>
 							<SelectTrigger className="bg-background">
 								<SelectValue placeholder="Seleccionar vendedor" />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="none">Sin vendedor asignado</SelectItem>
 								{sellers.map((seller) => (
-									<SelectItem key={seller.id} value={seller.id}>
+									<SelectItem key={seller.id} value={String(seller.id)}>
 										{seller.name}
 									</SelectItem>
 								))}

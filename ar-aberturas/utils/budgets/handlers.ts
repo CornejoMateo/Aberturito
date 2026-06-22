@@ -18,23 +18,23 @@ import { parseAmount } from './utils';
 import { BUDGET_STATUS, BUDGET_STATUS_LABELS } from '@/constants/budget-status';
 
 export interface BudgetHandlers {
-	handleChooseBudget: (budgetId: string, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void) => Promise<void>;
-	handleStatusChange: (budgetId: string, newStatus: string, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void) => Promise<void>;
-	handleDeleteBudget: (budgetId: string, setDeleteBudgetConfirm: (state: any) => void) => void;
+	handleChooseBudget: (budgetId: number, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void) => Promise<void>;
+	handleStatusChange: (budgetId: number, newStatus: string, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void) => Promise<void>;
+	handleDeleteBudget: (budgetId: number, setDeleteBudgetConfirm: (state: any) => void) => void;
 	confirmDeleteBudget: (deleteBudgetConfirm: any, refresh: () => void, setIsLoading: (loading: boolean) => void, setDeleteBudgetConfirm: (state: any) => void) => Promise<void>;
-	handleDeleteFolder: (folderId: string, budgetsByFolderId: Map<string, BudgetWithWork[]>, setDeleteFolderConfirm: (state: any) => void) => void;
+	handleDeleteFolder: (folderId: number, budgetsByFolderId: Map<number, BudgetWithWork[]>, setDeleteFolderConfirm: (state: any) => void) => void;
 	confirmDeleteFolder: (deleteFolderConfirm: any, refresh: () => void, setIsLoading: (loading: boolean) => void, setDeleteFolderConfirm: (state: any) => void) => Promise<void>;
 	handleViewPdf: (budget: BudgetWithWork, setIsLoading: (loading: boolean) => void) => Promise<void>;
 	handleOpenBudgetDetail: (budget: BudgetWithWork, setBudgetDetailModal: (state: any) => void) => void;
 	closeBudgetDetailModal: (setBudgetDetailModal: (state: any) => void) => void;
 	handleEditBudget: (budget: BudgetWithWork, setEditingBudget: (budget: BudgetWithWork | null) => void, closeBudgetDetailModal: () => void, setEditModalOpen: (open: boolean) => void) => void;
-	handleEditBudgetSubmit: (formData: any, editingBudget: BudgetWithWork | null, clientId: string, setIsLoading: (loading: boolean) => void, setEditModalOpen: (open: boolean) => void, setEditingBudget: (budget: BudgetWithWork | null) => void, refresh: () => void) => Promise<void>;
-	handleClientBudgetsUpdate: (newUsdRate: number, clientId: string, refresh: () => void) => Promise<void>;
-	handleCreateBudget: (formData: any, folderBudgets: any[], clientId: string, setIsCreateOpen: (open: boolean) => void, refresh: () => void, setIsLoading: (loading: boolean) => void) => Promise<void>;
+	handleEditBudgetSubmit: (formData: any, editingBudget: BudgetWithWork | null, clientId: number, setIsLoading: (loading: boolean) => void, setEditModalOpen: (open: boolean) => void, setEditingBudget: (budget: BudgetWithWork | null) => void, refresh: () => void) => Promise<void>;
+	handleClientBudgetsUpdate: (newUsdRate: number, clientId: number, refresh: () => void) => Promise<void>;
+	handleCreateBudget: (formData: any, folderBudgets: any[], clientId: number, setIsCreateOpen: (open: boolean) => void, refresh: () => void, setIsLoading: (loading: boolean) => void) => Promise<void>;
 }
 
 export const budgetHandlers: BudgetHandlers = {
-	async handleChooseBudget(budgetId: string, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void) {
+	async handleChooseBudget(budgetId: number, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void) {
 		try {
 			setIsLoading(true);
 			const budget = budgets.find(b => b.id === budgetId);
@@ -63,7 +63,7 @@ export const budgetHandlers: BudgetHandlers = {
 		}
 	},
 
-	async handleStatusChange(budgetId: string, newStatus: string, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void) {
+	async handleStatusChange(budgetId: number, newStatus: string, budgets: BudgetWithWork[], refresh: () => void, setIsLoading: (loading: boolean) => void) {
 		try {
 			setIsLoading(true);
 			const budget = budgets.find(b => b.id === budgetId);
@@ -114,7 +114,7 @@ export const budgetHandlers: BudgetHandlers = {
 		}
 	},
 
-	handleDeleteBudget(budgetId: string, setDeleteBudgetConfirm: (state: any) => void) {
+	handleDeleteBudget(budgetId: number, setDeleteBudgetConfirm: (state: any) => void) {
 		setDeleteBudgetConfirm({ open: true, budgetId });
 	},
 
@@ -125,8 +125,7 @@ export const budgetHandlers: BudgetHandlers = {
 
 		try {
 			setIsLoading(true);
-			const budgetIdString = String(deleteBudgetConfirm.budgetId);
-			const { error } = await deleteBudget(budgetIdString);
+			const { error } = await deleteBudget(deleteBudgetConfirm.budgetId);
 			if (error && error !== null) {
 				toast({
 					variant: 'destructive',
@@ -143,7 +142,7 @@ export const budgetHandlers: BudgetHandlers = {
 		}
 	},
 
-	handleDeleteFolder(folderId: string, budgetsByFolderId: Map<string, BudgetWithWork[]>, setDeleteFolderConfirm: (state: any) => void) {
+	handleDeleteFolder(folderId: number, budgetsByFolderId: Map<number, BudgetWithWork[]>, setDeleteFolderConfirm: (state: any) => void) {
 		const budgetCount = budgetsByFolderId.get(folderId)?.length || 0;
 		setDeleteFolderConfirm({ 
 			open: true, 
@@ -159,8 +158,7 @@ export const budgetHandlers: BudgetHandlers = {
 
 		try {
 			setIsLoading(true);
-			const folderIdString = String(deleteFolderConfirm.folderId);
-			const { error } = await deleteFolderBudgetWithBudgets(folderIdString);
+			const { error } = await deleteFolderBudgetWithBudgets(deleteFolderConfirm.folderId);
 			if (error && error !== null) {
 				toast({
 					variant: 'destructive',
@@ -222,7 +220,7 @@ export const budgetHandlers: BudgetHandlers = {
 		setEditModalOpen(true);
 	},
 
-	async handleEditBudgetSubmit(formData: any, editingBudget: BudgetWithWork | null, clientId: string, setIsLoading: (loading: boolean) => void, setEditModalOpen: (open: boolean) => void, setEditingBudget: (budget: BudgetWithWork | null) => void, refresh: () => void) {
+	async handleEditBudgetSubmit(formData: any, editingBudget: BudgetWithWork | null, clientId: number, setIsLoading: (loading: boolean) => void, setEditModalOpen: (open: boolean) => void, setEditingBudget: (budget: BudgetWithWork | null) => void, refresh: () => void) {
 		if (!editingBudget) return;
 
 		try {
@@ -266,7 +264,7 @@ export const budgetHandlers: BudgetHandlers = {
 		}
 	},
 
-	async handleClientBudgetsUpdate(newUsdRate: number, clientId: string, refresh: () => void) {	
+	async handleClientBudgetsUpdate(newUsdRate: number, clientId: number, refresh: () => void) {	
 		try {
 			const response = await fetch('/api/budget-dollar-rate', {
 				method: 'POST',
@@ -297,7 +295,7 @@ export const budgetHandlers: BudgetHandlers = {
 		}
 	},
 
-	async handleCreateBudget(formData: any, folderBudgets: any[], clientId: string, setIsCreateOpen: (open: boolean) => void, refresh: () => void, setIsLoading: (loading: boolean) => void) {
+	async handleCreateBudget(formData: any, folderBudgets: any[], clientId: number, setIsCreateOpen: (open: boolean) => void, refresh: () => void, setIsLoading: (loading: boolean) => void) {
 		try {
 			setIsLoading(true);
 
@@ -313,7 +311,7 @@ export const budgetHandlers: BudgetHandlers = {
 			if (!folderId) {
 				const { data: folder, error: folderError } = await createFolderBudget({
 					client_id: clientId,
-					work_id: work_id?.toString(),
+					work_id: work_id,
 				});
 
 				if (folderError || !folder) {

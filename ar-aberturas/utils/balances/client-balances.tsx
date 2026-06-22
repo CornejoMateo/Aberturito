@@ -32,7 +32,7 @@ import { BalanceCard } from './balance-card';
 import { useBalanceHandlers } from '@/hooks/balances/use-balance-handlers';
 
 interface ClientBalancesProps {
-	clientId: string;
+	clientId: number;
 	onCreateBalance?: () => void;
 	onBalanceDeleted?: () => void;
 }

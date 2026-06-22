@@ -14,8 +14,16 @@ import { budgetHandlers } from './handlers';
 import { FolderCard } from './components/FolderCard';
 import { BudgetDetailModal } from './components/BudgetDetailModal';
 import { ClientBudgetsTabProps } from './types';
+import { updateFolderBudget } from '@/lib/budgets/folder_budgets';
+import { toast } from '@/components/ui/use-toast';
+import { translateError } from '@/lib/error-translator';
 
-export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }: ClientBudgetsTabProps) {
+export function ClientBudgetsTab({
+	clientId,
+	works,
+	loadWorks,
+	onBudgetsChange,
+}: ClientBudgetsTabProps) {
 	const {
 		// State
 		isLoading,
@@ -36,7 +44,7 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 		setEditModalOpen,
 		editingBudget,
 		setEditingBudget,
-		
+
 		// Data
 		folderBudgets,
 		loadingFolders,
@@ -44,7 +52,7 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 		loadingBudgets,
 		orderedFolders,
 		chosenBudgetIds,
-		
+
 		// Actions
 		refresh,
 	} = useClientBudgetsState(clientId);
@@ -58,28 +66,38 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 	}, []);
 
 	// Event handlers
-	const handleChooseBudget = (budgetId: string) => {
+	const handleChooseBudget = (budgetId: number) => {
 		budgetHandlers.handleChooseBudget(budgetId, budgets, refresh, setIsLoading);
 	};
 
-	const handleStatusChange = (budgetId: string, newStatus: string) => {
+	const handleStatusChange = (budgetId: number, newStatus: string) => {
 		budgetHandlers.handleStatusChange(budgetId, newStatus, budgets, refresh, setIsLoading);
 	};
 
-	const handleDeleteBudget = (budgetId: string) => {
+	const handleDeleteBudget = (budgetId: number) => {
 		budgetHandlers.handleDeleteBudget(budgetId, setDeleteBudgetConfirm);
 	};
 
 	const confirmDeleteBudget = () => {
-		budgetHandlers.confirmDeleteBudget(deleteBudgetConfirm, refresh, setIsLoading, setDeleteBudgetConfirm);
+		budgetHandlers.confirmDeleteBudget(
+			deleteBudgetConfirm,
+			refresh,
+			setIsLoading,
+			setDeleteBudgetConfirm
+		);
 	};
 
-	const handleDeleteFolder = (folderId: string) => {
+	const handleDeleteFolder = (folderId: number) => {
 		budgetHandlers.handleDeleteFolder(folderId, budgetsByFolderId, setDeleteFolderConfirm);
 	};
 
 	const confirmDeleteFolder = () => {
-		budgetHandlers.confirmDeleteFolder(deleteFolderConfirm, refresh, setIsLoading, setDeleteFolderConfirm);
+		budgetHandlers.confirmDeleteFolder(
+			deleteFolderConfirm,
+			refresh,
+			setIsLoading,
+			setDeleteFolderConfirm
+		);
 	};
 
 	const handleViewPdf = (budget: BudgetWithWork) => {
@@ -95,11 +113,24 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 	};
 
 	const handleEditBudget = (budget: BudgetWithWork) => {
-		budgetHandlers.handleEditBudget(budget, setEditingBudget, closeBudgetDetailModal, setEditModalOpen);
+		budgetHandlers.handleEditBudget(
+			budget,
+			setEditingBudget,
+			closeBudgetDetailModal,
+			setEditModalOpen
+		);
 	};
 
 	const handleEditBudgetSubmit = async (formData: any) => {
-		await budgetHandlers.handleEditBudgetSubmit(formData, editingBudget, clientId, setIsLoading, setEditModalOpen, setEditingBudget, refresh);
+		await budgetHandlers.handleEditBudgetSubmit(
+			formData,
+			editingBudget,
+			clientId,
+			setIsLoading,
+			setEditModalOpen,
+			setEditingBudget,
+			refresh
+		);
 	};
 
 	const handleClientBudgetsUpdate = async (newUsdRate: number) => {
@@ -107,11 +138,18 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 	};
 
 	const handleCreateBudgetSubmit = async (formData: any) => {
-		await budgetHandlers.handleCreateBudget(formData, folderBudgets, clientId, setIsCreateOpen, refresh, setIsLoading);
+		await budgetHandlers.handleCreateBudget(
+			formData,
+			folderBudgets,
+			clientId,
+			setIsCreateOpen,
+			refresh,
+			setIsLoading
+		);
 	};
 
 	// Helper function to get budgets by folder ID (needed for folder delete)
-	const budgetsByFolderId = new Map<string, BudgetWithWork[]>();
+	const budgetsByFolderId = new Map<number, BudgetWithWork[]>();
 	for (const budget of budgets) {
 		if (!budget || !budget.folder_budget || !budget.folder_budget.id) {
 			continue;
@@ -123,23 +161,43 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 		budgetsByFolderId.get(folderId)!.push(budget);
 	}
 
+	const handleAssignWork = async (folderId: number, workId: number) => {
+		const { error } = await updateFolderBudget(folderId, { work_id: workId });
+		if (!error) {
+			toast({
+				title: 'Obra asignada',
+				description: 'La obra ha sido asignada a la carpeta de presupuestos.',
+			});
+			refresh();
+		} else {
+			const errorMessage = translateError(error);
+			toast({
+				title: 'Error',
+				description:
+					errorMessage || 'Ocurrió un error al asignar la obra. Por favor, intentá nuevamente.',
+				variant: 'destructive',
+			});
+		}
+	};
+
 	return (
 		<>
 			<div className="space-y-4">
 				<div className="flex items-center justify-between gap-2">
 					<div className="min-w-0">
 						{chosenBudgetIds.length > 0 ? (
-							<div className="mt-1">	
-								<Badge variant="secondary">{chosenBudgetIds.length} presupuesto(s) elegido(s)</Badge>
+							<div className="mt-1">
+								<Badge variant="secondary">
+									{chosenBudgetIds.length} presupuesto(s) elegido(s)
+								</Badge>
 							</div>
 						) : (
-							<div className="mt-1">	
-							</div>
+							<div className="mt-1"></div>
 						)}
 					</div>
 
 					<div className="flex gap-2">
-						{budgets.filter(b => b.amount_usd && b.amount_usd > 0).length > 0 && (
+						{budgets.filter((b) => b.amount_usd && b.amount_usd > 0).length > 0 && (
 							<Button
 								size="sm"
 								variant="outline"
@@ -151,7 +209,12 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 								Actualizar Precios
 							</Button>
 						)}
-						<Button size="sm" className="gap-2" disabled={isLoading} onClick={() => setIsCreateOpen(true)}>
+						<Button
+							size="sm"
+							className="gap-2"
+							disabled={isLoading}
+							onClick={() => setIsCreateOpen(true)}
+						>
 							<Plus className="h-4 w-4" />
 							Nuevo presupuesto
 						</Button>
@@ -163,7 +226,9 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 				) : folderBudgets.length === 0 ? (
 					<Card className="p-6">
 						<div className="text-center space-y-2">
-							<p className="text-sm text-muted-foreground">Este cliente todavía no tiene presupuestos.</p>
+							<p className="text-sm text-muted-foreground">
+								Este cliente todavía no tiene presupuestos.
+							</p>
 						</div>
 					</Card>
 				) : null}
@@ -173,14 +238,16 @@ export function ClientBudgetsTab({ clientId, works, loadWorks, onBudgetsChange }
 						<FolderCard
 							key={folder.id}
 							folder={folder}
+							works={works}
 							isOpen={!!openFolders[folder.id]}
-							onToggle={(open) => setOpenFolders(prev => ({ ...prev, [folder.id]: open }))}
+							onToggle={(open) => setOpenFolders((prev) => ({ ...prev, [folder.id]: open }))}
 							isLoading={isLoading}
 							onChooseBudget={handleChooseBudget}
 							onDeleteBudget={handleDeleteBudget}
 							onDeleteFolder={handleDeleteFolder}
 							onViewPdf={handleViewPdf}
 							onOpenDetail={handleOpenBudgetDetail}
+							onAssignWork={handleAssignWork}
 						/>
 					))}
 				</div>

@@ -28,7 +28,7 @@ import {
 } from '@/utils/file-upload-utils';
 
 interface ClaimFile {
-	id: string;
+	id: number;
 	name: string;
 	title: string | null;
 	url: string;
@@ -38,7 +38,7 @@ interface ClaimFile {
 
 interface ClaimImagesGalleryProps {
 	claimId: number;
-	clientId?: string | null;
+	clientId?: number | null;
 	claimDescription?: string | null;
 	workLocality?: string | null;
 	workZone?: string | null;
@@ -157,7 +157,7 @@ export function ClaimImagesGallery({
 		triggerFileUpload,
 		acceptedFileTypes,
 	} = useFileUpload({
-		clientId: clientId || '',
+		clientId: clientId ?? 0,
 		claimId,
 		allowedFileTypes: CLAIM_FILE_TYPES,
 		maxFileSize: MAX_FILE_SIZE_CLAIM,

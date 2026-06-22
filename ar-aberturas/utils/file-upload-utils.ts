@@ -136,7 +136,7 @@ export const formatDate = (dateString: string): string => {
 
 // type created for the file viewer modal
 export type FileViewerItem = {
-	id: string;
+	id: number;
 	url: string;
 	name: string;
 	displayName?: string | null;

@@ -25,7 +25,7 @@ import { translateError } from '@/lib/error-translator';
 import { useChecklistModal } from '@/hooks/clients/use-checklist-modal';
 
 type ChecklistModalProps = {
-	workId: string;
+	workId: number;
 	existingChecklists?: boolean;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
@@ -39,7 +39,7 @@ type ChecklistModalProps = {
 		items: Array<{ name: string; completed: boolean }>;
 	}) => Promise<void>;
 	onUpdate?: (
-		checklistId: string,
+		checklistId: number,
 		checklist: {
 			name?: string | null;
 			description?: string | null;

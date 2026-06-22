@@ -36,21 +36,21 @@ import { calculateProgress } from '@/helpers/checklists/progress';
 import { ChecklistCard } from './checklist-card';
 
 type ChecklistCompletionModalProps = {
-	workId: string;
+	workId: number;
 	children?: React.ReactNode;
 };
 
 export function ChecklistCompletionModal({ workId, children }: ChecklistCompletionModalProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const [saving, setSaving] = useState(false);
-	const [savingNotes, setSavingNotes] = useState<Record<string, boolean>>({});
-	const [addingClaim, setAddingClaim] = useState<Record<string, boolean>>({});
+	const [savingNotes, setSavingNotes] = useState<Record<number, boolean>>({});
+	const [addingClaim, setAddingClaim] = useState<Record<number, boolean>>({});
 	const [checklistToDelete, setChecklistToDelete] = useState<Checklist | null>(null);
 	const [checklistToEdit, setChecklistToEdit] = useState<Checklist | null>(null);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [isPostItModalOpen, setIsPostItModalOpen] = useState(false);
 	const [isUpdatingNote, setIsUpdatingNote] = useState(false);
-	const notesDebounceTimersRef = useRef<Record<string, number>>({});
+	const notesDebounceTimersRef = useRef<Record<number, number>>({});
 
 	const { user } = useAuth();
 
@@ -77,7 +77,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 		}
 	}, [fetchedChecklists]);
 
-	const toggleChecklistItem = async (checklistId: string, itemIndex: number) => {
+	const toggleChecklistItem = async (checklistId: number, itemIndex: number) => {
 		// Update local state optimistically
 		const updatedChecklists = checklists.map((checklist) => {
 			if (checklist.id === checklistId) {
@@ -131,7 +131,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 		}
 	};
 
-	const setAllChecklistItems = async (checklistId: string, done: boolean) => {
+	const setAllChecklistItems = async (checklistId: number, done: boolean) => {
 		const previousChecklists = checklists;
 
 		// Update local state optimistically
@@ -161,7 +161,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 		}
 	};
 
-	const updateChecklistNotes = (checklistId: string, notes: string) => {
+	const updateChecklistNotes = (checklistId: number, notes: string) => {
 		// Update local state
 		setChecklists((prev) => prev.map((c) => (c.id === checklistId ? { ...c, notes } : c)));
 
@@ -230,7 +230,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 			const claimData = {
 				date: today,
 				daily: mode === 'daily',
-				client_id: clientData?.id || null,
+				client_id: String(clientData?.id ?? '') || null,
 				alum_pvc: checklist.type_opening || null,
 				attend: null,
 				description,
@@ -310,7 +310,7 @@ export function ChecklistCompletionModal({ workId, children }: ChecklistCompleti
 		setIsEditModalOpen(true);
 	};
 
-	const handleUpdateChecklist = async (checklistId: string, updates: any) => {
+	const handleUpdateChecklist = async (checklistId: number, updates: any) => {
 		try {
 			setSaving(true);
 			// Transform items to include key property

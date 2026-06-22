@@ -99,7 +99,7 @@ export function DollarUpdateModal({
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify({
-					balanceId: parseInt(balance.id),
+					balanceId: balance.id,
 					newUsdRate: currentRate.venta,
 					newBalanceAmountARS: newValues.newBudgetInARS,
 				}),

@@ -14,9 +14,9 @@ import {
 import { FORM_DEFAULTS } from '../../constants/budgets/constants';
 import { workLabel} from '../../utils/budgets/utils';
 
-export function useClientBudgetsState(clientId: string) {
+export function useClientBudgetsState(clientId: number) {
 	const [isLoading, setIsLoading] = useState(false);
-	const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
+	const [openFolders, setOpenFolders] = useState<Record<number, boolean>>({});
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const [formData, setFormData] = useState<BudgetFormData>({
 		type: FORM_DEFAULTS.type,
@@ -76,7 +76,7 @@ export function useClientBudgetsState(clientId: string) {
 	);
 
 	const budgetsByFolderId = useMemo(() => {
-		const map = new Map<string, BudgetWithWork[]>();
+		const map = new Map<number, BudgetWithWork[]>();
 
 		for (const budget of budgets) {
 			if (!budget || !budget.folder_budget || !budget.folder_budget.id) {
@@ -119,7 +119,7 @@ export function useClientBudgetsState(clientId: string) {
 
 	useEffect(() => {
 		setOpenFolders((prev) => {
-			const next: Record<string, boolean> = { ...prev };
+			const next: Record<number, boolean> = { ...prev };
 			for (const f of orderedFolders) {
 				if (next[f.id] === undefined) next[f.id] = true;
 			}

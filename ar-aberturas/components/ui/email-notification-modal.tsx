@@ -18,7 +18,7 @@ import { Loader2, Mail, MapPin, Clock, User, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Client {
-	id: string;
+	id: number;
 	name?: string | null;
 	last_name?: string | null;
 	email?: string | null;
@@ -26,10 +26,10 @@ interface Client {
 }
 
 interface Work {
-	id: string;
+	id: number;
 	locality?: string | null;
 	address?: string | null;
-	client_id?: string | null;
+	client_id?: number | null;
 	client_name?: string | null;
 	client_last_name?: string | null;
 }
@@ -43,8 +43,8 @@ interface EmailNotificationModalProps {
 }
 
 interface EmailData {
-	clientId: string;
-	workId: string;
+	clientId: number;
+	workId: number;
 	to: string;
 	subject: string;
 	message: string;

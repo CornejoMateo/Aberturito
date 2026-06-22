@@ -11,8 +11,8 @@ import {
 import { optimizeFile } from '@/helpers/images/optimization';
 
 interface UseFileUploadOptions {
-	clientId: string;
-	checklistId?: string | null;
+	clientId: number;
+	checklistId?: number | null;
 	claimId?: number | null;
 	allowedFileTypes?: readonly string[];
 	maxFileSize?: number;

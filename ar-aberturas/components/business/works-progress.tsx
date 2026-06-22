@@ -94,11 +94,11 @@ export function WorksOpenings() {
 	} = useChecklistModal();
 
 	const handleSaveChecklist = async (checklist: any) => {
-		const { data: existingChecklists } = await getChecklistsByWorkId(checklistWork?.id || '');
+		const { data: existingChecklists } = await getChecklistsByWorkId(checklistWork?.id ?? 0);
 		const existingCount = existingChecklists?.length || 0;
 
 		const { error } = await createChecklist({
-			work_id: checklistWork?.id || '',
+			work_id: checklistWork?.id ?? 0,
 			name: checklist.name || `Abertura ${existingCount + 1}`,
 			description: checklist.description || '',
 			width: checklist.width || null,
@@ -122,7 +122,7 @@ export function WorksOpenings() {
 		reload();
 	};
 
-	const handleUpdateGeneralNote = async (workId: string, note: string) => {
+	const handleUpdateGeneralNote = async (workId: number, note: string) => {
 		const { error } = await updateWorkGeneralNote(workId, note.trim() || null);
 
 		if (error) {

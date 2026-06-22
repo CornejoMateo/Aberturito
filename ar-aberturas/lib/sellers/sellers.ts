@@ -1,7 +1,7 @@
 import { getSupabaseClient } from '../supabase-client';
 
 export type Seller = {
-	id: string;
+	id: number;
 	name: string;
 	created_at?: string;
 };
@@ -17,7 +17,7 @@ export async function listSellers(): Promise<{ data: Seller[] | null; error: any
 	return { data, error };
 }
 
-export async function getSellerById(id: string): Promise<{ data: Seller | null; error: any }> {
+export async function getSellerById(id: number): Promise<{ data: Seller | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
 	return { data, error };
@@ -36,7 +36,7 @@ export async function createSeller(
 }
 
 export async function updateSeller(
-	id: string,
+	id: number,
 	changes: Partial<Seller>
 ): Promise<{ data: Seller | null; error: any }> {
 	const supabase = getSupabaseClient();
@@ -44,7 +44,7 @@ export async function updateSeller(
 	return { data, error };
 }
 
-export async function deleteSeller(id: string): Promise<{ data: null; error: any }> {
+export async function deleteSeller(id: number): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
 	const { error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };

@@ -26,21 +26,21 @@ describe('useBalanceHandlers', () => {
 	const mockOnBalanceDeleted = jest.fn();
 
 	const mockBalance: BalanceWithTotals = {
-		id: '1',
-		client_id: 'client-1',
-		budget_id: 'budget-1',
+		id: 1,
+		client_id: 1,
+		budget_id: 1,
 		start_date: '2024-01-01',
 		contract_date_usd: 1000,
 		usd_current: 1100,
 		notes: '',
 		created_at: '2024-01-01',
 		budget: {
-			id: 'budget-1',
+			id: 1,
 			created_at: '2024-01-01',
 			amount_ars: 500000,
 			amount_usd: 5000,
 			folder_budget: {
-				id: 'folder-1',
+				id: 1,
 				work: {
 					locality: 'Buenos Aires',
 					address: 'Test Street 123',
@@ -161,7 +161,7 @@ describe('useBalanceHandlers', () => {
 				await result.current.handleDeleteBalance();
 			});
 
-			expect(mockDeleteBalance).toHaveBeenCalledWith('1');
+			expect(mockDeleteBalance).toHaveBeenCalledWith(1);
 			expect(mockRefresh).toHaveBeenCalled();
 			expect(mockOnBalanceDeleted).toHaveBeenCalled();
 			expect(result.current.isDeleteDialogOpen).toBe(false);
@@ -238,7 +238,7 @@ describe('useBalanceHandlers', () => {
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify({
-					balanceId: '1',
+					balanceId: 1,
 					newUsdRate: 1200,
 					newBalanceAmountARS: 550000,
 				}),

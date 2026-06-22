@@ -32,7 +32,7 @@ interface BudgetsFilterDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	filters: BudgetFilters;
-	sellers: Array<{ id: string; name: string }>;
+	sellers: Array<{ id: number; name: string }>;
 	onApplyFilters: (filters: BudgetFilters) => void;
 }
 
@@ -142,7 +142,7 @@ export function BudgetsFilterDialog({
 								<SelectItem value="all">Todos los vendedores</SelectItem>
 								<SelectItem value="none">Sin vendedor</SelectItem>
 								{sellers.map((seller) => (
-									<SelectItem key={seller.id} value={seller.id}>
+									<SelectItem key={seller.id} value={String(seller.id)}>
 										{seller.name}
 									</SelectItem>
 								))}

@@ -4,19 +4,19 @@ const TABLE = 'files_client';
 const BUCKET = 'clients';
 
 export type ClientFileRecord = {
-	id: string;
+	id: number;
 	uploaded_at: string;
-	client_id: string | null;
+	client_id: number | null;
 	path: string | null;
 	title: string | null;
 	description: string | null;
-	checklist_id: string | null;
+	checklist_id: number | null;
 	claim_id: number | null;
 };
 
 // get all client files
 export async function listClientFiles(
-	clientId: string
+	clientId: number
 ): Promise<{ data: ClientFileRecord[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 
@@ -70,7 +70,7 @@ export async function getClientFilesByClaim(
 
 // get files by checklist_id
 export async function getClientFilesByChecklist(
-	checklistId: string
+	checklistId: number
 ): Promise<{ data: ClientFileRecord[] | null; error: any }> {
 	const supabase = getSupabaseClient();
 
@@ -97,11 +97,11 @@ export async function getClientFilesByChecklist(
 
 // upload a file for a client
 export async function uploadClientFile(
-	clientId: string,
+	clientId: number,
 	file: File,
 	title: string | null = null,
 	description: string | null = null,
-	checklistId: string | null = null,
+	checklistId: number | null = null,
 	claimId: number | null = null
 ): Promise<{ data: ClientFileRecord | null; error: any }> {
 	const supabase = getSupabaseClient();
@@ -136,7 +136,7 @@ export async function uploadClientFile(
 }
 
 // delete a client file
-export async function deleteClientFile(fileId: string): Promise<{ success: boolean; error: any }> {
+export async function deleteClientFile(fileId: number): Promise<{ success: boolean; error: any }> {
 	const supabase = getSupabaseClient();
 
 	// Get the file record to find the path for deletion

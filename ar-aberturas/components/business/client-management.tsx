@@ -45,6 +45,7 @@ import { useAuth } from '@/components/provider/auth-provider';
 import { translateError } from '@/lib/error-translator';
 import { useClientBudgetsInfo } from '@/hooks/clients/use-client-budgets-info';
 import { paginateAndFilter } from '@/helpers/clients/pagination';
+import { listSellers, Seller } from '@/lib/sellers/sellers';
 import { SellersConfigDialog } from '@/utils/sellers/sellers-config-dialog';
 
 export function ClientManagement() {
@@ -74,6 +75,7 @@ export function ClientManagement() {
 	const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
 	const [viewingClient, setViewingClient] = useState<Client | null>(null);
 	const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+	const [sellers, setSellers] = useState<Seller[]>([]);
 	const [isSellersConfigOpen, setIsSellersConfigOpen] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 6;
@@ -171,6 +173,10 @@ export function ClientManagement() {
 		setCurrentPage(1);
 	}, [searchTerm]);
 
+	useEffect(() => {
+		listSellers().then(({ data }) => setSellers(data ?? []));
+	}, []);
+
 	return (
 		<div className="space-y-6">
 			{/* Delete Confirmation Dialog */}
@@ -221,28 +227,28 @@ export function ClientManagement() {
 					open={isAddDialogOpen}
 					onOpenChange={setIsAddDialogOpen}
 					onClientAdded={refresh}
+					sellers={sellers}
 				/>
-				{selectedClient && (
-					<ClientsAddDialog
-						open={isEditDialogOpen}
-						onOpenChange={setIsEditDialogOpen}
-						clientToEdit={
-							selectedClient
-								? {
-										id: selectedClient.id || '',
-										name: selectedClient.name || '',
-										last_name: selectedClient.last_name || '',
-										email: selectedClient.email || '',
-										phone_number: selectedClient.phone_number || '',
-										locality: selectedClient.locality || '',
-										contact_method: selectedClient.contact_method || '',
-										seller_id: selectedClient.seller_id || '',
-									}
-								: undefined
-						}
-						onUpdateClient={handleUpdateClient}
-					/>
-				)}
+				<ClientsAddDialog
+					open={isEditDialogOpen}
+					onOpenChange={setIsEditDialogOpen}
+					clientToEdit={
+						selectedClient
+							? {
+									id: selectedClient.id,
+									name: selectedClient.name || '',
+									last_name: selectedClient.last_name || '',
+									email: selectedClient.email || '',
+									phone_number: selectedClient.phone_number || '',
+									locality: selectedClient.locality || '',
+									contact_method: selectedClient.contact_method || '',
+									seller_id: selectedClient.seller_id,
+								}
+							: undefined
+					}
+					onUpdateClient={handleUpdateClient}
+					sellers={sellers}
+				/>
 			</div>
 
 			{/* Stats */}

@@ -89,7 +89,7 @@ export function ClaimsAddDialog({
 			}
 
 			setIsLoadingWorks(true);
-			const { data, error } = await getWorksByClientId(formData.client_id);
+			const { data, error } = await getWorksByClientId(Number(formData.client_id));
 
 			if (error) {
 				console.error('Error loading works:', error);

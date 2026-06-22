@@ -20,7 +20,7 @@ describe('useChecklistModal', () => {
 
 	it('should open modal with selected work', () => {
 		const { result } = renderHook(() => useChecklistModal());
-		const mockWork = { id: '1', client_id: '123', status: 'in_progress' } as any;
+		const mockWork = { id: 1, client_id: 123, status: 'in_progress' } as any;
 
 		act(() => {
 			result.current.openChecklist(mockWork);
@@ -32,7 +32,7 @@ describe('useChecklistModal', () => {
 
 	it('should close modal and reset selected work', () => {
 		const { result } = renderHook(() => useChecklistModal());
-		const mockWork = { id: '1', client_id: '123', status: 'in_progress' } as any;
+		const mockWork = { id: 1, client_id: 123, status: 'in_progress' } as any;
 
 		act(() => {
 			result.current.openChecklist(mockWork);
@@ -173,8 +173,8 @@ describe('useChecklistModal', () => {
 		const { result } = renderHook(() => useChecklistModal());
 
 		const existingChecklist: Checklist = {
-			id: '1',
-			work_id: 'work-1',
+			id: 1,
+			work_id: 1,
 			name: 'Existing Checklist',
 			description: 'Test description',
 			width: 150,
@@ -212,8 +212,8 @@ describe('useChecklistModal', () => {
 		const { result } = renderHook(() => useChecklistModal());
 
 		const checklistWithoutItems: Checklist = {
-			id: '1',
-			work_id: 'work-1',
+			id: 1,
+			work_id: 1,
 			name: 'Checklist',
 			description: null,
 			width: null,

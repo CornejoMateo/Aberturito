@@ -10,21 +10,21 @@ jest.mock('@/helpers/format-prices.tsx/formats', () => ({
 
 describe('BalanceCard', () => {
 	const mockBalance: BalanceWithBudget & { totalPaid?: number; totalPaidUSD?: number } = {
-		id: '1',
-		client_id: 'client-1',
-		budget_id: 'budget-1',
+		id: 1,
+		client_id: 1,
+		budget_id: 1,
 		start_date: '2024-01-01',
 		contract_date_usd: 1000,
 		usd_current: 1100,
-		notes: [],
+		notes: null,
 		created_at: '2024-01-01',
 		budget: {
-			id: 'budget-1',
+			id: 1,
 			created_at: '2024-01-01',
 			amount_ars: 500000,
 			amount_usd: 5000,
 			folder_budget: {
-				id: 'folder-1',
+				id: 1,
 				work: {
 					locality: 'Buenos Aires',
 					address: 'Test Street 123',
@@ -149,7 +149,7 @@ describe('BalanceCard', () => {
 		});
 
 		it('should render no budget assigned when work is missing', () => {
-			const balanceWithoutWork: BalanceWithBudget & { totalPaid?: number; totalPaidUSD?: number } = {
+			const balanceWithoutWork = {
 				...mockBalance,
 				budget: null,
 			};

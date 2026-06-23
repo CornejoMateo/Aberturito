@@ -18,8 +18,8 @@ import { formatBudgetType, formatBudgetStatus } from '@/helpers/budget/formats';
 import {
 	BUDGETS_REPORT_COLUMNS,
 	BUDGETS_REPORT_TITLE,
-	BUDGET_TYPES,
 	BUDGET_STATUS,
+	BUDGET_STATUS_ACCEPTED,
 } from '@/constants/reports/budgets-report';
 import { BudgetWithWorkAndClient, listBudgetsForReport } from '@/lib/budgets/budgets';
 import {
@@ -61,6 +61,7 @@ export function BudgetsReport() {
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 	const [typeFilter, setTypeFilter] = useState<string>('all');
 	const [statusFilter, setStatusFilter] = useState<string>('all');
+	const [electedFilter, setElectedFilter] = useState<boolean>(false);
 	const [sellerFilter, setSellerFilter] = useState<string>('all');
 	const [sellers, setSellers] = useState<Array<{ id: number; name: string }>>([]);
 	const [amountMin, setAmountMin] = useState<string>('');
@@ -143,10 +144,12 @@ export function BudgetsReport() {
 
 		// Filter by status
 		if (statusFilter !== 'all') {
-			filtered = filtered.filter((r) => {
-				if (statusFilter === BUDGET_STATUS.ACCEPTED) return r.accepted;
-				return r.status === statusFilter;
-			});
+			filtered = filtered.filter((r) => r.status === statusFilter);
+		}
+
+		// Filter by elected (can be combined with status)
+		if (electedFilter) {
+			filtered = filtered.filter((r) => r.accepted);
 		}
 
 		// Filter by seller
@@ -222,7 +225,7 @@ export function BudgetsReport() {
 			if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
 			return 0;
 		});
-	}, [rows, searchTerm, sortField, sortDirection, typeFilter, statusFilter, sellerFilter, amountMin, amountMax, amountMinUsd, amountMaxUsd]);
+	}, [rows, searchTerm, sortField, sortDirection, typeFilter, statusFilter, electedFilter, sellerFilter, amountMin, amountMax, amountMinUsd, amountMaxUsd]);
 
 	const totalPages = Math.max(1, Math.ceil(filteredRows.length / ITEMS_PER_PAGE));
 
@@ -278,6 +281,7 @@ export function BudgetsReport() {
 	const handleApplyFilters = (filters: {
 		typeFilter: string;
 		statusFilter: string;
+		electedFilter: boolean;
 		sellerFilter: string;
 		amountMin: string;
 		amountMax: string;
@@ -286,6 +290,7 @@ export function BudgetsReport() {
 	}) => {
 		setTypeFilter(filters.typeFilter);
 		setStatusFilter(filters.statusFilter);
+		setElectedFilter(filters.electedFilter);
 		setSellerFilter(filters.sellerFilter);
 		setAmountMin(filters.amountMin);
 		setAmountMax(filters.amountMax);
@@ -491,6 +496,7 @@ export function BudgetsReport() {
 				filters={{
 					typeFilter,
 					statusFilter,
+					electedFilter,
 					sellerFilter,
 					amountMin,
 					amountMax,

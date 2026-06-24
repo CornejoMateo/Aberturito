@@ -160,13 +160,13 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 									const aluminioValue = typeof data.aluminioValue === 'number' && !Number.isNaN(data.aluminioValue) ? data.aluminioValue : 0;
 									if (name === 'PVC') {
 										return [
-											`${Math.round(value)} unidades - $${new Intl.NumberFormat('es-AR').format(pvcValue)}`,
+											`${Math.round(value)} vendidos - $${new Intl.NumberFormat('es-AR').format(pvcValue)}`,
 											name,
 										];
 									}
 									if (name === 'Aluminio') {
 										return [
-											`${Math.round(value)} unidades - $${new Intl.NumberFormat('es-AR').format(aluminioValue)}`,
+											`${Math.round(value)} vendidos - $${new Intl.NumberFormat('es-AR').format(aluminioValue)}`,
 											name,
 										];
 									}

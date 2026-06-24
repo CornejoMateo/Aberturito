@@ -107,7 +107,7 @@ const navigation = [
 		disabled: false,
 	},
 	{
-		name:'Ajustes y Diario',
+		name: 'Ajustes y Diario',
 		href: '/claims',
 		icon: AlertCircle,
 		disabled: false,
@@ -128,6 +128,7 @@ const navigation = [
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	const [sidebarOpen, setSidebarOpen] = useState(false);
+	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 	const [expandedItems, setExpandedItems] = useState<string[]>([]);
 	const pathname = usePathname();
 	const router = useRouter();
@@ -214,9 +215,32 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	// Definición de permisos por rol
 	const allowedByRole = useMemo(() => {
 		return {
-			Admin: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Relevamiento', 'Reportes de Presupuestos', 'Obras', 'Calendario', 'Reportes', 'Ajustes y Diario'],
+			Admin: [
+				'Panel',
+				'Perfiles',
+				'Accesorios',
+				'Herrajes',
+				'Insumos',
+				'Clientes',
+				'Relevamiento',
+				'Reportes de Presupuestos',
+				'Obras',
+				'Calendario',
+				'Reportes',
+				'Ajustes y Diario',
+			],
 			Fabrica: ['Perfiles', 'Accesorios', 'Herrajes', 'Insumos'],
-			Ventas: ['Panel', 'Perfiles', 'Accesorios', 'Herrajes', 'Insumos', 'Clientes', 'Relevamiento', 'Reportes de Presupuestos', 'Calendario'],
+			Ventas: [
+				'Panel',
+				'Perfiles',
+				'Accesorios',
+				'Herrajes',
+				'Insumos',
+				'Clientes',
+				'Relevamiento',
+				'Reportes de Presupuestos',
+				'Calendario',
+			],
 			Marketing: ['Panel', 'Calendario', 'Clientes', 'Reportes', 'Reportes de Presupuestos'],
 			Colocador: ['Obras', 'Ajustes y Diario', 'Clientes'],
 		} as Record<string, string[]>;
@@ -296,20 +320,29 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 			{/* Sidebar */}
 			<aside
 				className={cn(
-					'fixed inset-y-0 left-0 z-50 w-64 transform bg-card border-r border-border transition-transform duration-200 ease-in-out',
-					sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+					'fixed inset-y-0 left-0 z-50 bg-card border-r border-border transition-all duration-200',
+					sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden' : 'lg:w-64',
+					sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+					'lg:translate-x-0'
 				)}
 			>
 				<div className="flex h-full flex-col">
 					{/* Logo */}
 					<div className="flex h-16 items-center justify-between border-b border-border px-6">
 						<div className="flex items-center gap-2">
-							<Image src="/logo-original.png" alt="Logo" width={80} height={80} style={{ height: 'auto' }} />
+							<Image
+								src="/logo-original.png"
+								alt="Logo"
+								width={80}
+								height={80}
+								style={{ height: 'auto' }}
+							/>
 							<span className="font-semibold text-foreground">AR Aberturas</span>
 						</div>
 						<Button
 							variant="ghost"
 							size="icon"
+							className="lg:hidden"
 							onClick={() => setSidebarOpen(false)}
 						>
 							<X className="h-5 w-5" />
@@ -451,13 +484,20 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 			</aside>
 
 			{/* Main content */}
-			<div className={cn('transition-all duration-200', sidebarOpen ? 'lg:pl-64' : 'pl-0')}>
+			<div className={cn('transition-all duration-200', sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-64')}>
+				{' '}
 				{/* Top bar */}
 				<header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-card px-4 lg:px-6">
 					<Button
 						variant="ghost"
 						size="icon"
-						onClick={() => setSidebarOpen(true)}
+						onClick={() => {
+							if (window.innerWidth >= 1024) {
+								setSidebarCollapsed(!sidebarCollapsed);
+							} else {
+								setSidebarOpen(!sidebarOpen);
+							}
+						}}
 					>
 						<Menu className="h-5 w-5" />
 					</Button>
@@ -468,7 +508,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 						<ThemeToggle />
 					</div>
 				</header>
-
 				{/* Page content */}
 				<main className="p-4 lg:p-6">{children}</main>
 			</div>

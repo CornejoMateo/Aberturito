@@ -62,6 +62,8 @@ export function BudgetsReport() {
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 	const [typeFilter, setTypeFilter] = useState<string>('all');
 	const [statusFilter, setStatusFilter] = useState<string>('all');
+	const [electedFilter, setElectedFilter] = useState<boolean>(false);
+	const [materialFilter, setMaterialFilter] = useState<string>('all');
 	const [sellerFilter, setSellerFilter] = useState<string>('all');
 	const [sellers, setSellers] = useState<Array<{ id: number; name: string }>>([]);
 	const [amountMin, setAmountMin] = useState<string>('');
@@ -151,6 +153,16 @@ export function BudgetsReport() {
 			});
 		}
 
+		// Filter by elected (can be combined with status)
+		if (electedFilter) {
+			filtered = filtered.filter((r) => r.accepted);
+		}
+
+		// Filter by material
+		if (materialFilter !== 'all') {
+			filtered = filtered.filter((r) => r.materialType === materialFilter);
+		}
+
 		// Filter by seller
 		if (sellerFilter !== 'all') {
 			if (sellerFilter === 'none') {
@@ -224,7 +236,7 @@ export function BudgetsReport() {
 			if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
 			return 0;
 		});
-	}, [rows, searchTerm, sortField, sortDirection, typeFilter, statusFilter, sellerFilter, amountMin, amountMax, amountMinUsd, amountMaxUsd]);
+	}, [rows, searchTerm, sortField, sortDirection, typeFilter, statusFilter, electedFilter, materialFilter, sellerFilter, amountMin, amountMax, amountMinUsd, amountMaxUsd]);
 
 	const totalPages = Math.max(1, Math.ceil(filteredRows.length / ITEMS_PER_PAGE));
 
@@ -280,6 +292,8 @@ export function BudgetsReport() {
 	const handleApplyFilters = (filters: {
 		typeFilter: string;
 		statusFilter: string;
+		electedFilter: boolean;
+		materialFilter: string;
 		sellerFilter: string;
 		amountMin: string;
 		amountMax: string;
@@ -288,6 +302,8 @@ export function BudgetsReport() {
 	}) => {
 		setTypeFilter(filters.typeFilter);
 		setStatusFilter(filters.statusFilter);
+		setElectedFilter(filters.electedFilter);
+		setMaterialFilter(filters.materialFilter);
 		setSellerFilter(filters.sellerFilter);
 		setAmountMin(filters.amountMin);
 		setAmountMax(filters.amountMax);
@@ -503,6 +519,8 @@ export function BudgetsReport() {
 				filters={{
 					typeFilter,
 					statusFilter,
+					electedFilter,
+					materialFilter,
 					sellerFilter,
 					amountMin,
 					amountMax,

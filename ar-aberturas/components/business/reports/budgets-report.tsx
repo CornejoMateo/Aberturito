@@ -45,6 +45,7 @@ type BudgetReportRow = {
 	client: string;
 	number: string;
 	type: string;
+	materialType: string;
 	work: string;
 	amountArs: number;
 	amountUsd: number;
@@ -117,6 +118,7 @@ export function BudgetsReport() {
 					client: clientName,
 					number: b.number || '-',
 					type: formatBudgetType(b.type),
+					materialType: b.type || '-',
 					work,
 					amountArs: b.amount_ars || 0,
 					amountUsd: b.amount_usd || 0,
@@ -375,6 +377,15 @@ export function BudgetsReport() {
 							</TableHead>
 							<TableHead
 								className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
+								onClick={() => handleSort('materialType')}
+							>
+								<div className="flex items-center gap-1">
+									{BUDGETS_REPORT_COLUMNS.materialType}
+									{getSortIcon('materialType')}
+								</div>
+							</TableHead>
+							<TableHead
+								className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
 								onClick={() => handleSort('work')}
 							>
 								<div className="flex items-center gap-1">
@@ -424,13 +435,13 @@ export function BudgetsReport() {
 					<TableBody>
 						{loading ? (
 							<TableRow>
-								<TableCell colSpan={9} className="text-center text-muted-foreground">
+								<TableCell colSpan={10} className="text-center text-muted-foreground">
 									Cargando presupuestos...
 								</TableCell>
 							</TableRow>
 						) : filteredRows.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={9} className="text-center text-muted-foreground">
+								<TableCell colSpan={10} className="text-center text-muted-foreground">
 									No hay resultados
 								</TableCell>
 							</TableRow>
@@ -441,6 +452,7 @@ export function BudgetsReport() {
 									<TableCell className="font-medium whitespace-nowrap">{r.client}</TableCell>
 									<TableCell className="whitespace-nowrap">{r.number}</TableCell>
 									<TableCell className="whitespace-nowrap">{r.type}</TableCell>
+									<TableCell className="whitespace-nowrap">{r.materialType}</TableCell>
 									<TableCell className="whitespace-nowrap">{r.work}</TableCell>
 									<TableCell className="text-right whitespace-nowrap">
 										{formatCurrency(r.amountArs)}

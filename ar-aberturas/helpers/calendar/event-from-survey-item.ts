@@ -39,10 +39,10 @@ export async function handleCreateEventFromSurveyItem(
 		});
 
 		if (error) {
-			console.error('Error al crear el evento:', error);
+			const err = 'Error al crear el evento:' + error;
 			toast({
 				title: 'Error',
-				description: translateError(error),
+				description: translateError(err),
 				variant: 'destructive',
 			});
 			return false;
@@ -58,10 +58,10 @@ export async function handleCreateEventFromSurveyItem(
 
 		return false;
 	} catch (error) {
-		console.error('Error inesperado al crear el evento:', error);
+		const err = 'Error inesperado al crear el evento:' + error;
 		toast({
 			title: 'Error',
-			description: translateError(error),
+			description: translateError(err),
 			variant: 'destructive',
 		});
 		return false;

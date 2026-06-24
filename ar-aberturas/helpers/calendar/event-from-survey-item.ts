@@ -1,5 +1,6 @@
 import { toast } from '@/components/ui/use-toast';
 import { createEvent } from '@/lib/calendar/events';
+import { translateError } from '@/lib/error-translator';
 
 interface EventData {
 	title?: string;
@@ -41,7 +42,7 @@ export async function handleCreateEventFromSurveyItem(
 			console.error('Error al crear el evento:', error);
 			toast({
 				title: 'Error',
-				description: 'No se pudo crear el evento.',
+				description: translateError(error),
 				variant: 'destructive',
 			});
 			return false;
@@ -60,7 +61,7 @@ export async function handleCreateEventFromSurveyItem(
 		console.error('Error inesperado al crear el evento:', error);
 		toast({
 			title: 'Error',
-			description: 'No se pudo crear el evento.',
+			description: translateError(error),
 			variant: 'destructive',
 		});
 		return false;

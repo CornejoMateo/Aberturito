@@ -917,36 +917,39 @@ export async function getSoldBudgetsByMaterial(): Promise<{
 }
 
 export async function getSoldBudgetsByMaterialByMonth(): Promise<{
-	data: Array<{ month: string; pvc: number; aluminio: number }> | null;
+	data: Array<{ month: string; pvc: number; aluminio: number; pvcValue: number; aluminioValue: number }> | null;
 	error: any;
 }> {
 	const supabase = getSupabaseClient();
-	const { data, error } = await supabase.from(TABLE).select('created_at, type').eq('sold', true);
+	const { data, error } = await supabase.from(TABLE).select('created_at, type, amount_ars').eq('sold', true);
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
 
-	const monthMap = new Map<string, { pvc: number; aluminio: number }>();
+	const monthMap = new Map<string, { pvc: number; aluminio: number; pvcValue: number; aluminioValue: number }>();
 
 	months.forEach((month) => {
-		monthMap.set(month, { pvc: 0, aluminio: 0 });
+		monthMap.set(month, { pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 });
 	});
 
 	data.forEach((budget: any) => {
 		if (!budget.created_at) return;
 
 		const monthName = months[new Date(budget.created_at).getMonth()];
-		const current = monthMap.get(monthName) || { pvc: 0, aluminio: 0 };
+		const current = monthMap.get(monthName) || { pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 };
 		const material = String(budget.type || '')
 			.trim()
 			.toLowerCase();
+		const amount = typeof budget.amount_ars === 'number' && !Number.isNaN(budget.amount_ars) ? budget.amount_ars : 0;
 
 		if (material.includes('pvc')) {
 			current.pvc += 1;
+			current.pvcValue += amount;
 		}
 
 		if (material.includes('aluminio')) {
 			current.aluminio += 1;
+			current.aluminioValue += amount;
 		}
 
 		monthMap.set(monthName, current);

@@ -25,7 +25,7 @@ export interface SalesMetrics {
 	clientsByContactMethod: Array<{ method: string; count: number }>;
 	budgetsByMaterial: Array<{ material: string; count: number }>;
  	soldBudgetsByMaterial: Array<{ material: string; count: number }>;
-	soldBudgetsByMaterialByMonth: Array<{ month: string; pvc: number; aluminio: number }>;
+	soldBudgetsByMaterialByMonth: Array<{ month: string; pvc: number; aluminio: number; pvcValue: number; aluminioValue: number }>;
 }
 
 export interface MonthlyData {

@@ -321,7 +321,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 			<aside
 				className={cn(
 					'fixed inset-y-0 left-0 z-50 bg-card border-r border-border transition-all duration-200',
-					sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden' : 'lg:w-64',
+					sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:invisible' : 'lg:w-64 lg:visible',
 					sidebarOpen ? 'translate-x-0' : '-translate-x-full',
 					'lg:translate-x-0'
 				)}
@@ -343,6 +343,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 							variant="ghost"
 							size="icon"
 							className="lg:hidden"
+							aria-label="Cerrar menú lateral"
 							onClick={() => setSidebarOpen(false)}
 						>
 							<X className="h-5 w-5" />

@@ -16,10 +16,11 @@ import { getBudgetAddress, getBudgetLabel } from '@/helpers/budgets/budget-helpe
 import { formatCreatedAt } from '@/helpers/date/format-date';
 import { getSurveyProgress } from '@/helpers/surveys/progress';
 import { BudgetWithWork } from '@/lib/works/balances';
-
+import { handleCreateEventFromSurveyItem } from '@/helpers/calendar/event-from-survey-item';
 import { CalendarIcon, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EventFormModal } from '@/utils/calendar/event-form-modal';
 
 import type {
 	ItemDialogState,
@@ -301,6 +302,29 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 														{item.label}
 													</label>
 													<div className="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+														<EventFormModal
+															onSave={async (eventData) => {
+																return handleCreateEventFromSurveyItem(eventData);
+															}}
+															initialData={{
+																title: item.label,
+																type: 'medicion',
+																client: `${client.last_name} ${client.name}`,
+																location: budget.folder_budget?.work?.locality || '',
+																address: budget.folder_budget?.work?.address || '',
+																description: '',
+															}}
+														>
+															<Button
+																variant="ghost"
+																size="icon"
+																className="h-6 w-6"
+																aria-label="Crear evento"
+																disabled={isLoading}
+															>
+																<CalendarIcon className="h-3 w-3" />
+															</Button>
+														</EventFormModal>
 														<Button
 															variant="ghost"
 															size="icon"

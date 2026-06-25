@@ -194,8 +194,8 @@ export function SurveyBudgetCard({
 													title: item.label,
 													type: 'medicion',
 													client: `${client.last_name} ${client.name}`,
-													location: client.locality || '',
-													address: '',
+													location: budget.folder_budget?.work?.locality || '',
+													address: budget.folder_budget?.work?.address || '',
 													description: '',
 												}}
 											>

@@ -15,7 +15,7 @@ import {
 	deleteSurveyItem as deleteSurveyItemLib,
 } from '@/lib/survey/survey';
 
-import { DEFAULT_SURVEY_STEPS } from '@/constants/survey';
+import { DEFAULT_SURVEY_STEPS } from '@/constants/surveys/survey';
 
 export function useClientSurveys(clientId?: number) {
 	const [soldBudgets, setSoldBudgets] = useState<BudgetWithWork[]>([]);
@@ -37,7 +37,8 @@ export function useClientSurveys(clientId?: number) {
 			}
 
 			const folderIds = folders.map((f) => f.id);
-			const { data: allBudgets, error: budgetsError } = await getBudgetsByFolderBudgetIds(folderIds);
+			const { data: allBudgets, error: budgetsError } =
+				await getBudgetsByFolderBudgetIds(folderIds);
 			if (budgetsError) throw budgetsError;
 			const sold = (allBudgets ?? []).filter((b) => b.sold === true);
 			setSoldBudgets(sold);
@@ -144,10 +145,7 @@ export function useClientSurveys(clientId?: number) {
 	);
 
 	const updateItem = useCallback(
-		async (
-			itemId: number,
-			changes: Partial<Pick<SurveyItem, 'label' | 'completed' | 'order'>>
-		) => {
+		async (itemId: number, changes: Partial<Pick<SurveyItem, 'label' | 'completed' | 'order'>>) => {
 			try {
 				const { error } = await updateSurveyItemLib(itemId, changes);
 				if (error) throw error;

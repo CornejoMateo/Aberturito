@@ -1,5 +1,5 @@
 import { getSupabaseClient } from '@/lib/supabase-client';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 
 // Singleton pattern to share channels across components
 const channelRegistry = new Map<string, any>();

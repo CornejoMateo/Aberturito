@@ -6,8 +6,10 @@ export function formatBudgetType(type: string | null | undefined) {
 	switch (type.toLowerCase()) {
 		case 'optimo':
 		case 'optimal':
+		case 'óptimo':
 			return BUDGET_TYPES.OPTIMAL;
 		case 'minimo':
+		case 'mínimo':
 		case 'minimal':
 			return BUDGET_TYPES.MINIMAL;
 		case 'estandar':

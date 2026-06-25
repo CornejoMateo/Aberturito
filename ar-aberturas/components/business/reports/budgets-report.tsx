@@ -107,7 +107,7 @@ export function BudgetsReport() {
 					dateRaw,
 					client: clientName,
 					number: b.number || '-',
-					type: formatBudgetType(b.type),
+					type: formatBudgetType(b.version),
 					materialType: b.type || '-',
 					work,
 					amountArs: b.amount_ars || 0,

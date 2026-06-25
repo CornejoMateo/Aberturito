@@ -11,8 +11,8 @@ const pendingCount = claims.filter((c) => !c.resolved && !c.daily).length;
 const resolvedCount = claims.filter((c) => c.resolved && !c.daily).length;
 
 return (
-    <div className="grid gap-4 md:grid-cols-3">
-				<Card className="p-6 bg-card border-border">
+    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+				<Card className="p-4 sm:p-6 bg-card border-border">
 					<div className="flex items-center justify-between">
 						<div>
 							<p className="text-sm font-medium text-muted-foreground">{filterType !== 'diario' ? 'Total reclamos' : 'Total actividades diarias'}</p>
@@ -26,7 +26,7 @@ return (
 
 				{filterType !== 'diario' && (
 					<>
-						<Card className="p-6 bg-card border-border">
+						<Card className="p-4 sm:p-6 bg-card border-border">
 							<div className="flex items-center justify-between">
 								<div>
 									<p className="text-sm font-medium text-muted-foreground">Pendientes</p>
@@ -37,9 +37,9 @@ return (
 								</div>
 							</div>
 						</Card>
-					
 
-						<Card className="p-6 bg-card border-border">
+
+						<Card className="p-4 sm:p-6 bg-card border-border">
 							<div className="flex items-center justify-between">
 								<div>
 									<p className="text-sm font-medium text-muted-foreground">Resueltos</p>

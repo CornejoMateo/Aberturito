@@ -234,9 +234,10 @@ export function ClaimsManagement() {
 					<p className="text-muted-foreground mt-1">Administración de reclamos y seguimiento</p>
 				</div>
 				{user?.role === 'Admin' && (
-					<Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
+					<Button onClick={() => setIsAddDialogOpen(true)} className="gap-2 w-full md:w-auto">
 						<Plus className="h-4 w-4" />
-						{filterType === 'diario' ? 'Agregar actividad diaria' : 'Agregar reclamo'}
+						<span className="hidden sm:inline">{filterType === 'diario' ? 'Agregar actividad diaria' : 'Agregar reclamo'}</span>
+						<span className="sm:hidden">{filterType === 'diario' ? 'Agregar actividad' : 'Agregar reclamo'}</span>
 					</Button>
 				)}
 			</div>

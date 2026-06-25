@@ -178,22 +178,179 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 
 	return (
 		<div className="space-y-4">
-			{soldBudgets.map((budget) => (
-				<SurveyBudgetCard
-					key={budget.id}
-					budget={budget}
-					survey={getSurveyForBudget(budget.id)}
-					items={items}
-					client={client}
-					isLoading={isLoading}
-					onCreateSurvey={handleCreateSurvey}
-					onToggleItem={handleToggleItem}
-					onSetItemDialog={setItemDialog}
-					onSetDeleteItemConfirm={setDeleteItemConfirm}
-					onSetDeleteRelConfirm={setDeleteRelConfirm}
-					onSetDueDateDialog={setDueDateDialog}
-				/>
-			))}
+			{soldBudgets.map((budget: BudgetWithWork) => {
+				const survey = getSurveyForBudget(budget.id);
+				const address = getBudgetAddress(budget);
+				const label = getBudgetLabel(budget);
+
+				return (
+					<Card key={budget.id}>
+						<CardHeader className="pb-2">
+							<div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+								<div className="min-w-0">
+									<CardTitle className="text-sm font-semibold">{label}</CardTitle>
+									{address && <p className="text-xs text-muted-foreground mt-0.5">{address}</p>}
+								</div>
+								<div className="flex items-center gap-2 flex-wrap flex-shrink-0">
+									<Badge variant="default" className="text-xs">
+										Vendido
+									</Badge>
+									{survey && (
+										<>
+											<Button
+												variant="ghost"
+												size="icon"
+												className="h-8 w-8 text-muted-foreground"
+												disabled={isLoading}
+												aria-label="Editar fecha de vencimiento"
+												onClick={() =>
+													setDueDateDialog({
+														open: true,
+														surveyId: survey.id,
+														currentDueDate: survey.due_date ? new Date(survey.due_date) : null,
+													})
+												}
+											>
+												<CalendarIcon className="h-4 w-4" />
+											</Button>
+											<div className="text-xs text-muted-foreground">
+												{survey.due_date ? formatCreatedAt(survey.due_date) : 'No establecida'}
+											</div>
+
+											<Button
+												variant="ghost"
+												size="icon"
+												className="h-8 w-8 text-muted-foreground hover:text-destructive"
+												disabled={isLoading}
+												aria-label="Eliminar relevamiento"
+												onClick={() => setDeleteRelConfirm({ open: true, surveyId: survey.id })}
+											>
+												<Trash2 className="h-4 w-4" />
+											</Button>
+										</>
+									)}
+								</div>
+							</div>
+						</CardHeader>
+
+						<CardContent>
+							{!survey ? (
+								<div className="text-center py-4 space-y-3">
+									<p className="text-xs text-muted-foreground">
+										No hay relevamiento para este presupuesto.
+									</p>
+									<Button
+										size="default"
+										onClick={() => handleCreateSurvey(budget.id)}
+										disabled={isLoading}
+										className="w-full sm:w-auto"
+									>
+										<Plus className="h-4 w-4 mr-1" />
+										Crear relevamiento
+									</Button>
+								</div>
+							) : (
+								<div className="space-y-3">
+									{/* Progress bar */}
+									{(() => {
+										const { done, total } = getProgress(survey.id);
+										return total > 0 ? (
+											<div className="flex items-center gap-2">
+												<div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+													<div
+														className="h-full bg-primary rounded-full transition-all duration-300"
+														style={{ width: `${(done / total) * 100}%` }}
+													/>
+												</div>
+												<span className="text-xs text-muted-foreground whitespace-nowrap">
+													{done}/{total}
+												</span>
+											</div>
+										) : null;
+									})()}
+
+									{/* Steps list */}
+									{getItemsForSurvey(survey.id).length === 0 ? (
+										<p className="text-xs text-muted-foreground text-center py-2">
+											No hay pasos. Agregá el primero.
+										</p>
+									) : (
+										<ul className="space-y-2">
+											{getItemsForSurvey(survey.id).map((item) => (
+												<li key={item.id} className="flex items-center gap-3 group">
+													<Checkbox
+														id={`item-${item.id}`}
+														checked={item.completed}
+														onCheckedChange={() => handleToggleItem(item)}
+														disabled={isLoading}
+														className="h-5 w-5"
+													/>
+													<label
+														htmlFor={`item-${item.id}`}
+														className={`flex-1 text-sm cursor-pointer select-none ${
+															item.completed ? 'line-through text-muted-foreground' : ''
+														}`}
+													>
+														{item.label}
+													</label>
+													<div className="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+														<Button
+															variant="ghost"
+															size="icon"
+															className="h-8 w-8"
+															aria-label="Editar paso"
+															disabled={isLoading}
+															onClick={() =>
+																setItemDialog({
+																	open: true,
+																	mode: 'edit',
+																	surveyId: item.survey_id,
+																	item,
+																})
+															}
+														>
+															<Pencil className="h-4 w-4" />
+														</Button>
+														<Button
+															variant="ghost"
+															size="icon"
+															className="h-8 w-8 text-muted-foreground hover:text-destructive"
+															aria-label="Eliminar paso"
+															disabled={isLoading}
+															onClick={() => setDeleteItemConfirm({ open: true, itemId: item.id })}
+														>
+															<Trash2 className="h-4 w-4" />
+														</Button>
+													</div>
+												</li>
+											))}
+										</ul>
+									)}
+
+									{/* Add step */}
+									<Button
+										variant="outline"
+										size="sm"
+										className="w-full mt-1"
+										disabled={isLoading}
+										onClick={() =>
+											setItemDialog({
+												open: true,
+												mode: 'add',
+												surveyId: survey.id,
+												item: null,
+											})
+										}
+									>
+										<Plus className="h-4 w-4 mr-1" />
+										Agregar paso
+									</Button>
+								</div>
+							)}
+						</CardContent>
+					</Card>
+				);
+			})}
 
 			{/* Add / Edit item dialog */}
 			<SurveyItemDialog

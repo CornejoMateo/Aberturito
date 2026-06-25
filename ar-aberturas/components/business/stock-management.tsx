@@ -329,7 +329,7 @@ export function StockManagement({
 			/>
 
 			{/* Filters */}
-			<div className="flex gap-4">
+			<div className="flex flex-col gap-4 md:flex-row md:items-start">
 				<StockFilters
 					searchTerm={searchTerm}
 					setSearchTerm={setSearchTerm}
@@ -357,7 +357,7 @@ export function StockManagement({
 								});
 							}
 						}}
-						className="h-auto"
+						className="h-auto w-full md:w-auto"
 					>
 						<Download className="mr-2 h-4 w-4" />
 						Descargar PDF

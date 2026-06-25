@@ -277,17 +277,17 @@ export function ClientDetailsDialog({
 							className="w-full"
 							onValueChange={handleTabChange}
 						>
-							<TabsList>
+							<TabsList className="flex-wrap h-auto justify-start gap-1 w-full">
 								{user?.role !== 'Colocador' && (
 									<>
-										<TabsTrigger value="info">Información</TabsTrigger>
-										<TabsTrigger value="works">Obras</TabsTrigger>
-										<TabsTrigger value="budgets">Presupuestos</TabsTrigger>
-										<TabsTrigger value="balances">Saldos</TabsTrigger>
+										<TabsTrigger value="info" className="flex-1 min-w-[80px]">Información</TabsTrigger>
+										<TabsTrigger value="works" className="flex-1 min-w-[80px]">Obras</TabsTrigger>
+										<TabsTrigger value="budgets" className="flex-1 min-w-[80px]">Presupuestos</TabsTrigger>
+										<TabsTrigger value="balances" className="flex-1 min-w-[80px]">Saldos</TabsTrigger>
 									</>
 								)}
-								<TabsTrigger value="images">Archivos</TabsTrigger>
-								<TabsTrigger value="surveys">Relevamiento</TabsTrigger>
+								<TabsTrigger value="images" className="flex-1 min-w-[80px]">Archivos</TabsTrigger>
+								<TabsTrigger value="surveys" className="flex-1 min-w-[80px]">Relevamiento</TabsTrigger>
 							</TabsList>
 
 							<div className="mt-2">

@@ -188,7 +188,8 @@ export function AccesoriesTable({
 
 	return (
 		<Card className="bg-card border-border overflow-hidden">
-			<div className="overflow-x-auto">
+			{/* Desktop Table View */}
+			<div className="hidden md:block overflow-x-auto">
 				<table className="w-full">
 					<thead className="border-b border-border bg-secondary">
 						<tr>
@@ -455,6 +456,208 @@ export function AccesoriesTable({
 						)}
 					</tbody>
 				</table>
+			</div>
+
+			{/* Mobile Card View */}
+			<div className="md:hidden p-4 space-y-4">
+				{filteredStock.length === 0 ? (
+					<div className="flex flex-col items-center gap-2 text-muted-foreground py-12">
+						<Package className="h-12 w-12 opacity-50" />
+						<p className="text-lg font-medium">No hay items</p>
+					</div>
+				) : (
+					filteredStock.map((item) => {
+						const total =
+							((item as any)[keys.quantityForLump] ?? 0) *
+								((item as any)[keys.quantityLump] ?? 0) || 0;
+						const quantityForThreshold = (item as any)[keys.quantityLump] ?? (item as any)[keys.quantity] ?? total;
+						return (
+							<div
+								key={(item as any).id}
+								className={`border rounded-lg p-4 space-y-3 bg-card border-border ${
+									getRowClassName((item as any).id, quantityForThreshold, categoryState, thresholds)
+								}`}
+							>
+								{/* Header with main info */}
+								<div className="flex justify-between items-start gap-2">
+									<div className="flex-1 min-w-0">
+										<p className="font-semibold text-sm truncate">
+											{(item as any)[keys.code] || '-'}
+										</p>
+										<p className="text-xs text-muted-foreground">
+											{(item as any)[keys.category] || '—'}
+										</p>
+									</div>
+								</div>
+
+								{/* Description */}
+								{(item as any)[keys.description] && (
+									<p className="text-xs text-foreground whitespace-pre-line break-words">
+										{((item as any)[keys.description] || '')
+											.split(' ')
+											.reduce(
+												(acc: string[], word: string) => {
+													const lastLine = acc[acc.length - 1] || '';
+													if (lastLine.length + word.length <= 100) {
+														acc[acc.length - 1] = lastLine ? `${lastLine} ${word}` : word;
+													} else {
+														acc.push(word);
+													}
+													return acc;
+												},
+												['']
+											)
+											.join('\n')}
+									</p>
+								)}
+
+								{/* Details */}
+								<div className="grid grid-cols-2 gap-2 text-xs">
+									<div>
+										<p className="text-muted-foreground">Línea</p>
+										<p className="font-medium">{(item as any)[keys.line] || '-'}</p>
+									</div>
+									<div>
+										<p className="text-muted-foreground">Marca</p>
+										<p className="font-medium">{(item as any)[keys.brand] || '-'}</p>
+									</div>
+									<div>
+										<p className="text-muted-foreground">Color</p>
+										<p className="font-medium">{(item as any)[keys.color] || '-'}</p>
+									</div>
+									<div>
+										<p className="text-muted-foreground">Ubicación</p>
+										<p className="font-medium">{(item as any)[keys.site] || '-'}</p>
+									</div>
+									<div>
+										<p className="text-muted-foreground">Cant x bulto</p>
+										<p className="font-medium">{(item as any)[keys.quantityForLump] ?? 0}</p>
+									</div>
+									<div>
+										<p className="text-muted-foreground">Bultos</p>
+										<p className="font-medium">{(item as any)[keys.quantityLump] ?? 0}</p>
+									</div>
+									<div>
+										<p className="text-muted-foreground">Fecha</p>
+										<p className="font-medium">{formatCreatedAt((item as any)[keys.createdAt])}</p>
+									</div>
+									<div>
+										<p className="text-muted-foreground">Imagen</p>
+										{(() => {
+											const imageId = (item as any)[keys.image_id] as number | null | undefined;
+											const imageUrl = imageId ? imageUrlsById[imageId] : null;
+											if (!imageId || !imageUrl) {
+												return <span className="text-muted-foreground">No tiene</span>;
+											}
+											return (
+												<Button
+													variant="outline"
+													size="sm"
+													className="h-6 text-xs"
+													onClick={() => setOpenImageUrl(imageUrl)}
+												>
+													Ver
+												</Button>
+											);
+										})()}
+									</div>
+									{isAutorized && (
+										<div>
+											<p className="text-muted-foreground">Precio</p>
+											<p className="font-medium">
+												{(item as any)[keys.price] ? `$${(item as any)[keys.price]}` : '—'}
+											</p>
+										</div>
+									)}
+								</div>
+
+								{/* Quantity controls */}
+								<div className="flex items-center justify-between gap-2">
+									<div className="flex items-center gap-2">
+										<Button
+											variant="outline"
+											size="icon"
+											className="h-8 w-8"
+											onClick={() =>
+												handleQuantityAction(
+													(item as any).id,
+													'decrement',
+													(item as any)[keys.quantity] ?? total
+												)
+											}
+											disabled={
+												(isUpdating && updatingId === (item as any).id) ||
+												((item as any)[keys.quantity] ?? total) <= 0
+											}
+										>
+											<Minus className="h-3.5 w-3.5" />
+										</Button>
+										<div className="text-center min-w-[60px]">
+											<p className="text-sm font-medium">
+												{(item as any)[keys.quantity] ?? total}
+											</p>
+											<p className="text-xs text-muted-foreground">unidades</p>
+										</div>
+										<Button
+											variant="outline"
+											size="icon"
+											className="h-8 w-8"
+											onClick={() =>
+												handleQuantityAction(
+													(item as any).id,
+													'increment',
+													(item as any)[keys.quantity] ?? total
+												)
+											}
+											disabled={isUpdating && updatingId === (item as any).id}
+										>
+											<Plus className="h-3.5 w-3.5" />
+										</Button>
+									</div>
+
+									{/* Actions */}
+									<div className="flex gap-1">
+										<Button
+											variant="ghost"
+											size="icon"
+											className="h-8 w-8"
+											onClick={() => onEdit((item as any).id)}
+										>
+											<Edit className="h-4 w-4" />
+										</Button>
+										<AlertDialog>
+											<AlertDialogTrigger asChild>
+												<Button
+													variant="ghost"
+													size="icon"
+													className="h-8 w-8 text-destructive hover:text-destructive"
+												>
+													<Trash2 className="h-4 w-4" />
+												</Button>
+											</AlertDialogTrigger>
+											<AlertDialogContent>
+												<AlertDialogTitle>¿Eliminar item?</AlertDialogTitle>
+												<AlertDialogDescription>
+													¿Estás seguro que deseas eliminar este item? Esta acción no se puede
+													deshacer.
+												</AlertDialogDescription>
+												<div className="flex justify-end gap-2 mt-4">
+													<AlertDialogCancel>Cancelar</AlertDialogCancel>
+													<AlertDialogAction
+														className="bg-destructive text-white hover:bg-destructive/90"
+														onClick={() => onDelete((item as any).id)}
+													>
+														Eliminar
+													</AlertDialogAction>
+												</div>
+											</AlertDialogContent>
+										</AlertDialog>
+									</div>
+								</div>
+							</div>
+						);
+					})
+				)}
 			</div>
 
 			{showQuantityDialog && (

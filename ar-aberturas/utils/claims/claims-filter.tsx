@@ -14,8 +14,8 @@ interface Props {
 
 export function ClaimsFilter({ filterType, setFilterType, searchTerm, setSearchTerm }: Props) {
 	return (
-		<Card className="p-4 bg-card border-border">
-			<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+		<Card className="p-3 sm:p-4 bg-card border-border">
+			<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 				<div className="flex flex-wrap gap-2 items-center">
 					<div className="flex flex-wrap gap-2">
 						<Button
@@ -31,8 +31,9 @@ export function ClaimsFilter({ filterType, setFilterType, searchTerm, setSearchT
 							onClick={() => setFilterType('pendientes')}
 							className={cn(filterType === 'pendientes' && 'bg-orange-500 hover:bg-orange-600')}
 						>
-							<Clock className="h-4 w-4 mr-2" />
-							Pendientes
+							<Clock className="h-4 w-4 mr-1 sm:mr-2" />
+							<span className="hidden sm:inline">Pendientes</span>
+							<span className="sm:hidden">Pendientes</span>
 						</Button>
 						<Button
 							variant={filterType === 'resueltos' ? 'default' : 'outline'}
@@ -40,11 +41,12 @@ export function ClaimsFilter({ filterType, setFilterType, searchTerm, setSearchT
 							onClick={() => setFilterType('resueltos')}
 							className={cn(filterType === 'resueltos' && 'bg-green-500 hover:bg-green-600')}
 						>
-							<CheckCircle className="h-4 w-4 mr-2" />
-							Resueltos
+							<CheckCircle className="h-4 w-4 mr-1 sm:mr-2" />
+							<span className="hidden sm:inline">Resueltos</span>
+							<span className="sm:hidden">Resueltos</span>
 						</Button>
 					</div>
-					<div className="h-8 w-px bg-border mx-2" />
+					<div className="h-8 w-px bg-border mx-2 hidden sm:block" />
 					<div className="flex flex-wrap gap-2">
 						<Button
 							variant={filterType === 'diario' ? 'default' : 'outline'}
@@ -52,8 +54,9 @@ export function ClaimsFilter({ filterType, setFilterType, searchTerm, setSearchT
 							onClick={() => setFilterType('diario')}
 							className={cn(filterType === 'diario' && 'bg-blue-500 hover:bg-blue-600')}
 						>
-							<FileText className="h-4 w-4 mr-2" />
-							Actividades diarias
+							<FileText className="h-4 w-4 mr-1 sm:mr-2" />
+							<span className="hidden sm:inline">Actividades diarias</span>
+							<span className="sm:hidden">Actividades diarias</span>
 						</Button>
 					</div>
 				</div>

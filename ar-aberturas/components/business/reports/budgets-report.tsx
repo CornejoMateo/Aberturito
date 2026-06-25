@@ -346,8 +346,8 @@ export function BudgetsReport() {
 				</div>
 			</div>
 
-			<Card className="p-0 bg-card border-border overflow-x-auto">
-				<div className="p-4 border-b flex items-center justify-between min-w-[1000px]">
+			<Card className="p-0 bg-card border-border overflow-hidden">
+				<div className="p-4 border-b flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 					<div className="text-sm text-muted-foreground">
 						{loading ? 'Cargando...' : `${filteredRows.length} presupuesto(s)`}
 					</div>
@@ -359,146 +359,213 @@ export function BudgetsReport() {
 							disabled={loading || filteredRows.length === 0}
 						>
 							<Download className="h-4 w-4" />
-							Descargar PDF
+							<span className="hidden sm:inline">Descargar PDF</span>
+							<span className="sm:hidden">Descargar PDF</span>
 						</Button>
 						<Button variant="outline" onClick={() => refresh()} className="gap-2">
 							<RefreshCw className="h-4 w-4" />
-							Actualizar
+							<span className="hidden sm:inline">Actualizar</span>
+							<span className="sm:hidden">Actualizar</span>
 						</Button>
 					</div>
 				</div>
 
-				<Table>
-					<TableHeader>
-						<TableRow>
-							<TableHead
-								className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
-								onClick={() => handleSort('date')}
-							>
-								<div className="flex items-center gap-1">
-									{BUDGETS_REPORT_COLUMNS.date}
-									{getSortIcon('date')}
-								</div>
-							</TableHead>
-							<TableHead
-								className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
-								onClick={() => handleSort('client')}
-							>
-								<div className="flex items-center gap-1">
-									{BUDGETS_REPORT_COLUMNS.client}
-									{getSortIcon('client')}
-								</div>
-							</TableHead>
-							<TableHead
-								className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
-								onClick={() => handleSort('number')}
-							>
-								<div className="flex items-center gap-1">
-									{BUDGETS_REPORT_COLUMNS.number}
-									{getSortIcon('number')}
-								</div>
-							</TableHead>
-							<TableHead
-								className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
-								onClick={() => handleSort('type')}
-							>
-								<div className="flex items-center gap-1">
-									{BUDGETS_REPORT_COLUMNS.type}
-									{getSortIcon('type')}
-								</div>
-							</TableHead>
-							<TableHead
-								className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
-								onClick={() => handleSort('materialType')}
-							>
-								<div className="flex items-center gap-1">
-									{BUDGETS_REPORT_COLUMNS.materialType}
-									{getSortIcon('materialType')}
-								</div>
-							</TableHead>
-							<TableHead
-								className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
-								onClick={() => handleSort('work')}
-							>
-								<div className="flex items-center gap-1">
-									{BUDGETS_REPORT_COLUMNS.work}
-									{getSortIcon('work')}
-								</div>
-							</TableHead>
-							<TableHead
-								className="text-right whitespace-nowrap cursor-pointer hover:bg-muted/50"
-								onClick={() => handleSort('amountArs')}
-							>
-								<div className="flex items-center justify-end gap-1">
-									{BUDGETS_REPORT_COLUMNS.amountArs}
-									{getSortIcon('amountArs')}
-								</div>
-							</TableHead>
-							<TableHead
-								className="text-right whitespace-nowrap cursor-pointer hover:bg-muted/50"
-								onClick={() => handleSort('amountUsd')}
-							>
-								<div className="flex items-center justify-end gap-1">
-									{BUDGETS_REPORT_COLUMNS.amountUsd}
-									{getSortIcon('amountUsd')}
-								</div>
-							</TableHead>
-							<TableHead
-								className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
-								onClick={() => handleSort('status')}
-							>
-								<div className="flex items-center gap-1">
-									{BUDGETS_REPORT_COLUMNS.status}
-									{getSortIcon('status')}
-								</div>
-							</TableHead>
-							<TableHead
-								className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
-								onClick={() => handleSort('seller')}
-							>
-								<div className="flex items-center gap-1">
-									Vendedor
-									{getSortIcon('seller')}
-								</div>
-							</TableHead>
-						</TableRow>
-					</TableHeader>
+				{/* Desktop Table View */}
+				<div className="hidden md:block overflow-x-auto">
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead
+									className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
+									onClick={() => handleSort('date')}
+								>
+									<div className="flex items-center gap-1">
+										{BUDGETS_REPORT_COLUMNS.date}
+										{getSortIcon('date')}
+									</div>
+								</TableHead>
+								<TableHead
+									className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
+									onClick={() => handleSort('client')}
+								>
+									<div className="flex items-center gap-1">
+										{BUDGETS_REPORT_COLUMNS.client}
+										{getSortIcon('client')}
+									</div>
+								</TableHead>
+								<TableHead
+									className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
+									onClick={() => handleSort('number')}
+								>
+									<div className="flex items-center gap-1">
+										{BUDGETS_REPORT_COLUMNS.number}
+										{getSortIcon('number')}
+									</div>
+								</TableHead>
+								<TableHead
+									className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
+									onClick={() => handleSort('type')}
+								>
+									<div className="flex items-center gap-1">
+										{BUDGETS_REPORT_COLUMNS.type}
+										{getSortIcon('type')}
+									</div>
+								</TableHead>
+								<TableHead
+									className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
+									onClick={() => handleSort('materialType')}
+								>
+									<div className="flex items-center gap-1">
+										{BUDGETS_REPORT_COLUMNS.materialType}
+										{getSortIcon('materialType')}
+									</div>
+								</TableHead>
+								<TableHead
+									className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
+									onClick={() => handleSort('work')}
+								>
+									<div className="flex items-center gap-1">
+										{BUDGETS_REPORT_COLUMNS.work}
+										{getSortIcon('work')}
+									</div>
+								</TableHead>
+								<TableHead
+									className="text-right whitespace-nowrap cursor-pointer hover:bg-muted/50"
+									onClick={() => handleSort('amountArs')}
+								>
+									<div className="flex items-center justify-end gap-1">
+										{BUDGETS_REPORT_COLUMNS.amountArs}
+										{getSortIcon('amountArs')}
+									</div>
+								</TableHead>
+								<TableHead
+									className="text-right whitespace-nowrap cursor-pointer hover:bg-muted/50"
+									onClick={() => handleSort('amountUsd')}
+								>
+									<div className="flex items-center justify-end gap-1">
+										{BUDGETS_REPORT_COLUMNS.amountUsd}
+										{getSortIcon('amountUsd')}
+									</div>
+								</TableHead>
+								<TableHead
+									className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
+									onClick={() => handleSort('status')}
+								>
+									<div className="flex items-center gap-1">
+										{BUDGETS_REPORT_COLUMNS.status}
+										{getSortIcon('status')}
+									</div>
+								</TableHead>
+								<TableHead
+									className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
+									onClick={() => handleSort('seller')}
+								>
+									<div className="flex items-center gap-1">
+										Vendedor
+										{getSortIcon('seller')}
+									</div>
+								</TableHead>
+							</TableRow>
+						</TableHeader>
 
-					<TableBody>
-						{loading ? (
-							<TableRow>
-								<TableCell colSpan={10} className="text-center text-muted-foreground">
-									Cargando presupuestos...
-								</TableCell>
-							</TableRow>
-						) : filteredRows.length === 0 ? (
-							<TableRow>
-								<TableCell colSpan={10} className="text-center text-muted-foreground">
-									No hay resultados
-								</TableCell>
-							</TableRow>
-						) : (
-							paginatedRows.map((r) => (
-								<TableRow key={r.id} className={getRowClassName(r)}>
-									<TableCell className="whitespace-nowrap">{r.date}</TableCell>
-									<TableCell className="font-medium whitespace-nowrap">{r.client}</TableCell>
-									<TableCell className="whitespace-nowrap">{r.number}</TableCell>
-									<TableCell className="whitespace-nowrap">{r.type}</TableCell>
-									<TableCell className="whitespace-nowrap">{r.materialType}</TableCell>
-									<TableCell className="whitespace-nowrap">{r.work}</TableCell>
-									<TableCell className="text-right whitespace-nowrap">
-										{formatCurrency(r.amountArs)}
+						<TableBody>
+							{loading ? (
+								<TableRow>
+									<TableCell colSpan={10} className="text-center text-muted-foreground">
+										Cargando presupuestos...
 									</TableCell>
-									<TableCell className="text-right whitespace-nowrap">
-										{formatCurrencyUSD(r.amountUsd)}
-									</TableCell>
-									<TableCell className="whitespace-nowrap">{r.status}</TableCell>
-									<TableCell className="whitespace-nowrap">{r.seller}</TableCell>
 								</TableRow>
-							))
-						)}
-					</TableBody>
-				</Table>
+							) : filteredRows.length === 0 ? (
+								<TableRow>
+									<TableCell colSpan={10} className="text-center text-muted-foreground">
+										No hay resultados
+									</TableCell>
+								</TableRow>
+							) : (
+								paginatedRows.map((r) => (
+									<TableRow key={r.id} className={getRowClassName(r)}>
+										<TableCell className="whitespace-nowrap">{r.date}</TableCell>
+										<TableCell className="font-medium whitespace-nowrap">{r.client}</TableCell>
+										<TableCell className="whitespace-nowrap">{r.number}</TableCell>
+										<TableCell className="whitespace-nowrap">{r.type}</TableCell>
+										<TableCell className="whitespace-nowrap">{r.materialType}</TableCell>
+										<TableCell className="whitespace-nowrap">{r.work}</TableCell>
+										<TableCell className="text-right whitespace-nowrap">
+											{formatCurrency(r.amountArs)}
+										</TableCell>
+										<TableCell className="text-right whitespace-nowrap">
+											{formatCurrencyUSD(r.amountUsd)}
+										</TableCell>
+										<TableCell className="whitespace-nowrap">{r.status}</TableCell>
+										<TableCell className="whitespace-nowrap">{r.seller}</TableCell>
+									</TableRow>
+								))
+							)}
+						</TableBody>
+					</Table>
+				</div>
+
+				{/* Mobile Card View */}
+				<div className="md:hidden p-4 space-y-4">
+					{loading ? (
+						<div className="text-center py-8 text-muted-foreground">
+							Cargando presupuestos...
+						</div>
+					) : filteredRows.length === 0 ? (
+						<div className="text-center py-8 text-muted-foreground">
+							No hay resultados
+						</div>
+					) : (
+						paginatedRows.map((r) => (
+							<div key={r.id} className={`p-4 rounded-lg border space-y-3 ${getRowClassName(r)}`}>
+								<div className="flex items-start justify-between gap-2">
+									<div className="flex-1 min-w-0">
+										<div className="font-medium text-sm">{r.client}</div>
+										<div className="text-xs text-muted-foreground mt-1">{r.date}</div>
+									</div>
+									<div className={`text-xs px-2 py-1 rounded-full ${
+										r.status === 'Vendido' ? 'bg-green-100 text-green-800' :
+										r.status === 'Perdido' ? 'bg-red-100 text-red-800' :
+										'bg-gray-100 text-gray-800'
+									}`}>
+										{r.status}
+									</div>
+								</div>
+
+								<div className="space-y-2 text-xs">
+									<div className="flex justify-between">
+										<span className="text-muted-foreground">Numero:</span>
+										<span className="ml-2">{r.number}</span>
+									</div>
+									<div className="flex justify-between">
+										<span className="text-muted-foreground">Tipo:</span>
+										<span className="ml-2">{r.type}</span>
+									</div>
+									<div className="flex justify-between">
+										<span className="text-muted-foreground">Material:</span>
+										<span className="ml-2">{r.materialType}</span>
+									</div>
+									<div className="flex justify-between">
+										<span className="text-muted-foreground">Obra:</span>
+										<span className="truncate ml-2">{r.work}</span>
+									</div>
+									<div className="flex justify-between">
+										<span className="text-muted-foreground">Monto ARS:</span>
+										<span className="ml-2">{formatCurrency(r.amountArs)}</span>
+									</div>
+									<div className="flex justify-between">
+										<span className="text-muted-foreground">Monto USD:</span>
+										<span className="ml-2">{formatCurrencyUSD(r.amountUsd)}</span>
+									</div>
+									<div className="flex justify-between">
+										<span className="text-muted-foreground">Vendedor:</span>
+										<span className="ml-2">{r.seller}</span>
+									</div>
+								</div>
+							</div>
+						))
+					)}
+				</div>
 
 				{filteredRows.length > 0 ? (
 					<div className="flex flex-col gap-3 border-t p-4 sm:flex-row sm:items-center sm:justify-between">

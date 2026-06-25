@@ -92,16 +92,16 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 			{/* Charts Section */}
 			<div className="grid gap-4 md:grid-cols-1">
 				{/* Material Distribution Chart */}
-				<Card className="p-6 bg-card border-border">
-					<h3 className="text-lg font-semibold text-foreground mb-6">
+				<Card className="p-4 sm:p-6 bg-card border-border">
+					<h3 className="text-base sm:text-lg font-semibold text-foreground mb-4 sm:mb-6">
 						Distribución de presupuestos por material
 					</h3>
 					{metrics.budgetsByMaterial && metrics.budgetsByMaterial.length > 0 ? (
 						<ResponsiveContainer width="100%" height={300}>
-							<BarChart data={metrics.budgetsByMaterial}>
+							<BarChart data={metrics.budgetsByMaterial} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
 								<CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-								<XAxis dataKey="material" interval={0} />
-								<YAxis />
+								<XAxis dataKey="material" interval={0} tick={{ fontSize: 12 }} />
+								<YAxis tick={{ fontSize: 12 }} />
 								<Tooltip formatter={(value) => `${value} presupuestos`} />
 								<Bar dataKey="count" fill="#06b6d4" name="Presupuestos" radius={[8, 8, 0, 0]} />
 							</BarChart>
@@ -114,16 +114,16 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 				</Card>
 
 				{/* Sold Budgets Material Distribution Chart */}
-				<Card className="p-6 bg-card border-border">
-					<h3 className="text-lg font-semibold text-foreground mb-6">
+				<Card className="p-4 sm:p-6 bg-card border-border">
+					<h3 className="text-base sm:text-lg font-semibold text-foreground mb-4 sm:mb-6">
 						Distribución de presupuestos vendidos por material
 					</h3>
 					{metrics.soldBudgetsByMaterial && metrics.soldBudgetsByMaterial.length > 0 ? (
 						<ResponsiveContainer width="100%" height={300}>
-							<BarChart data={metrics.soldBudgetsByMaterial}>
+							<BarChart data={metrics.soldBudgetsByMaterial} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
 								<CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-								<XAxis dataKey="material" interval={0} />
-								<YAxis />
+								<XAxis dataKey="material" interval={0} tick={{ fontSize: 12 }} />
+								<YAxis tick={{ fontSize: 12 }} />
 								<Tooltip formatter={(value) => `${value} presupuestos vendidos`} />
 								<Bar
 									dataKey="count"
@@ -141,8 +141,8 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 				</Card>
 			</div>
 
-			<Card className="p-6 bg-card border-border">
-				<h3 className="text-lg font-semibold text-foreground mb-2">
+			<Card className="p-4 sm:p-6 bg-card border-border">
+				<h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
 					Presupuestos vendidos por mes (PVC vs Aluminio)
 				</h3>
 				<p className="text-xs text-muted-foreground mb-4">
@@ -150,10 +150,10 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 				</p>
 				{metrics.totalSales > 0 ? (
 					<ResponsiveContainer width="100%" height={300}>
-						<LineChart data={soldByMaterialByMonthData}>
+						<LineChart data={soldByMaterialByMonthData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
 							<CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-							<XAxis dataKey="month" />
-							<YAxis />
+							<XAxis dataKey="month" tick={{ fontSize: 12 }} />
+							<YAxis tick={{ fontSize: 12 }} />
 							<Tooltip
 								formatter={(value: number, name: string, props: any) => {
 									const data = props.payload;
@@ -180,7 +180,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 									return [Math.round(value), name];
 								}}
 							/>
-							<Legend />
+							<Legend wrapperStyle={{ fontSize: 12 }} />
 							<Line
 								type="monotone"
 								dataKey="pvc"
@@ -223,8 +223,8 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 
 			<div className="grid gap-4 md:grid-cols-2">
 				{/* Contact Method Chart */}
-				<Card className="p-6 bg-card border-border">
-					<h3 className="text-lg font-semibold text-foreground mb-6">
+				<Card className="p-4 sm:p-6 bg-card border-border">
+					<h3 className="text-base sm:text-lg font-semibold text-foreground mb-4 sm:mb-6">
 						Clientes por medio de contacto
 					</h3>
 					{formatContactMethodData && formatContactMethodData.length > 0 ? (
@@ -245,7 +245,10 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 									))}
 								</Pie>
 								<Tooltip formatter={(value) => `${value}`} />
-								<Legend formatter={(value, entry) => `${value} (${entry.payload?.value})`} />
+								<Legend 
+									formatter={(value, entry) => `${value} (${entry.payload?.value})`}
+									wrapperStyle={{ fontSize: 12 }}
+								/>
 							</PieChart>
 						</ResponsiveContainer>
 					) : (
@@ -257,12 +260,12 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 
 				{/* Statistics Cards */}
 				<div className="grid gap-4 md:grid-cols-1">
-					<Card className="p-6 bg-card border-border hover:shadow-md transition-shadow">
+					<Card className="p-4 sm:p-6 bg-card border-border hover:shadow-md transition-shadow">
 						<div className="space-y-2">
 							<p className="text-sm font-medium text-muted-foreground">
 								Material más presupuestado
 							</p>
-							<p className="text-3xl font-bold text-foreground">
+							<p className="text-2xl sm:text-3xl font-bold text-foreground">
 								{metrics.budgetsByMaterial && metrics.budgetsByMaterial.length > 0
 									? metrics.budgetsByMaterial[0].material
 									: '--'}
@@ -275,10 +278,10 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 						</div>
 					</Card>
 
-					<Card className="p-6 bg-card border-border hover:shadow-md transition-shadow">
+					<Card className="p-4 sm:p-6 bg-card border-border hover:shadow-md transition-shadow">
 						<div className="space-y-2">
 							<p className="text-sm font-medium text-muted-foreground">Material más vendido</p>
-							<p className="text-3xl font-bold text-foreground">
+							<p className="text-2xl sm:text-3xl font-bold text-foreground">
 								{metrics.soldBudgetsByMaterial && metrics.soldBudgetsByMaterial.length > 0
 									? metrics.soldBudgetsByMaterial[0].material
 									: '--'}
@@ -291,12 +294,12 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 						</div>
 					</Card>
 
-					<Card className="p-6 bg-card border-border hover:shadow-md transition-shadow">
+					<Card className="p-4 sm:p-6 bg-card border-border hover:shadow-md transition-shadow">
 						<div className="space-y-2">
 							<p className="text-sm font-medium text-muted-foreground">
 								Medio de Contacto principal
 							</p>
-							<p className="text-3xl font-bold text-foreground">
+							<p className="text-2xl sm:text-3xl font-bold text-foreground">
 								{formatContactMethodData && formatContactMethodData.length > 0
 									? formatContactMethodData[0].name.split(':')[0]
 									: '--'}

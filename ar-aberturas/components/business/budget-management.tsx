@@ -143,11 +143,11 @@ export function BudgetManagement() {
 
 			{/* Tabs */}
 			<Tabs defaultValue="overview" className="space-y-4">
-				<TabsList className="bg-card border border-border">
-					<TabsTrigger value="overview">Resumen de ventas</TabsTrigger>
-					<TabsTrigger value="performance">Rendimiento</TabsTrigger>
-					<TabsTrigger value="sources">Fuentes y materiales</TabsTrigger>
-					<TabsTrigger value="architects">Arquitectos</TabsTrigger>
+				<TabsList className="flex-wrap h-auto justify-start gap-1 w-full bg-card border border-border">
+					<TabsTrigger value="overview" className="flex-1 min-w-[100px]">Resumen de ventas</TabsTrigger>
+					<TabsTrigger value="performance" className="flex-1 min-w-[100px]">Rendimiento</TabsTrigger>
+					<TabsTrigger value="sources" className="flex-1 min-w-[100px]">Fuentes y materiales</TabsTrigger>
+					<TabsTrigger value="architects" className="flex-1 min-w-[100px]">Arquitectos</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="overview">

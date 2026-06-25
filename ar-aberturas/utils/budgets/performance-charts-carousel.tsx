@@ -46,14 +46,14 @@ const ChartCarousel = ({ charts, state, onNext, onPrev, onSelect }: CarouselProp
 	const chart = charts[state.current];
 
 	return (
-		<Card className="p-6 bg-card border-border overflow-hidden">
+		<Card className="p-4 sm:p-6 bg-card border-border overflow-hidden">
 			{/* Header */}
-			<div className="flex items-center justify-between mb-2">
-				<div>
-					<h3 className="text-lg font-semibold text-foreground">{chart.title}</h3>
+			<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-2">
+				<div className="flex-1 min-w-0">
+					<h3 className="text-base sm:text-lg font-semibold text-foreground">{chart.title}</h3>
 					<p className="text-xs text-muted-foreground mt-1">{chart.description}</p>
 				</div>
-				<div className="flex gap-2">
+				<div className="flex gap-2 self-end">
 					<Button variant="outline" size="sm" onClick={onPrev} className="h-9 w-9 p-0">
 						<ChevronLeft className="h-4 w-4" />
 					</Button>
@@ -109,8 +109,18 @@ const AmountRangeBarChart = ({
 		<ResponsiveContainer width="100%" height={320}>
 			<BarChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 60 }}>
 				<CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-				<XAxis dataKey="amountRange" interval={0} />
-				<YAxis label={{ value: 'Cantidad', angle: -90, position: 'insideLeft' }} />
+				<XAxis 
+					dataKey="amountRange" 
+					interval={0}
+					tick={{ fontSize: 12 }}
+					angle={-45}
+					textAnchor="end"
+					height={80}
+				/>
+				<YAxis 
+					label={{ value: 'Cantidad', angle: -90, position: 'insideLeft' }}
+					tick={{ fontSize: 12 }}
+				/>
 				<Tooltip formatter={(value) => `${value} presupuestos`} />
 				<Bar dataKey="count" fill={fill} name={label} radius={[8, 8, 0, 0]} />
 			</BarChart>
@@ -278,10 +288,10 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
 			render: () =>
 				metrics.totalBudgets > 0 ? (
 					<ResponsiveContainer width="100%" height={300}>
-						<LineChart data={monthlyBudgetData}>
+						<LineChart data={monthlyBudgetData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
 							<CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-							<XAxis dataKey="month" />
-							<YAxis />
+							<XAxis dataKey="month" tick={{ fontSize: 12 }} />
+							<YAxis tick={{ fontSize: 12 }} />
 							<Tooltip
 								formatter={(value: number, name: string, props: any) => {
 									const data = props.payload || {};
@@ -318,7 +328,7 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
 									return [Math.round(value), name];
 								}}
 							/>
-							<Legend />
+							<Legend wrapperStyle={{ fontSize: 12 }} />
 							<Line
 								type="monotone"
 								dataKey="presupuestos"
@@ -370,10 +380,10 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
 			render: () =>
 				metrics.totalBudgets > 0 ? (
 					<ResponsiveContainer width="100%" height={300}>
-						<BarChart data={averagePerDayData}>
+						<BarChart data={averagePerDayData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
 							<CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-							<XAxis dataKey="month" />
-							<YAxis />
+							<XAxis dataKey="month" tick={{ fontSize: 12 }} />
+							<YAxis tick={{ fontSize: 12 }} />
 							<Tooltip formatter={(value) => `${Number(value).toFixed(2)} presupuestos/día`} />
 							<Bar
 								dataKey="promedio"
@@ -398,11 +408,17 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
 						<BarChart
 							data={metrics.budgetsByLocation}
 							layout="vertical"
-							margin={{ top: 5, right: 30, left: 150, bottom: 5 }}
+							margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
 						>
 							<CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-							<XAxis type="number" />
-							<YAxis dataKey="location" type="category" width={140} interval={0} />
+							<XAxis type="number" tick={{ fontSize: 12 }} />
+							<YAxis 
+								dataKey="location" 
+								type="category" 
+								width={110} 
+								interval={0}
+								tick={{ fontSize: 11 }}
+							/>
 							<Tooltip formatter={(value) => `${value} presupuestos`} />
 							<Bar dataKey="count" fill="#ec4899" name="Presupuestos" radius={[0, 8, 8, 0]} />
 						</BarChart>

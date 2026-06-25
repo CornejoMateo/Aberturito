@@ -338,7 +338,7 @@ export function ProfileTable({
 																variant="outline"
 																className="bg-yellow-200 dark:bg-yellow-900/30 border-yellow-400 max-w-[150px] truncate cursor-help"
 															>
-																{item.separated_for_work.clients?.name ||
+																{item.separated_for_work.clients?.last_name ||
 																	item.separated_for_work.locality ||
 																	item.separated_for_work.address ||
 																	'Obra'}
@@ -348,8 +348,8 @@ export function ProfileTable({
 															<div className="flex flex-col gap-1">
 																{item.separated_for_work.clients && (
 																	<p className="font-medium">
-																		{item.separated_for_work.clients.name}{' '}
-																		{item.separated_for_work.clients.last_name}
+																		{item.separated_for_work.clients.last_name}{' '}
+																		{item.separated_for_work.clients.name}
 																	</p>
 																)}
 																{item.separated_for_work.locality && (
@@ -468,15 +468,15 @@ export function ProfileTable({
 						<div
 							key={item.id}
 							className={`border rounded-lg p-4 space-y-3 ${
-								item.separated_for_work_id ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700' : 'bg-card border-border'
+								item.separated_for_work_id
+									? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700'
+									: 'bg-card border-border'
 							}`}
 						>
 							{/* Header with main info */}
 							<div className="flex justify-between items-start gap-2">
 								<div className="flex-1 min-w-0">
-									<p className="font-semibold text-sm truncate">
-										{item.code || 'N/A'}
-									</p>
+									<p className="font-semibold text-sm truncate">{item.code || 'N/A'}</p>
 									<p className="text-xs text-muted-foreground">
 										{item.line || 'N/A'} • {item.color || 'N/A'}
 									</p>
@@ -532,7 +532,8 @@ export function ProfileTable({
 							{item.separated_for_work_id && item.separated_for_work && (
 								<div className="bg-yellow-100 dark:bg-yellow-900/30 rounded p-2">
 									<p className="text-xs font-medium text-yellow-800 dark:text-yellow-200">
-										Separado para: {item.separated_for_work.locality || item.separated_for_work.address || 'Obra'}
+										Separado para:{' '}
+										{item.separated_for_work.locality || item.separated_for_work.address || 'Obra'}
 									</p>
 								</div>
 							)}

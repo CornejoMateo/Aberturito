@@ -196,7 +196,8 @@ export function ProfileTable({
 
 	return (
 		<Card className="bg-card border-border overflow-hidden">
-			<div className="overflow-x-auto">
+			{/* Desktop Table View */}
+			<div className="hidden md:block overflow-x-auto">
 				<table className="w-full">
 					<thead className="border-b border-border bg-secondary">
 						<tr>
@@ -337,15 +338,22 @@ export function ProfileTable({
 																variant="outline"
 																className="bg-yellow-200 dark:bg-yellow-900/30 border-yellow-400 max-w-[150px] truncate cursor-help"
 															>
-																{item.separated_for_work.locality ||
+																{item.separated_for_work.clients?.last_name ||
+																	item.separated_for_work.locality ||
 																	item.separated_for_work.address ||
 																	'Obra'}
 															</Badge>
 														</TooltipTrigger>
 														<TooltipContent>
 															<div className="flex flex-col gap-1">
+																{item.separated_for_work.clients && (
+																	<p className="font-medium">
+																		{item.separated_for_work.clients.last_name}{' '}
+																		{item.separated_for_work.clients.name}
+																	</p>
+																)}
 																{item.separated_for_work.locality && (
-																	<p className="font-medium text">
+																	<p className="text-sm text-muted-foreground">
 																		{item.separated_for_work.locality}
 																	</p>
 																)}
@@ -448,6 +456,178 @@ export function ProfileTable({
 				</table>
 			</div>
 
+			{/* Mobile Card View */}
+			<div className="md:hidden p-4 space-y-4">
+				{filteredStock.length === 0 ? (
+					<div className="flex flex-col items-center gap-2 text-muted-foreground py-12">
+						<Package className="h-12 w-12 opacity-50" />
+						<p className="text-lg font-medium">No hay items en stock</p>
+					</div>
+				) : (
+					filteredStock.map((item) => (
+						<div
+							key={item.id}
+							className={`border rounded-lg p-4 space-y-3 ${
+								item.separated_for_work_id
+									? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700'
+									: 'bg-card border-border'
+							}`}
+						>
+							{/* Header with main info */}
+							<div className="flex justify-between items-start gap-2">
+								<div className="flex-1 min-w-0">
+									<p className="font-semibold text-sm truncate">{item.code || 'N/A'}</p>
+									<p className="text-xs text-muted-foreground">
+										{item.line || 'N/A'} • {item.color || 'N/A'}
+									</p>
+								</div>
+								{(() => {
+									let badgeColor = 'bg-green-500 text-white';
+									let label = item.status || 'N/A';
+									if (label === 'Malo') {
+										badgeColor = 'bg-red-500 text-white';
+									} else if (label === 'Medio') {
+										badgeColor = 'bg-yellow-400 text-white';
+									} else if (label === 'Bueno') {
+										badgeColor = 'bg-green-500 text-white';
+									} else {
+										badgeColor = 'bg-muted-foreground text-white';
+									}
+									return <Badge className={`text-xs ${badgeColor}`}>{label}</Badge>;
+								})()}
+							</div>
+
+							{/* Details */}
+							<div className="grid grid-cols-2 gap-2 text-xs">
+								<div>
+									<p className="text-muted-foreground">Largo</p>
+									<p className="font-medium">{item.width ? `${item.width} mm` : 'N/A'}</p>
+								</div>
+								<div>
+									<p className="text-muted-foreground">Ubicación</p>
+									<p className="font-medium">{item.site || 'N/A'}</p>
+								</div>
+								<div>
+									<p className="text-muted-foreground">Fecha</p>
+									<p className="font-medium">{formatCreatedAt(item.created_at)}</p>
+								</div>
+								<div>
+									<p className="text-muted-foreground">Imagen</p>
+									{item.image_id && imageUrlsById[item.image_id] ? (
+										<Button
+											variant="outline"
+											size="sm"
+											className="h-6 text-xs"
+											onClick={() => setOpenImageUrl(imageUrlsById[item.image_id!])}
+										>
+											Ver
+										</Button>
+									) : (
+										<span className="text-muted-foreground">No tiene</span>
+									)}
+								</div>
+							</div>
+
+							{/* Work separation info */}
+							{item.separated_for_work_id && item.separated_for_work && (
+								<div className="bg-yellow-100 dark:bg-yellow-900/30 rounded p-2">
+									<p className="text-xs font-medium text-yellow-800 dark:text-yellow-200">
+										Separado para:{' '}
+										{item.separated_for_work.locality || item.separated_for_work.address || 'Obra'}
+									</p>
+								</div>
+							)}
+
+							{/* Quantity controls */}
+							<div className="flex items-center justify-between gap-2">
+								<div className="flex items-center gap-2">
+									<Button
+										variant="outline"
+										size="icon"
+										className="h-8 w-8"
+										onClick={() => handleQuantityAction(item.id!, 'decrement', item.quantity ?? 0)}
+										disabled={(isUpdating && updatingId === item.id) || (item.quantity ?? 0) <= 0}
+									>
+										<Minus className="h-3.5 w-3.5" />
+									</Button>
+									<div className="text-center min-w-[60px]">
+										<p className="text-sm font-medium">{item.quantity ?? 0}</p>
+										<p className="text-xs text-muted-foreground">unidades</p>
+									</div>
+									<Button
+										variant="outline"
+										size="icon"
+										className="h-8 w-8"
+										onClick={() => handleQuantityAction(item.id!, 'increment', item.quantity ?? 0)}
+										disabled={isUpdating && updatingId === item.id}
+									>
+										<Plus className="h-3.5 w-3.5" />
+									</Button>
+								</div>
+
+								{/* Actions */}
+								<div className="flex gap-1">
+									{onSeparate && onUnseparate && (
+										<Button
+											variant="ghost"
+											size="icon"
+											className="h-8 w-8"
+											onClick={() =>
+												item.separated_for_work_id
+													? handleUnseparate(item.id!)
+													: handleOpenSeparateDialog(item)
+											}
+											disabled={isUpdating && updatingId === item.id}
+										>
+											{item.separated_for_work_id ? (
+												<BookmarkCheck className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+											) : (
+												<Bookmark className="h-4 w-4" />
+											)}
+										</Button>
+									)}
+									<Button
+										variant="ghost"
+										size="icon"
+										className="h-8 w-8"
+										onClick={() => item.id && onEdit(item.id)}
+									>
+										<Edit className="h-4 w-4" />
+									</Button>
+									<AlertDialog>
+										<AlertDialogTrigger asChild>
+											<Button
+												variant="ghost"
+												size="icon"
+												className="h-8 w-8 text-destructive hover:text-destructive"
+											>
+												<Trash2 className="h-4 w-4" />
+											</Button>
+										</AlertDialogTrigger>
+										<AlertDialogContent>
+											<AlertDialogTitle>¿Eliminar perfil del stock?</AlertDialogTitle>
+											<AlertDialogDescription>
+												¿Estás seguro que deseas eliminar este perfil? Esta acción no se puede
+												deshacer.
+											</AlertDialogDescription>
+											<div className="flex justify-end gap-2 mt-4">
+												<AlertDialogCancel>Cancelar</AlertDialogCancel>
+												<AlertDialogAction
+													className="bg-destructive text-white hover:bg-destructive/90"
+													onClick={() => item.id && onDelete(item.id)}
+												>
+													Eliminar
+												</AlertDialogAction>
+											</div>
+										</AlertDialogContent>
+									</AlertDialog>
+								</div>
+							</div>
+						</div>
+					))
+				)}
+			</div>
+
 			{currentAction && (
 				<ConfirmUpdateDialog
 					open={confirmDialogOpen}
@@ -483,14 +663,17 @@ export function ProfileTable({
 						<Label htmlFor="work-select">Obra</Label>
 						<Button
 							variant="outline"
-							className="w-full justify-between"
+							className="w-full justify-between mt-3"
 							onClick={() => setWorkSelectDialogOpen(true)}
 							id="work-select"
 						>
 							{selectedWorkId
-								? works.find((work) => String(work.id) === selectedWorkId)?.locality ||
-									works.find((work) => String(work.id) === selectedWorkId)?.address ||
-									`Obra ${selectedWorkId}`
+								? (() => {
+										const selectedWork = works.find((work) => String(work.id) === selectedWorkId);
+										return selectedWork?.client_name
+											? `${selectedWork.client_name}${selectedWork.client_last_name ? ` ${selectedWork.client_last_name}` : ''}`
+											: selectedWork?.locality || selectedWork?.address || `Obra ${selectedWorkId}`;
+									})()
 								: 'Selecciona una obra'}
 							<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 						</Button>
@@ -516,14 +699,14 @@ export function ProfileTable({
 					</DialogHeader>
 					<div className="py-4">
 						<Command className="rounded-lg border shadow-md">
-							<CommandInput placeholder="Buscar obra por localidad o dirección..." />
+							<CommandInput placeholder="Buscar obra por cliente, localidad o dirección..." />
 							<CommandList className="max-h-[400px] overflow-y-auto">
 								<CommandEmpty>No se encontraron obras.</CommandEmpty>
 								<CommandGroup>
 									{works.map((work) => (
 										<CommandItem
 											key={work.id}
-											value={`${work.locality || ''} ${work.address || ''} ${work.id}`}
+											value={`${work.client_name || ''} ${work.client_last_name || ''} ${work.locality || ''} ${work.address || ''} ${work.id}`}
 											onSelect={() => {
 												setSelectedWorkId(String(work.id));
 												setWorkSelectDialogOpen(false);
@@ -537,7 +720,20 @@ export function ProfileTable({
 												)}
 											/>
 											<div className="flex flex-col">
-												<span className="font-medium">{work.locality || 'Sin localidad'}</span>
+												{work.client_name && (
+													<span className="font-medium">
+														{[work.client_name, work.client_last_name]
+															.filter(Boolean)
+															.join(' ')}{' '}
+													</span>
+												)}
+												<span
+													className={
+														work.client_name ? 'text-sm text-muted-foreground' : 'font-medium'
+													}
+												>
+													{work.locality || 'Sin localidad'}
+												</span>
 												{work.address && (
 													<span className="text-sm text-muted-foreground">{work.address}</span>
 												)}

@@ -1,7 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Search, Filter } from 'lucide-react';
-import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
+import { Search, Filter, BookmarkCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +12,8 @@ interface StockFiltersProps {
 	setShowOutOfStock: (show: boolean) => void;
 	showLowStock: boolean;
 	setShowLowStock: (show: boolean) => void;
+	showReservedProfiles: boolean;
+	setShowReservedProfiles: (show: boolean) => void;
 	setSelectedCategory: (category: 'Perfiles' | 'Accesorios' | 'Herrajes' | 'Insumos') => void;
 }
 
@@ -24,6 +25,8 @@ export function StockFilters({
 	setShowOutOfStock,
 	showLowStock,
 	setShowLowStock,
+	showReservedProfiles,
+	setShowReservedProfiles,
 }: StockFiltersProps) {
 	return (
 		<Card className="p-4 bg-card border-border">
@@ -38,7 +41,7 @@ export function StockFilters({
 							className="pl-9 bg-background"
 						/>
 					</div>
-					<div className="ml-auto flex items-center gap-2">
+					<div className="flex flex-wrap items-center gap-2 md:ml-auto">
 						<Button
 							variant="ghost"
 							size="sm"
@@ -49,8 +52,23 @@ export function StockFilters({
 							onClick={() => setShowOutOfStock(!showOutOfStock)}
 						>
 							<Filter className="h-3.5 w-3.5" />
-							<span>Mostrar solo sin stock</span>
+							<span className="hidden sm:inline">Mostrar solo sin stock</span>
+							<span className="sm:hidden">Sin stock</span>
 						</Button>
+						{selectedCategory === 'Perfiles' && (
+							<Button
+								variant="ghost"
+								size="sm"
+								className={cn(
+									'flex items-center gap-1.5 text-xs h-8 px-2',
+									showReservedProfiles ? 'bg-accent' : 'hover:bg-accent/50'
+								)}
+								onClick={() => setShowReservedProfiles(!showReservedProfiles)}
+							>
+								<BookmarkCheck className="h-3.5 w-3.5" />
+								<span>Mostrar perfiles reservados</span>
+							</Button>
+						)}
 						{selectedCategory === 'Insumos' && (
 							<Button
 								variant="ghost"
@@ -62,16 +80,11 @@ export function StockFilters({
 								onClick={() => setShowLowStock(!showLowStock)}
 							>
 								<Filter className="h-3.5 w-3.5" />
-								<span>Mostrar solo stock bajo</span>
+								<span className="hidden sm:inline">Mostrar solo stock bajo</span>
+								<span className="sm:hidden">Stock bajo</span>
 							</Button>
 						)}
-						{(selectedCategory === 'Accesorios' ||
-							selectedCategory === 'Herrajes' ||
-							selectedCategory === 'Insumos') && (
-							<div className="[&_button]:h-8 [&_button]:text-xs [&_button]:px-2">
-								<UpdatePricesDialog />
-							</div>
-						)}
+
 					</div>
 				</div>
 			</div>

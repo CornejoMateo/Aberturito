@@ -183,7 +183,7 @@ export function ClientBudgetsTab({
 	return (
 		<>
 			<div className="space-y-4">
-				<div className="flex items-center justify-between gap-2">
+				<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 					<div className="min-w-0">
 						{chosenBudgetIds.length > 0 ? (
 							<div className="mt-1">
@@ -196,7 +196,7 @@ export function ClientBudgetsTab({
 						)}
 					</div>
 
-					<div className="flex gap-2">
+					<div className="flex flex-wrap gap-2">
 						{budgets.filter((b) => b.amount_usd && b.amount_usd > 0).length > 0 && (
 							<Button
 								size="sm"
@@ -206,7 +206,8 @@ export function ClientBudgetsTab({
 								onClick={() => setIsClientBudgetsUpdateModalOpen(true)}
 							>
 								<TrendingUp className="h-4 w-4" />
-								Actualizar Precios
+								<span className="hidden sm:inline">Actualizar Precios</span>
+								<span className="sm:hidden">Actualizar Precios</span>
 							</Button>
 						)}
 						<Button
@@ -216,7 +217,8 @@ export function ClientBudgetsTab({
 							onClick={() => setIsCreateOpen(true)}
 						>
 							<Plus className="h-4 w-4" />
-							Nuevo presupuesto
+							<span className="hidden sm:inline">Nuevo presupuesto</span>
+							<span className="sm:hidden">Nuevo presupuesto</span>
 						</Button>
 					</div>
 				</div>

@@ -1,5 +1,5 @@
 import { getSupabaseClient } from '../supabase-client';
-import { normalize } from '../../helpers/budget/normalize';
+import { normalize } from '../../helpers/budgets/normalize';
 
 export interface ArchitectStats {
 	name: string;
@@ -21,10 +21,8 @@ export interface ArchitectReport {
 export async function getArchitectsReport(): Promise<{ data: ArchitectReport | null; error: any }> {
 	try {
 		const supabase = getSupabaseClient();
-		
-		const { data: budgets, error: budgetsError } = await supabase
-			.from('budgets')
-			.select(`
+
+		const { data: budgets, error: budgetsError } = await supabase.from('budgets').select(`
 				id,
 				amount_ars,
 				amount_usd,
@@ -43,25 +41,28 @@ export async function getArchitectsReport(): Promise<{ data: ArchitectReport | n
 		}
 
 		if (!budgets || budgets.length === 0) {
-			return { 
+			return {
 				data: {
 					architects: [],
 					topArchitect: null,
 					mostSoldArchitect: null,
-					totalArchitects: 0
-				}, 
-				error: null 
+					totalArchitects: 0,
+				},
+				error: null,
 			};
 		}
 
-		const architectMap = new Map<string, {
-			name: string;
-			totalBudgets: number;
-			soldBudgets: number;
-			chosenBudgets: number;
-			totalAmount: number;
-			soldAmount: number;
-		}>();
+		const architectMap = new Map<
+			string,
+			{
+				name: string;
+				totalBudgets: number;
+				soldBudgets: number;
+				chosenBudgets: number;
+				totalAmount: number;
+				soldAmount: number;
+			}
+		>();
 
 		budgets.forEach((budget: any) => {
 			const rawArchitect = budget.folder_budget?.work?.architect;
@@ -78,7 +79,7 @@ export async function getArchitectsReport(): Promise<{ data: ArchitectReport | n
 				soldBudgets: 0,
 				chosenBudgets: 0,
 				totalAmount: 0,
-				soldAmount: 0
+				soldAmount: 0,
 			};
 
 			current.totalBudgets++;
@@ -103,31 +104,31 @@ export async function getArchitectsReport(): Promise<{ data: ArchitectReport | n
 			chosenBudgets: stats.chosenBudgets,
 			totalAmount: stats.totalAmount,
 			soldAmount: stats.soldAmount,
-			soldPercentage: stats.totalBudgets > 0 ? (stats.soldBudgets / stats.totalBudgets) * 100 : 0
+			soldPercentage: stats.totalBudgets > 0 ? (stats.soldBudgets / stats.totalBudgets) * 100 : 0,
 		}));
 
 		architects.sort((a, b) => b.totalBudgets - a.totalBudgets);
 
-		const mostSoldArchitect = architects.length > 0
-			? architects.reduce((prev, current) =>
-				current.soldBudgets > prev.soldBudgets ? current : prev
-			)
-			: null;
+		const mostSoldArchitect =
+			architects.length > 0
+				? architects.reduce((prev, current) =>
+						current.soldBudgets > prev.soldBudgets ? current : prev
+					)
+				: null;
 
 		const report: ArchitectReport = {
 			architects,
 			topArchitect: architects[0] || null,
 			mostSoldArchitect: mostSoldArchitect || null,
-			totalArchitects: architects.length
+			totalArchitects: architects.length,
 		};
 
 		return { data: report, error: null };
-
 	} catch (error) {
 		console.error('Error inesperado en getArchitectsReport:', error);
-		return { 
-			data: null, 
-			error: error instanceof Error ? error.message : 'Error desconocido' 
+		return {
+			data: null,
+			error: error instanceof Error ? error.message : 'Error desconocido',
 		};
 	}
 }

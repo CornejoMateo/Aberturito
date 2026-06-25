@@ -5,6 +5,7 @@ import { StockFormDialog } from '../../utils/stock/stock-add-dialog';
 import { StockStats } from '../../utils/stock/stock-stats';
 import { StockFilters } from '../../utils/stock/stock-filters';
 import { generateStockReportPDF } from '@/lib/stock/stock-pdf';
+import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
 import { Download } from 'lucide-react';
 import { ProfileTable } from '../../utils/stock/profile-table';
 import { AccesoriesTable } from '@/utils/stock/stock-tables';
@@ -60,6 +61,7 @@ export function StockManagement({
 	const [selectedCategory, setSelectedCategory] = useState(category);
 	const [showOutOfStock, setShowOutOfStock] = useState(false);
 	const [showLowStock, setShowLowStock] = useState(false);
+	const [showReservedProfiles, setShowReservedProfiles] = useState(false);
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<any | null>(null);
@@ -74,16 +76,16 @@ export function StockManagement({
 		// First apply the standard filters (search, category, material)
 		let result = filterStockItems(stock, searchTerm, selectedCategory, materialType, category);
 
-		// Apply stock filters (out-of-stock and/or low stock)
-		if (showOutOfStock || showLowStock) {
+		// Apply stock filters (out-of-stock, low stock, and/or reserved profiles)
+		if (showOutOfStock || showLowStock || showReservedProfiles) {
 			result = result.filter((item: any) => {
 				const config = STOCK_CONFIGS[category as keyof typeof STOCK_CONFIGS];
 				const quantityField = config?.fields?.quantityLump;
 				const quantity = quantityField ? (item as any)[quantityField] : adapter.getQuantity(item);
-				
+
 				// Check if item matches out-of-stock filter
 				const matchesOutOfStock = showOutOfStock && quantity === 0;
-				
+
 				// Check if item matches low stock filter (only for Insumos)
 				let matchesLowStock = false;
 				if (showLowStock && category === 'Insumos') {
@@ -92,14 +94,28 @@ export function StockManagement({
 						matchesLowStock = quantity <= threshold.yellow;
 					}
 				}
-				
-				// Return true if matches either filter (OR logic)
-				return matchesOutOfStock || matchesLowStock;
+
+				// Check if item matches reserved profiles filter (only for Perfiles)
+				const matchesReserved =
+					showReservedProfiles && category === 'Perfiles' && !!item.separated_for_work_id;
+
+				// Return true if matches any active filter (OR logic)
+				return matchesOutOfStock || matchesLowStock || matchesReserved;
 			});
 		}
 
 		return result;
-	}, [stock, searchTerm, selectedCategory, materialType, category, showOutOfStock, showLowStock, thresholds]);
+	}, [
+		stock,
+		searchTerm,
+		selectedCategory,
+		materialType,
+		category,
+		showOutOfStock,
+		showLowStock,
+		showReservedProfiles,
+		thresholds,
+	]);
 
 	const totalPages = Math.ceil(filteredStock.length / itemsPerPage);
 
@@ -214,7 +230,9 @@ export function StockManagement({
 			{/* Header */}
 			<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 				<div>
-					<h2 className="text-2xl font-bold text-foreground text-balance">{getTitle(category, materialType)}</h2>
+					<h2 className="text-2xl font-bold text-foreground text-balance">
+						{getTitle(category, materialType)}
+					</h2>
 					<p className="text-muted-foreground mt-1">{getDescription(category, materialType)}</p>
 				</div>
 
@@ -232,7 +250,11 @@ export function StockManagement({
 					)}
 
 					{category === 'Insumos' && user?.role === 'Admin' && (
-						<Button variant="default" onClick={() => setIsThresholdsDialogOpen(true)} className="gap-2">
+						<Button
+							variant="default"
+							onClick={() => setIsThresholdsDialogOpen(true)}
+							className="gap-2"
+						>
 							<Settings className="h-5 w-5" />
 							Configurar Umbrales
 						</Button>
@@ -262,7 +284,8 @@ export function StockManagement({
 										const errorMessage = translateError(result.error);
 										toast({
 											title: 'Error',
-											description: errorMessage || 'No se pudo crear el perfil. Intenta nuevamente.',
+											description:
+												errorMessage || 'No se pudo crear el perfil. Intenta nuevamente.',
 											variant: 'destructive',
 										});
 										return;
@@ -324,40 +347,56 @@ export function StockManagement({
 				lastAddedItem={lastAddedItem}
 			/>
 
-			{/* Filters */}
-			<div className="flex gap-4">
-				<StockFilters
-					searchTerm={searchTerm}
-					setSearchTerm={setSearchTerm}
-					selectedCategory={selectedCategory}
-					setSelectedCategory={setSelectedCategory}
-					showOutOfStock={showOutOfStock}
-					setShowOutOfStock={setShowOutOfStock}
-					showLowStock={showLowStock}
-					setShowLowStock={setShowLowStock}
-				/>
-				{category === 'Insumos' && (
-					<Button
-						variant="outline"
-						onClick={async () => {
-							try {
-								await generateStockReportPDF(filteredStock, category, showOutOfStock, showLowStock);
-							} catch (error) {
-								console.error('Error generating PDF:', error);
-								toast({
-									title: 'Error',
-									description: 'No se pudo generar el PDF. Intenta nuevamente.',
-									variant: 'destructive',
-								});
-							}
-						}}
-						className="h-auto"
-					>
-						<Download className="mr-2 h-4 w-4" />
-						Descargar PDF
-					</Button>
+			<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+				{(selectedCategory === 'Accesorios' ||
+					selectedCategory === 'Herrajes' ||
+					selectedCategory === 'Insumos') && (
+					<div className="flex flex-col md:flex-row md:items-center gap-2 md:ml-auto">
+						<div className="w-full md:flex-1 [&_button]:w-full [&_button]:h-8 [&_button]:text-xs [&_button]:px-2">
+							<UpdatePricesDialog />
+						</div>
+						{selectedCategory === 'Insumos' && (
+							<Button
+								variant="outline"
+								onClick={async () => {
+									try {
+										await generateStockReportPDF(
+											filteredStock,
+											category,
+											showOutOfStock,
+											showLowStock
+										);
+									} catch (error) {
+										console.error('Error generating PDF:', error);
+										toast({
+											title: 'Error',
+											description: 'No se pudo generar el PDF. Intenta nuevamente.',
+											variant: 'destructive',
+										});
+									}
+								}}
+								className="h-8 text-xs w-full md:flex-1"
+							>
+								<Download className="mr-2 h-4 w-4" />
+								Descargar PDF
+							</Button>
+						)}
+					</div>
 				)}
 			</div>
+			{/* Filters */}
+			<StockFilters
+				searchTerm={searchTerm}
+				setSearchTerm={setSearchTerm}
+				selectedCategory={selectedCategory}
+				setSelectedCategory={setSelectedCategory}
+				showOutOfStock={showOutOfStock}
+				setShowOutOfStock={setShowOutOfStock}
+				showLowStock={showLowStock}
+				setShowLowStock={setShowLowStock}
+				showReservedProfiles={showReservedProfiles}
+				setShowReservedProfiles={setShowReservedProfiles}
+			/>
 
 			{/* Main table */}
 			{loading ? (
@@ -377,7 +416,8 @@ export function StockManagement({
 										const errorMessage = translateError(result.error);
 										toast({
 											title: 'Error',
-											description: errorMessage || 'No se pudo eliminar el perfil. Intenta nuevamente.',
+											description:
+												errorMessage || 'No se pudo eliminar el perfil. Intenta nuevamente.',
 											variant: 'destructive',
 										});
 									}
@@ -390,7 +430,8 @@ export function StockManagement({
 									console.error('Error al eliminar:', error);
 									toast({
 										title: 'Error',
-										description: errorMessage || 'No se pudo eliminar el perfil. Intenta nuevamente.',
+										description:
+											errorMessage || 'No se pudo eliminar el perfil. Intenta nuevamente.',
 										variant: 'destructive',
 									});
 								}
@@ -403,7 +444,8 @@ export function StockManagement({
 										const errorMessage = translateError(result.error);
 										toast({
 											title: 'Error',
-											description: errorMessage || 'No se pudo actualizar la cantidad. Intenta nuevamente.',
+											description:
+												errorMessage || 'No se pudo actualizar la cantidad. Intenta nuevamente.',
 											variant: 'destructive',
 										});
 									}
@@ -438,7 +480,8 @@ export function StockManagement({
 										const errorMessage = translateError(result.error);
 										toast({
 											title: 'Error',
-											description: errorMessage || 'No se pudo eliminar el item. Intenta nuevamente.',
+											description:
+												errorMessage || 'No se pudo eliminar el item. Intenta nuevamente.',
 											variant: 'destructive',
 										});
 									}
@@ -463,7 +506,8 @@ export function StockManagement({
 										const errorMessage = translateError(result.error);
 										toast({
 											title: 'Error',
-											description: errorMessage || 'No se pudo actualizar la cantidad. Intenta nuevamente.',
+											description:
+												errorMessage || 'No se pudo actualizar la cantidad. Intenta nuevamente.',
 											variant: 'destructive',
 										});
 									}
@@ -472,7 +516,8 @@ export function StockManagement({
 									const errorMessage = translateError(error);
 									toast({
 										title: 'Error',
-										description: errorMessage || 'No se pudo actualizar la cantidad. Intenta nuevamente.',
+										description:
+											errorMessage || 'No se pudo actualizar la cantidad. Intenta nuevamente.',
 										variant: 'destructive',
 									});
 								}
@@ -528,7 +573,8 @@ export function StockManagement({
 											const errorMessage = translateError(result.error);
 											toast({
 												title: 'Error',
-												description: errorMessage || 'No se pudo actualizar el item. Intenta nuevamente.',
+												description:
+													errorMessage || 'No se pudo actualizar el item. Intenta nuevamente.',
 												variant: 'destructive',
 											});
 											return;
@@ -539,7 +585,8 @@ export function StockManagement({
 										const errorMessage = translateError(error);
 										toast({
 											title: 'Error',
-											description: errorMessage || 'No se pudo actualizar el item. Intenta nuevamente.',
+											description:
+												errorMessage || 'No se pudo actualizar el item. Intenta nuevamente.',
 											variant: 'destructive',
 										});
 									}

@@ -12,6 +12,8 @@ export const IMAGE_TYPES = [
 	'image/webp',
 ] as const;
 
+export const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'] as const;
+
 // Video file types (only for clients)
 export const VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'] as const;
 
@@ -132,6 +134,20 @@ export const formatDate = (dateString: string): string => {
 		hour: '2-digit',
 		minute: '2-digit',
 	});
+};
+
+export const getFileKind = (fileName: string) => {
+	const extension = getFileExtension(fileName).toLowerCase();
+
+	if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(extension)) {
+		return 'image';
+	}
+
+	if (['mp4', 'webm', 'ogg', 'mov', 'avi'].includes(extension)) {
+		return 'video';
+	}
+
+	return 'file';
 };
 
 // type created for the file viewer modal

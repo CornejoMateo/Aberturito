@@ -176,13 +176,13 @@ export function WorksList({
 								</div>
 								<div className="flex flex-row sm:flex-row gap-2 sm:gap-3 items-center justify-between sm:justify-end">
 									<div className="flex items-center justify-end gap-2">
-										<div className="flex items-center gap-1 text-[11px] sm:text-sm text-muted-foreground group">
+										<div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground group">
 											<select
 												value={work.status || 'pending'}
 												onChange={async (e) => {
 													await handleUpdateWork(work.id, { status: e.target.value });
 												}}
-												className="bg-transparent border-none focus:ring-0 focus:ring-offset-0 p-0.5 pr-5 sm:p-1 sm:pr-6 appearance-none focus:outline-none cursor-pointer hover:bg-muted rounded-md text-[11px] sm:text-sm"
+												className="bg-transparent border-none focus:ring-0 focus:ring-offset-0 p-1 pr-5 sm:p-1 sm:pr-6 appearance-none focus:outline-none cursor-pointer hover:bg-muted rounded-md text-xs sm:text-sm"
 											>
 												{statusConfig.map((option) => (
 													<option key={option.value} value={option.value}>
@@ -190,7 +190,7 @@ export function WorksList({
 													</option>
 												))}
 											</select>
-											<ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 -ml-4 sm:-ml-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+											<ChevronDown className="h-3.5 w-3.5 sm:h-3.5 sm:w-3.5 -ml-4 sm:-ml-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
 										</div>
 										<div className="flex items-center gap-1">
 											{loadingChecklists[work.id] ? (
@@ -216,14 +216,14 @@ export function WorksList({
 										<Button
 											variant="ghost"
 											size="icon"
-											className="h-7 w-7 sm:h-8 sm:w-8"
+											className="h-9 w-9 sm:h-8 sm:w-8"
 											onClick={(e) => {
 												e.stopPropagation();
 												setWorkToDelete({ id: work.id, address: work.address || '' });
 												setIsDeleteDialogOpen(true);
 											}}
 										>
-											<Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+											<Trash2 className="h-4 w-4" />
 										</Button>
 									)}
 								</div>

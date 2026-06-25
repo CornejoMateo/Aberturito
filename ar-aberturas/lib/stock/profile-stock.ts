@@ -18,6 +18,10 @@ export type ProfileItemStock = {
 		id: string;
 		address?: string | null;
 		locality?: string | null;
+		clients?: {
+			name: string;
+			last_name: string;
+		} | null;
 	} | null;
 };
 
@@ -29,7 +33,7 @@ export async function listStock(): Promise<{ data: ProfileItemStock[] | null; er
 		.from(TABLE)
 		.select(`
 			*,
-			separated_for_work:separated_for_work_id(id, address, locality)
+			separated_for_work:separated_for_work_id(id, address, locality, clients:client_id(name, last_name))
 		`)
 		.order('created_at', { ascending: false });
 	return { data, error };
@@ -171,7 +175,7 @@ export async function separateProfile(
 		.eq('id', id)
 		.select(`
 			*,
-			separated_for_work:separated_for_work_id(id, address, locality)
+			separated_for_work:separated_for_work_id(id, address, locality, clients:client_id(name, last_name))
 		`)
 		.single();
 	return { data, error };
@@ -190,7 +194,7 @@ export async function unseparateProfile(
 		.eq('id', id)
 		.select(`
 			*,
-			separated_for_work:separated_for_work_id(id, address, locality)
+			separated_for_work:separated_for_work_id(id, address, locality, clients:client_id(name, last_name))
 		`)
 		.single();
 	return { data, error };

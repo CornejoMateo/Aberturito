@@ -7,11 +7,19 @@ import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from '@/components/ui/use-toast';
 import { ClipboardList } from 'lucide-react';
-
+import { Badge } from '@/components/ui/badge';
 import { Client } from '@/lib/clients/clients';
 import { Survey, SurveyItem, updateSurvey } from '@/lib/survey/survey';
 import { translateError } from '@/lib/error-translator';
 import { useClientSurveys } from '@/hooks/clients/use-client-survey';
+import { getBudgetAddress, getBudgetLabel } from '@/helpers/budgets/budget-helpers';
+import { formatCreatedAt } from '@/helpers/date/format-date';
+import { getSurveyProgress } from '@/helpers/surveys/progress';
+import { BudgetWithWork } from '@/lib/works/balances';
+
+import { CalendarIcon, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import type {
 	ItemDialogState,
@@ -27,7 +35,6 @@ import {
 } from '@/constants/surveys/survey';
 import { SurveyItemDialog } from './survey-item-dialog';
 import { SurveyDueDateDialog } from './survey-due-date-dialog';
-import { SurveyBudgetCard } from './survey-budget-card';
 
 interface ClientSurveyTabProps {
 	client: Client;
@@ -253,7 +260,7 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 								<div className="space-y-3">
 									{/* Progress bar */}
 									{(() => {
-										const { done, total } = getProgress(survey.id);
+										const { done, total } = getSurveyProgress(items, survey.id);
 										return total > 0 ? (
 											<div className="flex items-center gap-2">
 												<div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">

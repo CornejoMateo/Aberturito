@@ -1,6 +1,12 @@
 'use client';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +15,7 @@ import { BudgetWithWork } from '@/lib/works/balances';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
 import { formatCreatedAt } from '@/helpers/date/format-date';
 import { BudgetStatusSelector } from '@/components/ui/budget-status-selector';
-import { getBudgetStatus } from '@/constants/budget-status';
+import { getBudgetStatus } from '@/constants/budgets/budget-status';
 
 interface BudgetDetailModalProps {
 	isOpen: boolean;
@@ -44,9 +50,7 @@ export function BudgetDetailModal({
 						<FileText className="h-5 w-5" />
 						Detalles del Presupuesto
 					</DialogTitle>
-					<DialogDescription>
-						Información completa del presupuesto seleccionado
-					</DialogDescription>
+					<DialogDescription>Información completa del presupuesto seleccionado</DialogDescription>
 				</DialogHeader>
 				<div className="space-y-4">
 					<div className="grid grid-cols-2 gap-4">
@@ -78,15 +82,11 @@ export function BudgetDetailModal({
 					<div className="grid grid-cols-2 gap-4">
 						<div>
 							<Label className="text-sm font-medium text-muted-foreground">Monto ARS</Label>
-							<p className="text-sm font-semibold">
-								{formatCurrency(budget.amount_ars)}
-							</p>
+							<p className="text-sm font-semibold">{formatCurrency(budget.amount_ars)}</p>
 						</div>
 						<div>
 							<Label className="text-sm font-medium text-muted-foreground">Monto USD</Label>
-							<p className="text-sm font-semibold">
-								{formatCurrencyUSD(budget.amount_usd)}
-							</p>
+							<p className="text-sm font-semibold">{formatCurrencyUSD(budget.amount_usd)}</p>
 						</div>
 					</div>
 
@@ -109,10 +109,10 @@ export function BudgetDetailModal({
 
 					<div className="grid grid-cols-2 gap-4">
 						<div>
-							<Label className="text-sm font-medium text-muted-foreground mt-2">Fecha de emisión</Label>
-							<p className="text-sm font-semibold">
-								{formatCreatedAt(budget.created_at)}
-							</p>
+							<Label className="text-sm font-medium text-muted-foreground mt-2">
+								Fecha de emisión
+							</Label>
+							<p className="text-sm font-semibold">{formatCreatedAt(budget.created_at)}</p>
 						</div>
 						<div>
 							<Label className="text-sm font-medium text-muted-foreground">PDF</Label>
@@ -132,17 +132,17 @@ export function BudgetDetailModal({
 							</div>
 						</div>
 					</div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            {budget.date_of_sale && (
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground mt-2">Fecha de venta</Label>
-                <p className="text-sm font-semibold">
-                  {formatCreatedAt(budget.date_of_sale)}
-                </p>
-              </div>
-            )}
-          </div>
+
+					<div className="grid grid-cols-2 gap-4">
+						{budget.date_of_sale && (
+							<div>
+								<Label className="text-sm font-medium text-muted-foreground mt-2">
+									Fecha de venta
+								</Label>
+								<p className="text-sm font-semibold">{formatCreatedAt(budget.date_of_sale)}</p>
+							</div>
+						)}
+					</div>
 
 					<div className="flex justify-end gap-2 pt-4 border-t">
 						<Button variant="outline" onClick={onClose}>
@@ -157,7 +157,7 @@ export function BudgetDetailModal({
 							<Edit className="h-4 w-4" />
 							Editar
 						</Button>
-							{!budget.accepted && (
+						{!budget.accepted && (
 							<Button
 								onClick={() => {
 									onChooseBudget(budget.id);

@@ -26,6 +26,8 @@ describe('TransactionsTable', () => {
 	};
 
 	const mockOnDeleteTransaction = jest.fn();
+	const mockOnEditTransaction = jest.fn();
+	const mockOnViewFiles = jest.fn();
 
 	const defaultProps = {
 		isLoading: false,
@@ -40,6 +42,8 @@ describe('TransactionsTable', () => {
 			}
 		},
 		onDeleteTransaction: mockOnDeleteTransaction,
+		onEditTransaction: mockOnEditTransaction,
+		onViewFiles: mockOnViewFiles,
 	};
 
 	beforeEach(() => {
@@ -194,15 +198,15 @@ describe('TransactionsTable', () => {
 		it('should render delete button for each transaction', () => {
 			render(<TransactionsTable {...defaultProps} />);
 
-			const deleteButtons = screen.getAllByRole('button');
-			expect(deleteButtons.length).toBeGreaterThan(0);
+			const buttons = screen.getAllByRole('button');
+			expect(buttons.length).toBe(3); // Edit, Delete, Image
 		});
 
 		it('should call onDeleteTransaction when delete button is clicked', async () => {
 			const user = userEvent.setup();
 			render(<TransactionsTable {...defaultProps} />);
 
-			const deleteButton = screen.getAllByRole('button')[0];
+			const deleteButton = screen.getAllByRole('button')[1]; // 2nd button = Delete
 			await user.click(deleteButton);
 
 			expect(mockOnDeleteTransaction).toHaveBeenCalledWith(mockTransaction);
@@ -222,12 +226,16 @@ describe('TransactionsTable', () => {
 
 			render(<TransactionsTable {...defaultProps} transactions={transactions} />);
 
-			const deleteButtons = screen.getAllByRole('button');
-			await user.click(deleteButtons[0]);
+			const allButtons = screen.getAllByRole('button');
+			// Per row: [Edit, Delete, Image] = 3 buttons
+			const firstDelete = allButtons[1]; // Row 1 Delete
+			const secondDelete = allButtons[4]; // Row 2 Delete
+
+			await user.click(firstDelete);
 
 			expect(mockOnDeleteTransaction).toHaveBeenCalledWith(mockTransaction);
 
-			await user.click(deleteButtons[1]);
+			await user.click(secondDelete);
 
 			expect(mockOnDeleteTransaction).toHaveBeenCalledWith(transactions[1]);
 		});
@@ -354,15 +362,14 @@ describe('TransactionsTable', () => {
 			expect(tbody).toBeInTheDocument();
 		});
 
-		it('should render delete buttons with proper accessibility', () => {
+		it('should render action buttons with proper accessibility', () => {
 			render(<TransactionsTable {...defaultProps} />);
 
-			const deleteButtons = screen.getAllByRole('button');
-			expect(deleteButtons.length).toBeGreaterThan(0);
-
-			deleteButtons.forEach((button) => {
-				expect(button).toHaveClass('h-8', 'w-8');
-			});
+			const actionButtons = screen.getAllByRole('button');
+			expect(actionButtons.length).toBe(3);
+			expect(actionButtons[0]).toHaveClass('h-8', 'w-8'); // Edit
+			expect(actionButtons[1]).toHaveClass('h-8', 'w-8'); // Delete
+			expect(actionButtons[2]).toHaveClass('h-8', 'w-8'); // Image
 		});
 	});
 });

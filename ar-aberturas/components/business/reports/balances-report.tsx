@@ -3,20 +3,37 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
 import { formatShortDate } from '@/helpers/date/formats';
 import { calculateBalanceStats } from '@/helpers/balances/stats';
-import { BALANCES_REPORT_COLUMNS, BALANCES_REPORT_TITLE, BALANCE_TYPES, DEFAULT_FALLBACK } from '@/constants/reports/balances-report';
+import {
+	BALANCES_REPORT_COLUMNS,
+	BALANCE_TYPES,
+	DEFAULT_FALLBACK,
+} from '@/constants/reports/balances-report';
 import { StatsCardsBalances } from '@/utils/balances/stats-cards-balances';
 import { BalanceWithBudgetAndClient, listBalancesForReport } from '@/lib/works/balances';
 import { getLastTransactionUSD } from '@/lib/works/balance_transactions';
 import { getTotalsByBalanceIds } from '@/lib/works/balance_transactions';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
-import { normalizeMoney} from '@/helpers/format-prices.tsx/formats';
+import { normalizeMoney } from '@/helpers/format-prices.tsx/formats';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BudgetsReport } from './budgets-report';
 import { ClientsReport } from './clients-report';
@@ -72,51 +89,61 @@ export function BalancesReport() {
 			const ids = balances.map((b) => b.id);
 			const { data: totals } = await getTotalsByBalanceIds(ids);
 
-			const next: BalanceReportRow[] = await Promise.all(balances.map(async (b) => {
-				const totalPaid = totals?.[String(b.id)]?.totalAmount ?? 0;
-				const totalPaidUSD = totals?.[String(b.id)]?.totalAmountUSD ?? 0;
-				const budgetUsd = b.balance_amount_usd ?? 0;
-				const budgetArs = b.balance_amount_ars ?? 0;
-				const remainingUsd = normalizeMoney(budgetUsd - totalPaidUSD);
-				const remainingArs = normalizeMoney(budgetArs - totalPaid);
+			const next: BalanceReportRow[] = await Promise.all(
+				balances.map(async (b) => {
+					const totalPaid = totals?.[String(b.id)]?.totalAmount ?? 0;
+					const totalPaidUSD = totals?.[String(b.id)]?.totalAmountUSD ?? 0;
+					const budgetUsd = b.balance_amount_usd ?? 0;
+					const budgetArs = b.balance_amount_ars ?? 0;
+					const remainingUsd = normalizeMoney(budgetUsd - totalPaidUSD);
+					const remainingArs = normalizeMoney(budgetArs - totalPaid);
 
-				const clientName = `${b.client?.last_name ?? ''} ${b.client?.name ?? ''}`.trim() || DEFAULT_FALLBACK;
-				const workLocality = b.budget?.folder_budget?.work?.locality ?? '';
-				const workAddress = b.budget?.folder_budget?.work?.address ?? '';
-				const work = `${workLocality}${workLocality && workAddress ? ' - ' : ''}${workAddress}`.trim() || DEFAULT_FALLBACK;
+					const clientName =
+						`${b.client?.last_name ?? ''} ${b.client?.name ?? ''}`.trim() || DEFAULT_FALLBACK;
+					const workLocality = b.budget?.folder_budget?.work?.locality ?? '';
+					const workAddress = b.budget?.folder_budget?.work?.address ?? '';
+					const work =
+						`${workLocality}${workLocality && workAddress ? ' - ' : ''}${workAddress}`.trim() ||
+						DEFAULT_FALLBACK;
 
-				const conceptParts = [b.budget?.number ?? '', b.budget?.type ?? ''].filter(Boolean);
-				const concept = conceptParts.join(' - ') || DEFAULT_FALLBACK;
+					const conceptParts = [b.budget?.number ?? '', b.budget?.type ?? ''].filter(Boolean);
+					const concept = conceptParts.join(' - ') || DEFAULT_FALLBACK;
 
-				const usdContractRef = Number(b.contract_date_usd) || 0;
+					const usdContractRef = Number(b.contract_date_usd) || 0;
 
-				const balanceType = remainingUsd > 0 ? BALANCE_TYPES.DEBTOR : remainingUsd < 0 ? BALANCE_TYPES.CREDITOR : BALANCE_TYPES.CANCELLED;
-				const balanceAmountArs = remainingArs;
-				const balanceInUseUsd = remainingUsd;
+					const balanceType =
+						remainingUsd > 0
+							? BALANCE_TYPES.DEBTOR
+							: remainingUsd < 0
+								? BALANCE_TYPES.CREDITOR
+								: BALANCE_TYPES.CANCELLED;
+					const balanceAmountArs = remainingArs;
+					const balanceInUseUsd = remainingUsd;
 
-				const contractDateRaw = new Date(b.start_date || b.created_at);
-				let usdCurrentToCancel: number | null = null;
-				if (balanceType === BALANCE_TYPES.CANCELLED) {
-					const { data: lastTransactionUsd } = await getLastTransactionUSD(b.id);
-					usdCurrentToCancel = lastTransactionUsd ?? 0;
-				}
+					const contractDateRaw = new Date(b.start_date || b.created_at);
+					let usdCurrentToCancel: number | null = null;
+					if (balanceType === BALANCE_TYPES.CANCELLED) {
+						const { data: lastTransactionUsd } = await getLastTransactionUSD(b.id);
+						usdCurrentToCancel = lastTransactionUsd ?? 0;
+					}
 
-				return {
-					id: String(b.id),
-					contractDate: formatShortDate(b.start_date || b.created_at),
-					contractDateRaw,
-					client: clientName,
-					work,
-					concept,
-					purchaseArs: budgetArs,
-					deliveriesArs: totalPaid,
-					balanceType,
-					balanceAmountArs,
-					usdContractRef,
-					usdCurrentToCancel: usdCurrentToCancel,
-					balanceInUseUsd,
-				};
-			}));
+					return {
+						id: String(b.id),
+						contractDate: formatShortDate(b.start_date || b.created_at),
+						contractDateRaw,
+						client: clientName,
+						work,
+						concept,
+						purchaseArs: budgetArs,
+						deliveriesArs: totalPaid,
+						balanceType,
+						balanceAmountArs,
+						usdContractRef,
+						usdCurrentToCancel: usdCurrentToCancel,
+						balanceInUseUsd,
+					};
+				})
+			);
 
 			setRows(next);
 		};
@@ -127,7 +154,7 @@ export function BalancesReport() {
 	const filteredRows = useMemo(() => {
 		let filtered = rows;
 
-		// Filter to type 
+		// Filter to type
 		if (balanceTypeFilter !== 'all') {
 			filtered = filtered.filter((r) => r.balanceType === balanceTypeFilter);
 		}
@@ -181,7 +208,11 @@ export function BalancesReport() {
 
 	const getSortIcon = (field: keyof BalanceReportRow) => {
 		if (sortField !== field) return <ArrowUpDown className="h-4 w-4" />;
-		return sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />;
+		return sortDirection === 'asc' ? (
+			<ArrowUp className="h-4 w-4" />
+		) : (
+			<ArrowDown className="h-4 w-4" />
+		);
 	};
 
 	return (
@@ -234,7 +265,7 @@ export function BalancesReport() {
 						<Table>
 							<TableHeader>
 								<TableRow>
-									<TableHead 
+									<TableHead
 										className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
 										onClick={() => handleSort('contractDate')}
 									>
@@ -243,7 +274,7 @@ export function BalancesReport() {
 											{getSortIcon('contractDate')}
 										</div>
 									</TableHead>
-									<TableHead 
+									<TableHead
 										className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
 										onClick={() => handleSort('client')}
 									>
@@ -252,7 +283,7 @@ export function BalancesReport() {
 											{getSortIcon('client')}
 										</div>
 									</TableHead>
-									<TableHead 
+									<TableHead
 										className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
 										onClick={() => handleSort('work')}
 									>
@@ -261,7 +292,7 @@ export function BalancesReport() {
 											{getSortIcon('work')}
 										</div>
 									</TableHead>
-									<TableHead 
+									<TableHead
 										className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
 										onClick={() => handleSort('concept')}
 									>
@@ -270,7 +301,7 @@ export function BalancesReport() {
 											{getSortIcon('concept')}
 										</div>
 									</TableHead>
-									<TableHead 
+									<TableHead
 										className="text-right whitespace-nowrap cursor-pointer hover:bg-muted/50"
 										onClick={() => handleSort('purchaseArs')}
 									>
@@ -279,7 +310,7 @@ export function BalancesReport() {
 											{getSortIcon('purchaseArs')}
 										</div>
 									</TableHead>
-									<TableHead 
+									<TableHead
 										className="text-right whitespace-nowrap cursor-pointer hover:bg-muted/50"
 										onClick={() => handleSort('deliveriesArs')}
 									>
@@ -288,7 +319,7 @@ export function BalancesReport() {
 											{getSortIcon('deliveriesArs')}
 										</div>
 									</TableHead>
-									<TableHead 
+									<TableHead
 										className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
 										onClick={() => handleSort('balanceType')}
 									>
@@ -297,7 +328,7 @@ export function BalancesReport() {
 											{getSortIcon('balanceType')}
 										</div>
 									</TableHead>
-									<TableHead 
+									<TableHead
 										className="text-right whitespace-nowrap cursor-pointer hover:bg-muted/50"
 										onClick={() => handleSort('balanceAmountArs')}
 									>
@@ -306,7 +337,7 @@ export function BalancesReport() {
 											{getSortIcon('balanceAmountArs')}
 										</div>
 									</TableHead>
-									<TableHead 
+									<TableHead
 										className="text-right whitespace-nowrap cursor-pointer hover:bg-muted/50"
 										onClick={() => handleSort('usdContractRef')}
 									>
@@ -315,7 +346,7 @@ export function BalancesReport() {
 											{getSortIcon('usdContractRef')}
 										</div>
 									</TableHead>
-									<TableHead 
+									<TableHead
 										className="text-right whitespace-nowrap cursor-pointer hover:bg-muted/50"
 										onClick={() => handleSort('usdCurrentToCancel')}
 									>
@@ -324,7 +355,7 @@ export function BalancesReport() {
 											{getSortIcon('usdCurrentToCancel')}
 										</div>
 									</TableHead>
-									<TableHead 
+									<TableHead
 										className="text-right whitespace-nowrap cursor-pointer hover:bg-muted/50"
 										onClick={() => handleSort('balanceInUseUsd')}
 									>
@@ -356,13 +387,25 @@ export function BalancesReport() {
 											<TableCell className="font-medium whitespace-nowrap">{r.client}</TableCell>
 											<TableCell className="whitespace-nowrap">{r.work}</TableCell>
 											<TableCell className="whitespace-nowrap">{r.concept}</TableCell>
-											<TableCell className="text-right whitespace-nowrap">{formatCurrency(r.purchaseArs)}</TableCell>
-											<TableCell className="text-right whitespace-nowrap">{formatCurrency(r.deliveriesArs)}</TableCell>
+											<TableCell className="text-right whitespace-nowrap">
+												{formatCurrency(r.purchaseArs)}
+											</TableCell>
+											<TableCell className="text-right whitespace-nowrap">
+												{formatCurrency(r.deliveriesArs)}
+											</TableCell>
 											<TableCell className="whitespace-nowrap">{r.balanceType}</TableCell>
-											<TableCell className="text-right whitespace-nowrap">{formatCurrency(r.balanceAmountArs)}</TableCell>
-											<TableCell className="text-right whitespace-nowrap">{formatCurrencyUSD(r.usdContractRef)}</TableCell>
-											<TableCell className="text-right whitespace-nowrap">{formatCurrencyUSD(r.usdCurrentToCancel)}</TableCell>
-											<TableCell className="text-right whitespace-nowrap">{formatCurrencyUSD(r.balanceInUseUsd)}</TableCell>
+											<TableCell className="text-right whitespace-nowrap">
+												{formatCurrency(r.balanceAmountArs)}
+											</TableCell>
+											<TableCell className="text-right whitespace-nowrap">
+												{formatCurrencyUSD(r.usdContractRef)}
+											</TableCell>
+											<TableCell className="text-right whitespace-nowrap">
+												{formatCurrencyUSD(r.usdCurrentToCancel)}
+											</TableCell>
+											<TableCell className="text-right whitespace-nowrap">
+												{formatCurrencyUSD(r.balanceInUseUsd)}
+											</TableCell>
 										</TableRow>
 									))
 								)}

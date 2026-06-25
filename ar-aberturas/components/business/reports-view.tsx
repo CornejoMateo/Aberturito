@@ -1,7 +1,6 @@
 'use client';
 
 import { BalancesReport } from './reports/balances-report';
-import { BudgetsReport } from './reports/budgets-report';
 
 export function ReportsView() {
 	return (

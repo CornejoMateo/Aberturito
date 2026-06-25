@@ -1,11 +1,18 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { ClipboardList, CheckCircle, ArrowRight, Calendar, Tag as TagIcon, Settings } from 'lucide-react';
+import {
+	ClipboardList,
+	CheckCircle,
+	ArrowRight,
+	Calendar,
+	Tag as TagIcon,
+	Settings,
+} from 'lucide-react';
 import { Client, listClients } from '@/lib/clients/clients';
 import {
 	Survey,
@@ -16,14 +23,14 @@ import {
 } from '@/lib/survey/survey';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { translateError } from '@/lib/error-translator';
-import { DEFAULT_SURVEY_STEPS } from '@/constants/survey';
+import { DEFAULT_SURVEY_STEPS } from '@/constants/surveys/survey';
 import { ClientDetailsDialog } from '@/utils/clients/client-details-dialog';
 import { formatCreatedAt } from '@/helpers/date/format-date';
 import { differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
-import { TagSelector } from '@/components/tags/tag-selector';
-import { TagManagerDialog } from '@/components/tags/tag-manager-dialog';
+import { TagSelector } from '@/utils/surveys/tags/tag-selector';
+import { TagManagerDialog } from '@/utils/surveys/tags/tag-manager-dialog';
 import { SurveyTag, getTagsForSurveys } from '@/lib/tags/tags';
-import { TAG_COLORS } from '@/constants/tags';
+import { TAG_COLORS } from '@/constants/surveys/tags';
 
 interface ClientWithSurvey {
 	client: Client;
@@ -423,11 +430,7 @@ export function SurveyBoard() {
 						<h2 className="text-2xl font-bold text-foreground text-balance">Relevamiento</h2>
 						<p className="text-muted-foreground mt-1">Estado de relevamientos por cliente</p>
 					</div>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => setIsTagManagerOpen(true)}
-					>
+					<Button variant="outline" size="sm" onClick={() => setIsTagManagerOpen(true)}>
 						<Settings className="h-4 w-4 mr-2" />
 						Gestionar etiquetas
 					</Button>
@@ -519,7 +522,11 @@ export function SurveyBoard() {
 														<h4 className="font-medium text-foreground text-sm">
 															{clientWithSurvey.client.last_name} {clientWithSurvey.client.name}
 														</h4>
-														<TagSelector surveyId={clientWithSurvey.survey.id} onChange={loadSurveys} assignedTags={clientWithSurvey.tags} />
+														<TagSelector
+															surveyId={clientWithSurvey.survey.id}
+															onChange={loadSurveys}
+															assignedTags={clientWithSurvey.tags}
+														/>
 													</div>
 													{clientWithSurvey.client.locality && (
 														<p className="text-xs text-muted-foreground">
@@ -588,10 +595,7 @@ export function SurveyBoard() {
 			/>
 
 			{/* Tag Manager Dialog */}
-			<TagManagerDialog
-				open={isTagManagerOpen}
-				onOpenChange={setIsTagManagerOpen}
-			/>
+			<TagManagerDialog open={isTagManagerOpen} onOpenChange={setIsTagManagerOpen} />
 		</div>
 	);
 }

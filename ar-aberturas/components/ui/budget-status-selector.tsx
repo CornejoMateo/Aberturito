@@ -1,9 +1,19 @@
 'use client';
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { BUDGET_STATUS_OPTIONS, BUDGET_STATUS_COLORS, BUDGET_STATUS_LABELS } from '@/constants/budget-status';
-import { getStatusIcon } from '@/helpers/budget/status-helpers';
+import {
+	BUDGET_STATUS_OPTIONS,
+	BUDGET_STATUS_COLORS,
+	BUDGET_STATUS_LABELS,
+} from '@/constants/budgets/budget-status';
+import { getStatusIcon } from '@/helpers/budgets/status-helpers';
 
 interface BudgetStatusSelectorProps {
 	value?: string;
@@ -17,7 +27,7 @@ export function BudgetStatusSelector({
 	value,
 	onValueChange,
 	disabled = false,
-	placeholder = "Seleccionar estado...",
+	placeholder = 'Seleccionar estado...',
 	className,
 }: BudgetStatusSelectorProps) {
 	return (
@@ -40,7 +50,9 @@ export function BudgetStatusSelector({
 				{BUDGET_STATUS_OPTIONS.map((option) => (
 					<SelectItem key={option.value} value={option.value}>
 						<div className="flex items-center gap-2">
-							<Badge className={BUDGET_STATUS_COLORS[option.value as keyof typeof BUDGET_STATUS_COLORS]}>
+							<Badge
+								className={BUDGET_STATUS_COLORS[option.value as keyof typeof BUDGET_STATUS_COLORS]}
+							>
 								<div className="flex items-center gap-1">
 									{getStatusIcon(option.value)}
 									{option.label}

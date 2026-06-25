@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
 	Select,
 	SelectContent,
@@ -16,11 +17,15 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import { formatNumber, parseArsToNumber } from '@/utils/budgets/utils';
+import { formatNumber } from '@/utils/budgets/utils';
+import { BUDGET_STATUS } from '@/constants/reports/budgets-report';
+import { checklistTypes } from '@/lib/works/checklists.constants';
 
 type BudgetFilters = {
 	typeFilter: string;
 	statusFilter: string;
+	electedFilter: boolean;
+	materialFilter: string;
 	sellerFilter: string;
 	amountMin: string;
 	amountMax: string;
@@ -46,18 +51,20 @@ export function BudgetsFilterDialog({
 	const [localFilters, setLocalFilters] = useState<BudgetFilters>(filters);
 
 	useEffect(() => {
-	if (!open) return;
-	setLocalFilters(filters);
-}, [
-	open,
-	filters.typeFilter,
-	filters.statusFilter,
-	filters.sellerFilter,
-	filters.amountMin,
-	filters.amountMax,
-	filters.amountMinUsd,
-	filters.amountMaxUsd,
-]);
+		if (!open) return;
+		setLocalFilters(filters);
+	}, [
+		open,
+		filters.typeFilter,
+		filters.statusFilter,
+		filters.electedFilter,
+		filters.materialFilter,
+		filters.sellerFilter,
+		filters.amountMin,
+		filters.amountMax,
+		filters.amountMinUsd,
+		filters.amountMaxUsd,
+	]);
 
 	const handleApply = () => {
 		onApplyFilters(localFilters);
@@ -68,6 +75,8 @@ export function BudgetsFilterDialog({
 		const clearedFilters: BudgetFilters = {
 			typeFilter: 'all',
 			statusFilter: 'all',
+			electedFilter: false,
+			materialFilter: 'all',
 			sellerFilter: 'all',
 			amountMin: '',
 			amountMax: '',
@@ -81,19 +90,17 @@ export function BudgetsFilterDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="bg-card max-w-md">
+			<DialogContent className="bg-card max-w-md max-h-[90vh] flex flex-col">
 				<DialogHeader>
 					<DialogTitle className="text-foreground">Filtros de Presupuestos</DialogTitle>
 				</DialogHeader>
 
-				<div className="space-y-4 py-4">
+				<div className="flex-1 overflow-y-auto space-y-4 py-4">
 					<div className="grid gap-2">
 						<Label htmlFor="type">Tipo de presupuesto</Label>
 						<Select
 							value={localFilters.typeFilter}
-							onValueChange={(value) =>
-								setLocalFilters((prev) => ({ ...prev, typeFilter: value }))
-							}
+							onValueChange={(value) => setLocalFilters((prev) => ({ ...prev, typeFilter: value }))}
 						>
 							<SelectTrigger className="bg-background">
 								<SelectValue placeholder="Todos los tipos" />
@@ -120,9 +127,44 @@ export function BudgetsFilterDialog({
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="all">Todos los estados</SelectItem>
-								<SelectItem value="Pendiente">Pendiente</SelectItem>
-								<SelectItem value="Vendido">Vendido</SelectItem>
-								<SelectItem value="Perdido">Perdido</SelectItem>
+								<SelectItem value={BUDGET_STATUS.PENDING}>Pendiente</SelectItem>
+								<SelectItem value={BUDGET_STATUS.SOLD}>Vendido</SelectItem>
+								<SelectItem value={BUDGET_STATUS.LOST}>Perdido</SelectItem>
+							</SelectContent>
+						</Select>
+					</div>
+
+					<div className="flex items-center space-x-2">
+						<Checkbox
+							id="elected"
+							checked={localFilters.electedFilter}
+							onCheckedChange={(checked) =>
+								setLocalFilters((prev) => ({ ...prev, electedFilter: checked as boolean }))
+							}
+						/>
+						<Label htmlFor="elected" className="cursor-pointer">
+							Solo presupuestos elegidos
+						</Label>
+					</div>
+
+					<div className="grid gap-2">
+						<Label htmlFor="material">Material</Label>
+						<Select
+							value={localFilters.materialFilter}
+							onValueChange={(value) =>
+								setLocalFilters((prev) => ({ ...prev, materialFilter: value }))
+							}
+						>
+							<SelectTrigger className="bg-background">
+								<SelectValue placeholder="Todos los materiales" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">Todos los materiales</SelectItem>
+								{Object.values(checklistTypes).map((type) => (
+									<SelectItem key={type} value={type}>
+										{type}
+									</SelectItem>
+								))}
 							</SelectContent>
 						</Select>
 					</div>

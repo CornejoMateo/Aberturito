@@ -21,7 +21,7 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog';
 import { type ProfileItemStock } from '@/lib/stock/profile-stock';
-import { status } from '@/constants/stock-constants';
+import { status } from '@/constants/stock/stock-constants';
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { LineSelect } from '@/components/stock/line-select';
@@ -86,7 +86,16 @@ export function StockFormDialog({
 
 	const handleSave = () => {
 		// Validate required fields
-		if (!code || !line || !color || !site || !width || !quantity) {
+		if (
+			!code ||
+			!line ||
+			!color ||
+			!site ||
+			width === '' ||
+			width === undefined ||
+			quantity === '' ||
+			quantity === undefined
+		) {
 			toast({
 				title: 'Error de validación',
 				description: 'Por favor complete todos los campos obligatorios',
@@ -96,10 +105,17 @@ export function StockFormDialog({
 			return;
 		}
 
-		if (Number(quantity) < 0 || Number(width) < 0) {
+		if (
+			typeof quantity !== 'number' ||
+			!Number.isFinite(quantity) ||
+			typeof width !== 'number' ||
+			!Number.isFinite(width) ||
+			quantity < 0 ||
+			width < 0
+		) {
 			toast({
 				title: 'Error de validación',
-				description: 'La cantidad y el largo no pueden ser negativos',
+				description: 'La cantidad y el largo deben ser validos y positivos',
 				variant: 'destructive',
 				duration: 5000,
 			});
@@ -138,7 +154,8 @@ export function StockFormDialog({
 			const errorMessage = translateError(error);
 			toast({
 				title: 'Error',
-				description: errorMessage || 'Ocurrió un error al guardar el perfil. Por favor, intente nuevamente.',
+				description:
+					errorMessage || 'Ocurrió un error al guardar el perfil. Por favor, intente nuevamente.',
 				variant: 'destructive',
 				duration: 5000,
 			});
@@ -168,7 +185,6 @@ export function StockFormDialog({
 				</DialogHeader>
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2">
 					<div className="grid gap-4">
-
 						<div className="grid gap-2">
 							<Label htmlFor="line" className="text-foreground">
 								Línea
@@ -230,7 +246,7 @@ export function StockFormDialog({
 								type="number"
 								className="bg-background"
 								value={quantity}
-								onChange={(e) => setQuantity(Number(e.target.value) || '')}
+								onChange={(e) => setQuantity(e.target.value === '' ? '' : Number(e.target.value))}
 								required
 							/>
 						</div>

@@ -10,7 +10,11 @@ import { BudgetFolderVM } from '../types';
 import { workLabel } from '../utils';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
 import { formatCreatedAt } from '@/helpers/date/format-date';
-import { getBudgetStatus, BUDGET_STATUS_COLORS, BUDGET_STATUS_LABELS } from '@/constants/budget-status';
+import {
+	getBudgetStatus,
+	BUDGET_STATUS_COLORS,
+	BUDGET_STATUS_LABELS,
+} from '@/constants/budgets/budget-status';
 
 interface BudgetCardProps {
 	budget: BudgetWithWork;
@@ -56,7 +60,7 @@ export function BudgetCard({
 					}}
 					disabled={isLoading}
 					className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
-				>	
+				>
 					<Trash2 className="h-4 w-4" />
 				</Button>
 			</div>
@@ -78,13 +82,9 @@ export function BudgetCard({
 						{formatCurrencyUSD(budget.amount_usd)}
 					</p>
 				</div>
-				{budget.number ? (
-					<Badge variant="outline">#{budget.number}</Badge>
-				) : null}
+				{budget.number ? <Badge variant="outline">#{budget.number}</Badge> : null}
 				{budget.created_at && (
-					<p className="text-xs text-muted-foreground">
-						{formatCreatedAt(budget.created_at)}
-					</p>
+					<p className="text-xs text-muted-foreground">{formatCreatedAt(budget.created_at)}</p>
 				)}
 			</div>
 
@@ -121,12 +121,15 @@ export function BudgetCard({
 			</div>
 			{(() => {
 				const currentStatus = getBudgetStatus(budget);
-				
+
 				return (
-					<div className={cn(
-						'absolute bottom-0 left-0 right-0 text-white text-xs font-semibold py-1 text-center rounded-b-lg',
-						BUDGET_STATUS_COLORS[currentStatus as keyof typeof BUDGET_STATUS_COLORS] || 'bg-gray-500'
-					)}>
+					<div
+						className={cn(
+							'absolute bottom-0 left-0 right-0 text-white text-xs font-semibold py-1 text-center rounded-b-lg',
+							BUDGET_STATUS_COLORS[currentStatus as keyof typeof BUDGET_STATUS_COLORS] ||
+								'bg-gray-500'
+						)}
+					>
 						{BUDGET_STATUS_LABELS[currentStatus as keyof typeof BUDGET_STATUS_LABELS]}
 					</div>
 				);

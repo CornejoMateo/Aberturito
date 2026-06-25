@@ -71,6 +71,7 @@ export async function generateBudgetsReportPDF(
 		row.client,
 		row.number,
 		row.type,
+		row.materialType,
 		row.work,
 		row.amountArs.toLocaleString('es-AR', { minimumFractionDigits: 2 }),
 		row.amountUsd.toLocaleString('en-US', { minimumFractionDigits: 2 }),
@@ -80,7 +81,7 @@ export async function generateBudgetsReportPDF(
 
 	// Table headers
 	const headers = [
-		['Fecha', 'Cliente', 'Número', 'Tipo', 'Obra', 'Monto ARS', 'Monto USD', 'Estado', 'Vendedor'],
+		['Fecha', 'Cliente', 'Número', 'Tipo', 'Material', 'Obra', 'Monto ARS', 'Monto USD', 'Estado', 'Vendedor'],
 	];
 
 	// Generate table
@@ -90,26 +91,27 @@ export async function generateBudgetsReportPDF(
 		startY: yOffset,
 		margin: { top: margin, left: margin, right: margin, bottom: margin },
 		styles: {
-			fontSize: 8,
-			cellPadding: 2,
+			fontSize: 7.5,
+			cellPadding: 1.5,
 			font: 'helvetica',
 		},
 		headStyles: {
-			fontSize: 9,
+			fontSize: 8.5,
 			fontStyle: 'bold',
 			fillColor: [66, 66, 66],
 			textColor: [255, 255, 255],
 		},
 		columnStyles: {
-			0: { cellWidth: 25 }, // Fecha
-			1: { cellWidth: 35 }, // Cliente
-			2: { cellWidth: 20 }, // Número
-			3: { cellWidth: 25 }, // Tipo
-			4: { cellWidth: 60 }, // Obra
-			5: { cellWidth: 30, halign: 'right' }, // Monto ARS
-			6: { cellWidth: 30, halign: 'right' }, // Monto USD
-			7: { cellWidth: 25 }, // Estado
-			8: { cellWidth: 30 }, // Vendedor
+			0: { cellWidth: 20 }, // Fecha
+			1: { cellWidth: 30 }, // Cliente
+			2: { cellWidth: 18 }, // Número
+			3: { cellWidth: 20 }, // Tipo
+			4: { cellWidth: 20 }, // Material
+			5: { cellWidth: 50 }, // Obra
+			6: { cellWidth: 28 }, // Monto ARS
+			7: { cellWidth: 28 }, // Monto USD
+			8: { cellWidth: 22 }, // Estado
+			9: { cellWidth: 26 }, // Vendedor
 		},
 		didDrawPage: (data) => {
 			// Footer with page numbers

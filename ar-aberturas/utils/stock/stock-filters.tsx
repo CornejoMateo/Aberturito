@@ -1,7 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Search, Filter, BookmarkCheck } from 'lucide-react';
-import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -85,13 +84,7 @@ export function StockFilters({
 								<span className="sm:hidden">Stock bajo</span>
 							</Button>
 						)}
-						{(selectedCategory === 'Accesorios' ||
-							selectedCategory === 'Herrajes' ||
-							selectedCategory === 'Insumos') && (
-							<div className="[&_button]:h-8 [&_button]:text-xs [&_button]:px-2">
-								<UpdatePricesDialog />
-							</div>
-						)}
+
 					</div>
 				</div>
 			</div>

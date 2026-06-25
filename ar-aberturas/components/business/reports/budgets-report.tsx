@@ -14,7 +14,7 @@ import {
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
 import { formatShortDate } from '@/helpers/date/formats';
-import { formatBudgetType, formatBudgetStatus } from '@/helpers/budget/formats';
+import { formatBudgetType, formatBudgetStatus } from '@/helpers/budgets/formats';
 import { BUDGETS_REPORT_COLUMNS, BUDGETS_REPORT_TITLE } from '@/constants/reports/budgets-report';
 import { BudgetWithWorkAndClient, listBudgetsForReport } from '@/lib/budgets/budgets';
 import { Button } from '@/components/ui/button';

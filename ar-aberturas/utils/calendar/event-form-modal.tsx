@@ -33,9 +33,17 @@ import { validateDate } from '@/helpers/calendar/validateDate';
 interface EventFormModalProps {
 	onSave: (data: any) => void;
 	children: React.ReactNode;
+	initialData?: {
+		title?: string;
+		type?: string;
+		client?: string;
+		location?: string;
+		address?: string;
+		description?: string;
+	};
 }
 
-export function EventFormModal({ onSave, children }: EventFormModalProps) {
+export function EventFormModal({ onSave, children, initialData }: EventFormModalProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
@@ -49,6 +57,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 		window.addEventListener('resize', checkMobile);
 		return () => window.removeEventListener('resize', checkMobile);
 	}, []);
+
 	const [formData, setFormData] = useState({
 		title: '',
 		type: 'produccionOK',
@@ -59,6 +68,21 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 		description: '',
 		remember: true,
 	});
+
+	// Pre-fill form when initialData changes
+	useEffect(() => {
+		if (initialData) {
+			setFormData((prev) => ({
+				...prev,
+				title: initialData.title || prev.title,
+				type: initialData.type || prev.type,
+				client: initialData.client || prev.client,
+				location: initialData.location || prev.location,
+				address: initialData.address || prev.address,
+				description: initialData.description || prev.description,
+			}));
+		}
+	}, [initialData]);
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { id, value } = e.target;

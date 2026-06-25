@@ -45,6 +45,7 @@ type BudgetReportRow = {
 	client: string;
 	number: string;
 	type: string;
+	materialType: string;
 	work: string;
 	amountArs: number;
 	amountUsd: number;
@@ -61,6 +62,8 @@ export function BudgetsReport() {
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 	const [typeFilter, setTypeFilter] = useState<string>('all');
 	const [statusFilter, setStatusFilter] = useState<string>('all');
+	const [electedFilter, setElectedFilter] = useState<boolean>(false);
+	const [materialFilter, setMaterialFilter] = useState<string>('all');
 	const [sellerFilter, setSellerFilter] = useState<string>('all');
 	const [sellers, setSellers] = useState<Array<{ id: number; name: string }>>([]);
 	const [amountMin, setAmountMin] = useState<string>('');
@@ -117,6 +120,7 @@ export function BudgetsReport() {
 					client: clientName,
 					number: b.number || '-',
 					type: formatBudgetType(b.type),
+					materialType: b.type || '-',
 					work,
 					amountArs: b.amount_ars || 0,
 					amountUsd: b.amount_usd || 0,
@@ -147,6 +151,16 @@ export function BudgetsReport() {
 				if (statusFilter === BUDGET_STATUS.ACCEPTED) return r.accepted;
 				return r.status === statusFilter;
 			});
+		}
+
+		// Filter by elected (can be combined with status)
+		if (electedFilter) {
+			filtered = filtered.filter((r) => r.accepted);
+		}
+
+		// Filter by material
+		if (materialFilter !== 'all') {
+			filtered = filtered.filter((r) => r.materialType === materialFilter);
 		}
 
 		// Filter by seller
@@ -222,7 +236,7 @@ export function BudgetsReport() {
 			if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
 			return 0;
 		});
-	}, [rows, searchTerm, sortField, sortDirection, typeFilter, statusFilter, sellerFilter, amountMin, amountMax, amountMinUsd, amountMaxUsd]);
+	}, [rows, searchTerm, sortField, sortDirection, typeFilter, statusFilter, electedFilter, materialFilter, sellerFilter, amountMin, amountMax, amountMinUsd, amountMaxUsd]);
 
 	const totalPages = Math.max(1, Math.ceil(filteredRows.length / ITEMS_PER_PAGE));
 
@@ -278,6 +292,8 @@ export function BudgetsReport() {
 	const handleApplyFilters = (filters: {
 		typeFilter: string;
 		statusFilter: string;
+		electedFilter: boolean;
+		materialFilter: string;
 		sellerFilter: string;
 		amountMin: string;
 		amountMax: string;
@@ -286,6 +302,8 @@ export function BudgetsReport() {
 	}) => {
 		setTypeFilter(filters.typeFilter);
 		setStatusFilter(filters.statusFilter);
+		setElectedFilter(filters.electedFilter);
+		setMaterialFilter(filters.materialFilter);
 		setSellerFilter(filters.sellerFilter);
 		setAmountMin(filters.amountMin);
 		setAmountMax(filters.amountMax);
@@ -375,6 +393,15 @@ export function BudgetsReport() {
 							</TableHead>
 							<TableHead
 								className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
+								onClick={() => handleSort('materialType')}
+							>
+								<div className="flex items-center gap-1">
+									{BUDGETS_REPORT_COLUMNS.materialType}
+									{getSortIcon('materialType')}
+								</div>
+							</TableHead>
+							<TableHead
+								className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
 								onClick={() => handleSort('work')}
 							>
 								<div className="flex items-center gap-1">
@@ -424,13 +451,13 @@ export function BudgetsReport() {
 					<TableBody>
 						{loading ? (
 							<TableRow>
-								<TableCell colSpan={9} className="text-center text-muted-foreground">
+								<TableCell colSpan={10} className="text-center text-muted-foreground">
 									Cargando presupuestos...
 								</TableCell>
 							</TableRow>
 						) : filteredRows.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={9} className="text-center text-muted-foreground">
+								<TableCell colSpan={10} className="text-center text-muted-foreground">
 									No hay resultados
 								</TableCell>
 							</TableRow>
@@ -441,6 +468,7 @@ export function BudgetsReport() {
 									<TableCell className="font-medium whitespace-nowrap">{r.client}</TableCell>
 									<TableCell className="whitespace-nowrap">{r.number}</TableCell>
 									<TableCell className="whitespace-nowrap">{r.type}</TableCell>
+									<TableCell className="whitespace-nowrap">{r.materialType}</TableCell>
 									<TableCell className="whitespace-nowrap">{r.work}</TableCell>
 									<TableCell className="text-right whitespace-nowrap">
 										{formatCurrency(r.amountArs)}
@@ -491,6 +519,8 @@ export function BudgetsReport() {
 				filters={{
 					typeFilter,
 					statusFilter,
+					electedFilter,
+					materialFilter,
 					sellerFilter,
 					amountMin,
 					amountMax,

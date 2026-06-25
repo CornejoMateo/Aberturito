@@ -498,7 +498,7 @@ export function ProfileTable({
 								? (() => {
 										const selectedWork = works.find((work) => String(work.id) === selectedWorkId);
 										return selectedWork?.client_name
-											? `${selectedWork.client_name} ${selectedWork.client_last_name}`
+											? `${selectedWork.client_name}${selectedWork.client_last_name ? ` ${selectedWork.client_last_name}` : ''}`
 											: selectedWork?.locality || selectedWork?.address || `Obra ${selectedWorkId}`;
 									})()
 								: 'Selecciona una obra'}
@@ -549,7 +549,9 @@ export function ProfileTable({
 											<div className="flex flex-col">
 												{work.client_name && (
 													<span className="font-medium">
-														{work.client_name} {work.client_last_name}
+														{[work.client_name, work.client_last_name]
+															.filter(Boolean)
+															.join(' ')}{' '}
 													</span>
 												)}
 												<span

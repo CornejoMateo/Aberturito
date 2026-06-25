@@ -504,6 +504,14 @@ export function AccesoriesTable({
 								{/* Details */}
 								<div className="grid grid-cols-2 gap-2 text-xs">
 									<div>
+										<p className="text-muted-foreground">Línea</p>
+										<p className="font-medium">{(item as any)[keys.line] || '-'}</p>
+									</div>
+									<div>
+										<p className="text-muted-foreground">Marca</p>
+										<p className="font-medium">{(item as any)[keys.brand] || '-'}</p>
+									</div>
+									<div>
 										<p className="text-muted-foreground">Color</p>
 										<p className="font-medium">{(item as any)[keys.color] || '-'}</p>
 									</div>

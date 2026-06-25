@@ -24,7 +24,7 @@ import {
 	INITIAL_DELETE_ITEM,
 	INITIAL_DELETE_REL,
 	INITIAL_DUE_DATE,
-} from '@/constants/survey';
+} from '@/constants/surveys/survey';
 import { SurveyItemDialog } from './survey-item-dialog';
 import { SurveyDueDateDialog } from './survey-due-date-dialog';
 import { SurveyBudgetCard } from './survey-budget-card';
@@ -228,7 +228,9 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 				dialog={dueDateDialog}
 				onOpenChange={(open) => !open && setDueDateDialog(INITIAL_DUE_DATE)}
 				onSave={handleDueDateSave}
-				onDateSelect={(date) => setDueDateDialog({ ...dueDateDialog, currentDueDate: date ?? null })}
+				onDateSelect={(date) =>
+					setDueDateDialog({ ...dueDateDialog, currentDueDate: date ?? null })
+				}
 			/>
 		</div>
 	);

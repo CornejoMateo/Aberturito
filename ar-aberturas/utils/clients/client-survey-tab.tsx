@@ -249,12 +249,12 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 				return (
 					<Card key={budget.id}>
 						<CardHeader className="pb-2">
-							<div className="flex items-start justify-between gap-2">
+							<div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
 								<div className="min-w-0">
 									<CardTitle className="text-sm font-semibold">{label}</CardTitle>
 									{address && <p className="text-xs text-muted-foreground mt-0.5">{address}</p>}
 								</div>
-								<div className="flex items-center gap-2 flex-shrink-0">
+								<div className="flex items-center gap-2 flex-wrap flex-shrink-0">
 									<Badge variant="default" className="text-xs">
 										Vendido
 									</Badge>
@@ -263,7 +263,7 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 											<Button
 												variant="ghost"
 												size="icon"
-												className="h-7 w-7 text-muted-foreground"
+												className="h-8 w-8 text-muted-foreground"
 												disabled={isLoading}
 												aria-label="Editar fecha de vencimiento"
 												onClick={() =>
@@ -274,7 +274,7 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 													})
 												}
 											>
-												<CalendarIcon className="h-3.5 w-3.5" />
+												<CalendarIcon className="h-4 w-4" />
 											</Button>
 											<div className="text-xs text-muted-foreground">
 												{survey.due_date ? formatCreatedAt(survey.due_date) : 'No establecida'}
@@ -283,12 +283,12 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 											<Button
 												variant="ghost"
 												size="icon"
-												className="h-7 w-7 text-muted-foreground hover:text-destructive"
+												className="h-8 w-8 text-muted-foreground hover:text-destructive"
 												disabled={isLoading}
 												aria-label="Eliminar relevamiento"
 												onClick={() => setDeleteRelConfirm({ open: true, surveyId: survey.id })}
 											>
-												<Trash2 className="h-3.5 w-3.5" />
+												<Trash2 className="h-4 w-4" />
 											</Button>
 										</>
 									)}
@@ -303,9 +303,10 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 										No hay relevamiento para este presupuesto.
 									</p>
 									<Button
-										size="sm"
+										size="default"
 										onClick={() => handleCreateSurvey(budget.id)}
 										disabled={isLoading}
+										className="w-full sm:w-auto"
 									>
 										<Plus className="h-4 w-4 mr-1" />
 										Crear relevamiento
@@ -345,6 +346,7 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 														checked={item.completed}
 														onCheckedChange={() => handleToggleItem(item)}
 														disabled={isLoading}
+														className="h-5 w-5"
 													/>
 													<label
 														htmlFor={`item-${item.id}`}
@@ -354,11 +356,11 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 													>
 														{item.label}
 													</label>
-													<div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+													<div className="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
 														<Button
 															variant="ghost"
 															size="icon"
-															className="h-6 w-6"
+															className="h-8 w-8"
 															aria-label="Editar paso"
 															disabled={isLoading}
 															onClick={() =>
@@ -370,17 +372,17 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 																})
 															}
 														>
-															<Pencil className="h-3 w-3" />
+															<Pencil className="h-4 w-4" />
 														</Button>
 														<Button
 															variant="ghost"
 															size="icon"
-															className="h-6 w-6 text-muted-foreground hover:text-destructive"
+															className="h-8 w-8 text-muted-foreground hover:text-destructive"
 															aria-label="Eliminar paso"
 															disabled={isLoading}
 															onClick={() => setDeleteItemConfirm({ open: true, itemId: item.id })}
 														>
-															<Trash2 className="h-3 w-3" />
+															<Trash2 className="h-4 w-4" />
 														</Button>
 													</div>
 												</li>

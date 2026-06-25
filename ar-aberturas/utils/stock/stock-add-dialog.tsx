@@ -21,7 +21,7 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog';
 import { type ProfileItemStock } from '@/lib/stock/profile-stock';
-import { status } from '@/constants/stock-constants';
+import { status } from '@/constants/stock/stock-constants';
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { LineSelect } from '@/components/stock/line-select';
@@ -138,7 +138,8 @@ export function StockFormDialog({
 			const errorMessage = translateError(error);
 			toast({
 				title: 'Error',
-				description: errorMessage || 'Ocurrió un error al guardar el perfil. Por favor, intente nuevamente.',
+				description:
+					errorMessage || 'Ocurrió un error al guardar el perfil. Por favor, intente nuevamente.',
 				variant: 'destructive',
 				duration: 5000,
 			});
@@ -168,7 +169,6 @@ export function StockFormDialog({
 				</DialogHeader>
 				<div className="overflow-y-auto flex-1 py-4 pr-2 -mr-2">
 					<div className="grid gap-4">
-
 						<div className="grid gap-2">
 							<Label htmlFor="line" className="text-foreground">
 								Línea

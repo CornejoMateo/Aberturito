@@ -15,7 +15,7 @@ export interface SalesMetrics {
 	lostAverageTicket: number; // Average amount of lost budgets
 	totalLost: number; // Total count of lost budgets
 	clientsWithBudget: number; 
-	budgetsByMonth: Array<{ month: string; presupuestos: number; vendidos: number; date_sale: number; perdidos: number }>;
+	budgetsByMonth: Array<{ month: string; presupuestos: number; vendidos: number; date_sale: number; perdidos: number; presupuestosValue: number; vendidosValue: number; date_saleValue: number; perdidosValue: number }>;
 	averageSaleDelayDays: number;
 	budgetsByAmount: Array<{ amountRange: string; count: number }>;
 	budgetsByAmountChosen: Array<{ amountRange: string; count: number }>;
@@ -25,7 +25,7 @@ export interface SalesMetrics {
 	clientsByContactMethod: Array<{ method: string; count: number }>;
 	budgetsByMaterial: Array<{ material: string; count: number }>;
  	soldBudgetsByMaterial: Array<{ material: string; count: number }>;
-	soldBudgetsByMaterialByMonth: Array<{ month: string; pvc: number; aluminio: number }>;
+	soldBudgetsByMaterialByMonth: Array<{ month: string; pvc: number; aluminio: number; pvcValue: number; aluminioValue: number }>;
 }
 
 export interface MonthlyData {

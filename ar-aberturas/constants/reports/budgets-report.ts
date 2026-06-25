@@ -5,6 +5,7 @@ export const BUDGETS_REPORT_COLUMNS = {
 	client: 'CLIENTE',
 	number: 'NÚMERO',
 	type: 'TIPO',
+	materialType: 'MATERIAL',
 	work: 'OBRA',
 	amountArs: 'MONTO ARS',
 	amountUsd: 'MONTO USD',

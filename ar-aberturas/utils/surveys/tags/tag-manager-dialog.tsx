@@ -1,14 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from '@/components/ui/use-toast';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
 import { SurveyTag, getAllTags, createTag, updateTag, deleteTag } from '@/lib/tags/tags';
-import { TAG_COLORS } from '@/constants/tags';
+import { TAG_COLORS } from '@/constants/surveys/tags';
 import { translateError } from '@/lib/error-translator';
 
 interface TagManagerDialogProps {
@@ -32,7 +38,10 @@ export function TagManagerDialog({ open, onOpenChange }: TagManagerDialogProps) 
 	const [newTagName, setNewTagName] = useState('');
 	const [newTagColor, setNewTagColor] = useState<string>(TAG_COLORS[0].value);
 	const [editTag, setEditTag] = useState<EditTagState>({ open: false, tag: null });
-	const [deleteTagConfirm, setDeleteTagConfirm] = useState<DeleteTagState>({ open: false, tagId: null });
+	const [deleteTagConfirm, setDeleteTagConfirm] = useState<DeleteTagState>({
+		open: false,
+		tagId: null,
+	});
 
 	const loadTags = async () => {
 		setIsLoading(true);
@@ -65,7 +74,7 @@ export function TagManagerDialog({ open, onOpenChange }: TagManagerDialogProps) 
 		try {
 			const { data, error } = await createTag({ name: newTagName.trim(), color: newTagColor });
 			if (error) throw error;
-			
+
 			toast({ title: 'Etiqueta creada' });
 			setNewTagName('');
 			setNewTagColor(TAG_COLORS[0].value);
@@ -88,7 +97,7 @@ export function TagManagerDialog({ open, onOpenChange }: TagManagerDialogProps) 
 		try {
 			const { error } = await updateTag(editTag.tag.id, { name: name.trim(), color });
 			if (error) throw error;
-			
+
 			toast({ title: 'Etiqueta actualizada' });
 			setEditTag({ open: false, tag: null });
 			loadTags();
@@ -110,7 +119,7 @@ export function TagManagerDialog({ open, onOpenChange }: TagManagerDialogProps) 
 		try {
 			const { error } = await deleteTag(deleteTagConfirm.tagId);
 			if (error) throw error;
-			
+
 			toast({ title: 'Etiqueta eliminada' });
 			setDeleteTagConfirm({ open: false, tagId: null });
 			loadTags();
@@ -140,7 +149,7 @@ export function TagManagerDialog({ open, onOpenChange }: TagManagerDialogProps) 
 							Crea, edita o elimina etiquetas para usarlas en los relevamientos.
 						</DialogDescription>
 					</DialogHeader>
-					
+
 					<div className="space-y-4">
 						{/* Create new tag */}
 						<div className="flex gap-2">
@@ -212,7 +221,10 @@ export function TagManagerDialog({ open, onOpenChange }: TagManagerDialogProps) 
 			</Dialog>
 
 			{/* Edit tag dialog */}
-			<Dialog open={editTag.open} onOpenChange={(open) => !open && setEditTag({ open: false, tag: null })}>
+			<Dialog
+				open={editTag.open}
+				onOpenChange={(open) => !open && setEditTag({ open: false, tag: null })}
+			>
 				<DialogContent className="sm:max-w-[400px]">
 					<DialogHeader>
 						<DialogTitle>Editar etiqueta</DialogTitle>
@@ -232,17 +244,16 @@ export function TagManagerDialog({ open, onOpenChange }: TagManagerDialogProps) 
 											key={color.value}
 											type="button"
 											className={`w-8 h-8 rounded ${color.bg} ${editTag.tag?.color === color.value ? 'ring-2 ring-offset-2 ring-foreground' : ''}`}
-											onClick={() => setEditTag({ ...editTag, tag: { ...editTag.tag!, color: color.value } })}
+											onClick={() =>
+												setEditTag({ ...editTag, tag: { ...editTag.tag!, color: color.value } })
+											}
 											title={color.name}
 										/>
 									))}
 								</div>
 							</div>
 							<div className="flex justify-end gap-2">
-								<Button
-									variant="outline"
-									onClick={() => setEditTag({ open: false, tag: null })}
-								>
+								<Button variant="outline" onClick={() => setEditTag({ open: false, tag: null })}>
 									Cancelar
 								</Button>
 								<Button

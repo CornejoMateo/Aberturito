@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { Tag as TagIcon, X } from 'lucide-react';
 import { SurveyTag, getAllTags, assignTagToSurvey, removeTagFromSurvey } from '@/lib/tags/tags';
-import { TAG_COLORS } from '@/constants/tags';
+import { TAG_COLORS } from '@/constants/surveys/tags';
 import { toast } from '@/components/ui/use-toast';
 import { translateError } from '@/lib/error-translator';
 
@@ -16,7 +16,12 @@ interface TagSelectorProps {
 	assignedTags?: SurveyTag[];
 }
 
-export function TagSelector({ surveyId, disabled, onChange, assignedTags: propAssignedTags }: TagSelectorProps) {
+export function TagSelector({
+	surveyId,
+	disabled,
+	onChange,
+	assignedTags: propAssignedTags,
+}: TagSelectorProps) {
 	const [tags, setTags] = useState<SurveyTag[]>([]);
 	const [assignedTags, setAssignedTags] = useState<SurveyTag[]>(propAssignedTags ?? []);
 	const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +55,7 @@ export function TagSelector({ surveyId, disabled, onChange, assignedTags: propAs
 	const handleToggleTag = async (tag: SurveyTag) => {
 		const isAssigned = assignedTags.some((t) => t.id === tag.id);
 		setIsLoading(true);
-		
+
 		try {
 			if (isAssigned) {
 				const { error } = await removeTagFromSurvey(surveyId, tag.id);
@@ -95,7 +100,7 @@ export function TagSelector({ surveyId, disabled, onChange, assignedTags: propAs
 			<PopoverContent className="w-64 p-3" align="start">
 				<div className="space-y-3">
 					<div className="text-sm font-medium">Etiquetas</div>
-					
+
 					{tags.length === 0 ? (
 						<p className="text-xs text-muted-foreground text-center py-2">
 							No hay etiquetas disponibles.

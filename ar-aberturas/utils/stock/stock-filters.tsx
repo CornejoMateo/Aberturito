@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, BookmarkCheck } from 'lucide-react';
 import { UpdatePricesDialog } from '@/components/stock/update-prices-dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,8 @@ interface StockFiltersProps {
 	setShowOutOfStock: (show: boolean) => void;
 	showLowStock: boolean;
 	setShowLowStock: (show: boolean) => void;
+	showReservedProfiles: boolean;
+	setShowReservedProfiles: (show: boolean) => void;
 	setSelectedCategory: (category: 'Perfiles' | 'Accesorios' | 'Herrajes' | 'Insumos') => void;
 }
 
@@ -24,6 +26,8 @@ export function StockFilters({
 	setShowOutOfStock,
 	showLowStock,
 	setShowLowStock,
+	showReservedProfiles,
+	setShowReservedProfiles,
 }: StockFiltersProps) {
 	return (
 		<Card className="p-4 bg-card border-border">
@@ -51,6 +55,20 @@ export function StockFilters({
 							<Filter className="h-3.5 w-3.5" />
 							<span>Mostrar solo sin stock</span>
 						</Button>
+						{selectedCategory === 'Perfiles' && (
+							<Button
+								variant="ghost"
+								size="sm"
+								className={cn(
+									'flex items-center gap-1.5 text-xs h-8 px-2',
+									showReservedProfiles ? 'bg-accent' : 'hover:bg-accent/50'
+								)}
+								onClick={() => setShowReservedProfiles(!showReservedProfiles)}
+							>
+								<BookmarkCheck className="h-3.5 w-3.5" />
+								<span>Mostrar perfiles reservados</span>
+							</Button>
+						)}
 						{selectedCategory === 'Insumos' && (
 							<Button
 								variant="ghost"

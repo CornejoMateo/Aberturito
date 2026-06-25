@@ -55,7 +55,9 @@ export function AccesoriesTable({
 	const [isUpdating, setIsUpdating] = useState(false);
 	const [updatingId, setUpdatingId] = useState<number | null>(null);
 	const [showQuantityDialog, setShowQuantityDialog] = useState(false);
-	const [quantityDialogType, setQuantityDialogType] = useState<'increase' | 'decrease' | null>(null);
+	const [quantityDialogType, setQuantityDialogType] = useState<'increase' | 'decrease' | null>(
+		null
+	);
 	const [quantityChange, setQuantityChange] = useState<number | ''>('');
 	const [currentItemId, setCurrentItemId] = useState<number | null>(null);
 	const [currentItemTotal, setCurrentItemTotal] = useState<number>(0);
@@ -86,9 +88,9 @@ export function AccesoriesTable({
 			});
 			return;
 		}
-		
+
 		const adjustment = Number(quantityChange);
-		
+
 		if (adjustment < 0) {
 			toast({
 				title: 'Error',
@@ -98,11 +100,12 @@ export function AccesoriesTable({
 			});
 			return;
 		}
-		
-		const newQuantity = quantityDialogType === 'increase' 
-			? currentItemTotal + adjustment 
-			: currentItemTotal - adjustment;
-		
+
+		const newQuantity =
+			quantityDialogType === 'increase'
+				? currentItemTotal + adjustment
+				: currentItemTotal - adjustment;
+
 		if (newQuantity < 0) {
 			toast({
 				title: 'Error',
@@ -112,7 +115,7 @@ export function AccesoriesTable({
 			});
 			return;
 		}
-		
+
 		try {
 			setIsUpdating(true);
 			setUpdatingId(currentItemId);
@@ -198,7 +201,7 @@ export function AccesoriesTable({
 										Línea
 									</th>
 									<th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
-										Marca
+										Proveedor
 									</th>
 								</>
 							)}
@@ -255,11 +258,18 @@ export function AccesoriesTable({
 									((item as any)[keys.quantityForLump] ?? 0) *
 										((item as any)[keys.quantityLump] ?? 0) || 0;
 								// For thresholds, use quantity_lump (number of bundles/lumps), not total or quantity_for_lump
-								const quantityForThreshold = (item as any)[keys.quantityLump] ?? (item as any)[keys.quantity] ?? total;
+								const quantityForThreshold =
+									(item as any)[keys.quantityLump] ?? (item as any)[keys.quantity] ?? total;
 								return (
-									<tr key={(item as any).id} className={`${
-										getRowClassName((item as any).id, quantityForThreshold, categoryState, thresholds)
-									}`}>
+									<tr
+										key={(item as any).id}
+										className={`${getRowClassName(
+											(item as any).id,
+											quantityForThreshold,
+											categoryState,
+											thresholds
+										)}`}
+									>
 										<td className="px-2 py-2 whitespace-nowrap">
 											<p className="text-center text-sm text-foreground">
 												{(item as any)[keys.category] || '—'}
@@ -428,13 +438,13 @@ export function AccesoriesTable({
 													}
 
 													return (
-													<Button
-														variant="outline"
-														size="sm"
-														onClick={() => setOpenImageUrl(imageUrl)}
-													>
-														Ver
-													</Button>
+														<Button
+															variant="outline"
+															size="sm"
+															onClick={() => setOpenImageUrl(imageUrl)}
+														>
+															Ver
+														</Button>
 													);
 												})()}
 											</div>
@@ -455,8 +465,8 @@ export function AccesoriesTable({
 								{quantityDialogType === 'increase' ? 'Aumentar cantidad' : 'Disminuir cantidad'}
 							</DialogTitle>
 							<DialogDescription>
-								{quantityDialogType === 'increase' 
-									? '¿Cuántas unidades desea aumentar?' 
+								{quantityDialogType === 'increase'
+									? '¿Cuántas unidades desea aumentar?'
 									: '¿Cuántas unidades desea disminuir?'}
 							</DialogDescription>
 						</DialogHeader>

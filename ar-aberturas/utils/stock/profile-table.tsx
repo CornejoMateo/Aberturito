@@ -337,15 +337,22 @@ export function ProfileTable({
 																variant="outline"
 																className="bg-yellow-200 dark:bg-yellow-900/30 border-yellow-400 max-w-[150px] truncate cursor-help"
 															>
-																{item.separated_for_work.locality ||
+																{item.separated_for_work.clients?.name ||
+																	item.separated_for_work.locality ||
 																	item.separated_for_work.address ||
 																	'Obra'}
 															</Badge>
 														</TooltipTrigger>
 														<TooltipContent>
 															<div className="flex flex-col gap-1">
+																{item.separated_for_work.clients && (
+																	<p className="font-medium">
+																		{item.separated_for_work.clients.name}{' '}
+																		{item.separated_for_work.clients.last_name}
+																	</p>
+																)}
 																{item.separated_for_work.locality && (
-																	<p className="font-medium text">
+																	<p className="text-sm text-muted-foreground">
 																		{item.separated_for_work.locality}
 																	</p>
 																)}
@@ -483,14 +490,17 @@ export function ProfileTable({
 						<Label htmlFor="work-select">Obra</Label>
 						<Button
 							variant="outline"
-							className="w-full justify-between"
+							className="w-full justify-between mt-3"
 							onClick={() => setWorkSelectDialogOpen(true)}
 							id="work-select"
 						>
 							{selectedWorkId
-								? works.find((work) => String(work.id) === selectedWorkId)?.locality ||
-									works.find((work) => String(work.id) === selectedWorkId)?.address ||
-									`Obra ${selectedWorkId}`
+								? (() => {
+										const selectedWork = works.find((work) => String(work.id) === selectedWorkId);
+										return selectedWork?.client_name
+											? `${selectedWork.client_name}${selectedWork.client_last_name ? ` ${selectedWork.client_last_name}` : ''}`
+											: selectedWork?.locality || selectedWork?.address || `Obra ${selectedWorkId}`;
+									})()
 								: 'Selecciona una obra'}
 							<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 						</Button>
@@ -516,14 +526,14 @@ export function ProfileTable({
 					</DialogHeader>
 					<div className="py-4">
 						<Command className="rounded-lg border shadow-md">
-							<CommandInput placeholder="Buscar obra por localidad o dirección..." />
+							<CommandInput placeholder="Buscar obra por cliente, localidad o dirección..." />
 							<CommandList className="max-h-[400px] overflow-y-auto">
 								<CommandEmpty>No se encontraron obras.</CommandEmpty>
 								<CommandGroup>
 									{works.map((work) => (
 										<CommandItem
 											key={work.id}
-											value={`${work.locality || ''} ${work.address || ''} ${work.id}`}
+											value={`${work.client_name || ''} ${work.client_last_name || ''} ${work.locality || ''} ${work.address || ''} ${work.id}`}
 											onSelect={() => {
 												setSelectedWorkId(String(work.id));
 												setWorkSelectDialogOpen(false);
@@ -537,7 +547,20 @@ export function ProfileTable({
 												)}
 											/>
 											<div className="flex flex-col">
-												<span className="font-medium">{work.locality || 'Sin localidad'}</span>
+												{work.client_name && (
+													<span className="font-medium">
+														{[work.client_name, work.client_last_name]
+															.filter(Boolean)
+															.join(' ')}{' '}
+													</span>
+												)}
+												<span
+													className={
+														work.client_name ? 'text-sm text-muted-foreground' : 'font-medium'
+													}
+												>
+													{work.locality || 'Sin localidad'}
+												</span>
 												{work.address && (
 													<span className="text-sm text-muted-foreground">{work.address}</span>
 												)}

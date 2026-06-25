@@ -228,7 +228,7 @@ export function CalendarView() {
 						}
 					}}
 				>
-					<Button className="gap-2">
+					<Button className="gap-2 w-full sm:w-auto">
 						<CalendarIcon className="h-4 w-4" />
 						Nuevo evento
 					</Button>
@@ -237,7 +237,7 @@ export function CalendarView() {
 
 			<div className="grid gap-6 lg:grid-cols-3">
 				{/* Calendar */}
-				<Card className="p-6 bg-card border-border lg:col-span-2">
+				<Card className="p-4 sm:p-6 bg-card border-border lg:col-span-2">
 					<div className="space-y-4">
 						<div className="flex gap-2 flex-wrap">
 							<Button
@@ -343,7 +343,7 @@ export function CalendarView() {
 				</Card>
 
 				{/* Upcoming events */}
-				<Card className="p-6 bg-card border-border">
+				<Card className="p-4 sm:p-6 bg-card border-border">
 					<div className="flex justify-between items-center">
 						<h3 className="text-sm font-semibold text-foreground">Próximos eventos</h3>
 						{selectedDate && (
@@ -425,10 +425,10 @@ export function CalendarView() {
 														variant="ghost"
 														size="icon"
 														onClick={(e) => handleDeleteEvent(event.id, e)}
-														className="h-6 w-6 -mr-2"
+														className="h-8 w-8 -mr-2"
 														aria-label="Eliminar evento"
 													>
-														<Trash2 className="h-3.5 w-3.5" />
+														<Trash2 className="h-4 w-4" />
 													</Button>
 												</div>
 											</div>

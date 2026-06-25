@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { format, isBefore, startOfDay } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
@@ -82,7 +82,7 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 			...formData,
 			date: format(formData.date!, 'dd-MM-yyyy'),
 		});
-		
+
 		setIsOpen(false);
 		resetForm();
 
@@ -120,9 +120,9 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 				<form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
 					<div className="grid gap-2">
 						<Label htmlFor="title">Título</Label>
-						<Input 
-							id="title" 
-							value={formData.title} 
+						<Input
+							id="title"
+							value={formData.title}
 							onChange={handleInputChange}
 							placeholder="Título del evento"
 						/>
@@ -130,11 +130,11 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 
 					<div className="grid gap-2">
 						<Label htmlFor="type">Tipo de evento</Label>
-						<Select 
+						<Select
 							value={formData.type}
 							onValueChange={(value) => setFormData((prev) => ({ ...prev, type: value }))}
 						>
-    						<SelectTrigger className="w-full">
+							<SelectTrigger className="w-full">
 								<SelectValue placeholder="Selecciona un tipo de evento" />
 							</SelectTrigger>
 							<SelectContent>
@@ -180,12 +180,12 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 							</PopoverContent>
 						</Popover>
 					</div>
-					
+
 					<div className="grid gap-2">
 						<Label htmlFor="client">Cliente</Label>
-						<Input 
-							id="client" 
-							value={formData.client} 
+						<Input
+							id="client"
+							value={formData.client}
 							onChange={handleInputChange}
 							placeholder="Nombre del cliente"
 						/>
@@ -193,9 +193,9 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 
 					<div className="grid gap-2">
 						<Label htmlFor="location">Localidad</Label>
-						<Input 
-							id="location" 
-							value={formData.location} 
+						<Input
+							id="location"
+							value={formData.location}
 							onChange={handleInputChange}
 							placeholder="Localidad"
 						/>
@@ -203,9 +203,9 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 
 					<div className="grid gap-2">
 						<Label htmlFor="address">Dirección</Label>
-						<Input 
-							id="address" 
-							value={formData.address} 
+						<Input
+							id="address"
+							value={formData.address}
 							onChange={handleInputChange}
 							placeholder="Dirección"
 						/>
@@ -213,15 +213,15 @@ export function EventFormModal({ onSave, children }: EventFormModalProps) {
 
 					<div className="grid gap-2 col-span-2">
 						<Label htmlFor="description">Descripción</Label>
-						<Input 
-							id="description" 
-							value={formData.description} 
+						<Input
+							id="description"
+							value={formData.description}
 							onChange={handleInputChange}
 							placeholder="Detalles adicionales del evento"
 						/>
 					</div>
 
-					<DialogFooter className='col-span-2 flex flex-row gap-2'>
+					<DialogFooter className="col-span-2 flex flex-row gap-2">
 						<Button
 							type="button"
 							variant="outline"

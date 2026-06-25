@@ -1,6 +1,5 @@
 import { TrendingDown, TrendingUp, Users } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/helpers/format-prices.tsx/formats';
 import { BALANCE_TYPES } from '@/constants/reports/balances-report';
 
@@ -13,17 +12,13 @@ interface StatsCardsBalancesProps {
 	};
 }
 
-export function StatsCardsBalances({
-	stats,
-}: StatsCardsBalancesProps) {
+export function StatsCardsBalances({ stats }: StatsCardsBalancesProps) {
 	return (
 		<div className="grid gap-4 md:grid-cols-3 lg:grid-cols-3">
 			<Card className="p-6 bg-card border-border">
 				<div className="flex items-center justify-between">
 					<div>
-						<p className="text-sm font-medium text-muted-foreground">
-							{BALANCE_TYPES.TOTAL}
-						</p>
+						<p className="text-sm font-medium text-muted-foreground">{BALANCE_TYPES.TOTAL}</p>
 						<p className="text-2xl font-bold text-foreground mt-2">
 							{stats.debtorsCount + stats.creditorsCount}
 						</p>
@@ -40,9 +35,7 @@ export function StatsCardsBalances({
 			<Card className="p-6 bg-card border-border">
 				<div className="flex items-center justify-between">
 					<div>
-						<p className="text-sm font-medium text-muted-foreground">
-							{BALANCE_TYPES.DEBTOR}
-						</p>
+						<p className="text-sm font-medium text-muted-foreground">{BALANCE_TYPES.DEBTOR}</p>
 						<p className="text-2xl font-bold text-foreground mt-2">
 							{formatCurrency(stats.totalDebtors)}
 						</p>
@@ -59,9 +52,7 @@ export function StatsCardsBalances({
 			<Card className="p-6 bg-card border-border">
 				<div className="flex items-center justify-between">
 					<div>
-						<p className="text-sm font-medium text-muted-foreground">
-							{BALANCE_TYPES.CREDITOR}
-						</p>
+						<p className="text-sm font-medium text-muted-foreground">{BALANCE_TYPES.CREDITOR}</p>
 						<p className="text-2xl font-bold text-foreground mt-2">
 							{formatCurrency(stats.totalCreditors)}
 						</p>

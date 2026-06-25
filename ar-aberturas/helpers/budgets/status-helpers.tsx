@@ -1,5 +1,5 @@
 import { CheckCircle, Clock, XCircle } from 'lucide-react';
-import { BUDGET_STATUS } from '@/constants/budget-status';
+import { BUDGET_STATUS } from '@/constants/budgets/budget-status';
 
 export const getStatusIcon = (status: string) => {
 	switch (status) {

@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react';
+import { Trash2, Edit, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
 	Table,
@@ -16,6 +16,8 @@ interface TransactionsTableProps {
 	transactions: BalanceTransaction[];
 	formatDate: (dateStr: string | null | undefined) => string;
 	onDeleteTransaction: (transaction: BalanceTransaction) => void;
+	onEditTransaction: (transaction: BalanceTransaction) => void;
+	onViewFiles: (transaction: BalanceTransaction) => void;
 }
 
 export function TransactionsTable({
@@ -23,6 +25,8 @@ export function TransactionsTable({
 	transactions,
 	formatDate,
 	onDeleteTransaction,
+	onEditTransaction,
+	onViewFiles,
 }: TransactionsTableProps) {
 	return (
 		<Table>
@@ -33,7 +37,8 @@ export function TransactionsTable({
 					<TableHead className="text-center w-[200px]">Observaciones</TableHead>
 					<TableHead className="text-center">Monto pesos/USD</TableHead>
 					<TableHead className="text-center">Cotizacion USD</TableHead>
-					<TableHead className="text-center w-[50px]">Accion</TableHead>
+					<TableHead className="text-center">Acción</TableHead>
+					<TableHead className="text-center">Archivos</TableHead>
 				</TableRow>
 			</TableHeader>
 			<TableBody>
@@ -69,13 +74,33 @@ export function TransactionsTable({
 								{formatCurrencyUSD(transaction.quote_usd)}
 							</TableCell>
 							<TableCell className="text-center">
+								<div className="flex items-center justify-center gap-1">
+									<Button
+										variant="ghost"
+										size="icon"
+										className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+										onClick={() => onEditTransaction(transaction)}
+									>
+										<Edit className="h-4 w-4" />
+									</Button>
+									<Button
+										variant="ghost"
+										size="icon"
+										className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+										onClick={() => onDeleteTransaction(transaction)}
+									>
+										<Trash2 className="h-4 w-4" />
+									</Button>
+								</div>
+							</TableCell>
+							<TableCell className="text-center">
 								<Button
 									variant="ghost"
 									size="icon"
-									className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-									onClick={() => onDeleteTransaction(transaction)}
+									className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+									onClick={() => onViewFiles(transaction)}
 								>
-									<Trash2 className="h-4 w-4" />
+									<ImageIcon className="h-4 w-4" />
 								</Button>
 							</TableCell>
 						</TableRow>

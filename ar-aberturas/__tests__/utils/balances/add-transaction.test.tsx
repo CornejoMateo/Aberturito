@@ -18,6 +18,8 @@ describe('AddTransactionSection', () => {
 	const mockOnCancel = jest.fn();
 	const mockOnSave = jest.fn();
 	const mockOnStartAdd = jest.fn();
+	const mockOnFilesSelect = jest.fn();
+	const mockOnRemoveFile = jest.fn();
 
 	const defaultDate = new Date('2024-03-20');
 
@@ -39,6 +41,9 @@ describe('AddTransactionSection', () => {
 		onSave: mockOnSave,
 		onStartAdd: mockOnStartAdd,
 		saveDisabled: false,
+		selectedFiles: [],
+		onFilesSelect: mockOnFilesSelect,
+		onRemoveFile: mockOnRemoveFile,
 	};
 
 	beforeEach(() => {

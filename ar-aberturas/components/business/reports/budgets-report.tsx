@@ -15,20 +15,8 @@ import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
 import { formatShortDate } from '@/helpers/date/formats';
 import { formatBudgetType, formatBudgetStatus } from '@/helpers/budget/formats';
-import {
-	BUDGETS_REPORT_COLUMNS,
-	BUDGETS_REPORT_TITLE,
-	BUDGET_TYPES,
-	BUDGET_STATUS,
-} from '@/constants/reports/budgets-report';
+import { BUDGETS_REPORT_COLUMNS, BUDGETS_REPORT_TITLE } from '@/constants/reports/budgets-report';
 import { BudgetWithWorkAndClient, listBudgetsForReport } from '@/lib/budgets/budgets';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Download, Filter } from 'lucide-react';
 import { listSellers } from '@/lib/sellers/sellers';
@@ -45,6 +33,7 @@ type BudgetReportRow = {
 	client: string;
 	number: string;
 	type: string;
+	materialType: string;
 	work: string;
 	amountArs: number;
 	amountUsd: number;
@@ -61,6 +50,8 @@ export function BudgetsReport() {
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 	const [typeFilter, setTypeFilter] = useState<string>('all');
 	const [statusFilter, setStatusFilter] = useState<string>('all');
+	const [electedFilter, setElectedFilter] = useState<boolean>(false);
+	const [materialFilter, setMaterialFilter] = useState<string>('all');
 	const [sellerFilter, setSellerFilter] = useState<string>('all');
 	const [sellers, setSellers] = useState<Array<{ id: number; name: string }>>([]);
 	const [amountMin, setAmountMin] = useState<string>('');
@@ -116,7 +107,8 @@ export function BudgetsReport() {
 					dateRaw,
 					client: clientName,
 					number: b.number || '-',
-					type: formatBudgetType(b.type),
+					type: formatBudgetType(b.version),
+					materialType: b.type || '-',
 					work,
 					amountArs: b.amount_ars || 0,
 					amountUsd: b.amount_usd || 0,
@@ -143,10 +135,22 @@ export function BudgetsReport() {
 
 		// Filter by status
 		if (statusFilter !== 'all') {
-			filtered = filtered.filter((r) => {
-				if (statusFilter === BUDGET_STATUS.ACCEPTED) return r.accepted;
-				return r.status === statusFilter;
-			});
+			filtered = filtered.filter((r) => r.status === statusFilter);
+		}
+
+		// Filter by elected (can be combined with status)
+		if (electedFilter) {
+			filtered = filtered.filter((r) => r.accepted);
+		}
+
+		// Filter by elected (can be combined with status)
+		if (electedFilter) {
+			filtered = filtered.filter((r) => r.accepted);
+		}
+
+		// Filter by material
+		if (materialFilter !== 'all') {
+			filtered = filtered.filter((r) => r.materialType === materialFilter);
 		}
 
 		// Filter by seller
@@ -222,7 +226,21 @@ export function BudgetsReport() {
 			if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
 			return 0;
 		});
-	}, [rows, searchTerm, sortField, sortDirection, typeFilter, statusFilter, sellerFilter, amountMin, amountMax, amountMinUsd, amountMaxUsd]);
+	}, [
+		rows,
+		searchTerm,
+		sortField,
+		sortDirection,
+		typeFilter,
+		statusFilter,
+		electedFilter,
+		materialFilter,
+		sellerFilter,
+		amountMin,
+		amountMax,
+		amountMinUsd,
+		amountMaxUsd,
+	]);
 
 	const totalPages = Math.max(1, Math.ceil(filteredRows.length / ITEMS_PER_PAGE));
 
@@ -268,7 +286,14 @@ export function BudgetsReport() {
 	const handleDownloadPDF = async () => {
 		try {
 			const { generateBudgetsReportPDF } = await import('@/lib/budgets/budgets-pdf');
-			await generateBudgetsReportPDF(filteredRows, sellerFilter, amountMin, amountMax, amountMinUsd, amountMaxUsd);
+			await generateBudgetsReportPDF(
+				filteredRows,
+				sellerFilter,
+				amountMin,
+				amountMax,
+				amountMinUsd,
+				amountMaxUsd
+			);
 		} catch (error) {
 			const message = translateError(error);
 			console.error('Error al generar PDF:', message);
@@ -278,6 +303,8 @@ export function BudgetsReport() {
 	const handleApplyFilters = (filters: {
 		typeFilter: string;
 		statusFilter: string;
+		electedFilter: boolean;
+		materialFilter: string;
 		sellerFilter: string;
 		amountMin: string;
 		amountMax: string;
@@ -286,6 +313,8 @@ export function BudgetsReport() {
 	}) => {
 		setTypeFilter(filters.typeFilter);
 		setStatusFilter(filters.statusFilter);
+		setElectedFilter(filters.electedFilter);
+		setMaterialFilter(filters.materialFilter);
 		setSellerFilter(filters.sellerFilter);
 		setAmountMin(filters.amountMin);
 		setAmountMax(filters.amountMax);
@@ -323,7 +352,12 @@ export function BudgetsReport() {
 						{loading ? 'Cargando...' : `${filteredRows.length} presupuesto(s)`}
 					</div>
 					<div className="flex gap-2">
-						<Button variant="outline" onClick={handleDownloadPDF} className="gap-2" disabled={loading || filteredRows.length === 0}>
+						<Button
+							variant="outline"
+							onClick={handleDownloadPDF}
+							className="gap-2"
+							disabled={loading || filteredRows.length === 0}
+						>
 							<Download className="h-4 w-4" />
 							Descargar PDF
 						</Button>
@@ -371,6 +405,15 @@ export function BudgetsReport() {
 								<div className="flex items-center gap-1">
 									{BUDGETS_REPORT_COLUMNS.type}
 									{getSortIcon('type')}
+								</div>
+							</TableHead>
+							<TableHead
+								className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
+								onClick={() => handleSort('materialType')}
+							>
+								<div className="flex items-center gap-1">
+									{BUDGETS_REPORT_COLUMNS.materialType}
+									{getSortIcon('materialType')}
 								</div>
 							</TableHead>
 							<TableHead
@@ -424,13 +467,13 @@ export function BudgetsReport() {
 					<TableBody>
 						{loading ? (
 							<TableRow>
-								<TableCell colSpan={9} className="text-center text-muted-foreground">
+								<TableCell colSpan={10} className="text-center text-muted-foreground">
 									Cargando presupuestos...
 								</TableCell>
 							</TableRow>
 						) : filteredRows.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={9} className="text-center text-muted-foreground">
+								<TableCell colSpan={10} className="text-center text-muted-foreground">
 									No hay resultados
 								</TableCell>
 							</TableRow>
@@ -441,6 +484,7 @@ export function BudgetsReport() {
 									<TableCell className="font-medium whitespace-nowrap">{r.client}</TableCell>
 									<TableCell className="whitespace-nowrap">{r.number}</TableCell>
 									<TableCell className="whitespace-nowrap">{r.type}</TableCell>
+									<TableCell className="whitespace-nowrap">{r.materialType}</TableCell>
 									<TableCell className="whitespace-nowrap">{r.work}</TableCell>
 									<TableCell className="text-right whitespace-nowrap">
 										{formatCurrency(r.amountArs)}
@@ -491,6 +535,8 @@ export function BudgetsReport() {
 				filters={{
 					typeFilter,
 					statusFilter,
+					electedFilter,
+					materialFilter,
 					sellerFilter,
 					amountMin,
 					amountMax,

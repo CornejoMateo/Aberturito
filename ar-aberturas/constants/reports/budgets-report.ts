@@ -5,6 +5,7 @@ export const BUDGETS_REPORT_COLUMNS = {
 	client: 'CLIENTE',
 	number: 'NÚMERO',
 	type: 'TIPO',
+	materialType: 'MATERIAL',
 	work: 'OBRA',
 	amountArs: 'MONTO ARS',
 	amountUsd: 'MONTO USD',
@@ -19,7 +20,10 @@ export const BUDGET_TYPES = {
 
 export const BUDGET_STATUS = {
 	PENDING: 'Pendiente',
-	ACCEPTED: 'Aceptado',
 	SOLD: 'Vendido',
 	LOST: 'Perdido',
+} as const;
+
+export const BUDGET_STATUS_ACCEPTED = {
+	ACCEPTED: 'Elegido',
 } as const;

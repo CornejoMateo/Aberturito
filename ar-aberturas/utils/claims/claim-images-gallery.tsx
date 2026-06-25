@@ -20,12 +20,8 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-	CLAIM_FILE_TYPES,
-	MAX_FILE_SIZE_CLAIM,
-	formatFileSize,
-	getFileExtension,
-} from '@/utils/file-upload-utils';
+import { CLAIM_FILE_TYPES, MAX_FILE_SIZE_CLAIM, formatFileSize } from '@/utils/file-upload-utils';
+import { getFileKind } from '@/utils/file-upload-utils';
 
 interface ClaimFile {
 	id: number;
@@ -61,20 +57,6 @@ export function ClaimImagesGallery({
 	const locationParts = [workLocality, workZone, workAddress]
 		.map((part) => part?.trim())
 		.filter((part): part is string => Boolean(part));
-
-	const getFileKind = (fileName: string) => {
-		const extension = getFileExtension(fileName).toLowerCase();
-
-		if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(extension)) {
-			return 'image';
-		}
-
-		if (['mp4', 'webm', 'ogg', 'mov', 'avi'].includes(extension)) {
-			return 'video';
-		}
-
-		return 'file';
-	};
 
 	const loadImages = async () => {
 		setIsLoading(true);

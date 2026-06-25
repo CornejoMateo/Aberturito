@@ -1,7 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useState, useEffect, useCallback } from 'react';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -17,10 +23,15 @@ import {
 	BalanceTransaction,
 	getTransactionsByBalanceId,
 	createTransaction,
+	updateTransaction,
 	deleteTransaction,
 } from '@/lib/works/balance_transactions';
 import { updateBalance } from '@/lib/works/balances';
+import { getClientFilesByTransaction, uploadClientFile } from '@/lib/clients/files';
+import { optimizeFile } from '@/helpers/images/optimization';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Loader2, Upload, FileText, Trash2, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { formatCurrency } from '../../helpers/format-prices.tsx/formats';
 import { calculateBalanceSummary } from '../../helpers/balances/balance-calculations';
@@ -31,6 +42,12 @@ import { BalanceInformation } from './balance-information';
 import { NotesInput } from '@/components/ui/notes-input';
 import { translateError } from '@/lib/error-translator';
 import { formatCreatedAt } from '@/helpers/date/format-date';
+import { formatFileSize, IMAGE_EXTENSIONS, isImage } from '@/utils/file-upload-utils';
+import { getSupabaseClient } from '@/lib/supabase-client';
+import { deleteClientFile } from '@/lib/clients/files';
+import { FileViewerModal } from '@/components/ui/file-viewer-modal';
+import { FileViewerItem } from '@/utils/file-upload-utils';
+import { getFileKind } from '@/utils/file-upload-utils';
 
 interface BalanceDetailsModalProps {
 	balance: BalanceWithBudget | null;
@@ -52,6 +69,14 @@ export function BalanceDetailsModal({
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [isEditingNotes, setIsEditingNotes] = useState(false);
 	const [balanceNotes, setBalanceNotes] = useState('');
+	const [editingTransaction, setEditingTransaction] = useState<BalanceTransaction | null>(null);
+	const [transactionFilesToUpload, setTransactionFilesToUpload] = useState<File[]>([]);
+	const [isSavingTransaction, setIsSavingTransaction] = useState(false);
+	const [transactionForFiles, setTransactionForFiles] = useState<BalanceTransaction | null>(null);
+	const [transactionFiles, setTransactionFiles] = useState<FileViewerItem[]>([]);
+	const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+	const [selectedFileIndex, setSelectedFileIndex] = useState<number | null>(null);
+	const [transactionFileToDelete, setTransactionFileToDelete] = useState<number | null>(null);
 	const { toast } = useToast();
 
 	// Form state
@@ -90,7 +115,9 @@ export function BalanceDetailsModal({
 	};
 
 	const handleAddTransaction = async () => {
-		if (!balance || !transactionAmount) return;
+		if (!balance || !transactionAmount || isSavingTransaction) return;
+
+		setIsSavingTransaction(true);
 
 		try {
 			const { data, error } = await createTransaction({
@@ -104,12 +131,25 @@ export function BalanceDetailsModal({
 			});
 
 			if (error) {
+				setIsSavingTransaction(false);
+				const err = translateError(error);
 				toast({
 					variant: 'destructive',
 					title: 'Error al crear transacción',
-					description: 'Hubo un problema al crear la transacción. Intente nuevamente.',
+					description: err || 'Hubo un problema al crear la transacción. Intente nuevamente.',
 				});
 				return;
+			}
+
+			// Upload files if selected
+			if (data && transactionFilesToUpload.length > 0) {
+				console.log(
+					'[handleAddTransaction] voy a subir',
+					transactionFilesToUpload.length,
+					'archivos para transacción',
+					data.id
+				);
+				await uploadFilesForTransaction(data.id);
 			}
 
 			toast({
@@ -117,20 +157,20 @@ export function BalanceDetailsModal({
 				description: 'La transacción se ha creado exitosamente.',
 			});
 
-			// Reset form
-			setTransactionDate(new Date());
-			setTransactionAmount('');
-			setPaymentMethod('');
-			setNotes('');
-			setQuoteUsd('');
-			setUsdAmount('');
-			setIsAddingTransaction(false);
+			resetTransactionForm();
 
 			// Reload transactions
 			await loadTransactions();
 			onTransactionCreated?.();
 		} catch (error) {
-			console.error('Error inesperado al crear transacción:', error);
+			const err = translateError(error);
+			toast({
+				variant: 'destructive',
+				title: 'Error inesperado',
+				description: err || 'Ocurrió un error inesperado. Intente nuevamente.',
+			});
+		} finally {
+			setIsSavingTransaction(false);
 		}
 	};
 
@@ -144,7 +184,9 @@ export function BalanceDetailsModal({
 				toast({
 					variant: 'destructive',
 					title: 'Error al eliminar transacción',
-					description: translateError(error) || 'Hubo un problema al eliminar la transacción. Intente nuevamente.',
+					description:
+						translateError(error) ||
+						'Hubo un problema al eliminar la transacción. Intente nuevamente.',
 				});
 				return;
 			}
@@ -158,15 +200,269 @@ export function BalanceDetailsModal({
 			await loadTransactions();
 			onTransactionCreated?.();
 		} catch (error) {
+			const err = translateError(error);
 			toast({
 				variant: 'destructive',
 				title: 'Error inesperado',
-				description: translateError(error) || 'Ocurrió un error inesperado. Intente nuevamente.',
+				description: err || 'Ocurrió un error inesperado. Intente nuevamente.',
 			});
 		} finally {
 			setIsDeleteDialogOpen(false);
 			setTransactionToDelete(null);
 		}
+	};
+
+	const uploadFilesForTransaction = async (transactionId: number) => {
+		if (transactionFilesToUpload.length === 0 || !balance) {
+			return;
+		}
+
+		const clientId = (balance as any)?.client_id;
+
+		if (!clientId) {
+			toast({
+				variant: 'destructive',
+				title: 'Error al subir archivos',
+				description: 'No se encontró el cliente asociado a esta transacción.',
+			});
+			return;
+		}
+
+		let hasError = false;
+
+		for (const file of transactionFilesToUpload) {
+			try {
+				console.log('[uploadFilesForTransaction] procesando archivo:', file.name);
+				const optimizedFile = await optimizeFile(file);
+
+				const { error } = await uploadClientFile(
+					clientId,
+					optimizedFile,
+					null,
+					null,
+					null,
+					null,
+					transactionId
+				);
+
+				if (error) {
+					const err = translateError(error);
+					toast({
+						variant: 'destructive',
+						title: 'Error al subir archivo',
+						description: err || `Hubo un problema al subir el archivo ${file.name}.`,
+					});
+				} else {
+					toast({
+						title: 'Archivos exitosamente subidos',
+						description: `Los archivos se han subido exitosamente para la transacción.`,
+					});
+				}
+			} catch (error) {
+				const err = translateError(error);
+				toast({
+					variant: 'destructive',
+					title: 'Error al subir archivo',
+					description: err || `Hubo un problema al subir el archivo ${file.name}.`,
+				});
+			}
+		}
+	};
+
+	const handleEditTransaction = (transaction: BalanceTransaction) => {
+		setEditingTransaction(transaction);
+		setTransactionDate(transaction.date ? new Date(transaction.date + 'T00:00:00') : new Date());
+		setTransactionAmount(transaction.amount ? String(transaction.amount) : '');
+		setPaymentMethod(transaction.payment_method || '');
+		setNotes(transaction.notes || '');
+		setQuoteUsd(transaction.quote_usd ? String(transaction.quote_usd) : '');
+		setUsdAmount(transaction.usd_amount ? String(transaction.usd_amount) : '');
+		setTransactionFilesToUpload([]);
+		setIsAddingTransaction(true);
+	};
+
+	const handleUpdateTransaction = async () => {
+		if (!balance || !editingTransaction || !transactionAmount || isSavingTransaction) return;
+
+		setIsSavingTransaction(true);
+
+		try {
+			const { error } = await updateTransaction(editingTransaction.id, {
+				date: format(transactionDate, 'yyyy-MM-dd'),
+				amount: parseArsToNumber(transactionAmount),
+				payment_method: paymentMethod || null,
+				notes: notes || null,
+				quote_usd: quoteUsd ? parseFloat(quoteUsd) : null,
+				usd_amount: usdAmount ? parseFloat(usdAmount) : null,
+			});
+
+			if (error) {
+				setIsSavingTransaction(false);
+				const err = translateError(error);
+				toast({
+					variant: 'destructive',
+					title: 'Error al actualizar transacción',
+					description: err || 'Hubo un problema al actualizar la transacción. Intente nuevamente.',
+				});
+				return;
+			}
+
+			// Upload files if selected
+			if (transactionFilesToUpload.length > 0) {
+				console.log(
+					'[handleUpdateTransaction] voy a subir',
+					transactionFilesToUpload.length,
+					'archivos para transacción',
+					editingTransaction.id
+				);
+				await uploadFilesForTransaction(editingTransaction.id);
+			}
+
+			toast({
+				title: 'Transacción actualizada',
+				description: 'La transacción se ha actualizado exitosamente.',
+			});
+
+			resetTransactionForm();
+			await loadTransactions();
+			onTransactionCreated?.();
+		} catch (error) {
+			const err = translateError(error);
+			toast({
+				variant: 'destructive',
+				title: 'Error inesperado',
+				description: err || 'Ocurrió un error inesperado. Intente nuevamente.',
+			});
+			console.error('Error inesperado al actualizar transacción:', error);
+		} finally {
+			setIsSavingTransaction(false);
+		}
+	};
+
+	const resetTransactionForm = () => {
+		setEditingTransaction(null);
+		setTransactionDate(new Date());
+		setTransactionAmount('');
+		setPaymentMethod('');
+		setNotes('');
+		setQuoteUsd('');
+		setUsdAmount('');
+		setTransactionFilesToUpload([]);
+		setIsAddingTransaction(false);
+	};
+
+	const handleDeleteTransactionFile = async () => {
+		if (!transactionFileToDelete) return;
+
+		try {
+			const { success, error } = await deleteClientFile(transactionFileToDelete);
+
+			if (error || !success) {
+				toast({
+					variant: 'destructive',
+					title: 'Error al eliminar archivo',
+					description:
+						translateError(error?.message || error) || 'Hubo un problema al eliminar el archivo.',
+				});
+			} else {
+				toast({
+					title: 'Archivo eliminado',
+					description: 'El archivo se eliminó exitosamente.',
+				});
+				if (transactionForFiles) {
+					await loadTransactionFiles(transactionForFiles.id);
+				}
+			}
+		} catch (error) {
+			const err = translateError(error);
+			toast({
+				variant: 'destructive',
+				title: 'Error',
+				description: 'Ocurrió un error inesperado al eliminar el archivo.',
+			});
+		} finally {
+			setTransactionFileToDelete(null);
+		}
+	};
+
+	const loadTransactionFiles = useCallback(async (transactionId: number) => {
+		setIsLoadingFiles(true);
+		try {
+			const { data, error } = await getClientFilesByTransaction(transactionId);
+
+			if (error) {
+				const err = translateError(error);
+				toast({
+					variant: 'destructive',
+					title: 'Error al cargar archivos',
+					description: err || 'Hubo un problema al cargar los archivos.',
+				});
+				setTransactionFiles([]);
+				return;
+			}
+
+			if (!data || data.length === 0) {
+				setTransactionFiles([]);
+				return;
+			}
+
+			const supabase = getSupabaseClient();
+			const filesWithUrls: (FileViewerItem | null)[] = await Promise.all(
+				data.map(async (file) => {
+					try {
+						if (!file.path) return null;
+
+						const { data: blob, error: downloadError } = await supabase.storage
+							.from('clients')
+							.download(file.path);
+
+						if (downloadError || !blob) {
+							console.error('Error downloading file:', file.path, downloadError);
+							return null;
+						}
+
+						const url = URL.createObjectURL(blob);
+						const name = file.path.split('/').pop() || 'archivo';
+
+						return {
+							id: file.id,
+							url,
+							name,
+							displayName: file.title,
+							description: file.description,
+							size: blob.size,
+							uploadedAt: file.uploaded_at || new Date().toISOString(),
+						} as FileViewerItem;
+					} catch (err) {
+						const errorMessage = translateError(err);
+						toast({
+							variant: 'destructive',
+							title: 'Error al procesar archivo',
+							description: errorMessage || 'Hubo un problema al procesar un archivo.',
+						});
+						return null;
+					}
+				})
+			);
+
+			const validFiles = filesWithUrls.filter((f): f is FileViewerItem => f !== null);
+			setTransactionFiles(validFiles);
+		} catch (error) {
+			const err = translateError(error);
+			toast({
+				variant: 'destructive',
+				title: 'Error al cargar archivos',
+				description: err || 'Hubo un problema al cargar los archivos.',
+			});
+			setTransactionFiles([]);
+		} finally {
+			setIsLoadingFiles(false);
+		}
+	}, []);
+
+	const handleViewTransactionFiles = (transaction: BalanceTransaction) => {
+		setTransactionForFiles(transaction);
+		loadTransactionFiles(transaction.id);
 	};
 
 	const handleUpdateBalanceNotes = async () => {
@@ -216,17 +512,14 @@ export function BalanceDetailsModal({
 	const work = balance?.budget?.folder_budget?.work;
 
 	useEffect(() => {
-		if (transactionAmount && quoteUsd && isAddingTransaction) {
-			const normalizedAmount = transactionAmount
-				.replace(/\./g, '') // remove thousand separators
-				.replace(',', '.'); // decimal separator to dot for parsing
+		if (transactionAmount && quoteUsd) {
+			const normalizedAmount = transactionAmount.replace(/\./g, '').replace(',', '.');
 
 			const amountNumber = Number(normalizedAmount);
 			const rateNumber = Number(quoteUsd);
 
 			if (!isNaN(amountNumber) && !isNaN(rateNumber)) {
 				const calculatedUsd = (amountNumber / rateNumber).toFixed(2);
-
 				setUsdAmount(calculatedUsd);
 			}
 		}
@@ -261,12 +554,14 @@ export function BalanceDetailsModal({
 							<div className="flex items-center justify-between mb-3">
 								<h4 className="font-semibold">Notas del saldo</h4>
 								{!isEditingNotes && (
-								<button
-									onClick={() => setIsEditingNotes(true)}
-									className="text-sm text-primary hover:underline"
-								>
-									{balance.notes && String(balance.notes).trim() !== '' ? 'Editar notas' : 'Agregar notas'}
-								</button>
+									<button
+										onClick={() => setIsEditingNotes(true)}
+										className="text-sm text-primary hover:underline"
+									>
+										{balance.notes && String(balance.notes).trim() !== ''
+											? 'Editar notas'
+											: 'Agregar notas'}
+									</button>
 								)}
 							</div>
 							{isEditingNotes ? (
@@ -303,9 +598,7 @@ export function BalanceDetailsModal({
 											{balance.notes}
 										</div>
 									) : (
-										<p className="text-sm text-muted-foreground italic">
-											No hay notas agregadas
-										</p>
+										<p className="text-sm text-muted-foreground italic">No hay notas agregadas</p>
 									)}
 								</div>
 							)}
@@ -325,18 +618,18 @@ export function BalanceDetailsModal({
 							onNotesChange={setNotes}
 							paymentMethod={paymentMethod}
 							onPaymentMethodChange={setPaymentMethod}
-							onCancel={() => {
-								setIsAddingTransaction(false);
-								setTransactionDate(new Date());
-								setTransactionAmount('');
-								setPaymentMethod('');
-								setNotes('');
-								setQuoteUsd('');
-								setUsdAmount('');
-							}}
-							onSave={handleAddTransaction}
+							onCancel={resetTransactionForm}
+							onSave={editingTransaction ? handleUpdateTransaction : handleAddTransaction}
 							onStartAdd={() => setIsAddingTransaction(true)}
-							saveDisabled={!transactionAmount}
+							saveDisabled={!transactionAmount || isSavingTransaction}
+							editingTransaction={editingTransaction ?? undefined}
+							selectedFiles={transactionFilesToUpload}
+							onFilesSelect={(newFiles) =>
+								setTransactionFilesToUpload((prev) => [...prev, ...newFiles])
+							}
+							onRemoveFile={(index) =>
+								setTransactionFilesToUpload((prev) => prev.filter((_, i) => i !== index))
+							}
 						/>
 
 						{/* Transactions Table */}
@@ -349,6 +642,8 @@ export function BalanceDetailsModal({
 									setTransactionToDelete(transaction);
 									setIsDeleteDialogOpen(true);
 								}}
+								onEditTransaction={handleEditTransaction}
+								onViewFiles={handleViewTransactionFiles}
 							/>
 						</div>
 					</div>
@@ -382,6 +677,157 @@ export function BalanceDetailsModal({
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
+
+			<Dialog
+				open={!!transactionForFiles}
+				onOpenChange={(open) => {
+					if (!open) {
+						transactionFiles.forEach((f) => {
+							if (f.url) URL.revokeObjectURL(f.url);
+						});
+						setTransactionForFiles(null);
+						setTransactionFiles([]);
+					}
+				}}
+			>
+				<DialogContent className="!max-w-3xl !max-h-[80vh] overflow-y-auto">
+					<DialogHeader>
+						<DialogTitle>Archivos de la transacción</DialogTitle>
+						<DialogDescription>
+							Archivos adjuntos a la transacción del{' '}
+							{transactionForFiles ? formatCreatedAt(transactionForFiles.date) : ''}.
+						</DialogDescription>
+					</DialogHeader>
+
+					<div className="flex justify-end">
+						<input
+							type="file"
+							id="gallery-file-upload"
+							className="hidden"
+							multiple
+							onChange={async (e) => {
+								const files = e.target.files;
+								if (files && files.length > 0 && transactionForFiles) {
+									const newFiles = Array.from(files);
+									const clientId = (balance as any)?.client_id;
+									if (clientId) {
+										for (const file of newFiles) {
+											try {
+												const optimizedFile = await optimizeFile(file);
+												await uploadClientFile(
+													clientId,
+													optimizedFile,
+													null,
+													null,
+													null,
+													null,
+													transactionForFiles.id
+												);
+											} catch (err) {
+												console.error('Error uploading file from gallery:', err);
+											}
+										}
+										await loadTransactionFiles(transactionForFiles.id);
+									}
+								}
+								e.target.value = '';
+							}}
+						/>
+						<Button
+							size="sm"
+							variant="outline"
+							onClick={() => document.getElementById('gallery-file-upload')?.click()}
+						>
+							<Upload className="h-4 w-4 mr-2" />
+							Subir archivos
+						</Button>
+					</div>
+
+					{isLoadingFiles ? (
+						<div className="flex items-center justify-center h-32">
+							<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+						</div>
+					) : transactionFiles.length === 0 ? (
+						<div className="flex items-center justify-center h-32 border-2 border-dashed border-muted-foreground/25 rounded-lg">
+							<p className="text-sm text-muted-foreground">No hay archivos adjuntos</p>
+						</div>
+					) : (
+						<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+							{transactionFiles.map((file, index) => {
+								const fileKind = getFileKind(file.name);
+
+								return (
+									<div
+										key={file.id}
+										className="group relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer"
+										onClick={() => setSelectedFileIndex(index)}
+									>
+										{fileKind === 'image' ? (
+											<img
+												src={file.url}
+												alt={file.displayName || file.name}
+												className="w-full h-full object-cover"
+											/>
+										) : (
+											<div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted/60">
+												<FileText className="h-12 w-12 text-muted-foreground" />
+											</div>
+										)}
+										<div className="absolute top-2 right-2 opacity-80">
+											<Button
+												size="icon"
+												variant="destructive"
+												className="h-7 w-7"
+												onClick={(e) => {
+													e.stopPropagation();
+													setTransactionFileToDelete(file.id);
+												}}
+											>
+												<Trash2 className="h-3 w-3" />
+											</Button>
+										</div>
+										<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+											<p className="text-white text-xs truncate">{file.displayName || file.name}</p>
+											{file.size && (
+												<p className="text-white/80 text-xs">{formatFileSize(file.size)}</p>
+											)}
+										</div>
+									</div>
+								);
+							})}
+						</div>
+					)}
+				</DialogContent>
+			</Dialog>
+
+			<AlertDialog
+				open={!!transactionFileToDelete}
+				onOpenChange={() => setTransactionFileToDelete(null)}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>¿Eliminar archivo?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Esta acción no se puede deshacer. El archivo será eliminado permanentemente.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancelar</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={handleDeleteTransactionFile}
+							className="bg-destructive hover:bg-destructive/90"
+						>
+							Eliminar
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+
+			<FileViewerModal
+				files={transactionFiles}
+				selectedIndex={selectedFileIndex}
+				onSelectedIndexChange={setSelectedFileIndex}
+			/>
 		</Dialog>
 	);
 }

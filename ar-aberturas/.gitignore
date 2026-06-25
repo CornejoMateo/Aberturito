@@ -32,3 +32,6 @@ coverage/
 
 # DS_Store
 *.DS_Store
+
+# History
+*.history

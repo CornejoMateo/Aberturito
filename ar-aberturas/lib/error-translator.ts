@@ -1,6 +1,6 @@
 export const translateError = (error: any): string => {
 	const errorMessage = error?.message || String(error);
-	
+
 	// Network errors
 	if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
 		return 'Error de conexión. Verifica tu conexión a internet e intenta nuevamente.';
@@ -14,7 +14,7 @@ export const translateError = (error: any): string => {
 	if (errorMessage.includes('offline')) {
 		return 'Sin conexión a internet. Verifica tu conexión.';
 	}
-	
+
 	// Common HTTP errors
 	if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
 		return 'No tienes autorización. Inicia sesión nuevamente.';
@@ -34,7 +34,7 @@ export const translateError = (error: any): string => {
 	if (errorMessage.includes('503') || errorMessage.includes('Service unavailable')) {
 		return 'El servicio no está disponible temporalmente.';
 	}
-	
+
 	// Database errors
 	if (errorMessage.includes('duplicate key') || errorMessage.includes('unique constraint')) {
 		return 'Ya existe un registro con estos datos.';
@@ -45,7 +45,7 @@ export const translateError = (error: any): string => {
 	if (errorMessage.includes('violates check constraint')) {
 		return 'Los datos no cumplen con las validaciones requeridas.';
 	}
-	
+
 	// Validation errors
 	if (errorMessage.includes('required') || errorMessage.includes('is required')) {
 		return 'Faltan campos obligatorios.';
@@ -53,7 +53,10 @@ export const translateError = (error: any): string => {
 	if (errorMessage.includes('invalid') && errorMessage.includes('email')) {
 		return 'El correo electrónico no es válido.';
 	}
-	
+	if (errorMessage.includes('is out of range') || errorMessage.includes('must be between')) {
+		return 'El valor ingresado está fuera del rango permitido.';
+	}
+
 	// File/Upload errors
 	if (errorMessage.includes('file too large') || errorMessage.includes('size exceeded')) {
 		return 'El archivo es demasiado grande.';
@@ -67,7 +70,7 @@ export const translateError = (error: any): string => {
 	) {
 		return 'Ya existe un archivo con ese nombre. Intenta nuevamente o usa otro archivo.';
 	}
-	
+
 	// Return original message if no translation found
 	return errorMessage || 'Ocurrió un error inesperado.';
 };

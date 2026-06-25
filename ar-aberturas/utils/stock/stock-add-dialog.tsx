@@ -86,7 +86,16 @@ export function StockFormDialog({
 
 	const handleSave = () => {
 		// Validate required fields
-		if (!code || !line || !color || !site || !width || !quantity) {
+		if (
+			!code ||
+			!line ||
+			!color ||
+			!site ||
+			width === '' ||
+			width === undefined ||
+			quantity === '' ||
+			quantity === undefined
+		) {
 			toast({
 				title: 'Error de validación',
 				description: 'Por favor complete todos los campos obligatorios',
@@ -96,10 +105,17 @@ export function StockFormDialog({
 			return;
 		}
 
-		if (Number(quantity) < 0 || Number(width) < 0) {
+		if (
+			typeof quantity !== 'number' ||
+			!Number.isFinite(quantity) ||
+			typeof width !== 'number' ||
+			!Number.isFinite(width) ||
+			quantity < 0 ||
+			width < 0
+		) {
 			toast({
 				title: 'Error de validación',
-				description: 'La cantidad y el largo no pueden ser negativos',
+				description: 'La cantidad y el largo deben ser validos y positivos',
 				variant: 'destructive',
 				duration: 5000,
 			});
@@ -230,7 +246,7 @@ export function StockFormDialog({
 								type="number"
 								className="bg-background"
 								value={quantity}
-								onChange={(e) => setQuantity(Number(e.target.value) || '')}
+								onChange={(e) => setQuantity(e.target.value === '' ? '' : Number(e.target.value))}
 								required
 							/>
 						</div>

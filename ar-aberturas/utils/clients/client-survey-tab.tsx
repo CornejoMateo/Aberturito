@@ -1,86 +1,36 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from '@/components/ui/dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from '@/components/ui/use-toast';
-import { Calendar as CalendarIcon, ClipboardList, Pencil, Plus, Trash2 } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { ClipboardList } from 'lucide-react';
 
 import { Client } from '@/lib/clients/clients';
-import { BudgetWithWork } from '@/lib/works/balances';
 import { Survey, SurveyItem, updateSurvey } from '@/lib/survey/survey';
 import { translateError } from '@/lib/error-translator';
 import { useClientSurveys } from '@/hooks/clients/use-client-survey';
 
-import { SurveyItemForm } from './survey-item-form';
-import { formatCreatedAt } from '@/helpers/date/format-date';
+import type {
+	ItemDialogState,
+	DeleteItemConfirmState,
+	DeleteRelConfirmState,
+	DueDateDialogState,
+} from './client-survey-tab.types';
+import {
+	INITIAL_ITEM_DIALOG,
+	INITIAL_DELETE_ITEM,
+	INITIAL_DELETE_REL,
+	INITIAL_DUE_DATE,
+} from '@/constants/surveys/survey';
+import { SurveyItemDialog } from './survey-item-dialog';
+import { SurveyDueDateDialog } from './survey-due-date-dialog';
+import { SurveyBudgetCard } from './survey-budget-card';
 
 interface ClientSurveyTabProps {
 	client: Client;
-}
-
-type ItemDialogState = {
-	open: boolean;
-	mode: 'add' | 'edit';
-	surveyId: number | null;
-	item: SurveyItem | null;
-};
-
-type DeleteItemConfirmState = {
-	open: boolean;
-	itemId: number | null;
-};
-
-type DeleteRelConfirmState = {
-	open: boolean;
-	surveyId: number | null;
-};
-
-type DueDateDialogState = {
-	open: boolean;
-	surveyId: number | null;
-	currentDueDate: Date | null;
-};
-
-const INITIAL_ITEM_DIALOG: ItemDialogState = {
-	open: false,
-	mode: 'add',
-	surveyId: null,
-	item: null,
-};
-
-const INITIAL_DELETE_ITEM: DeleteItemConfirmState = { open: false, itemId: null };
-const INITIAL_DELETE_REL: DeleteRelConfirmState = { open: false, surveyId: null };
-const INITIAL_DUE_DATE: DueDateDialogState = { open: false, surveyId: null, currentDueDate: null };
-
-function getBudgetLabel(budget: BudgetWithWork): string {
-	const parts: string[] = [];
-	if (budget.number) parts.push(`#${budget.number}`);
-	if (budget.type) parts.push(budget.type);
-	return parts.length ? parts.join(' · ') : 'Presupuesto vendido';
-}
-
-function getBudgetAddress(budget: BudgetWithWork): string | null {
-	const work = budget.folder_budget?.work;
-	if (!work) return null;
-	const parts = [work.address, work.locality].filter(Boolean);
-	return parts.join(', ') || null;
 }
 
 export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
@@ -113,11 +63,6 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 
 	const getItemsForSurvey = (surveyId: number): SurveyItem[] =>
 		items.filter((i) => i.survey_id === surveyId).sort((a, b) => a.order - b.order);
-
-	const getProgress = (surveyId: number): { done: number; total: number } => {
-		const survey = getItemsForSurvey(surveyId);
-		return { done: survey.filter((i) => i.completed).length, total: survey.length };
-	};
 
 	const handleCreateSurvey = async (budgetId: number) => {
 		try {
@@ -215,14 +160,6 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 			});
 		}
 	};
-
-	if (isLoading && !soldBudgets.length && !surveys.length) {
-		return (
-			<div className="py-8 text-center">
-				<p className="text-sm text-muted-foreground">Cargando relevamientos...</p>
-			</div>
-		);
-	}
 
 	if (!soldBudgets.length) {
 		return (
@@ -416,27 +353,12 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 			})}
 
 			{/* Add / Edit item dialog */}
-			<Dialog
-				open={itemDialog.open}
+			<SurveyItemDialog
+				dialog={itemDialog}
 				onOpenChange={(open) => !open && setItemDialog(INITIAL_ITEM_DIALOG)}
-			>
-				<DialogContent className="sm:max-w-[400px]">
-					<DialogHeader>
-						<DialogTitle>{itemDialog.mode === 'add' ? 'Agregar paso' : 'Editar paso'}</DialogTitle>
-						<DialogDescription>
-							{itemDialog.mode === 'add'
-								? 'Ingresá el nombre del nuevo paso del relevamiento.'
-								: 'Modificá el nombre del paso.'}
-						</DialogDescription>
-					</DialogHeader>
-					<SurveyItemForm
-						initialLabel={itemDialog.item?.label ?? ''}
-						onSubmit={handleItemFormSubmit}
-						onCancel={() => setItemDialog(INITIAL_ITEM_DIALOG)}
-						isLoading={isLoading}
-					/>
-				</DialogContent>
-			</Dialog>
+				onSubmit={handleItemFormSubmit}
+				isLoading={isLoading}
+			/>
 
 			{/* Confirm delete step */}
 			<ConfirmDialog
@@ -459,70 +381,14 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 			/>
 
 			{/* Due date dialog */}
-			<Dialog
-				open={dueDateDialog.open}
+			<SurveyDueDateDialog
+				dialog={dueDateDialog}
 				onOpenChange={(open) => !open && setDueDateDialog(INITIAL_DUE_DATE)}
-			>
-				<DialogContent className="sm:max-w-[400px]">
-					<DialogHeader>
-						<DialogTitle>Fecha de vencimiento</DialogTitle>
-						<DialogDescription>
-							Establecé una fecha límite para completar este relevamiento.
-						</DialogDescription>
-					</DialogHeader>
-					<div className="space-y-4">
-						<div>
-							<label htmlFor="due-date" className="text-sm font-medium">
-								Fecha de vencimiento
-							</label>
-							<Popover>
-								<PopoverTrigger asChild>
-									<Button
-										variant="outline"
-										className={cn(
-											'w-full justify-start text-left font-normal mt-1.5',
-											!dueDateDialog.currentDueDate && 'text-muted-foreground'
-										)}
-									>
-										<CalendarIcon className="mr-2 h-4 w-4" />
-										{dueDateDialog.currentDueDate
-											? formatCreatedAt(dueDateDialog.currentDueDate)
-											: 'Seleccionar fecha'}
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent className="w-auto p-0" align="start">
-									<Calendar
-										mode="single"
-										selected={dueDateDialog.currentDueDate ?? undefined}
-										onSelect={(date) =>
-											setDueDateDialog({ ...dueDateDialog, currentDueDate: date ?? null })
-										}
-										initialFocus
-										locale={es}
-									/>
-								</PopoverContent>
-							</Popover>
-						</div>
-						<div className="flex justify-end gap-2">
-							{dueDateDialog.currentDueDate && (
-								<Button
-									variant="ghost"
-									onClick={() => handleDueDateSave(null)}
-									className="text-destructive hover:text-destructive"
-								>
-									Quitar fecha
-								</Button>
-							)}
-							<Button variant="outline" onClick={() => setDueDateDialog(INITIAL_DUE_DATE)}>
-								Cancelar
-							</Button>
-							<Button onClick={() => handleDueDateSave(dueDateDialog.currentDueDate)}>
-								Guardar
-							</Button>
-						</div>
-					</div>
-				</DialogContent>
-			</Dialog>
+				onSave={handleDueDateSave}
+				onDateSelect={(date) =>
+					setDueDateDialog({ ...dueDateDialog, currentDueDate: date ?? null })
+				}
+			/>
 		</div>
 	);
 }

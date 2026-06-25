@@ -22,23 +22,25 @@ import { type SupplyItemStock } from '@/lib/stock/supplies-stock';
 import { useAuth } from '@/components/provider/auth-provider';
 
 type FormData = {
-  category: string;
-  line: string;
-  brand: string;
-  code: string;
-  description: string;
-  color: string;
-  quantityPerLump: number | '';
-  lumpCount: number | '';
-  quantity: number | '';
-  site: string;
-  price: number | '';
+	category: string;
+	line: string;
+	brand: string;
+	code: string;
+	description: string;
+	color: string;
+	quantityPerLump: number | '';
+	lumpCount: number | '';
+	quantity: number | '';
+	site: string;
+	price: number | '';
 };
 
 interface AccessoryFormDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	onSave: (item: Partial<AccessoryItemStock> | Partial<IronworkItemStock> | Partial<SupplyItemStock>) => void;
+	onSave: (
+		item: Partial<AccessoryItemStock> | Partial<IronworkItemStock> | Partial<SupplyItemStock>
+	) => void;
 	materialType?: 'Aluminio' | 'PVC';
 	category: StockCategory;
 	editItem?: AccessoryItemStock | IronworkItemStock | SupplyItemStock | null;
@@ -59,7 +61,7 @@ export function AccessoryFormDialog({
 
 	// Fields common to accessories/ironworks
 	const [formData, setFormData] = useState<FormData>({
-  		category: '',
+		category: '',
 		line: '',
 		brand: '',
 		code: '',
@@ -73,11 +75,13 @@ export function AccessoryFormDialog({
 	});
 
 	const [showQuantityDialog, setShowQuantityDialog] = useState(false);
-	const [quantityDialogType, setQuantityDialogType] = useState<'increase' | 'decrease' | null>(null);
+	const [quantityDialogType, setQuantityDialogType] = useState<'increase' | 'decrease' | null>(
+		null
+	);
 	const [quantityChange, setQuantityChange] = useState<number | ''>('');
 	const [changeQuantityFlag, setChangeQuantityFlag] = useState(false);
 
-	const {user} = useAuth();
+	const { user } = useAuth();
 	const isAuthorized = user?.role === 'Admin' || user?.role === 'Ventas';
 
 	useEffect(() => {
@@ -86,17 +90,17 @@ export function AccessoryFormDialog({
 			const item = editItem as any;
 
 			setFormData({
-			category: item[fields.category] || '',
-			line: item[fields.line] || '',
-			brand: item[fields.brand] || '',
-			code: item[fields.code] || '',
-			description: item[fields.description] || '',
-			color: item[fields.color] || '',
-			quantityPerLump: item[fields.quantityForLump] ?? '',
-			lumpCount: item[fields.quantityLump] ?? '',
-			quantity: item[fields.quantity] ?? '',
-			site: item[fields.site] || '',
-			price: item[fields.price] ?? '',
+				category: item[fields.category] || '',
+				line: item[fields.line] || '',
+				brand: item[fields.brand] || '',
+				code: item[fields.code] || '',
+				description: item[fields.description] || '',
+				color: item[fields.color] || '',
+				quantityPerLump: item[fields.quantityForLump] ?? '',
+				lumpCount: item[fields.quantityLump] ?? '',
+				quantity: item[fields.quantity] ?? '',
+				site: item[fields.site] || '',
+				price: item[fields.price] ?? '',
 			});
 		} else {
 			resetForm();
@@ -129,10 +133,10 @@ export function AccessoryFormDialog({
 
 	const handleQuantityAdjustment = () => {
 		if (quantityChange === '') return;
-		
+
 		const currentTotal = (formData.quantity as number) || 0;
 		const adjustment = Number(quantityChange);
-		
+
 		if (quantityDialogType === 'decrease') {
 			if (adjustment > currentTotal) {
 				toast({
@@ -153,7 +157,7 @@ export function AccessoryFormDialog({
 				return;
 			}
 		}
-		
+
 		if (quantityDialogType === 'increase' && adjustment < 0) {
 			toast({
 				title: 'Error',
@@ -163,11 +167,10 @@ export function AccessoryFormDialog({
 			});
 			return;
 		}
-		
-		const newTotal = quantityDialogType === 'increase' 
-			? currentTotal + adjustment 
-			: currentTotal - adjustment;
-		
+
+		const newTotal =
+			quantityDialogType === 'increase' ? currentTotal + adjustment : currentTotal - adjustment;
+
 		if (newTotal < 0) {
 			toast({
 				title: 'Error',
@@ -177,7 +180,7 @@ export function AccessoryFormDialog({
 			});
 			return;
 		}
-		
+
 		updateField('quantity', newTotal);
 		onSave({
 			[config.fields.quantity]: newTotal,
@@ -206,7 +209,7 @@ export function AccessoryFormDialog({
 			});
 			return;
 		}
-		
+
 		if (formData.quantityPerLump < 0 || formData.lumpCount < 0 || formData.quantity < 0) {
 			toast({
 				title: 'Error de validación',
@@ -224,7 +227,9 @@ export function AccessoryFormDialog({
 				isEditing && (editItem as any)[fields.createdAt]
 					? (editItem as any)[fields.createdAt]
 					: new Date().toISOString().split('T')[0],
-			[fields.material]: isEditing ? (editItem as any)[fields.material] || materialType : materialType,
+			[fields.material]: isEditing
+				? (editItem as any)[fields.material] || materialType
+				: materialType,
 			[fields.category]: formData.category,
 			[fields.line]: formData.line,
 			[fields.brand]: formData.brand,
@@ -259,17 +264,19 @@ export function AccessoryFormDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			{triggerButton && (
 				<DialogTrigger asChild>
-				<Button className="gap-2">
-					<Plus className="h-4 w-4" />
-					Agregar {config.title.slice(0, -1).toLowerCase()}
-				</Button>
+					<Button className="gap-2">
+						<Plus className="h-4 w-4" />
+						Agregar {config.title.slice(0, -1).toLowerCase()}
+					</Button>
 				</DialogTrigger>
 			)}
 			<DialogContent showCloseButton={false} className="bg-card max-h-[90vh] flex flex-col">
-			<DialogHeader>
-				<DialogTitle>
-					{isEditing ? `Editar ${config.title.slice(0, -1).toLowerCase()}` : `Agregar ${config.title.slice(0, -1).toLowerCase()}`}
-				</DialogTitle>
+				<DialogHeader>
+					<DialogTitle>
+						{isEditing
+							? `Editar ${config.title.slice(0, -1).toLowerCase()}`
+							: `Agregar ${config.title.slice(0, -1).toLowerCase()}`}
+					</DialogTitle>
 					<DialogDescription>
 						{isEditing ? 'Modifique los datos' : 'Complete los datos del nuevo ítem'}
 					</DialogDescription>
@@ -287,40 +294,40 @@ export function AccessoryFormDialog({
 						</div>
 
 						<div className="grid gap-2">
-							<Label htmlFor='line'>Línea</Label>
-							<Input 
-								id='line'
-								value={formData.line} 
-								onChange={(e) => updateField('line', e.target.value)} 
+							<Label htmlFor="line">Línea</Label>
+							<Input
+								id="line"
+								value={formData.line}
+								onChange={(e) => updateField('line', e.target.value)}
 								placeholder="Ingrese la línea"
 								className="bg-background"
 							/>
 						</div>
 
 						<div className="grid gap-2">
-							<Label htmlFor='brand'>Marca</Label>
-							<Input 
+							<Label htmlFor="brand">Proveedor</Label>
+							<Input
 								id="brand"
-								value={formData.brand} 
-								onChange={(e) => updateField('brand', e.target.value)} 
-								placeholder="Ingrese la marca"
+								value={formData.brand}
+								onChange={(e) => updateField('brand', e.target.value)}
+								placeholder="Ingrese el proveedor"
 								className="bg-background"
 							/>
 						</div>
 
 						<div className="grid gap-2">
-							<Label htmlFor='code'>Código</Label>
-							<Input 
+							<Label htmlFor="code">Código</Label>
+							<Input
 								id="code"
-								value={formData.code} 
-								onChange={(e) => updateField('code', e.target.value)} 
+								value={formData.code}
+								onChange={(e) => updateField('code', e.target.value)}
 								placeholder="Ingrese el código"
 								className="bg-background"
 							/>
 						</div>
 
 						<div className="grid gap-2">
-							<Label htmlFor='description'>Descripción</Label>
+							<Label htmlFor="description">Descripción</Label>
 							<Input
 								id="description"
 								value={formData.description}
@@ -330,11 +337,11 @@ export function AccessoryFormDialog({
 						</div>
 
 						<div className="grid gap-2">
-							<Label htmlFor='color'>Color</Label>
-							<Input 
+							<Label htmlFor="color">Color</Label>
+							<Input
 								id="color"
-								value={formData.color} 
-								onChange={(e) => updateField('color', e.target.value)} 
+								value={formData.color}
+								onChange={(e) => updateField('color', e.target.value)}
 								placeholder="Ingrese el color"
 								className="bg-background"
 							/>
@@ -342,20 +349,20 @@ export function AccessoryFormDialog({
 
 						<div className="grid gap-2 md:grid-cols-3">
 							<div className="grid gap-2">
-								<Label htmlFor='quantityPerLump'>Cantidad x bulto</Label>
+								<Label htmlFor="quantityPerLump">Cantidad x bulto</Label>
 								<Input
 									id="quantityPerLump"
 									type="number"
 									value={formData.quantityPerLump}
 									onChange={(e) => {
-										updateField('quantityPerLump', e.target.value ? Number(e.target.value) : ''); 
+										updateField('quantityPerLump', e.target.value ? Number(e.target.value) : '');
 										setChangeQuantityFlag(true);
 									}}
 									className="bg-background"
 								/>
 							</div>
 							<div className="grid gap-2">
-								<Label htmlFor='lumpCount'>Cantidad de bultos</Label>
+								<Label htmlFor="lumpCount">Cantidad de bultos</Label>
 								<Input
 									id="lumpCount"
 									type="number"
@@ -368,23 +375,25 @@ export function AccessoryFormDialog({
 								/>
 							</div>
 							<div className="grid gap-2">
-								<Label htmlFor='quantity'>Cantidad total</Label>
+								<Label htmlFor="quantity">Cantidad total</Label>
 								<Input
-									id='quantity'
+									id="quantity"
 									type="number"
 									value={formData.quantity}
-									onChange={(e) => updateField('quantity', e.target.value ? Number(e.target.value) : '')}
+									onChange={(e) =>
+										updateField('quantity', e.target.value ? Number(e.target.value) : '')
+									}
 									className="bg-background"
 								/>
 							</div>
 						</div>
 
 						<div className="grid gap-2">
-							<Label htmlFor='site'>Ubicación</Label>
-							<Input 
+							<Label htmlFor="site">Ubicación</Label>
+							<Input
 								id="site"
-								value={formData.site} 
-								onChange={(e) => updateField('site', e.target.value)} 
+								value={formData.site}
+								onChange={(e) => updateField('site', e.target.value)}
 								placeholder="Ingrese la ubicación"
 								className="bg-background"
 							/>
@@ -392,12 +401,14 @@ export function AccessoryFormDialog({
 
 						{isAuthorized && (
 							<div className="grid gap-2">
-								<Label htmlFor='price'>Precio (opcional)</Label>
+								<Label htmlFor="price">Precio (opcional)</Label>
 								<Input
-									id='price'
+									id="price"
 									type="number"
 									value={formData.price}
-									onChange={(e) => updateField('price', e.target.value ? Number(e.target.value) : '')}
+									onChange={(e) =>
+										updateField('price', e.target.value ? Number(e.target.value) : '')
+									}
 									className="bg-background"
 								/>
 							</div>
@@ -418,8 +429,8 @@ export function AccessoryFormDialog({
 							{quantityDialogType === 'increase' ? 'Aumentar cantidad' : 'Disminuir cantidad'}
 						</DialogTitle>
 						<DialogDescription>
-							{quantityDialogType === 'increase' 
-								? '¿Cuántas unidades desea aumentar?' 
+							{quantityDialogType === 'increase'
+								? '¿Cuántas unidades desea aumentar?'
 								: '¿Cuántas unidades desea disminuir?'}
 						</DialogDescription>
 					</DialogHeader>

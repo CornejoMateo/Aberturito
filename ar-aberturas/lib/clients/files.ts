@@ -12,6 +12,7 @@ export type ClientFileRecord = {
 	description: string | null;
 	checklist_id: number | null;
 	claim_id: number | null;
+	balance_transaction_id?: number | null;
 };
 
 // get all client files
@@ -28,7 +29,8 @@ export async function listClientFiles(
 		const { data: files, error: listError } = await supabase
 			.from(TABLE)
 			.select('*')
-			.eq('client_id', clientId);
+			.eq('client_id', clientId)
+			.is('balance_transaction_id', null);
 
 		if (listError) {
 			return { data: null, error: listError };
@@ -95,6 +97,33 @@ export async function getClientFilesByChecklist(
 	}
 }
 
+// get files by balance_transaction_id
+export async function getClientFilesByTransaction(
+	transactionId: number
+): Promise<{ data: ClientFileRecord[] | null; error: any }> {
+	const supabase = getSupabaseClient();
+
+	try {
+		if (!transactionId) {
+			return { data: [], error: 'Error getting transaction id:' };
+		}
+
+		const { data: files, error: listError } = await supabase
+			.from(TABLE)
+			.select('*')
+			.eq('balance_transaction_id', transactionId);
+
+		if (listError) {
+			return { data: null, error: listError };
+		}
+
+		return { data: files, error: null };
+	} catch (err) {
+		console.error('Unexpected error listing client files by transaction:', err);
+		return { data: null, error: err };
+	}
+}
+
 // upload a file for a client
 export async function uploadClientFile(
 	clientId: number,
@@ -102,18 +131,24 @@ export async function uploadClientFile(
 	title: string | null = null,
 	description: string | null = null,
 	checklistId: number | null = null,
-	claimId: number | null = null
+	claimId: number | null = null,
+	transactionId: number | null = null
 ): Promise<{ data: ClientFileRecord | null; error: any }> {
 	const supabase = getSupabaseClient();
 	const fileExt = file.name.split('.').pop();
 	const fileName = `${crypto.randomUUID()}.${fileExt}`;
 	const filePath = `${clientId}/${fileName}`;
 
+	console.log('[uploadClientFile] subiendo a storage:', filePath, 'size:', file.size);
+
 	const { error: uploadError } = await supabase.storage.from(BUCKET).upload(filePath, file);
 
 	if (uploadError) {
+		console.log('[uploadClientFile] error en storage:', uploadError);
 		return { data: null, error: uploadError };
 	}
+
+	console.log('[uploadClientFile] storage ok, insertando en DB con balance_transaction_id:', transactionId);
 
 	const { data: fileRecord, error: dbError } = await supabase
 		.from(TABLE)
@@ -124,14 +159,17 @@ export async function uploadClientFile(
 			path: filePath,
 			checklist_id: checklistId,
 			claim_id: claimId,
+			balance_transaction_id: transactionId,
 		})
 		.select()
 		.single();
 
 	if (dbError) {
+		console.log('[uploadClientFile] error en DB insert:', dbError);
 		return { data: null, error: dbError };
 	}
 
+	console.log('[uploadClientFile] insert ok, fileRecord id:', fileRecord?.id);
 	return { data: fileRecord, error: null };
 }
 

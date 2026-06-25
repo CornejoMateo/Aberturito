@@ -60,6 +60,7 @@ export function StockManagement({
 	const [selectedCategory, setSelectedCategory] = useState(category);
 	const [showOutOfStock, setShowOutOfStock] = useState(false);
 	const [showLowStock, setShowLowStock] = useState(false);
+	const [showReservedProfiles, setShowReservedProfiles] = useState(false);
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<any | null>(null);
@@ -74,8 +75,8 @@ export function StockManagement({
 		// First apply the standard filters (search, category, material)
 		let result = filterStockItems(stock, searchTerm, selectedCategory, materialType, category);
 
-		// Apply stock filters (out-of-stock and/or low stock)
-		if (showOutOfStock || showLowStock) {
+		// Apply stock filters (out-of-stock, low stock, and/or reserved profiles)
+		if (showOutOfStock || showLowStock || showReservedProfiles) {
 			result = result.filter((item: any) => {
 				const config = STOCK_CONFIGS[category as keyof typeof STOCK_CONFIGS];
 				const quantityField = config?.fields?.quantityLump;
@@ -93,13 +94,16 @@ export function StockManagement({
 					}
 				}
 				
-				// Return true if matches either filter (OR logic)
-				return matchesOutOfStock || matchesLowStock;
+				// Check if item matches reserved profiles filter (only for Perfiles)
+				const matchesReserved = showReservedProfiles && category === 'Perfiles' && !!item.separated_for_work_id;
+				
+				// Return true if matches any active filter (OR logic)
+				return matchesOutOfStock || matchesLowStock || matchesReserved;
 			});
 		}
 
 		return result;
-	}, [stock, searchTerm, selectedCategory, materialType, category, showOutOfStock, showLowStock, thresholds]);
+	}, [stock, searchTerm, selectedCategory, materialType, category, showOutOfStock, showLowStock, showReservedProfiles, thresholds]);
 
 	const totalPages = Math.ceil(filteredStock.length / itemsPerPage);
 
@@ -335,6 +339,8 @@ export function StockManagement({
 					setShowOutOfStock={setShowOutOfStock}
 					showLowStock={showLowStock}
 					setShowLowStock={setShowLowStock}
+					showReservedProfiles={showReservedProfiles}
+					setShowReservedProfiles={setShowReservedProfiles}
 				/>
 				{category === 'Insumos' && (
 					<Button

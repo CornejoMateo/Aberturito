@@ -31,7 +31,6 @@ import { useIsMobile } from '@/components/ui/use-mobile';
 import { getRowClassName } from '@/helpers/stock/stock-row-class';
 import { formatCreatedAt } from '@/helpers/date/format-date';
 import { getSupabaseClient } from '@/lib/supabase-client';
-import { getStockThresholdByItem } from '@/lib/stock/stock-thresholds';
 
 interface AccesoriesTableProps {
 	categoryState: StockCategory;
@@ -470,13 +469,17 @@ export function AccesoriesTable({
 						const total =
 							((item as any)[keys.quantityForLump] ?? 0) *
 								((item as any)[keys.quantityLump] ?? 0) || 0;
-						const quantityForThreshold = (item as any)[keys.quantityLump] ?? (item as any)[keys.quantity] ?? total;
+						const quantityForThreshold =
+							(item as any)[keys.quantityLump] ?? (item as any)[keys.quantity] ?? total;
 						return (
 							<div
 								key={(item as any).id}
-								className={`border rounded-lg p-4 space-y-3 bg-card border-border ${
-									getRowClassName((item as any).id, quantityForThreshold, categoryState, thresholds)
-								}`}
+								className={`border rounded-lg p-4 space-y-3 bg-card border-border ${getRowClassName(
+									(item as any).id,
+									quantityForThreshold,
+									categoryState,
+									thresholds
+								)}`}
 							>
 								{/* Header with main info */}
 								<div className="flex justify-between items-start gap-2">
@@ -518,7 +521,7 @@ export function AccesoriesTable({
 										<p className="font-medium">{(item as any)[keys.line] || '-'}</p>
 									</div>
 									<div>
-										<p className="text-muted-foreground">Marca</p>
+										<p className="text-muted-foreground">Proveedor</p>
 										<p className="font-medium">{(item as any)[keys.brand] || '-'}</p>
 									</div>
 									<div>
@@ -593,9 +596,7 @@ export function AccesoriesTable({
 											<Minus className="h-3.5 w-3.5" />
 										</Button>
 										<div className="text-center min-w-[60px]">
-											<p className="text-sm font-medium">
-												{(item as any)[keys.quantity] ?? total}
-											</p>
+											<p className="text-sm font-medium">{(item as any)[keys.quantity] ?? total}</p>
 											<p className="text-xs text-muted-foreground">unidades</p>
 										</div>
 										<Button

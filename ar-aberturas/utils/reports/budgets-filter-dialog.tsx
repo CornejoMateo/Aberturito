@@ -17,8 +17,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import { formatNumber, parseArsToNumber } from '@/utils/budgets/utils';
+import { formatNumber } from '@/utils/budgets/utils';
 import { BUDGET_STATUS } from '@/constants/reports/budgets-report';
+import { checklistTypes } from '@/lib/works/checklists.constants';
 
 type BudgetFilters = {
 	typeFilter: string;
@@ -50,20 +51,20 @@ export function BudgetsFilterDialog({
 	const [localFilters, setLocalFilters] = useState<BudgetFilters>(filters);
 
 	useEffect(() => {
-	if (!open) return;
-	setLocalFilters(filters);
-}, [
-	open,
-	filters.typeFilter,
-	filters.statusFilter,
-	filters.electedFilter,
-	filters.materialFilter,
-	filters.sellerFilter,
-	filters.amountMin,
-	filters.amountMax,
-	filters.amountMinUsd,
-	filters.amountMaxUsd,
-]);
+		if (!open) return;
+		setLocalFilters(filters);
+	}, [
+		open,
+		filters.typeFilter,
+		filters.statusFilter,
+		filters.electedFilter,
+		filters.materialFilter,
+		filters.sellerFilter,
+		filters.amountMin,
+		filters.amountMax,
+		filters.amountMinUsd,
+		filters.amountMaxUsd,
+	]);
 
 	const handleApply = () => {
 		onApplyFilters(localFilters);
@@ -99,9 +100,7 @@ export function BudgetsFilterDialog({
 						<Label htmlFor="type">Tipo de presupuesto</Label>
 						<Select
 							value={localFilters.typeFilter}
-							onValueChange={(value) =>
-								setLocalFilters((prev) => ({ ...prev, typeFilter: value }))
-							}
+							onValueChange={(value) => setLocalFilters((prev) => ({ ...prev, typeFilter: value }))}
 						>
 							<SelectTrigger className="bg-background">
 								<SelectValue placeholder="Todos los tipos" />
@@ -161,9 +160,11 @@ export function BudgetsFilterDialog({
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="all">Todos los materiales</SelectItem>
-								<SelectItem value="PVC">PVC</SelectItem>
-								<SelectItem value="Aluminio">Aluminio</SelectItem>
-								<SelectItem value="Cortina">Cortina</SelectItem>
+								{Object.values(checklistTypes).map((type) => (
+									<SelectItem key={type} value={type}>
+										{type}
+									</SelectItem>
+								))}
 							</SelectContent>
 						</Select>
 					</div>

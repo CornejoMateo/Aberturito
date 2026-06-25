@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/components/provider/auth-provider';
 import { Lock, User } from 'lucide-react';
-import Image from 'next/image';
 
 export default function LoginPage() {
 	const { signIn, user, loading } = useAuth();

@@ -28,9 +28,11 @@ interface SourcesAndMaterialsTabProps {
 }
 
 export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterialsTabProps) {
-
-	const getMaterialCount = (materials: Array<{ material: string; count: number }>, aliases: string) => {
-		const materialEntry = materials.find(item => aliases.includes(item.material));
+	const getMaterialCount = (
+		materials: Array<{ material: string; count: number }>,
+		aliases: string
+	) => {
+		const materialEntry = materials.find((item) => aliases.includes(item.material));
 		return materialEntry ? materialEntry.count : 0;
 	};
 
@@ -111,7 +113,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 					)}
 				</Card>
 
-        		{/* Sold Budgets Material Distribution Chart */}
+				{/* Sold Budgets Material Distribution Chart */}
 				<Card className="p-6 bg-card border-border">
 					<h3 className="text-lg font-semibold text-foreground mb-6">
 						Distribución de presupuestos vendidos por material
@@ -120,7 +122,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 						<ResponsiveContainer width="100%" height={300}>
 							<BarChart data={metrics.soldBudgetsByMaterial}>
 								<CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-								<XAxis dataKey="material"  interval={0}/>
+								<XAxis dataKey="material" interval={0} />
 								<YAxis />
 								<Tooltip formatter={(value) => `${value} presupuestos vendidos`} />
 								<Bar
@@ -137,7 +139,6 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 						</div>
 					)}
 				</Card>
-
 			</div>
 
 			<Card className="p-6 bg-card border-border">
@@ -156,8 +157,14 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 							<Tooltip
 								formatter={(value: number, name: string, props: any) => {
 									const data = props.payload;
-									const pvcValue = typeof data.pvcValue === 'number' && !Number.isNaN(data.pvcValue) ? data.pvcValue : 0;
-									const aluminioValue = typeof data.aluminioValue === 'number' && !Number.isNaN(data.aluminioValue) ? data.aluminioValue : 0;
+									const pvcValue =
+										typeof data.pvcValue === 'number' && !Number.isNaN(data.pvcValue)
+											? data.pvcValue
+											: 0;
+									const aluminioValue =
+										typeof data.aluminioValue === 'number' && !Number.isNaN(data.aluminioValue)
+											? data.aluminioValue
+											: 0;
 									if (name === 'PVC') {
 										return [
 											`${Math.round(value)} vendidos - $${new Intl.NumberFormat('es-AR').format(pvcValue)}`,
@@ -215,8 +222,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 			</div>
 
 			<div className="grid gap-4 md:grid-cols-2">
-
-        		{/* Contact Method Chart */}
+				{/* Contact Method Chart */}
 				<Card className="p-6 bg-card border-border">
 					<h3 className="text-lg font-semibold text-foreground mb-6">
 						Clientes por medio de contacto
@@ -239,9 +245,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 									))}
 								</Pie>
 								<Tooltip formatter={(value) => `${value}`} />
-								<Legend
-									formatter={(value, entry) => `${value} (${entry.payload?.value})`}
-								/>
+								<Legend formatter={(value, entry) => `${value} (${entry.payload?.value})`} />
 							</PieChart>
 						</ResponsiveContainer>
 					) : (
@@ -253,7 +257,6 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 
 				{/* Statistics Cards */}
 				<div className="grid gap-4 md:grid-cols-1">
-
 					<Card className="p-6 bg-card border-border hover:shadow-md transition-shadow">
 						<div className="space-y-2">
 							<p className="text-sm font-medium text-muted-foreground">
@@ -288,7 +291,7 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 						</div>
 					</Card>
 
-          			<Card className="p-6 bg-card border-border hover:shadow-md transition-shadow">
+					<Card className="p-6 bg-card border-border hover:shadow-md transition-shadow">
 						<div className="space-y-2">
 							<p className="text-sm font-medium text-muted-foreground">
 								Medio de Contacto principal
@@ -305,7 +308,6 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 							</p>
 						</div>
 					</Card>
-
 				</div>
 			</div>
 		</TabsContent>

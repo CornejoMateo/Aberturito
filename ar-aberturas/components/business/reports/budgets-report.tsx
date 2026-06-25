@@ -15,20 +15,8 @@ import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
 import { formatShortDate } from '@/helpers/date/formats';
 import { formatBudgetType, formatBudgetStatus } from '@/helpers/budget/formats';
-import {
-	BUDGETS_REPORT_COLUMNS,
-	BUDGETS_REPORT_TITLE,
-	BUDGET_STATUS,
-	BUDGET_STATUS_ACCEPTED,
-} from '@/constants/reports/budgets-report';
+import { BUDGETS_REPORT_COLUMNS, BUDGETS_REPORT_TITLE } from '@/constants/reports/budgets-report';
 import { BudgetWithWorkAndClient, listBudgetsForReport } from '@/lib/budgets/budgets';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Download, Filter } from 'lucide-react';
 import { listSellers } from '@/lib/sellers/sellers';
@@ -238,7 +226,21 @@ export function BudgetsReport() {
 			if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
 			return 0;
 		});
-	}, [rows, searchTerm, sortField, sortDirection, typeFilter, statusFilter, electedFilter, materialFilter, sellerFilter, amountMin, amountMax, amountMinUsd, amountMaxUsd]);
+	}, [
+		rows,
+		searchTerm,
+		sortField,
+		sortDirection,
+		typeFilter,
+		statusFilter,
+		electedFilter,
+		materialFilter,
+		sellerFilter,
+		amountMin,
+		amountMax,
+		amountMinUsd,
+		amountMaxUsd,
+	]);
 
 	const totalPages = Math.max(1, Math.ceil(filteredRows.length / ITEMS_PER_PAGE));
 
@@ -284,7 +286,14 @@ export function BudgetsReport() {
 	const handleDownloadPDF = async () => {
 		try {
 			const { generateBudgetsReportPDF } = await import('@/lib/budgets/budgets-pdf');
-			await generateBudgetsReportPDF(filteredRows, sellerFilter, amountMin, amountMax, amountMinUsd, amountMaxUsd);
+			await generateBudgetsReportPDF(
+				filteredRows,
+				sellerFilter,
+				amountMin,
+				amountMax,
+				amountMinUsd,
+				amountMaxUsd
+			);
 		} catch (error) {
 			const message = translateError(error);
 			console.error('Error al generar PDF:', message);
@@ -343,7 +352,12 @@ export function BudgetsReport() {
 						{loading ? 'Cargando...' : `${filteredRows.length} presupuesto(s)`}
 					</div>
 					<div className="flex gap-2">
-						<Button variant="outline" onClick={handleDownloadPDF} className="gap-2" disabled={loading || filteredRows.length === 0}>
+						<Button
+							variant="outline"
+							onClick={handleDownloadPDF}
+							className="gap-2"
+							disabled={loading || filteredRows.length === 0}
+						>
 							<Download className="h-4 w-4" />
 							Descargar PDF
 						</Button>

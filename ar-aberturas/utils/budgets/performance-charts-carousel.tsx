@@ -18,6 +18,7 @@ import {
 } from 'recharts';
 import { SalesMetrics } from '../../lib/budgets/types';
 import { MetricCard } from './metric-card';
+import { formatCurrency } from '@/helpers/format-prices.tsx/formats';
 
 interface PerformanceChartsCarouselProps {
 	metrics: SalesMetrics;
@@ -129,18 +130,138 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
 		metrics.budgetsByMonth && metrics.budgetsByMonth.length > 0
 			? metrics.budgetsByMonth
 			: [
-					{ month: 'Ene', presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0, presupuestosValue: 0, vendidosValue: 0, date_saleValue: 0, perdidosValue: 0 },
-					{ month: 'Feb', presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0, presupuestosValue: 0, vendidosValue: 0, date_saleValue: 0, perdidosValue: 0 },
-					{ month: 'Mar', presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0, presupuestosValue: 0, vendidosValue: 0, date_saleValue: 0, perdidosValue: 0 },
-					{ month: 'Abr', presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0, presupuestosValue: 0, vendidosValue: 0, date_saleValue: 0, perdidosValue: 0 },
-					{ month: 'May', presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0, presupuestosValue: 0, vendidosValue: 0, date_saleValue: 0, perdidosValue: 0 },
-					{ month: 'Jun', presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0, presupuestosValue: 0, vendidosValue: 0, date_saleValue: 0, perdidosValue: 0 },
-					{ month: 'Jul', presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0, presupuestosValue: 0, vendidosValue: 0, date_saleValue: 0, perdidosValue: 0 },
-					{ month: 'Ago', presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0, presupuestosValue: 0, vendidosValue: 0, date_saleValue: 0, perdidosValue: 0 },
-					{ month: 'Sep', presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0, presupuestosValue: 0, vendidosValue: 0, date_saleValue: 0, perdidosValue: 0 },
-					{ month: 'Oct', presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0, presupuestosValue: 0, vendidosValue: 0, date_saleValue: 0, perdidosValue: 0 },
-					{ month: 'Nov', presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0, presupuestosValue: 0, vendidosValue: 0, date_saleValue: 0, perdidosValue: 0 },
-					{ month: 'Dic', presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0, presupuestosValue: 0, vendidosValue: 0, date_saleValue: 0, perdidosValue: 0 },
+					{
+						month: 'Ene',
+						presupuestos: 0,
+						vendidos: 0,
+						date_sale: 0,
+						perdidos: 0,
+						presupuestosValue: 0,
+						vendidosValue: 0,
+						date_saleValue: 0,
+						perdidosValue: 0,
+					},
+					{
+						month: 'Feb',
+						presupuestos: 0,
+						vendidos: 0,
+						date_sale: 0,
+						perdidos: 0,
+						presupuestosValue: 0,
+						vendidosValue: 0,
+						date_saleValue: 0,
+						perdidosValue: 0,
+					},
+					{
+						month: 'Mar',
+						presupuestos: 0,
+						vendidos: 0,
+						date_sale: 0,
+						perdidos: 0,
+						presupuestosValue: 0,
+						vendidosValue: 0,
+						date_saleValue: 0,
+						perdidosValue: 0,
+					},
+					{
+						month: 'Abr',
+						presupuestos: 0,
+						vendidos: 0,
+						date_sale: 0,
+						perdidos: 0,
+						presupuestosValue: 0,
+						vendidosValue: 0,
+						date_saleValue: 0,
+						perdidosValue: 0,
+					},
+					{
+						month: 'May',
+						presupuestos: 0,
+						vendidos: 0,
+						date_sale: 0,
+						perdidos: 0,
+						presupuestosValue: 0,
+						vendidosValue: 0,
+						date_saleValue: 0,
+						perdidosValue: 0,
+					},
+					{
+						month: 'Jun',
+						presupuestos: 0,
+						vendidos: 0,
+						date_sale: 0,
+						perdidos: 0,
+						presupuestosValue: 0,
+						vendidosValue: 0,
+						date_saleValue: 0,
+						perdidosValue: 0,
+					},
+					{
+						month: 'Jul',
+						presupuestos: 0,
+						vendidos: 0,
+						date_sale: 0,
+						perdidos: 0,
+						presupuestosValue: 0,
+						vendidosValue: 0,
+						date_saleValue: 0,
+						perdidosValue: 0,
+					},
+					{
+						month: 'Ago',
+						presupuestos: 0,
+						vendidos: 0,
+						date_sale: 0,
+						perdidos: 0,
+						presupuestosValue: 0,
+						vendidosValue: 0,
+						date_saleValue: 0,
+						perdidosValue: 0,
+					},
+					{
+						month: 'Sep',
+						presupuestos: 0,
+						vendidos: 0,
+						date_sale: 0,
+						perdidos: 0,
+						presupuestosValue: 0,
+						vendidosValue: 0,
+						date_saleValue: 0,
+						perdidosValue: 0,
+					},
+					{
+						month: 'Oct',
+						presupuestos: 0,
+						vendidos: 0,
+						date_sale: 0,
+						perdidos: 0,
+						presupuestosValue: 0,
+						vendidosValue: 0,
+						date_saleValue: 0,
+						perdidosValue: 0,
+					},
+					{
+						month: 'Nov',
+						presupuestos: 0,
+						vendidos: 0,
+						date_sale: 0,
+						perdidos: 0,
+						presupuestosValue: 0,
+						vendidosValue: 0,
+						date_saleValue: 0,
+						perdidosValue: 0,
+					},
+					{
+						month: 'Dic',
+						presupuestos: 0,
+						vendidos: 0,
+						date_sale: 0,
+						perdidos: 0,
+						presupuestosValue: 0,
+						vendidosValue: 0,
+						date_saleValue: 0,
+						perdidosValue: 0,
+					},
 				];
 
 	// Data for the average ticket chart (default to 0 if no data)
@@ -163,23 +284,36 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
 							<YAxis />
 							<Tooltip
 								formatter={(value: number, name: string, props: any) => {
-									const data = props.payload;
-									const presupuestosValue = typeof data.presupuestosValue === 'number' && !Number.isNaN(data.presupuestosValue) ? data.presupuestosValue : 0;
-									const vendidosValue = typeof data.vendidosValue === 'number' && !Number.isNaN(data.vendidosValue) ? data.vendidosValue : 0;
-									const date_saleValue = typeof data.date_saleValue === 'number' && !Number.isNaN(data.date_saleValue) ? data.date_saleValue : 0;
-									const perdidosValue = typeof data.perdidosValue === 'number' && !Number.isNaN(data.perdidosValue) ? data.perdidosValue : 0;
+									const data = props.payload || {};
+									const presupuestosValue =
+										typeof data.presupuestosValue === 'number' &&
+										!Number.isNaN(data.presupuestosValue)
+											? data.presupuestosValue
+											: 0;
+									const vendidosValue =
+										typeof data.vendidosValue === 'number' && !Number.isNaN(data.vendidosValue)
+											? data.vendidosValue
+											: 0;
+									const date_saleValue =
+										typeof data.date_saleValue === 'number' && !Number.isNaN(data.date_saleValue)
+											? data.date_saleValue
+											: 0;
+									const perdidosValue =
+										typeof data.perdidosValue === 'number' && !Number.isNaN(data.perdidosValue)
+											? data.perdidosValue
+											: 0;
 
 									if (name === 'Presupuestos') {
-										return [`${Math.round(value)} - $${new Intl.NumberFormat('es-AR').format(presupuestosValue)}`, name];
+										return [`${Math.round(value)} - ${formatCurrency(presupuestosValue)}`, name];
 									}
 									if (name === 'Vendidos (según fecha de creación)') {
-										return [`${Math.round(value)} - $${new Intl.NumberFormat('es-AR').format(vendidosValue)}`, name];
+										return [`${Math.round(value)} - ${formatCurrency(vendidosValue)}`, name];
 									}
 									if (name === 'Vendidos (según fecha de venta)') {
-										return [`${Math.round(value)} - $${new Intl.NumberFormat('es-AR').format(date_saleValue)}`, name];
+										return [`${Math.round(value)} - ${formatCurrency(date_saleValue)}`, name];
 									}
 									if (name === 'Perdidos') {
-										return [`${Math.round(value)} - $${new Intl.NumberFormat('es-AR').format(perdidosValue)}`, name];
+										return [`${Math.round(value)} - ${formatCurrency(perdidosValue)}`, name];
 									}
 									return [Math.round(value), name];
 								}}
@@ -341,7 +475,7 @@ export function PerformanceChartsCarousel({ metrics }: PerformanceChartsCarousel
 				onSelect={handleSelectChartByAmount}
 			/>
 			<MetricCard
-				label='Promedio de días hasta la venta'
+				label="Promedio de días hasta la venta"
 				value={
 					metrics.totalSales > 0
 						? `${metrics.averageSaleDelayDays.toFixed(2)} días`

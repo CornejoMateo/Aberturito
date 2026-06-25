@@ -524,11 +524,15 @@ export async function getBudgetsByMonth(): Promise<{
 		vendidos: number;
 		date_sale: number;
 		perdidos: number;
+		presupuestosValue: number;
+		vendidosValue: number;
+		date_saleValue: number;
+		perdidosValue: number;
 	}> | null;
 	error: any;
 }> {
 	const supabase = getSupabaseClient();
-	const { data, error } = await supabase.from(TABLE).select('created_at, sold, lost, date_of_sale');
+	const { data, error } = await supabase.from(TABLE).select('created_at, sold, lost, date_of_sale, amount_ars');
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
@@ -536,16 +540,18 @@ export async function getBudgetsByMonth(): Promise<{
 	// Group by month and count presupuestos and vendidos
 	const monthMap = new Map<
 		string,
-		{ presupuestos: number; vendidos: number; date_sale: number; perdidos: number }
+		{ presupuestos: number; vendidos: number; date_sale: number; perdidos: number; presupuestosValue: number; vendidosValue: number; date_saleValue: number; perdidosValue: number }
 	>();
 
 	// Inizialize monthMap with all months to ensure they appear in the result even if they have 0 presupuestos/vendidos
 	months.forEach((month) => {
-		monthMap.set(month, { presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0 });
+		monthMap.set(month, { presupuestos: 0, vendidos: 0, date_sale: 0, perdidos: 0, presupuestosValue: 0, vendidosValue: 0, date_saleValue: 0, perdidosValue: 0 });
 	});
 
 	// Contact data and populate monthMap
 	data.forEach((budget: any) => {
+		const amount = typeof budget.amount_ars === 'number' && !Number.isNaN(budget.amount_ars) ? budget.amount_ars : 0;
+
 		if (budget.created_at) {
 			const date = new Date(budget.created_at);
 			const monthIndex = date.getMonth();
@@ -556,13 +562,20 @@ export async function getBudgetsByMonth(): Promise<{
 				vendidos: 0,
 				date_sale: 0,
 				perdidos: 0,
+				presupuestosValue: 0,
+				vendidosValue: 0,
+				date_saleValue: 0,
+				perdidosValue: 0,
 			};
 			current.presupuestos += 1;
+			current.presupuestosValue += amount;
 			if (budget.sold) {
 				current.vendidos += 1;
+				current.vendidosValue += amount;
 			}
 			if (budget.lost) {
 				current.perdidos += 1;
+				current.perdidosValue += amount;
 			}
 			monthMap.set(monthName, current);
 		}
@@ -578,8 +591,13 @@ export async function getBudgetsByMonth(): Promise<{
 				vendidos: 0,
 				date_sale: 0,
 				perdidos: 0,
+				presupuestosValue: 0,
+				vendidosValue: 0,
+				date_saleValue: 0,
+				perdidosValue: 0,
 			};
 			current.date_sale += 1;
+			current.date_saleValue += amount;
 			monthMap.set(monthName, current);
 		}
 	});
@@ -917,36 +935,39 @@ export async function getSoldBudgetsByMaterial(): Promise<{
 }
 
 export async function getSoldBudgetsByMaterialByMonth(): Promise<{
-	data: Array<{ month: string; pvc: number; aluminio: number }> | null;
+	data: Array<{ month: string; pvc: number; aluminio: number; pvcValue: number; aluminioValue: number }> | null;
 	error: any;
 }> {
 	const supabase = getSupabaseClient();
-	const { data, error } = await supabase.from(TABLE).select('created_at, type').eq('sold', true);
+	const { data, error } = await supabase.from(TABLE).select('created_at, type, amount_ars').eq('sold', true);
 
 	if (error) return { data: null, error };
 	if (!data) return { data: [], error: null };
 
-	const monthMap = new Map<string, { pvc: number; aluminio: number }>();
+	const monthMap = new Map<string, { pvc: number; aluminio: number; pvcValue: number; aluminioValue: number }>();
 
 	months.forEach((month) => {
-		monthMap.set(month, { pvc: 0, aluminio: 0 });
+		monthMap.set(month, { pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 });
 	});
 
 	data.forEach((budget: any) => {
 		if (!budget.created_at) return;
 
 		const monthName = months[new Date(budget.created_at).getMonth()];
-		const current = monthMap.get(monthName) || { pvc: 0, aluminio: 0 };
+		const current = monthMap.get(monthName) || { pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 };
 		const material = String(budget.type || '')
 			.trim()
 			.toLowerCase();
+		const amount = typeof budget.amount_ars === 'number' && !Number.isNaN(budget.amount_ars) ? budget.amount_ars : 0;
 
 		if (material.includes('pvc')) {
 			current.pvc += 1;
+			current.pvcValue += amount;
 		}
 
 		if (material.includes('aluminio')) {
 			current.aluminio += 1;
+			current.aluminioValue += amount;
 		}
 
 		monthMap.set(monthName, current);

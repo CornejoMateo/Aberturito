@@ -71,18 +71,18 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 		metrics.soldBudgetsByMaterialByMonth && metrics.soldBudgetsByMaterialByMonth.length > 0
 			? metrics.soldBudgetsByMaterialByMonth
 			: [
-					{ month: 'Ene', pvc: 0, aluminio: 0 },
-					{ month: 'Feb', pvc: 0, aluminio: 0 },
-					{ month: 'Mar', pvc: 0, aluminio: 0 },
-					{ month: 'Abr', pvc: 0, aluminio: 0 },
-					{ month: 'May', pvc: 0, aluminio: 0 },
-					{ month: 'Jun', pvc: 0, aluminio: 0 },
-					{ month: 'Jul', pvc: 0, aluminio: 0 },
-					{ month: 'Ago', pvc: 0, aluminio: 0 },
-					{ month: 'Sep', pvc: 0, aluminio: 0 },
-					{ month: 'Oct', pvc: 0, aluminio: 0 },
-					{ month: 'Nov', pvc: 0, aluminio: 0 },
-					{ month: 'Dic', pvc: 0, aluminio: 0 },
+					{ month: 'Ene', pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 },
+					{ month: 'Feb', pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 },
+					{ month: 'Mar', pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 },
+					{ month: 'Abr', pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 },
+					{ month: 'May', pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 },
+					{ month: 'Jun', pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 },
+					{ month: 'Jul', pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 },
+					{ month: 'Ago', pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 },
+					{ month: 'Sep', pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 },
+					{ month: 'Oct', pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 },
+					{ month: 'Nov', pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 },
+					{ month: 'Dic', pvc: 0, aluminio: 0, pvcValue: 0, aluminioValue: 0 },
 				];
 
 	return (
@@ -153,7 +153,26 @@ export function SourcesAndMaterialsTab({ metrics, loading }: SourcesAndMaterials
 							<CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
 							<XAxis dataKey="month" />
 							<YAxis />
-							<Tooltip formatter={(value) => Math.round(value as number)} />
+							<Tooltip
+								formatter={(value: number, name: string, props: any) => {
+									const data = props.payload;
+									const pvcValue = typeof data.pvcValue === 'number' && !Number.isNaN(data.pvcValue) ? data.pvcValue : 0;
+									const aluminioValue = typeof data.aluminioValue === 'number' && !Number.isNaN(data.aluminioValue) ? data.aluminioValue : 0;
+									if (name === 'PVC') {
+										return [
+											`${Math.round(value)} vendidos - $${new Intl.NumberFormat('es-AR').format(pvcValue)}`,
+											name,
+										];
+									}
+									if (name === 'Aluminio') {
+										return [
+											`${Math.round(value)} vendidos - $${new Intl.NumberFormat('es-AR').format(aluminioValue)}`,
+											name,
+										];
+									}
+									return [Math.round(value), name];
+								}}
+							/>
 							<Legend />
 							<Line
 								type="monotone"

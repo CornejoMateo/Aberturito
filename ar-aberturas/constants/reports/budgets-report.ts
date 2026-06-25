@@ -20,7 +20,10 @@ export const BUDGET_TYPES = {
 
 export const BUDGET_STATUS = {
 	PENDING: 'Pendiente',
-	ACCEPTED: 'Aceptado',
 	SOLD: 'Vendido',
 	LOST: 'Perdido',
+} as const;
+
+export const BUDGET_STATUS_ACCEPTED = {
+	ACCEPTED: 'Elegido',
 } as const;

@@ -168,6 +168,19 @@ export function BudgetsFilterDialog({
 						</Select>
 					</div>
 
+					<div className="flex items-center space-x-2">
+						<Checkbox
+							id="elected"
+							checked={localFilters.electedFilter}
+							onCheckedChange={(checked) =>
+								setLocalFilters((prev) => ({ ...prev, electedFilter: checked as boolean }))
+							}
+						/>
+						<Label htmlFor="elected" className="cursor-pointer">
+							Solo presupuestos elegidos
+						</Label>
+					</div>
+
 					<div className="grid gap-2">
 						<Label htmlFor="seller">Vendedor</Label>
 						<Select

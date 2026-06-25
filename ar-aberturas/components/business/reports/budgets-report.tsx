@@ -18,8 +18,8 @@ import { formatBudgetType, formatBudgetStatus } from '@/helpers/budget/formats';
 import {
 	BUDGETS_REPORT_COLUMNS,
 	BUDGETS_REPORT_TITLE,
-	BUDGET_TYPES,
 	BUDGET_STATUS,
+	BUDGET_STATUS_ACCEPTED,
 } from '@/constants/reports/budgets-report';
 import { BudgetWithWorkAndClient, listBudgetsForReport } from '@/lib/budgets/budgets';
 import {
@@ -147,10 +147,12 @@ export function BudgetsReport() {
 
 		// Filter by status
 		if (statusFilter !== 'all') {
-			filtered = filtered.filter((r) => {
-				if (statusFilter === BUDGET_STATUS.ACCEPTED) return r.accepted;
-				return r.status === statusFilter;
-			});
+			filtered = filtered.filter((r) => r.status === statusFilter);
+		}
+
+		// Filter by elected (can be combined with status)
+		if (electedFilter) {
+			filtered = filtered.filter((r) => r.accepted);
 		}
 
 		// Filter by elected (can be combined with status)

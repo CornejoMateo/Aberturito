@@ -38,7 +38,7 @@ export function StockFilters({
 							className="pl-9 bg-background"
 						/>
 					</div>
-					<div className="ml-auto flex items-center gap-2">
+					<div className="flex flex-wrap items-center gap-2 md:ml-auto">
 						<Button
 							variant="ghost"
 							size="sm"
@@ -49,7 +49,8 @@ export function StockFilters({
 							onClick={() => setShowOutOfStock(!showOutOfStock)}
 						>
 							<Filter className="h-3.5 w-3.5" />
-							<span>Mostrar solo sin stock</span>
+							<span className="hidden sm:inline">Mostrar solo sin stock</span>
+							<span className="sm:hidden">Sin stock</span>
 						</Button>
 						{selectedCategory === 'Insumos' && (
 							<Button
@@ -62,7 +63,8 @@ export function StockFilters({
 								onClick={() => setShowLowStock(!showLowStock)}
 							>
 								<Filter className="h-3.5 w-3.5" />
-								<span>Mostrar solo stock bajo</span>
+								<span className="hidden sm:inline">Mostrar solo stock bajo</span>
+								<span className="sm:hidden">Stock bajo</span>
 							</Button>
 						)}
 						{(selectedCategory === 'Accesorios' ||

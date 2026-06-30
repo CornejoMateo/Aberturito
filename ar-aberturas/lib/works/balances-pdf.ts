@@ -200,7 +200,7 @@ export async function generateBalancesReportPDF(
 	const day = String(fileDate.getDate()).padStart(2, '0');
 	const month = String(fileDate.getMonth() + 1).padStart(2, '0');
 	const year = fileDate.getFullYear();
-	const formattedDate = `${day}/${month}/${year}`;
+	const formattedDate = `${day}-${month}-${year}`;
 
 	const fileName = balanceTypeFilter && balanceTypeFilter !== 'all'
 		? `saldos_${balanceTypeFilter}_${formattedDate}.pdf`

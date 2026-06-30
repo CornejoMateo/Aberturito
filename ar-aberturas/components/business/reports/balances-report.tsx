@@ -36,7 +36,6 @@ import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
 import { normalizeMoney } from '@/helpers/format-prices.tsx/formats';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BudgetsReport } from './budgets-report';
-import { ClientsReport } from './clients-report';
 
 type BalanceReportRow = {
 	id: string;
@@ -225,7 +224,6 @@ export function BalancesReport() {
 				<TabsList className="bg-card border border-border">
 					<TabsTrigger value="balances">Saldos</TabsTrigger>
 					<TabsTrigger value="budgets">Presupuestos</TabsTrigger>
-					<TabsTrigger value="clients">Clientes</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="balances" className="space-y-4">
@@ -487,10 +485,6 @@ export function BalancesReport() {
 
 				<TabsContent value="budgets" className="space-y-4">
 					<BudgetsReport />
-				</TabsContent>
-
-				<TabsContent value="clients" className="space-y-4">
-					<ClientsReport />
 				</TabsContent>
 			</Tabs>
 		</div>

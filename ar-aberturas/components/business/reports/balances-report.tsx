@@ -24,19 +24,14 @@ import { StatsCardsBalances } from '@/utils/balances/stats-cards-balances';
 import { BalanceWithBudgetAndClient, listBalancesForReport } from '@/lib/works/balances';
 import { getLastTransactionUSD } from '@/lib/works/balance_transactions';
 import { getTotalsByBalanceIds } from '@/lib/works/balance_transactions';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Download, Filter } from 'lucide-react';
 import { normalizeMoney } from '@/helpers/format-prices.tsx/formats';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BudgetsReport } from './budgets-report';
-import { ClientsReport } from './clients-report';
+import { BalancesFilterDialog } from '@/utils/reports/balances-filter-dialog';
+import { translateError } from '@/lib/error-translator';
+import { parseArsToNumber } from '@/utils/budgets/utils';
 
 type BalanceReportRow = {
 	id: string;
@@ -60,6 +55,19 @@ export function BalancesReport() {
 	const [sortField, setSortField] = useState<keyof BalanceReportRow>('contractDate');
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 	const [balanceTypeFilter, setBalanceTypeFilter] = useState<string>('all');
+	const [purchaseMin, setPurchaseMin] = useState<string>('');
+	const [purchaseMax, setPurchaseMax] = useState<string>('');
+	const [deliveriesMin, setDeliveriesMin] = useState<string>('');
+	const [deliveriesMax, setDeliveriesMax] = useState<string>('');
+	const [balanceAmountMin, setBalanceAmountMin] = useState<string>('');
+	const [balanceAmountMax, setBalanceAmountMax] = useState<string>('');
+	const [usdContractMin, setUsdContractMin] = useState<string>('');
+	const [usdContractMax, setUsdContractMax] = useState<string>('');
+	const [usdCurrentMin, setUsdCurrentMin] = useState<string>('');
+	const [usdCurrentMax, setUsdCurrentMax] = useState<string>('');
+	const [balanceInUseMin, setBalanceInUseMin] = useState<string>('');
+	const [balanceInUseMax, setBalanceInUseMax] = useState<string>('');
+	const [filterDialogOpen, setFilterDialogOpen] = useState(false);
 
 	// Calculate stats
 	const balanceStats = useMemo(() => {
@@ -154,12 +162,96 @@ export function BalancesReport() {
 	const filteredRows = useMemo(() => {
 		let filtered = rows;
 
-		// Filter to type
+		// Filter by balance type
 		if (balanceTypeFilter !== 'all') {
 			filtered = filtered.filter((r) => r.balanceType === balanceTypeFilter);
 		}
 
-		// Filter to text
+		// Filter by purchase amount range
+		if (purchaseMin !== '') {
+			const min = parseArsToNumber(purchaseMin);
+			if (!isNaN(min)) {
+				filtered = filtered.filter((r) => r.purchaseArs >= min);
+			}
+		}
+		if (purchaseMax !== '') {
+			const max = parseArsToNumber(purchaseMax);
+			if (!isNaN(max)) {
+				filtered = filtered.filter((r) => r.purchaseArs <= max);
+			}
+		}
+
+		// Filter by deliveries amount range
+		if (deliveriesMin !== '') {
+			const min = parseArsToNumber(deliveriesMin);
+			if (!isNaN(min)) {
+				filtered = filtered.filter((r) => r.deliveriesArs >= min);
+			}
+		}
+		if (deliveriesMax !== '') {
+			const max = parseArsToNumber(deliveriesMax);
+			if (!isNaN(max)) {
+				filtered = filtered.filter((r) => r.deliveriesArs <= max);
+			}
+		}
+
+		// Filter by balance amount range
+		if (balanceAmountMin !== '') {
+			const min = parseArsToNumber(balanceAmountMin);
+			if (!isNaN(min)) {
+				filtered = filtered.filter((r) => r.balanceAmountArs >= min);
+			}
+		}
+		if (balanceAmountMax !== '') {
+			const max = parseArsToNumber(balanceAmountMax);
+			if (!isNaN(max)) {
+				filtered = filtered.filter((r) => r.balanceAmountArs <= max);
+			}
+		}
+
+		// Filter by USD contract amount range
+		if (usdContractMin !== '') {
+			const min = parseArsToNumber(usdContractMin);
+			if (!isNaN(min)) {
+				filtered = filtered.filter((r) => r.usdContractRef >= min);
+			}
+		}
+		if (usdContractMax !== '') {
+			const max = parseArsToNumber(usdContractMax);
+			if (!isNaN(max)) {
+				filtered = filtered.filter((r) => r.usdContractRef <= max);
+			}
+		}
+
+		// Filter by USD current amount range
+		if (usdCurrentMin !== '') {
+			const min = parseArsToNumber(usdCurrentMin);
+			if (!isNaN(min)) {
+				filtered = filtered.filter((r) => r.usdCurrentToCancel !== null && r.usdCurrentToCancel >= min);
+			}
+		}
+		if (usdCurrentMax !== '') {
+			const max = parseArsToNumber(usdCurrentMax);
+			if (!isNaN(max)) {
+				filtered = filtered.filter((r) => r.usdCurrentToCancel !== null && r.usdCurrentToCancel <= max);
+			}
+		}
+
+		// Filter by balance in use USD range
+		if (balanceInUseMin !== '') {
+			const min = parseArsToNumber(balanceInUseMin);
+			if (!isNaN(min)) {
+				filtered = filtered.filter((r) => r.balanceInUseUsd >= min);
+			}
+		}
+		if (balanceInUseMax !== '') {
+			const max = parseArsToNumber(balanceInUseMax);
+			if (!isNaN(max)) {
+				filtered = filtered.filter((r) => r.balanceInUseUsd <= max);
+			}
+		}
+
+		// Filter by text
 		const s = searchTerm.trim().toLowerCase();
 		if (s) {
 			filtered = filtered.filter((r) => {
@@ -195,7 +287,25 @@ export function BalancesReport() {
 			if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
 			return 0;
 		});
-	}, [rows, searchTerm, sortField, sortDirection, balanceTypeFilter]);
+	}, [
+			rows,
+			searchTerm,
+			sortField,
+			sortDirection,
+			balanceTypeFilter,
+			purchaseMin,
+			purchaseMax,
+			deliveriesMin,
+			deliveriesMax,
+			balanceAmountMin,
+			balanceAmountMax,
+			usdContractMin,
+			usdContractMax,
+			usdCurrentMin,
+			usdCurrentMax,
+			balanceInUseMin,
+			balanceInUseMax,
+		]);
 
 	const handleSort = (field: keyof BalanceReportRow) => {
 		if (sortField === field) {
@@ -215,6 +325,61 @@ export function BalancesReport() {
 		);
 	};
 
+	const handleDownloadPDF = async () => {
+		try {
+			const { generateBalancesReportPDF } = await import('@/lib/works/balances-pdf');
+			await generateBalancesReportPDF(
+				filteredRows,
+				balanceTypeFilter,
+				purchaseMin,
+				purchaseMax,
+				deliveriesMin,
+				deliveriesMax,
+				balanceAmountMin,
+				balanceAmountMax,
+				usdContractMin,
+				usdContractMax,
+				usdCurrentMin,
+				usdCurrentMax,
+				balanceInUseMin,
+				balanceInUseMax
+			);
+		} catch (error) {
+			const message = translateError(error);
+			console.error('Error al generar PDF:', message);
+		}
+	};
+
+	const handleApplyFilters = (filters: {
+		balanceTypeFilter: string;
+		purchaseMin: string;
+		purchaseMax: string;
+		deliveriesMin: string;
+		deliveriesMax: string;
+		balanceAmountMin: string;
+		balanceAmountMax: string;
+		usdContractMin: string;
+		usdContractMax: string;
+		usdCurrentMin: string;
+		usdCurrentMax: string;
+		balanceInUseMin: string;
+		balanceInUseMax: string;
+	}) => {
+		setBalanceTypeFilter(filters.balanceTypeFilter);
+		setPurchaseMin(filters.purchaseMin);
+		setPurchaseMax(filters.purchaseMax);
+		setDeliveriesMin(filters.deliveriesMin);
+		setDeliveriesMax(filters.deliveriesMax);
+		setBalanceAmountMin(filters.balanceAmountMin);
+		setBalanceAmountMax(filters.balanceAmountMax);
+		setUsdContractMin(filters.usdContractMin);
+		setUsdContractMax(filters.usdContractMax);
+		setUsdCurrentMin(filters.usdCurrentMin);
+		setUsdCurrentMax(filters.usdCurrentMax);
+		setBalanceInUseMin(filters.balanceInUseMin);
+		setBalanceInUseMax(filters.balanceInUseMax);
+	};
+
 	return (
 		<div className="space-y-6">
 			{/* Stats Cards */}
@@ -225,41 +390,48 @@ export function BalancesReport() {
 				<TabsList className="bg-card border border-border">
 					<TabsTrigger value="balances">Saldos</TabsTrigger>
 					<TabsTrigger value="budgets">Presupuestos</TabsTrigger>
-					<TabsTrigger value="clients">Clientes</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="balances" className="space-y-4">
 					{/* Controls */}
 					<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-						<Select value={balanceTypeFilter} onValueChange={setBalanceTypeFilter}>
-							<SelectTrigger className="w-full sm:w-[180px]">
-								<SelectValue placeholder="Tipo de saldo" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">Todos los tipos</SelectItem>
-								<SelectItem value={BALANCE_TYPES.DEBTOR}>Deudor</SelectItem>
-								<SelectItem value={BALANCE_TYPES.CREDITOR}>Acreedor</SelectItem>
-								<SelectItem value={BALANCE_TYPES.CANCELLED}>Cancelado</SelectItem>
-							</SelectContent>
-						</Select>
+						<div className="flex flex-col gap-3 md:flex-row md:items-center w-full">
+							<Input
+								placeholder="Buscar por cliente, obra, concepto..."
+								value={searchTerm}
+								onChange={(e) => setSearchTerm(e.target.value)}
+								className="w-full sm:w-[300px]"
+							/>
 
-						<Input
-							placeholder="Buscar por cliente, obra, concepto..."
-							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
-							className="w-full sm:w-[300px]"
-						/>
+							<Button variant="outline" onClick={() => setFilterDialogOpen(true)} className="gap-2">
+								<Filter className="h-4 w-4" />
+								Filtrar
+							</Button>
+						</div>
 					</div>
 
 					<Card className="p-0 bg-card border-border overflow-hidden">
-						<div className="p-4 border-b flex items-center justify-between">
+						<div className="p-4 border-b flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 							<div className="text-sm text-muted-foreground">
 								{loading ? 'Cargando...' : `${filteredRows.length} fila(s)`}
 							</div>
-							<Button variant="outline" onClick={() => refresh()} className="gap-2">
-								<RefreshCw className="h-4 w-4" />
-								Actualizar
-							</Button>
+							<div className="flex gap-2">
+								<Button
+									variant="outline"
+									onClick={handleDownloadPDF}
+									className="gap-2"
+									disabled={loading || filteredRows.length === 0}
+								>
+									<Download className="h-4 w-4" />
+									<span className="hidden sm:inline">Descargar PDF</span>
+									<span className="sm:hidden">PDF</span>
+								</Button>
+								<Button variant="outline" onClick={() => refresh()} className="gap-2">
+									<RefreshCw className="h-4 w-4" />
+									<span className="hidden sm:inline">Actualizar</span>
+									<span className="sm:hidden">Act.</span>
+								</Button>
+							</div>
 						</div>
 
 						{/* Desktop Table View */}
@@ -488,11 +660,28 @@ export function BalancesReport() {
 				<TabsContent value="budgets" className="space-y-4">
 					<BudgetsReport />
 				</TabsContent>
-
-				<TabsContent value="clients" className="space-y-4">
-					<ClientsReport />
-				</TabsContent>
 			</Tabs>
+
+			<BalancesFilterDialog
+				open={filterDialogOpen}
+				onOpenChange={setFilterDialogOpen}
+				filters={{
+					balanceTypeFilter,
+					purchaseMin,
+					purchaseMax,
+					deliveriesMin,
+					deliveriesMax,
+					balanceAmountMin,
+					balanceAmountMax,
+					usdContractMin,
+					usdContractMax,
+					usdCurrentMin,
+					usdCurrentMax,
+					balanceInUseMin,
+					balanceInUseMax,
+				}}
+				onApplyFilters={handleApplyFilters}
+			/>
 		</div>
 	);
 }

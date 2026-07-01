@@ -10,6 +10,7 @@ import { OverviewTab } from '@/utils/budgets/tabs/overview-tab';
 import { PerformanceTab } from '@/utils/budgets/tabs/performance-tab';
 import { SourcesAndMaterialsTab } from '@/utils/budgets/tabs/sources-and-materials-tab';
 import { ArchitectsTab } from '@/utils/budgets/tabs/architects-tab';
+import { ClientsTab } from '@/utils/budgets/tabs/clients-tab';
 import { TICKET_TYPES, DEFAULT_TICKET_TYPE } from '@/constants/budgets/tickets';
 import { formatCurrency } from '@/helpers/format-prices.tsx/formats';
 
@@ -148,6 +149,7 @@ export function BudgetManagement() {
 					<TabsTrigger value="performance" className="flex-1 min-w-[100px]">Rendimiento</TabsTrigger>
 					<TabsTrigger value="sources" className="flex-1 min-w-[100px]">Fuentes y materiales</TabsTrigger>
 					<TabsTrigger value="architects" className="flex-1 min-w-[100px]">Arquitectos</TabsTrigger>
+					<TabsTrigger value="clients" className="flex-1 min-w-[100px]">Clientes</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="overview">
@@ -186,6 +188,10 @@ export function BudgetManagement() {
 
 				<TabsContent value="architects">
 					<ArchitectsTab loading={loading} />
+				</TabsContent>
+
+				<TabsContent value="clients">
+					<ClientsTab loading={loading} />
 				</TabsContent>
 			</Tabs>
 		</div>

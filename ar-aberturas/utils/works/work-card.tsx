@@ -170,6 +170,7 @@ export function WorkCard({
 								<Button
 									variant="outline"
 									size="sm"
+									disabled={true}
 									onClick={() => onOpenEmail(work)}
 									title="Enviar notificación por email"
 								>

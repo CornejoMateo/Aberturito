@@ -1,117 +1,141 @@
-# Aberturito
+# Aberturito — AR Aberturas
 
-A modern web application built with Next.js, featuring a responsive UI and robust backend integration.
+Full-stack management system for **AR Aberturas**, an aluminum and PVC window, door, and ironwork manufacturing and installation company. Covers inventory, clients, budgets, work orders, claims, and more.
 
-## 🚀 Features
+## Features
 
-- **Modern UI**: Built with Radix UI primitives for accessible, customizable components
-- **Full-Stack**: Utilizes Next.js for server-side rendering and API routes
-- **Authentication**: Secure user authentication with Supabase
-- **Media Management**: Cloudinary integration for efficient image handling
-- **Type Safety**: Written in TypeScript for better developer experience
-- **Responsive Design**: Works seamlessly across all device sizes
+- **Inventory Management** — Profiles (Aluminum/PVC), accessories, ironworks, and supplies with pricing, low-stock thresholds, and PDF export
+- **Client CRM** — Contact details, on-site surveys, budgets, and associated work orders
+- **Surveys** — On-site measurements with categorized items and progress tracking
+- **Budgets** — Quotations in ARS and USD with exchange rate calculation and folder grouping
+- **Work Orders** — Job tracking with checklists, balances, notes, and files
+- **Claims & Daily Log** — Issue tracking, adjustments, and daily records
+- **Calendar** — Events with reminders and automated email notifications
+- **Reports** — Budget reports, client balances, and sales metrics
+- **Image Gallery** — Ability to save files associated with each customer, as well as store images for each item in stock
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-- **Frontend**: Next.js 13+ (App Router)
-- **Styling**: Tailwind CSS with CSS Modules
-- **UI Components**: Radix UI Primitives
-- **Backend**: Supabase (Database, Storage)
-- **Media**: Cloudinary
-- **Form Handling**: React Hook Form with Zod validation
-- **Testing**: Jest and React Testing Library
-- **Linting & Formatting**: ESLint, Prettier
+| Layer              | Technology                                                  |
+| ------------------ | ----------------------------------------------------------- |
+| **Framework**      | Next.js 16 (App Router)                                     |
+| **Language**       | TypeScript                                                  |
+| **UI**             | React 19, Tailwind CSS v4, shadcn/ui                        |
+| **Icons**          | Lucide React                                                |
+| **Fonts**          | Geist                                                       |
+| **Database**       | Supabase (PostgreSQL)                                       |
+| **Authentication** | Custom (users/roles table in Supabase + localStorage)       |
+| **Storage**        | Supabase Storage (images, files)                            |
+| **PDF**            | jsPDF + jspdf-autotable                                     |
+| **Forms**          | React Hook Form + Zod                                       |
+| **Dates**          | date-fns                                                    |
+| **Charts**         | Recharts                                                    |
+| **Email**          | Nodemailer (SMTP) + Resend                                  |
+| **Theme**          | next-themes (light/dark)                                    |
+| **Testing**        | Jest + React Testing Library                                |
+| **PWA**            | Web app manifest                                            |
+| **CI/CD**          | GitHub Actions + Supabase Edge Functions (automatic emails) |
 
-## 📦 Prerequisites
+## Prerequisites
 
-- Node.js 18+ and npm/yarn
-- Supabase account and project
-- Cloudinary account (for media handling)
+- Node.js 18+
+- Supabase project
+- Resend account or SMTP configuration (for emails)
 
-## 🚀 Getting Started
+## Getting Started
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-username/ar-aberturas.git
-   cd ar-aberturas/ar-aberturas
-   ```
+```bash
+git clone https://github.com/your-username/ar-aberturas.git
+cd ar-aberturas/ar-aberturas
+npm install
+```
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   # or
-   yarn
-   ```
+Create `.env.development` or `.env.local`:
 
-3. **Set up environment variables**
-   Create a `.env.local` file in the root directory and add the following:
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-   ```
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
 
-4. **Run the development server**
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   ```
+Start the dev server:
 
-   Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```bash
+npm run dev
+# → http://localhost:3000
+```
 
-## 🧪 Testing
+## Scripts
 
-Run the test suite with:
+| Command                 | Description          |
+| ----------------------- | -------------------- |
+| `npm run dev`           | Development server   |
+| `npm run build`         | Production build     |
+| `npm start`             | Production server    |
+| `npm run lint`          | Lint check           |
+| `npm test`              | Run tests            |
+| `npm run test:watch`    | Tests in watch mode  |
+| `npm run test:coverage` | Tests with coverage  |
+| `npm run send:emails`   | Send emails manually |
+
+## Testing
+
 ```bash
 npm test
-# or
-yarn test
-
-# For test coverage
 npm run test:coverage
 ```
 
-## 🏗️ Building for Production
-
-```bash
-npm run build
-# or
-yarn build
-
-# Start production server
-npm start
-# or
-yarn start
-```
-
-## 📂 Project Structure
+## Project Structure
 
 ```
 ar-aberturas/
-├── app/                # App router pages and layouts
-├── components/         # Reusable UI components
-├── constants/          # Application constants
-├── hooks/              # Custom React hooks
-├── lib/                # Utility functions and configurations
-├── public/             # Static assets
-├── scripts/            # Build and utility scripts
-├── styles/             # Global styles and CSS modules
-└── utils/              # Utility functions and helpers
+├── app/                    # Pages and layouts (App Router)
+│   ├── login/
+│   ├── stock/{aluminio,pvc}/
+│   ├── accessories/{aluminio,pvc}/
+│   ├── ironworks/{aluminio,pvc}/
+│   ├── supplies/
+│   ├── clients/
+│   ├── survey/
+│   ├── budgets/
+│   ├── works/
+│   ├── claims/
+│   ├── calendar/
+│   ├── reports/
+│   └── api/                # API routes
+├── components/             # React components
+│   ├── ui/                 # shadcn/ui primitives
+│   ├── layout/
+│   ├── provider/
+│   └── business/           # Business logic components
+├── hooks/                  # Custom React hooks
+├── lib/                    # Data access and business logic
+│   ├── supabase-client.ts
+│   ├── users/
+│   ├── clients/
+│   ├── budgets/
+│   ├── stock/
+│   ├── works/
+│   ├── survey/
+│   ├── claims/
+│   └── calendar/
+├── helpers/                # Utility functions
+├── utils/                  # UI sub-components
+├── constants/
+├── __tests__/
+├── supabase/
+│   ├── functions/          # Edge Functions (Deno)
+│   └── config.toml
+├── public/                 # Static assets
+├── styles/globals.css
+├── supabase-schema.sql
+└── .env.development / .env.production
 ```
 
-## 🤝 Contributing
+## License
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Apache 2.0 — see [LICENSE](LICENSE).
 
 ---
 
-Built with ❤️ by DLAY
+Built by [DLAY](https://dlay.com.ar)

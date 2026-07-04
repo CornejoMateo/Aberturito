@@ -42,7 +42,7 @@ import { BalanceInformation } from './balance-information';
 import { NotesInput } from '@/components/ui/notes-input';
 import { translateError } from '@/lib/error-translator';
 import { formatCreatedAt } from '@/helpers/date/format-date';
-import { formatFileSize, IMAGE_EXTENSIONS, isImage } from '@/utils/file-upload-utils';
+import { formatFileSize } from '@/utils/file-upload-utils';
 import { getSupabaseClient } from '@/lib/supabase-client';
 import { deleteClientFile } from '@/lib/clients/files';
 import { FileViewerModal } from '@/components/ui/file-viewer-modal';
@@ -64,7 +64,7 @@ export function BalanceDetailsModal({
 }: BalanceDetailsModalProps) {
 	const [transactions, setTransactions] = useState<BalanceTransaction[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
-	const [isAddingTransaction, setIsAddingTransaction] = useState(false);
+	const [addingMode, setAddingMode] = useState<'transaction' | 'extra' | null>(null);
 	const [transactionToDelete, setTransactionToDelete] = useState<BalanceTransaction | null>(null);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [isEditingNotes, setIsEditingNotes] = useState(false);
@@ -103,6 +103,14 @@ export function BalanceDetailsModal({
 
 			if (error) {
 				console.error('Error al cargar transacciones:', error);
+				toast({
+					variant: 'destructive',
+					title: 'Error al cargar transacciones',
+					description:
+						translateError(error) ||
+						'Hubo un problema al cargar las transacciones. Intente nuevamente.',
+				});
+				setTransactions([]);
 				return;
 			}
 
@@ -174,6 +182,59 @@ export function BalanceDetailsModal({
 		}
 	};
 
+	const handleAddExtraAmount = async () => {
+		if (!balance || !transactionAmount || isSavingTransaction) return;
+
+		setIsSavingTransaction(true);
+
+		try {
+			const { data, error } = await createTransaction({
+				balance_id: balance.id,
+				date: format(transactionDate, 'yyyy-MM-dd'),
+				amount: parseArsToNumber(transactionAmount),
+				payment_method: paymentMethod || null,
+				notes: notes || null,
+				quote_usd: quoteUsd ? parseFloat(quoteUsd) : null,
+				usd_amount: usdAmount ? parseFloat(usdAmount) : null,
+				is_extra_amount: true,
+			});
+
+			if (error) {
+				setIsSavingTransaction(false);
+				const err = translateError(error);
+				toast({
+					variant: 'destructive',
+					title: 'Error al crear monto extra',
+					description: err || 'Hubo un problema al crear el monto extra. Intente nuevamente.',
+				});
+				return;
+			}
+
+			// Upload files if selected
+			if (data && transactionFilesToUpload.length > 0) {
+				await uploadFilesForTransaction(data.id);
+			}
+
+			toast({
+				title: 'Monto extra creado',
+				description: 'El monto extra se ha creado exitosamente.',
+			});
+
+			resetTransactionForm();
+			await loadTransactions();
+			onTransactionCreated?.();
+		} catch (error) {
+			const err = translateError(error);
+			toast({
+				variant: 'destructive',
+				title: 'Error inesperado',
+				description: err || 'Ocurrió un error inesperado. Intente nuevamente.',
+			});
+		} finally {
+			setIsSavingTransaction(false);
+		}
+	};
+
 	const handleDeleteTransaction = async () => {
 		if (!transactionToDelete) return;
 
@@ -228,8 +289,6 @@ export function BalanceDetailsModal({
 			return;
 		}
 
-		let hasError = false;
-
 		for (const file of transactionFilesToUpload) {
 			try {
 				console.log('[uploadFilesForTransaction] procesando archivo:', file.name);
@@ -278,7 +337,7 @@ export function BalanceDetailsModal({
 		setQuoteUsd(transaction.quote_usd ? String(transaction.quote_usd) : '');
 		setUsdAmount(transaction.usd_amount ? String(transaction.usd_amount) : '');
 		setTransactionFilesToUpload([]);
-		setIsAddingTransaction(true);
+		setAddingMode(transaction.is_extra_amount ? 'extra' : 'transaction');
 	};
 
 	const handleUpdateTransaction = async () => {
@@ -294,6 +353,7 @@ export function BalanceDetailsModal({
 				notes: notes || null,
 				quote_usd: quoteUsd ? parseFloat(quoteUsd) : null,
 				usd_amount: usdAmount ? parseFloat(usdAmount) : null,
+				is_extra_amount: addingMode === 'extra',
 			});
 
 			if (error) {
@@ -348,7 +408,7 @@ export function BalanceDetailsModal({
 		setQuoteUsd('');
 		setUsdAmount('');
 		setTransactionFilesToUpload([]);
-		setIsAddingTransaction(false);
+		setAddingMode(null);
 	};
 
 	const handleDeleteTransactionFile = async () => {
@@ -498,8 +558,18 @@ export function BalanceDetailsModal({
 		}
 	};
 
-	const totalPaid = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-	const totalPaidUSD = transactions.reduce((sum, t) => sum + (Number(t.usd_amount) || 0), 0);
+	const totalPaid = transactions
+		.filter((t) => !t.is_extra_amount)
+		.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+	const totalPaidUSD = transactions
+		.filter((t) => !t.is_extra_amount)
+		.reduce((sum, t) => sum + (Number(t.usd_amount) || 0), 0);
+	const totalExtraArs = transactions
+		.filter((t) => t.is_extra_amount)
+		.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+	const totalExtraUsd = transactions
+		.filter((t) => t.is_extra_amount)
+		.reduce((sum, t) => sum + (Number(t.usd_amount) || 0), 0);
 	const summary = calculateBalanceSummary({
 		budgetAmountArs: balance?.balance_amount_ars,
 		budgetAmountUsd: balance?.balance_amount_usd,
@@ -508,6 +578,8 @@ export function BalanceDetailsModal({
 		usdCurrent: balance?.usd_current,
 		totalPaidArs: totalPaid,
 		totalPaidUsd: totalPaidUSD,
+		totalExtraArs,
+		totalExtraUsd,
 	});
 	const work = balance?.budget?.folder_budget?.work;
 
@@ -545,7 +617,10 @@ export function BalanceDetailsModal({
 							usdCurrent={balance.usd_current}
 							totalPaid={totalPaid}
 							totalPaidUsd={totalPaidUSD}
+							totalExtraArs={totalExtraArs}
+							totalExtraUsd={totalExtraUsd}
 							summary={summary}
+							budget={balance.budget}
 							formatDate={formatCreatedAt}
 						/>
 
@@ -605,7 +680,7 @@ export function BalanceDetailsModal({
 						</div>
 
 						<AddTransactionSection
-							isAddingTransaction={isAddingTransaction}
+							addingMode={addingMode}
 							transactionDate={transactionDate}
 							onTransactionDateChange={setTransactionDate}
 							transactionAmount={transactionAmount}
@@ -619,8 +694,15 @@ export function BalanceDetailsModal({
 							paymentMethod={paymentMethod}
 							onPaymentMethodChange={setPaymentMethod}
 							onCancel={resetTransactionForm}
-							onSave={editingTransaction ? handleUpdateTransaction : handleAddTransaction}
-							onStartAdd={() => setIsAddingTransaction(true)}
+							onSave={
+								editingTransaction
+									? handleUpdateTransaction
+									: addingMode === 'extra'
+										? handleAddExtraAmount
+										: handleAddTransaction
+							}
+							onStartAddTransaction={() => setAddingMode('transaction')}
+							onStartAddExtra={() => setAddingMode('extra')}
 							saveDisabled={!transactionAmount || isSavingTransaction}
 							editingTransaction={editingTransaction ?? undefined}
 							selectedFiles={transactionFilesToUpload}

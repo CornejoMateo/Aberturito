@@ -4,6 +4,8 @@ interface BalanceCalculationInput {
 	usdCurrent?: number | null;
 	totalPaidArs?: number | null;
 	totalPaidUsd?: number | null;
+	totalExtraArs?: number | null;
+	totalExtraUsd?: number | null;
 	budgetInitialArs?: number | null;
 	budgetInitialUsd?: number | null;
 }
@@ -15,6 +17,8 @@ export interface BalanceSummary {
 	budgetArsCurrent: number;
 	totalPaidArs: number;
 	totalPaidUsd: number;
+	totalExtraArs: number;
+	totalExtraUsd: number;
 	remainingArs: number;
 	remainingUsd: number;
 	progressPercentage: number;
@@ -30,10 +34,15 @@ export function calculateBalanceSummary(input: BalanceCalculationInput): Balance
 	const budgetArsCurrent = toSafeNumber(input.budgetAmountArs);
 	const totalPaidArs = toSafeNumber(input.totalPaidArs);
 	const totalPaidUsd = toSafeNumber(input.totalPaidUsd);
+	const totalExtraArs = toSafeNumber(input.totalExtraArs);
+	const totalExtraUsd = toSafeNumber(input.totalExtraUsd);
 
-	const remainingUsd = budgetUsd - totalPaidUsd;
-	const remainingArs = budgetArsCurrent - totalPaidArs;
-	const progressBase = budgetArsCurrent > 0 ? budgetArsCurrent : budgetArsInitial;
+	const effectiveBudgetArs = budgetArsCurrent + totalExtraArs;
+	const effectiveBudgetUsd = budgetUsd + totalExtraUsd;
+
+	const remainingUsd = effectiveBudgetUsd - totalPaidUsd;
+	const remainingArs = effectiveBudgetArs - totalPaidArs;
+	const progressBase = effectiveBudgetArs > 0 ? effectiveBudgetArs : budgetArsInitial;
 	const progressPercentage =
 		progressBase > 0 ? Math.min(Math.round((totalPaidArs / progressBase) * 100), 100) : 0;
 
@@ -44,6 +53,8 @@ export function calculateBalanceSummary(input: BalanceCalculationInput): Balance
 		budgetArsCurrent,
 		totalPaidArs,
 		totalPaidUsd,
+		totalExtraArs,
+		totalExtraUsd,
 		remainingArs,
 		remainingUsd,
 		progressPercentage,

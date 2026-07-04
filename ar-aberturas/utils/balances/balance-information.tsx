@@ -25,6 +25,15 @@ const formatUsdValue = (amount?: number | null) => {
 	}).format(amount);
 };
 
+interface BudgetDetail {
+	id: number;
+	created_at: string;
+	number?: string | null;
+	type?: string | null;
+	version?: string | null;
+	usd_quote?: number | null;
+}
+
 interface BalanceInformationProps {
 	balanceId: number;
 
@@ -39,8 +48,12 @@ interface BalanceInformationProps {
 
 	totalPaid: number;
 	totalPaidUsd: number;
+	totalExtraArs: number;
+	totalExtraUsd: number;
 
 	summary: BalanceSummary;
+
+	budget?: BudgetDetail | null;
 
 	formatDate: (dateStr: string | null | undefined) => string;
 }
@@ -53,7 +66,10 @@ export function BalanceInformation({
 	usdCurrent,
 	totalPaid,
 	totalPaidUsd,
+	totalExtraArs,
+	totalExtraUsd,
 	summary,
+	budget,
 	formatDate,
 }: BalanceInformationProps) {
 	const [open, setOpen] = useState(false);
@@ -151,15 +167,17 @@ export function BalanceInformation({
 				<div>
 					<p className="text-xs text-muted-foreground mb-1">Presupuesto contratado</p>
 
-					<div className="flex flex-col">
-						<p className="text-sm font-bold text-primary">
-							{formatCurrency(summary.budgetArsInitial)}
-						</p>
+					{budget && (
+						<div className="space-y-1">
+							<p className="text-sm font-bold text-primary">
+								{budget.type
+									? `${budget.type}${budget.version ? ` - ${budget.version}` : ''}`
+									: 'Sin tipo'}
+							</p>
 
-						<p className="text-xs text-muted-foreground">
-							{formatCurrencyUSD(summary.budgetUsdInitial)}
-						</p>
-					</div>
+							<p className="text-xs text-muted-foreground">#{budget.number || 'Sin número'}</p>
+						</div>
+					)}
 				</div>
 
 				<div>
@@ -192,6 +210,18 @@ export function BalanceInformation({
 
 						{usdCurrent && (
 							<p className="text-xs text-muted-foreground">{formatCurrencyUSD(totalPaidUsd)}</p>
+						)}
+					</div>
+				</div>
+
+				<div>
+					<p className="text-xs text-muted-foreground mb-1">Montos extra</p>
+
+					<div className="flex flex-col">
+						<p className="text-sm font-bold text-blue-600">{formatCurrency(totalExtraArs)}</p>
+
+						{usdCurrent && (
+							<p className="text-xs text-muted-foreground">{formatCurrencyUSD(totalExtraUsd)}</p>
 						)}
 					</div>
 				</div>

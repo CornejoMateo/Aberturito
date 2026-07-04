@@ -17,6 +17,8 @@ describe('calculateBalanceSummary', () => {
 			budgetArsCurrent: 200000,
 			totalPaidArs: 30000,
 			totalPaidUsd: 20,
+			totalExtraArs: 0,
+			totalExtraUsd: 0,
 			remainingArs: 170000,
 			remainingUsd: 80,
 			progressPercentage: 15,
@@ -48,8 +50,6 @@ describe('calculateBalanceSummary', () => {
 		expect(result.type).toBe('Cancelado');
 	});
 
-	// usdCurrent no longer afecta el cálculo directo de budgetArsCurrent
-
 	it('handles null and undefined values as zero safely', () => {
 		const result = calculateBalanceSummary({
 			budgetAmountArs: null,
@@ -66,6 +66,8 @@ describe('calculateBalanceSummary', () => {
 			budgetArsCurrent: 0,
 			totalPaidArs: 0,
 			totalPaidUsd: 0,
+			totalExtraArs: 0,
+			totalExtraUsd: 0,
 			remainingArs: 0,
 			remainingUsd: 0,
 			progressPercentage: 0,

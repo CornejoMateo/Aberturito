@@ -166,6 +166,11 @@ export function WorksOpenings() {
 			/>
 
 			{/* Installations list */}
+			{loading && !works.length ? (
+				<div className="flex items-center justify-center h-64">
+					<p className="text-muted-foreground">Cargando obras...</p>
+				</div>
+			) : (
 			<div className="space-y-4">
 				{paginatedData.map((installation) => {
 					return (
@@ -181,6 +186,7 @@ export function WorksOpenings() {
 					);
 				})}
 			</div>
+			)}
 
 			{/* Pagination */}
 			{totalPages > 1 && (

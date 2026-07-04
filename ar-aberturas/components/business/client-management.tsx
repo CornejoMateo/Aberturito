@@ -282,6 +282,11 @@ export function ClientManagement() {
 					</Card>
 
 					{/* Clients grid */}
+					{loading && !clients.length ? (
+						<div className="flex items-center justify-center h-64">
+							<p className="text-muted-foreground">Cargando clientes...</p>
+						</div>
+					) : (
 					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 						{currentItems.map((client) => (
 							<Card
@@ -391,8 +396,7 @@ export function ClientManagement() {
 							</Card>
 						))}
 					</div>
-
-					{/* Pagination controls */}
+					)}
 					{filteredClients.length > itemsPerPage && (
 						<div className="flex items-center justify-between px-2 mt-6">
 							<div className="text-sm text-muted-foreground">

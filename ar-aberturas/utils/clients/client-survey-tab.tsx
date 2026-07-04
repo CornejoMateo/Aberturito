@@ -169,6 +169,14 @@ export function ClientSurveyTab({ client }: ClientSurveyTabProps) {
 		}
 	};
 
+	if (isLoading) {
+		return (
+			<div className="flex items-center justify-center h-64">
+				<p className="text-muted-foreground">Cargando relevamientos...</p>
+			</div>
+		);
+	}
+
 	if (!soldBudgets.length) {
 		return (
 			<Card className="p-6">

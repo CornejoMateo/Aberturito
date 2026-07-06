@@ -195,10 +195,12 @@ export function BalanceInformation({
 
 					<div className="flex flex-col">
 						<p className="text-sm font-bold text-primary">
-							{formatCurrency(summary.budgetArsCurrent)}
+							{formatCurrency(summary.budgetArsCurrent + summary.totalExtraArs)}
 						</p>
 
-						<p className="text-xs text-muted-foreground">{formatCurrencyUSD(summary.budgetUsd)}</p>
+						<p className="text-xs text-muted-foreground">
+							{formatCurrencyUSD(summary.budgetUsd + summary.totalExtraUsd)}
+						</p>
 					</div>
 				</div>
 

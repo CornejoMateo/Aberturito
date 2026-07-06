@@ -42,6 +42,8 @@ export interface BalanceWithTotals extends BalanceWithBudget {
 	remaining?: number;
 	totalPaidUSD?: number;
 	remainingUSD?: number;
+	totalExtraArs?: number;
+	totalExtraUsd?: number;
 }
 
 export function ClientBalances({
@@ -119,6 +121,8 @@ export function ClientBalances({
 						totalPaidUSD,
 						remaining: summary.remainingArs,
 						remainingUSD: summary.remainingUsd,
+						totalExtraArs,
+						totalExtraUsd,
 					};
 				})
 			);
@@ -198,6 +202,8 @@ export function ClientBalances({
 							usdCurrent: balance.usd_current,
 							totalPaidArs: balance.totalPaid,
 							totalPaidUsd: balance.totalPaidUSD,
+							totalExtraArs: balance.totalExtraArs,
+							totalExtraUsd: balance.totalExtraUsd,
 						});
 
 						return (

@@ -58,9 +58,7 @@ export function BalanceCard({
 					<div className="flex-1 min-w-0">
 						<div className="flex items-center gap-2 mb-3">
 							<DollarSign className="h-4 w-4 text-primary flex-shrink-0" />
-							<span className="font-semibold text-sm">
-								{summary.type}
-							</span>
+							<span className="font-semibold text-sm">{summary.type}</span>
 							{balance.notes && balance.notes.length > 0 && (
 								<div title="Tiene notas">
 									<StickyNote className="h-3.5 w-3.5 text-yellow-600" />
@@ -70,9 +68,7 @@ export function BalanceCard({
 						<div className="text-sm">
 							{balance.budget?.folder_budget?.work ? (
 								<div>
-									<p className="font-medium">
-										{balance.budget.folder_budget.work.locality}
-									</p>
+									<p className="font-medium">{balance.budget.folder_budget.work.locality}</p>
 									<p className="text-muted-foreground text-xs">
 										{balance.budget.folder_budget.work.address}
 									</p>
@@ -91,11 +87,11 @@ export function BalanceCard({
 								</p>
 								<div className="flex flex-col">
 									<p className="text-xs sm:text-sm font-bold text-primary truncate">
-										{formatCurrency(summary.budgetArsCurrent)}
+										{formatCurrency(summary.budgetArsCurrent + summary.totalExtraArs)}
 									</p>
 									{summary.budgetUsd > 0 && (
 										<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
-											{formatCurrencyUSD(summary.budgetUsd)}
+											{formatCurrencyUSD(summary.budgetUsd + summary.totalExtraUsd)}
 										</p>
 									)}
 								</div>
@@ -116,9 +112,7 @@ export function BalanceCard({
 								</div>
 							</div>
 							<div className="flex flex-col">
-								<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">
-									Saldo
-								</p>
+								<p className="text-[10px] sm:text-xs text-muted-foreground mb-1 truncate">Saldo</p>
 								<div className="flex flex-col">
 									<p className="text-xs sm:text-sm font-bold text-orange-600 truncate">
 										{formatCurrency(summary.remainingArs)}

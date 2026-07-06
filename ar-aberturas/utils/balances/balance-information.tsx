@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pencil } from 'lucide-react';
+import { Info, Pencil } from 'lucide-react';
 import { formatCurrency, formatCurrencyUSD } from '../../helpers/format-prices.tsx/formats';
 import { BalanceSummary } from '../../helpers/balances/balance-calculations';
 import {
@@ -20,10 +20,19 @@ import { translateError } from '@/lib/error-translator';
 const formatUsdValue = (amount?: number | null) => {
 	if (amount === null || amount === undefined) return '';
 	return new Intl.NumberFormat('es-AR', {
-		minimumFractionDigits: 3,
+		minimumFractionDigits: 0,
 		maximumFractionDigits: 3,
 	}).format(amount);
 };
+
+interface BudgetDetail {
+	id: number;
+	created_at: string;
+	number?: string | null;
+	type?: string | null;
+	version?: string | null;
+	usd_quote?: number | null;
+}
 
 interface BalanceInformationProps {
 	balanceId: number;
@@ -39,8 +48,12 @@ interface BalanceInformationProps {
 
 	totalPaid: number;
 	totalPaidUsd: number;
+	totalExtraArs: number;
+	totalExtraUsd: number;
 
 	summary: BalanceSummary;
+
+	budget?: BudgetDetail | null;
 
 	formatDate: (dateStr: string | null | undefined) => string;
 }
@@ -53,23 +66,21 @@ export function BalanceInformation({
 	usdCurrent,
 	totalPaid,
 	totalPaidUsd,
+	totalExtraArs,
+	totalExtraUsd,
 	summary,
+	budget,
 	formatDate,
 }: BalanceInformationProps) {
 	const [open, setOpen] = useState(false);
 
-	const [arsValue, setArsValue] = useState(summary.budgetArsCurrent.toString() || '');
+	const [arsValue, setArsValue] = useState(
+		formatNumber(summary.budgetArsCurrent.toLocaleString('es-AR')) || ''
+	);
 
-	const [usdValue, setUsdValue] = useState(formatUsdValue(summary.budgetUsd));
+	const [usdValue, setUsdValue] = useState(summary.budgetUsd?.toString() || '');
 
 	const [loading, setLoading] = useState(false);
-
-	useEffect(() => {
-		if (!open) return;
-
-		setArsValue(formatCurrency(summary.budgetArsCurrent) || '');
-		setUsdValue(formatUsdValue(summary.budgetUsd));
-	}, [open, summary.budgetArsCurrent, summary.budgetUsd]);
 
 	const handleSave = async () => {
 		try {
@@ -77,7 +88,7 @@ export function BalanceInformation({
 
 			const { error } = await updateBalance(balanceId, {
 				balance_amount_ars: arsValue ? parseArsToNumber(arsValue) : null,
-				balance_amount_usd: usdValue ? parseArsToNumber(usdValue) : null,
+				balance_amount_usd: usdValue ? Number(usdValue) : null,
 			});
 
 			if (error) {
@@ -151,15 +162,17 @@ export function BalanceInformation({
 				<div>
 					<p className="text-xs text-muted-foreground mb-1">Presupuesto contratado</p>
 
-					<div className="flex flex-col">
-						<p className="text-sm font-bold text-primary">
-							{formatCurrency(summary.budgetArsInitial)}
-						</p>
+					{budget && (
+						<div className="space-y-1">
+							<p className="text-sm font-bold text-primary">
+								{budget.type
+									? `${budget.type}${budget.version ? ` - ${budget.version}` : ''}`
+									: 'Sin tipo'}
+							</p>
 
-						<p className="text-xs text-muted-foreground">
-							{formatCurrencyUSD(summary.budgetUsdInitial)}
-						</p>
-					</div>
+							<p className="text-xs text-muted-foreground">#{budget.number || 'Sin número'}</p>
+						</div>
+					)}
 				</div>
 
 				<div>
@@ -177,10 +190,12 @@ export function BalanceInformation({
 
 					<div className="flex flex-col">
 						<p className="text-sm font-bold text-primary">
-							{formatCurrency(summary.budgetArsCurrent)}
+							{formatCurrency(summary.effectiveBudgetArs)}
 						</p>
 
-						<p className="text-xs text-muted-foreground">{formatCurrencyUSD(summary.budgetUsd)}</p>
+						<p className="text-xs text-muted-foreground">
+							{formatCurrencyUSD(summary.effectiveBudgetUsd)}
+						</p>
 					</div>
 				</div>
 
@@ -192,6 +207,18 @@ export function BalanceInformation({
 
 						{usdCurrent && (
 							<p className="text-xs text-muted-foreground">{formatCurrencyUSD(totalPaidUsd)}</p>
+						)}
+					</div>
+				</div>
+
+				<div>
+					<p className="text-xs text-muted-foreground mb-1">Montos extra</p>
+
+					<div className="flex flex-col">
+						<p className="text-sm font-bold text-violet-600">{formatCurrency(totalExtraArs)}</p>
+
+						{usdCurrent && (
+							<p className="text-xs text-muted-foreground">{formatCurrencyUSD(totalExtraUsd)}</p>
 						)}
 					</div>
 				</div>
@@ -223,9 +250,12 @@ export function BalanceInformation({
 
 							<Input
 								type="text"
-								inputMode="decimal"
+								inputMode="numeric"
 								value={arsValue}
-								onChange={(e) => setArsValue(formatNumber(e.target.value))}
+								onChange={(e) => {
+									const formatted = formatNumber(e.target.value);
+									setArsValue(formatted);
+								}}
 								placeholder="Ingrese monto en ARS"
 							/>
 						</div>
@@ -234,12 +264,19 @@ export function BalanceInformation({
 							<label className="text-sm font-medium">Monto en USD</label>
 
 							<Input
-								type="text"
-								inputMode="decimal"
+								type="number"
 								value={usdValue}
-								onChange={(e) => setUsdValue(formatNumber(e.target.value))}
-								placeholder="100.000,800"
+								onChange={(e) => setUsdValue(e.target.value)}
+								placeholder="Ingrese monto en USD"
 							/>
+
+							<div className="flex items-start gap-1.5 col-span-2">
+								<Info className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+
+								<p className="text-xs text-muted-foreground">
+									El formato USD usa punto en vez de coma para los decimales (ej: 1500.50)
+								</p>
+							</div>
 						</div>
 					</div>
 

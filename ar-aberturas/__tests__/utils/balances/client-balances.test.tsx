@@ -322,7 +322,7 @@ describe('ClientBalances', () => {
 			expect(mockUseOptimizedRealtime).toHaveBeenCalledWith(
 				'balances',
 				expect.any(Function),
-				'balances_client-1'
+				'balances_1'
 			);
 		});
 

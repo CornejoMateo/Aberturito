@@ -17,14 +17,15 @@ describe('AddTransactionSection', () => {
 	const mockOnPaymentMethodChange = jest.fn();
 	const mockOnCancel = jest.fn();
 	const mockOnSave = jest.fn();
-	const mockOnStartAdd = jest.fn();
+	const mockOnStartAddTransaction = jest.fn();
+	const mockOnStartAddExtra = jest.fn();
 	const mockOnFilesSelect = jest.fn();
 	const mockOnRemoveFile = jest.fn();
 
 	const defaultDate = new Date('2024-03-20');
 
 	const defaultProps = {
-		isAddingTransaction: false,
+		addingMode: null as 'transaction' | 'extra' | null,
 		transactionDate: defaultDate,
 		onTransactionDateChange: mockOnTransactionDateChange,
 		transactionAmount: '',
@@ -39,7 +40,8 @@ describe('AddTransactionSection', () => {
 		onPaymentMethodChange: mockOnPaymentMethodChange,
 		onCancel: mockOnCancel,
 		onSave: mockOnSave,
-		onStartAdd: mockOnStartAdd,
+		onStartAddTransaction: mockOnStartAddTransaction,
+		onStartAddExtra: mockOnStartAddExtra,
 		saveDisabled: false,
 		selectedFiles: [],
 		onFilesSelect: mockOnFilesSelect,
@@ -51,46 +53,58 @@ describe('AddTransactionSection', () => {
 	});
 
 	describe('Collapsed View', () => {
-		it('should render add transaction button when not adding', () => {
+		it('should render add transaction buttons when not adding', () => {
 			render(<AddTransactionSection {...defaultProps} />);
 
-			const button = screen.getByRole('button', { name: /Agregar transacción/i });
-			expect(button).toBeInTheDocument();
+			const transactionButton = screen.getByRole('button', { name: /Agregar transacción/i });
+			const extraButton = screen.getByRole('button', { name: /Agregar monto extra/i });
+			expect(transactionButton).toBeInTheDocument();
+			expect(extraButton).toBeInTheDocument();
 		});
 
-		it('should call onStartAdd when button is clicked', async () => {
+		it('should call onStartAddTransaction when transaction button is clicked', async () => {
 			const user = userEvent.setup();
 			render(<AddTransactionSection {...defaultProps} />);
 
 			const button = screen.getByRole('button', { name: /Agregar transacción/i });
 			await user.click(button);
 
-			expect(mockOnStartAdd).toHaveBeenCalled();
+			expect(mockOnStartAddTransaction).toHaveBeenCalled();
+		});
+
+		it('should call onStartAddExtra when extra button is clicked', async () => {
+			const user = userEvent.setup();
+			render(<AddTransactionSection {...defaultProps} />);
+
+			const button = screen.getByRole('button', { name: /Agregar monto extra/i });
+			await user.click(button);
+
+			expect(mockOnStartAddExtra).toHaveBeenCalled();
 		});
 
 		it('should not display form fields when not adding', () => {
 			render(<AddTransactionSection {...defaultProps} />);
 
-			expect(screen.queryByLabelText(/Fecha/i)).not.toBeInTheDocument();
-			expect(screen.queryByLabelText(/Monto en pesos/i)).not.toBeInTheDocument();
+			expect(screen.queryByText(/Monto en pesos/i)).not.toBeInTheDocument();
+			expect(screen.queryByText(/Monto en USD/i)).not.toBeInTheDocument();
 		});
 	});
 
 	describe('Expanded Form View', () => {
 		const expandedProps = {
 			...defaultProps,
-			isAddingTransaction: true,
+			addingMode: 'transaction' as const,
 		};
 
-		it('should display form when isAddingTransaction is true', () => {
+		it('should display form when addingMode is "transaction"', () => {
 			render(<AddTransactionSection {...expandedProps} />);
 
 			expect(screen.getByText('Fecha')).toBeInTheDocument();
 			expect(screen.getByRole('button', { name: format(defaultDate, 'PPP', { locale: es }) })).toBeInTheDocument();
-			expect(screen.getByLabelText(/Monto en pesos/i)).toBeInTheDocument();
-			expect(screen.getByLabelText(/Monto en USD/i)).toBeInTheDocument();
-			expect(screen.getByLabelText(/Cotización USD/i)).toBeInTheDocument();
-			expect(screen.getByLabelText(/Observaciones/i)).toBeInTheDocument();
+			expect(screen.getByText(/Monto en pesos/i)).toBeInTheDocument();
+			expect(screen.getByText(/Monto en USD/i)).toBeInTheDocument();
+			expect(screen.getByText(/Cotización USD/i)).toBeInTheDocument();
+			expect(screen.getByText(/Observaciones/i)).toBeInTheDocument();
 			expect(screen.getByRole('combobox', { name: /Método de pago/i })).toBeInTheDocument();
 		});
 
@@ -139,7 +153,7 @@ describe('AddTransactionSection', () => {
 	describe('Date Input', () => {
 		const expandedProps = {
 			...defaultProps,
-			isAddingTransaction: true,
+			addingMode: 'transaction' as const,
 		};
 
 		it('should display current date in date button', () => {
@@ -171,7 +185,7 @@ describe('AddTransactionSection', () => {
 	describe('Amount Inputs', () => {
 		const expandedProps = {
 			...defaultProps,
-			isAddingTransaction: true,
+			addingMode: 'transaction' as const,
 		};
 
 		it('should update transaction amount when input changes', async () => {
@@ -225,7 +239,7 @@ describe('AddTransactionSection', () => {
 	describe('Payment Method Selector', () => {
 		const expandedProps = {
 			...defaultProps,
-			isAddingTransaction: true,
+			addingMode: 'transaction' as const,
 		};
 
 		it('should render all payment method options', async () => {
@@ -272,7 +286,7 @@ describe('AddTransactionSection', () => {
 	describe('Notes Input', () => {
 		const expandedProps = {
 			...defaultProps,
-			isAddingTransaction: true,
+			addingMode: 'transaction' as const,
 		};
 
 		it('should update notes when input changes', async () => {
@@ -301,7 +315,7 @@ describe('AddTransactionSection', () => {
 	describe('Form Validation', () => {
 		const expandedProps = {
 			...defaultProps,
-			isAddingTransaction: true,
+			addingMode: 'transaction' as const,
 		};
 
 		it('should show disabled save button initially', () => {
@@ -333,24 +347,25 @@ describe('AddTransactionSection', () => {
 	describe('Accessibility', () => {
 		const expandedProps = {
 			...defaultProps,
-			isAddingTransaction: true,
+			addingMode: 'transaction' as const,
 		};
 
 		it('should have proper labels for all inputs', () => {
 			render(<AddTransactionSection {...expandedProps} />);
 
 			expect(screen.getByText('Fecha')).toBeInTheDocument();
-			expect(screen.getByLabelText(/Monto en pesos/i)).toBeInTheDocument();
-			expect(screen.getByLabelText(/Monto en USD/i)).toBeInTheDocument();
-			expect(screen.getByLabelText(/Cotización USD/i)).toBeInTheDocument();
-			expect(screen.getByLabelText(/Observaciones/i)).toBeInTheDocument();
+			expect(screen.getByText(/Monto en pesos/i)).toBeInTheDocument();
+			expect(screen.getByText(/Monto en USD/i)).toBeInTheDocument();
+			expect(screen.getByText(/Cotización USD/i)).toBeInTheDocument();
+			expect(screen.getByText(/Observaciones/i)).toBeInTheDocument();
 			expect(screen.getByRole('combobox', { name: /Método de pago/i })).toBeInTheDocument();
 		});
 
-		it('should have title on dollar update button', () => {
-			const { container } = render(<AddTransactionSection {...defaultProps} />);
+		it('should have add transaction buttons', () => {
+			render(<AddTransactionSection {...defaultProps} />);
 
 			expect(screen.getByRole('button', { name: /Agregar transacción/i })).toBeInTheDocument();
+			expect(screen.getByRole('button', { name: /Agregar monto extra/i })).toBeInTheDocument();
 		});
 	});
 });

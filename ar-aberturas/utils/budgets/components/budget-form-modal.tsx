@@ -112,12 +112,15 @@ export function BudgetFormModal({
 			const normalizedAmount = formData.amount
 				.replace(/\./g, '') // remove thousand separators
 				.replace(',', '.'); // decimal separator to dot for parsing
+			const normalizedQuote = formData.usd_quote
+				.replace(/\./g, '') // remove thousand separators
+				.replace(',', '.'); // decimal separator to dot for parsing
 
 			const amountNumber = Number(normalizedAmount);
-			const rateNumber = Number(formData.usd_quote);
+			const rateNumber = Number(normalizedQuote);
 
 			if (!isNaN(amountNumber) && !isNaN(rateNumber)) {
-				const calculatedUsd = (amountNumber / rateNumber).toFixed(2);
+				const calculatedUsd = (amountNumber / rateNumber).toFixed(3);
 
 				setFormData((prev) => ({
 					...prev,
@@ -251,9 +254,14 @@ export function BudgetFormModal({
 							<Input
 								type="text"
 								value={formData.usd_quote}
-								onChange={(e) =>
-									setFormData((prev: BudgetFormData) => ({ ...prev, usd_quote: e.target.value }))
-								}
+								onChange={(e) => {
+									const formatted = formatNumber(e.target.value);
+
+									setFormData((prev: BudgetFormData) => ({
+										...prev,
+										usd_quote: formatted,
+									}));
+								}}
 							/>
 						</div>
 

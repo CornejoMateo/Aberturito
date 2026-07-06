@@ -24,7 +24,7 @@ import {
 import { Plus, Search } from 'lucide-react';
 import { BalanceWithBudget, getBalancesByClientId } from '@/lib/works/balances';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
-import { getTotalByBalanceId } from '@/lib/works/balance_transactions';
+import { getTotalsByBalanceIds } from '@/lib/works/balance_transactions';
 import { BalanceDetailsModal } from './balance-details-modal';
 import { DollarUpdateModal } from '@/components/ui/dollar-update-modal';
 import { calculateBalanceSummary } from '../../helpers/balances/balance-calculations';
@@ -42,6 +42,8 @@ export interface BalanceWithTotals extends BalanceWithBudget {
 	remaining?: number;
 	totalPaidUSD?: number;
 	remainingUSD?: number;
+	totalExtraArs?: number;
+	totalExtraUsd?: number;
 }
 
 export function ClientBalances({
@@ -96,28 +98,33 @@ export function ClientBalances({
 				return;
 			}
 
-			const balancesWithTotals = await Promise.all(
-				rawBalances.map(async (balance) => {
-					const { data: totals } = await getTotalByBalanceId(balance.id);
-					const totalPaid = totals?.totalAmount || 0;
-					const totalPaidUSD = totals?.totalAmountUSD || 0;
-					const summary = calculateBalanceSummary({
-						budgetAmountArs: balance.balance_amount_ars,
-						budgetAmountUsd: balance.balance_amount_usd,
-						usdCurrent: balance.usd_current,
-						totalPaidArs: totalPaid,
-						totalPaidUsd: totalPaidUSD,
-					});
+			const { data: totalsById } = await getTotalsByBalanceIds(rawBalances.map((b) => b.id));
+			const balancesWithTotals = rawBalances.map((balance) => {
+				const totals = totalsById?.[String(balance.id)];
+				const totalPaid = totals?.totalAmount || 0;
+				const totalPaidUSD = totals?.totalAmountUSD || 0;
+				const totalExtraArs = totals?.totalExtraAmount || 0;
+				const totalExtraUsd = totals?.totalExtraAmountUSD || 0;
+				const summary = calculateBalanceSummary({
+					budgetAmountArs: balance.balance_amount_ars,
+					budgetAmountUsd: balance.balance_amount_usd,
+					usdCurrent: balance.usd_current,
+					totalPaidArs: totalPaid,
+					totalPaidUsd: totalPaidUSD,
+					totalExtraArs,
+					totalExtraUsd,
+				});
 
-					return {
-						...balance,
-						totalPaid,
-						totalPaidUSD,
-						remaining: summary.remainingArs,
-						remainingUSD: summary.remainingUsd,
-					};
-				})
-			);
+				return {
+					...balance,
+					totalPaid,
+					totalPaidUSD,
+					remaining: summary.remainingArs,
+					remainingUSD: summary.remainingUsd,
+					totalExtraArs,
+					totalExtraUsd,
+				};
+			});
 			setBalancesWithTotals(balancesWithTotals);
 		};
 
@@ -194,6 +201,8 @@ export function ClientBalances({
 							usdCurrent: balance.usd_current,
 							totalPaidArs: balance.totalPaid,
 							totalPaidUsd: balance.totalPaidUSD,
+							totalExtraArs: balance.totalExtraArs,
+							totalExtraUsd: balance.totalExtraUsd,
 						});
 
 						return (

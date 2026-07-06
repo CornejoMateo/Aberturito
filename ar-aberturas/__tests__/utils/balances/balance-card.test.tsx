@@ -37,14 +37,17 @@ describe('BalanceCard', () => {
 
 	const mockSummary: BalanceSummary = {
 		budgetArsInitial: 500000,
+		budgetUsdInitial: 0,
 		budgetUsd: 5000,
 		budgetArsCurrent: 5500000,
 		totalPaidArs: 100000,
 		totalPaidUsd: 900,
+		totalExtraArs: 0,
+		totalExtraUsd: 0,
 		remainingArs: 5400000,
 		remainingUsd: 4100,
 		progressPercentage: 2,
-		isDebtor: true,
+		type: 'Deudor',
 	};
 
 	const mockCardClick = jest.fn();
@@ -71,7 +74,7 @@ describe('BalanceCard', () => {
 			expect(screen.getByText('Test Street 123')).toBeInTheDocument();
 		});
 
-		it('should render debtor status when isDebtor is true', () => {
+		it('should render debtor status when type is Deudor', () => {
 			render(
 				<BalanceCard
 					balance={mockBalance}
@@ -85,8 +88,8 @@ describe('BalanceCard', () => {
 			expect(screen.getByText('Deudor')).toBeInTheDocument();
 		});
 
-		it('should render creditor status when isDebtor is false', () => {
-			const creditorSummary = { ...mockSummary, isDebtor: false };
+		it('should render creditor status when type is Acreedor', () => {
+			const creditorSummary = { ...mockSummary, type: 'Acreedor' };
 
 			render(
 				<BalanceCard

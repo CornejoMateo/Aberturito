@@ -59,7 +59,7 @@ describe('TransactionsTable', () => {
 			expect(screen.getByText('Observaciones')).toBeInTheDocument();
 			expect(screen.getByText('Monto pesos/USD')).toBeInTheDocument();
 			expect(screen.getByText('Cotizacion USD')).toBeInTheDocument();
-			expect(screen.getByText('Accion')).toBeInTheDocument();
+			expect(screen.getByText('Acción')).toBeInTheDocument();
 		});
 
 		it('should render loading message when isLoading is true', () => {

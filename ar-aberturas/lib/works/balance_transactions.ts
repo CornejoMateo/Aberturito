@@ -88,13 +88,38 @@ export async function deleteTransaction(id: number): Promise<{ data: null; error
 	return { data: null, error };
 }
 
+type TotalsRow = {
+	amount?: number | null;
+	usd_amount?: number | null;
+	is_extra_amount?: boolean | null;
+};
+
+type BalanceTotals = {
+	totalAmount: number;
+	totalAmountUSD: number;
+	totalExtraAmount: number;
+	totalExtraAmountUSD: number;
+};
+
+function splitTotals(rows: TotalsRow[]): BalanceTotals {
+	let totalAmount = 0;
+	let totalAmountUSD = 0;
+	let totalExtraAmount = 0;
+	let totalExtraAmountUSD = 0;
+	for (const r of rows) {
+		if (r.is_extra_amount) {
+			totalExtraAmount += Number(r.amount) || 0;
+			totalExtraAmountUSD += Number(r.usd_amount) || 0;
+		} else {
+			totalAmount += Number(r.amount) || 0;
+			totalAmountUSD += Number(r.usd_amount) || 0;
+		}
+	}
+	return { totalAmount, totalAmountUSD, totalExtraAmount, totalExtraAmountUSD };
+}
+
 export async function getTotalByBalanceId(balanceId: number): Promise<{
-	data: {
-		totalAmount: number;
-		totalAmountUSD: number;
-		totalExtraAmount: number;
-		totalExtraAmountUSD: number;
-	} | null;
+	data: BalanceTotals | null;
 	error: any;
 }> {
 	const supabase = getSupabaseClient();
@@ -107,30 +132,14 @@ export async function getTotalByBalanceId(balanceId: number): Promise<{
 		return { data: null, error };
 	}
 
-	const regular = (transactions || []).filter((t) => !t.is_extra_amount);
-	const extra = (transactions || []).filter((t) => t.is_extra_amount);
-
-	const totalAmount = regular.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-	const totalAmountUSD = regular.reduce((sum, t) => sum + (Number(t.usd_amount) || 0), 0);
-	const totalExtraAmount = extra.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-	const totalExtraAmountUSD = extra.reduce((sum, t) => sum + (Number(t.usd_amount) || 0), 0);
-
 	return {
-		data: { totalAmount, totalAmountUSD, totalExtraAmount, totalExtraAmountUSD },
+		data: splitTotals(transactions || []),
 		error: null,
 	};
 }
 
 export async function getTotalsByBalanceIds(balanceIds: number[]): Promise<{
-	data: Record<
-		string,
-		{
-			totalAmount: number;
-			totalAmountUSD: number;
-			totalExtraAmount: number;
-			totalExtraAmountUSD: number;
-		}
-	> | null;
+	data: Record<string, BalanceTotals> | null;
 	error: any;
 }> {
 	if (!balanceIds.length) return { data: {}, error: null };
@@ -144,32 +153,17 @@ export async function getTotalsByBalanceIds(balanceIds: number[]): Promise<{
 		return { data: null, error };
 	}
 
-	const totals: Record<
-		string,
-		{
-			totalAmount: number;
-			totalAmountUSD: number;
-			totalExtraAmount: number;
-			totalExtraAmountUSD: number;
-		}
-	> = {};
+	const groups: Record<string, TotalsRow[]> = {};
 	for (const t of transactions || []) {
-		const id = String((t as any).balance_id || '');
+		const id = String(t.balance_id ?? '');
 		if (!id) continue;
-		if (!totals[id])
-			totals[id] = {
-				totalAmount: 0,
-				totalAmountUSD: 0,
-				totalExtraAmount: 0,
-				totalExtraAmountUSD: 0,
-			};
-		if ((t as any).is_extra_amount) {
-			totals[id].totalExtraAmount += Number((t as any).amount) || 0;
-			totals[id].totalExtraAmountUSD += Number((t as any).usd_amount) || 0;
-		} else {
-			totals[id].totalAmount += Number((t as any).amount) || 0;
-			totals[id].totalAmountUSD += Number((t as any).usd_amount) || 0;
-		}
+		if (!groups[id]) groups[id] = [];
+		groups[id].push(t);
+	}
+
+	const totals: Record<string, BalanceTotals> = {};
+	for (const [id, rows] of Object.entries(groups)) {
+		totals[id] = splitTotals(rows);
 	}
 
 	return { data: totals, error: null };

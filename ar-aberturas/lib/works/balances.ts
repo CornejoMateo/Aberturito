@@ -76,7 +76,7 @@ export async function listBalances(): Promise<{ data: BalanceWithBudget[] | null
 	const { data, error } = await supabase
 		.from(TABLE)
 		.select(
-			'*, budget:budgets(id, amount_ars, amount_usd, usd_quote, number, type, version, folder_budget:folder_budgets(work:works(address, locality)))'
+			'*, budget:budgets(id, created_at, amount_ars, amount_usd, usd_quote, number, type, version, folder_budget:folder_budgets(work:works(address, locality)))'
 		)
 		.order('created_at', { ascending: false });
 	return { data, error };
@@ -92,7 +92,7 @@ export async function listBalancesForReport(): Promise<{
 		.select(
 			`*,
 			client:clients(id, name, last_name),
-			budget:budgets(id, amount_ars, amount_usd, usd_quote, number, type, version, folder_budget:folder_budgets(work:works(address, locality)))`
+			budget:budgets(id, created_at, amount_ars, amount_usd, usd_quote, number, type, version, folder_budget:folder_budgets(work:works(address, locality)))`
 		)
 		.order('created_at', { ascending: false });
 	return { data, error };

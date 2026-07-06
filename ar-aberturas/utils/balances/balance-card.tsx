@@ -89,11 +89,11 @@ export function BalanceCard({
 								</p>
 								<div className="flex flex-col">
 									<p className="text-xs sm:text-sm font-bold text-primary truncate">
-										{formatCurrency(summary.budgetArsCurrent + summary.totalExtraArs)}
+										{formatCurrency(summary.effectiveBudgetArs)}
 									</p>
-									{summary.budgetUsd > 0 && (
+									{(summary.budgetUsd > 0 || summary.totalExtraUsd > 0) && (
 										<p className="text-[9px] sm:text-xs text-muted-foreground truncate">
-											{formatCurrencyUSD(summary.budgetUsd + summary.totalExtraUsd)}
+											{formatCurrencyUSD(summary.effectiveBudgetUsd)}
 										</p>
 									)}
 								</div>

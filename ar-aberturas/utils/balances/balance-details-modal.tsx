@@ -122,7 +122,7 @@ export function BalanceDetailsModal({
 		}
 	};
 
-	const handleAddTransaction = async () => {
+	const handleSaveTransaction = async (isExtraAmount?: boolean) => {
 		if (!balance || !transactionAmount || isSavingTransaction) return;
 
 		setIsSavingTransaction(true);
@@ -136,6 +136,7 @@ export function BalanceDetailsModal({
 				notes: notes || null,
 				quote_usd: quoteUsd ? parseArsToNumber(quoteUsd) : null,
 				usd_amount: usdAmount ? parseFloat(usdAmount) : null,
+				...(isExtraAmount && { is_extra_amount: true }),
 			});
 
 			if (error) {
@@ -143,84 +144,31 @@ export function BalanceDetailsModal({
 				const err = translateError(error);
 				toast({
 					variant: 'destructive',
-					title: 'Error al crear transacción',
-					description: err || 'Hubo un problema al crear la transacción. Intente nuevamente.',
+					title: isExtraAmount ? 'Error al crear monto extra' : 'Error al crear transacción',
+					description:
+						err ||
+						(isExtraAmount
+							? 'Hubo un problema al crear el monto extra. Intente nuevamente.'
+							: 'Hubo un problema al crear la transacción. Intente nuevamente.'),
 				});
 				return;
 			}
 
 			// Upload files if selected
 			if (data && transactionFilesToUpload.length > 0) {
-				console.log(
-					'[handleAddTransaction] voy a subir',
-					transactionFilesToUpload.length,
-					'archivos para transacción',
-					data.id
-				);
 				await uploadFilesForTransaction(data.id);
 			}
 
 			toast({
-				title: 'Transacción creada',
-				description: 'La transacción se ha creado exitosamente.',
+				title: isExtraAmount ? 'Monto extra creado' : 'Transacción creada',
+				description: isExtraAmount
+					? 'El monto extra se ha creado exitosamente.'
+					: 'La transacción se ha creado exitosamente.',
 			});
 
 			resetTransactionForm();
 
 			// Reload transactions
-			await loadTransactions();
-			onTransactionCreated?.();
-		} catch (error) {
-			const err = translateError(error);
-			toast({
-				variant: 'destructive',
-				title: 'Error inesperado',
-				description: err || 'Ocurrió un error inesperado. Intente nuevamente.',
-			});
-		} finally {
-			setIsSavingTransaction(false);
-		}
-	};
-
-	const handleAddExtraAmount = async () => {
-		if (!balance || !transactionAmount || isSavingTransaction) return;
-
-		setIsSavingTransaction(true);
-
-		try {
-			const { data, error } = await createTransaction({
-				balance_id: balance.id,
-				date: format(transactionDate, 'yyyy-MM-dd'),
-				amount: parseArsToNumber(transactionAmount),
-				payment_method: paymentMethod || null,
-				notes: notes || null,
-				quote_usd: quoteUsd ? parseArsToNumber(quoteUsd) : null,
-				usd_amount: usdAmount ? parseFloat(usdAmount) : null,
-				is_extra_amount: true,
-			});
-
-			if (error) {
-				setIsSavingTransaction(false);
-				const err = translateError(error);
-				toast({
-					variant: 'destructive',
-					title: 'Error al crear monto extra',
-					description: err || 'Hubo un problema al crear el monto extra. Intente nuevamente.',
-				});
-				return;
-			}
-
-			// Upload files if selected
-			if (data && transactionFilesToUpload.length > 0) {
-				await uploadFilesForTransaction(data.id);
-			}
-
-			toast({
-				title: 'Monto extra creado',
-				description: 'El monto extra se ha creado exitosamente.',
-			});
-
-			resetTransactionForm();
 			await loadTransactions();
 			onTransactionCreated?.();
 		} catch (error) {
@@ -705,9 +653,7 @@ export function BalanceDetailsModal({
 							onSave={
 								editingTransaction
 									? handleUpdateTransaction
-									: addingMode === 'extra'
-										? handleAddExtraAmount
-										: handleAddTransaction
+									: () => handleSaveTransaction(addingMode === 'extra')
 							}
 							onStartAddTransaction={() => setAddingMode('transaction')}
 							onStartAddExtra={() => setAddingMode('extra')}
@@ -727,7 +673,6 @@ export function BalanceDetailsModal({
 							<TransactionsTable
 								isLoading={isLoading}
 								transactions={transactions}
-								formatDate={formatCreatedAt}
 								onDeleteTransaction={(transaction) => {
 									setTransactionToDelete(transaction);
 									setIsDeleteDialogOpen(true);

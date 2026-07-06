@@ -19,6 +19,8 @@ export interface BalanceSummary {
 	totalPaidUsd: number;
 	totalExtraArs: number;
 	totalExtraUsd: number;
+	effectiveBudgetArs: number;
+	effectiveBudgetUsd: number;
 	remainingArs: number;
 	remainingUsd: number;
 	progressPercentage: number;
@@ -55,6 +57,8 @@ export function calculateBalanceSummary(input: BalanceCalculationInput): Balance
 		totalPaidUsd,
 		totalExtraArs,
 		totalExtraUsd,
+		effectiveBudgetArs,
+		effectiveBudgetUsd,
 		remainingArs,
 		remainingUsd,
 		progressPercentage,

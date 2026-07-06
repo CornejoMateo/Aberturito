@@ -73,6 +73,8 @@ export function BalanceCard({
 										{balance.budget.folder_budget.work.address}
 									</p>
 								</div>
+							) : balance.budget ? (
+								<span className="text-muted-foreground">Sin obra asignada</span>
 							) : (
 								<span className="text-muted-foreground">Sin presupuesto asignado</span>
 							)}

@@ -134,7 +134,7 @@ export function BalanceDetailsModal({
 				amount: parseArsToNumber(transactionAmount),
 				payment_method: paymentMethod || null,
 				notes: notes || null,
-				quote_usd: quoteUsd ? parseFloat(quoteUsd) : null,
+				quote_usd: quoteUsd ? parseArsToNumber(quoteUsd) : null,
 				usd_amount: usdAmount ? parseFloat(usdAmount) : null,
 			});
 
@@ -194,7 +194,7 @@ export function BalanceDetailsModal({
 				amount: parseArsToNumber(transactionAmount),
 				payment_method: paymentMethod || null,
 				notes: notes || null,
-				quote_usd: quoteUsd ? parseFloat(quoteUsd) : null,
+				quote_usd: quoteUsd ? parseArsToNumber(quoteUsd) : null,
 				usd_amount: usdAmount ? parseFloat(usdAmount) : null,
 				is_extra_amount: true,
 			});
@@ -331,13 +331,27 @@ export function BalanceDetailsModal({
 	const handleEditTransaction = (transaction: BalanceTransaction) => {
 		setEditingTransaction(transaction);
 		setTransactionDate(transaction.date ? new Date(transaction.date + 'T00:00:00') : new Date());
-		setTransactionAmount(transaction.amount ? String(transaction.amount) : '');
+		setTransactionAmount(
+			transaction.amount
+				? transaction.amount.toLocaleString('es-AR', {
+						minimumFractionDigits: 0,
+						maximumFractionDigits: 3,
+					})
+				: ''
+		);
 		setPaymentMethod(transaction.payment_method || '');
 		setNotes(transaction.notes || '');
-		setQuoteUsd(transaction.quote_usd ? String(transaction.quote_usd) : '');
+		setQuoteUsd(
+			transaction.quote_usd
+				? transaction.quote_usd.toLocaleString('es-AR', {
+						minimumFractionDigits: 0,
+						maximumFractionDigits: 3,
+					})
+				: ''
+		);
 		setUsdAmount(transaction.usd_amount ? String(transaction.usd_amount) : '');
 		setTransactionFilesToUpload([]);
-		setAddingMode(transaction.is_extra_amount ? 'extra' : 'transaction');
+		setAddingMode('transaction');
 	};
 
 	const handleUpdateTransaction = async () => {
@@ -351,9 +365,8 @@ export function BalanceDetailsModal({
 				amount: parseArsToNumber(transactionAmount),
 				payment_method: paymentMethod || null,
 				notes: notes || null,
-				quote_usd: quoteUsd ? parseFloat(quoteUsd) : null,
+				quote_usd: quoteUsd ? parseArsToNumber(quoteUsd) : null,
 				usd_amount: usdAmount ? parseFloat(usdAmount) : null,
-				is_extra_amount: addingMode === 'extra',
 			});
 
 			if (error) {
@@ -369,12 +382,6 @@ export function BalanceDetailsModal({
 
 			// Upload files if selected
 			if (transactionFilesToUpload.length > 0) {
-				console.log(
-					'[handleUpdateTransaction] voy a subir',
-					transactionFilesToUpload.length,
-					'archivos para transacción',
-					editingTransaction.id
-				);
 				await uploadFilesForTransaction(editingTransaction.id);
 			}
 
@@ -586,12 +593,13 @@ export function BalanceDetailsModal({
 	useEffect(() => {
 		if (transactionAmount && quoteUsd) {
 			const normalizedAmount = transactionAmount.replace(/\./g, '').replace(',', '.');
+			const normalizedQuote = quoteUsd.replace(/\./g, '').replace(',', '.');
 
 			const amountNumber = Number(normalizedAmount);
-			const rateNumber = Number(quoteUsd);
+			const rateNumber = Number(normalizedQuote);
 
 			if (!isNaN(amountNumber) && !isNaN(rateNumber)) {
-				const calculatedUsd = (amountNumber / rateNumber).toFixed(2);
+				const calculatedUsd = (amountNumber / rateNumber).toFixed(3);
 				setUsdAmount(calculatedUsd);
 			}
 		}

@@ -158,9 +158,9 @@ export function AddTransactionSection({
 					<Label htmlFor="quote-usd">Cotización USD</Label>
 					<Input
 						id="quote-usd"
-						type="number"
+						type="text"
 						value={quoteUsd}
-						onChange={(e) => onQuoteUsdChange(e.target.value)}
+						onChange={(e) => onQuoteUsdChange(formatNumber(e.target.value))}
 					/>
 				</div>
 				<div className="space-y-2">

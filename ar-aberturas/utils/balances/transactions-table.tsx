@@ -79,7 +79,7 @@ export function TransactionsTable({
 								</div>
 							</TableCell>
 							<TableCell className="text-center font-sm">
-								{formatCurrencyUSD(transaction.quote_usd)}
+								{formatCurrency(transaction.quote_usd)}
 							</TableCell>
 							<TableCell className="text-center">
 								<div className="flex items-center justify-center gap-1">

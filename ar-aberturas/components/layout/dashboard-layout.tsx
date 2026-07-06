@@ -37,6 +37,8 @@ import {
 	ClipboardList,
 } from 'lucide-react';
 import Image from 'next/image';
+import { clearCache } from '@/utils/cache';
+import { Trash2 } from 'lucide-react';
 
 const navigation = [
 	{
@@ -133,10 +135,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	const router = useRouter();
 	const { user, loading, signOutUser } = useAuth();
 
-	// Toggle sidebar function
-	const toggleSidebar = () => {
-		setSidebarOpen(!sidebarOpen);
-	};
+	const [cacheDialogOpen, setCacheDialogOpen] = useState(false);
 
 	// Función para manejar la expansión de submenús
 	const toggleExpanded = (itemName: string) => {
@@ -505,6 +504,39 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 						<h1 className="text-lg font-semibold text-foreground">Sistema de Gestión</h1>
 					</div>
 					<div className="flex items-center gap-2">
+						<AlertDialog open={cacheDialogOpen} onOpenChange={setCacheDialogOpen}>
+							<AlertDialogTrigger asChild>
+								<Button variant="ghost" size="sm" className="opacity-30 hover:opacity-100">
+									<Trash2 className="h-4 w-4" />
+									Eliminar caché
+								</Button>
+							</AlertDialogTrigger>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>Eliminar caché</AlertDialogTitle>
+								</AlertDialogHeader>
+								<div className="text-sm text-muted-foreground space-y-2">
+									<p>
+										Al eliminar la caché se borrarán datos temporales almacenados en tu navegador,
+										como imágenes, scripts y otros archivos estáticos. Esto puede ayudar a mejorar
+										el rendimiento y solucionar problemas de visualización.
+									</p>
+									<p className="font-medium text-foreground">
+										NINGUNO de tus datos guardados (clientes, insumos, obras, etc.) se eliminarán.
+									</p>
+									<p>Beneficios de eliminar la caché:</p>
+									<ul className="list-disc pl-5 space-y-1">
+										<li>Liberar espacio de almacenamiento</li>
+										<li>Resolver problemas visuales o de carga</li>
+									</ul>
+									<p>Tené en cuenta que cuando eliminas la caché, se te cerrará la sesión.</p>
+								</div>
+								<AlertDialogFooter>
+									<AlertDialogCancel>Cancelar</AlertDialogCancel>
+									<AlertDialogAction onClick={clearCache}>Aceptar</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
 						<ThemeToggle />
 					</div>
 				</header>

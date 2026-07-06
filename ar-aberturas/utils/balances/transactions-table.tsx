@@ -1,4 +1,4 @@
-import { Trash2, Edit, ImageIcon } from 'lucide-react';
+import { Trash2, Edit, ImageIcon, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
 	Table,
@@ -10,11 +10,11 @@ import {
 } from '@/components/ui/table';
 import { BalanceTransaction } from '@/lib/works/balance_transactions';
 import { formatCurrency, formatCurrencyUSD } from '../../helpers/format-prices.tsx/formats';
+import { formatCreatedAt } from '@/helpers/date/format-date';
 
 interface TransactionsTableProps {
 	isLoading: boolean;
 	transactions: BalanceTransaction[];
-	formatDate: (dateStr: string | null | undefined) => string;
 	onDeleteTransaction: (transaction: BalanceTransaction) => void;
 	onEditTransaction: (transaction: BalanceTransaction) => void;
 	onViewFiles: (transaction: BalanceTransaction) => void;
@@ -23,7 +23,6 @@ interface TransactionsTableProps {
 export function TransactionsTable({
 	isLoading,
 	transactions,
-	formatDate,
 	onDeleteTransaction,
 	onEditTransaction,
 	onViewFiles,
@@ -44,23 +43,31 @@ export function TransactionsTable({
 			<TableBody>
 				{isLoading ? (
 					<TableRow>
-						<TableCell colSpan={6} className="text-center text-muted-foreground">
+						<TableCell colSpan={7} className="text-center text-muted-foreground">
 							Cargando transacciones...
 						</TableCell>
 					</TableRow>
 				) : transactions.length === 0 ? (
 					<TableRow>
-						<TableCell colSpan={6} className="text-center text-muted-foreground">
+						<TableCell colSpan={7} className="text-center text-muted-foreground">
 							No hay transacciones registradas
 						</TableCell>
 					</TableRow>
 				) : (
 					transactions.map((transaction) => (
 						<TableRow key={transaction.id}>
-							<TableCell>{formatDate(transaction.date)}</TableCell>
+							<TableCell>{formatCreatedAt(transaction.date)}</TableCell>
 							<TableCell className="text-center font-sm">{transaction.payment_method}</TableCell>
 							<TableCell className="text-center font-sm w-[200px] whitespace-normal break-words">
-								{transaction.notes}
+								<div className="flex items-center gap-1 justify-center">
+									{transaction.is_extra_amount && (
+										<span className="inline-flex items-center gap-0.5 text-xs font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-sm">
+											<Plus className="h-3 w-3" />
+											Extra
+										</span>
+									)}
+									<span>{transaction.notes}</span>
+								</div>
 							</TableCell>
 							<TableCell className="text-center font-sm">
 								<div className="flex flex-col">
@@ -71,7 +78,7 @@ export function TransactionsTable({
 								</div>
 							</TableCell>
 							<TableCell className="text-center font-sm">
-								{formatCurrencyUSD(transaction.quote_usd)}
+								{formatCurrency(transaction.quote_usd)}
 							</TableCell>
 							<TableCell className="text-center">
 								<div className="flex items-center justify-center gap-1">

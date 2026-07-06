@@ -19,23 +19,31 @@ describe('BalanceInformation', () => {
 
 	const mockSummary: BalanceSummary = {
 		budgetArsInitial: 500000,
+		budgetUsdInitial: 0,
 		budgetUsd: 5000,
 		budgetArsCurrent: 550000,
 		totalPaidArs: 100000,
 		totalPaidUsd: 900,
+		totalExtraArs: 0,
+		totalExtraUsd: 0,
 		remainingArs: 450000,
 		remainingUsd: 4100,
 		progressPercentage: 18,
-		isDebtor: true,
+		type: 'Deudor',
 	};
 
 	const defaultProps = {
+		balanceId: 1,
 		work: mockWork,
 		startDate: '2024-01-15',
 		contractDateUsd: 1000,
 		usdCurrent: 1100,
 		totalPaid: 100000,
+		totalPaidUsd: 900,
+		totalExtraArs: 0,
+		totalExtraUsd: 0,
 		summary: mockSummary,
+		budget: null,
 		formatDate: (dateStr: string | null | undefined) => {
 			if (!dateStr) return '-';
 			try {
@@ -65,9 +73,10 @@ describe('BalanceInformation', () => {
 			expect(screen.getByText(/Fecha de inicio/i)).toBeInTheDocument();
 			expect(screen.getByText(/Dolar en fecha contratacion/i)).toBeInTheDocument();
 			expect(screen.getByText(/Dolar actual/i)).toBeInTheDocument();
-			expect(screen.getByText(/Presupuesto inicial/i)).toBeInTheDocument();
+			expect(screen.getByText(/Presupuesto contratado/i)).toBeInTheDocument();
 			expect(screen.getByText(/Presupuesto actual/i)).toBeInTheDocument();
 			expect(screen.getByText(/Entregado/i)).toBeInTheDocument();
+			expect(screen.getByText(/Montos extra/i)).toBeInTheDocument();
 			expect(screen.getByText(/Saldo/i)).toBeInTheDocument();
 		});
 
@@ -81,7 +90,6 @@ describe('BalanceInformation', () => {
 		it('should render budget amounts', () => {
 			render(<BalanceInformation {...defaultProps} />);
 
-			expect(screen.getByText('$500.000')).toBeInTheDocument(); // budgetArsInitial
 			expect(screen.getByText('$550.000')).toBeInTheDocument(); // budgetArsCurrent
 		});
 
@@ -170,13 +178,13 @@ describe('BalanceInformation', () => {
 		it('should display contract date USD', () => {
 			render(<BalanceInformation {...defaultProps} formatDate={formatDate} />);
 
-			expect(screen.getByText('USD 1000.00')).toBeInTheDocument();
+			expect(screen.getByText('$1.000')).toBeInTheDocument();
 		});
 
 		it('should display current USD rate', () => {
 			render(<BalanceInformation {...defaultProps} formatDate={formatDate} />);
 
-			expect(screen.getByText('USD 1100.00')).toBeInTheDocument();
+			expect(screen.getByText('$1.100')).toBeInTheDocument();
 		});
 
 		it('should display USD budget amount', () => {
@@ -189,7 +197,7 @@ describe('BalanceInformation', () => {
 		it('should display USD payment amount', () => {
 			render(<BalanceInformation {...defaultProps} formatDate={formatDate} />);
 
-			expect(screen.getByText('USD 90.91')).toBeInTheDocument();
+			expect(screen.getByText('USD 900.00')).toBeInTheDocument();
 		});
 
 		it('should display USD remaining amount', () => {
@@ -208,18 +216,12 @@ describe('BalanceInformation', () => {
 				/>
 			);
 
-			expect(screen.getAllByText('USD 0.00').length).toBeGreaterThanOrEqual(2);
+			expect(screen.getAllByText('$0').length).toBeGreaterThanOrEqual(2);
 		});
 	});
 
 	describe('Budget Calculations', () => {
-		it('should display initial budget correctly', () => {
-			render(<BalanceInformation {...defaultProps} formatDate={formatDate} />);
-
-			expect(screen.getByText('$500.000')).toBeInTheDocument(); // budgetArsInitial
-		});
-
-		it('should display current budget (adjusted by USD rate)', () => {
+		it('should display current budget', () => {
 			render(<BalanceInformation {...defaultProps} formatDate={formatDate} />);
 
 			expect(screen.getByText('$550.000')).toBeInTheDocument(); // budgetArsCurrent
@@ -231,9 +233,23 @@ describe('BalanceInformation', () => {
 			);
 
 			const text = container.textContent;
-			expect(text).toContain('$500.000');
 			expect(text).toContain('$550.000');
 			expect(text).toContain('USD 5000.00');
+		});
+
+		it('should display budget contract info when budget is provided', () => {
+			const mockBudget = { id: 1, created_at: '2024-01-01', number: '001', type: 'Presupuesto' };
+
+			render(
+				<BalanceInformation
+					{...defaultProps}
+					budget={mockBudget}
+					formatDate={formatDate}
+				/>
+			);
+
+			expect(screen.getAllByText(/Presupuesto/).length).toBeGreaterThanOrEqual(2);
+			expect(screen.getByText('#001')).toBeInTheDocument();
 		});
 	});
 
@@ -268,7 +284,7 @@ describe('BalanceInformation', () => {
 				/>
 			);
 
-			expect(screen.getByText('$0')).toBeInTheDocument();
+			expect(screen.getAllByText('$0').length).toBeGreaterThanOrEqual(1);
 		});
 
 		it('should handle fully paid balance', () => {
@@ -288,7 +304,7 @@ describe('BalanceInformation', () => {
 				/>
 			);
 
-			expect(screen.getByText('$0')).toBeInTheDocument();
+			expect(screen.getAllByText('$0').length).toBeGreaterThanOrEqual(1);
 		});
 	});
 
@@ -346,22 +362,29 @@ describe('BalanceInformation', () => {
 				/>
 			);
 
-			expect(screen.getByText('USD 1000.50')).toBeInTheDocument();
-			expect(screen.getByText('USD 1100.75')).toBeInTheDocument();
+			expect(screen.getByText('$1.000,5')).toBeInTheDocument();
+			expect(screen.getByText('$1.100,75')).toBeInTheDocument();
 		});
 
-		it('should calculate USD conversion correctly', () => {
-			const { container } = render(
+		it('should display extra amounts section', () => {
+			const summaryWithExtra = {
+				...mockSummary,
+				totalExtraArs: 50000,
+				totalExtraUsd: 100,
+			};
+
+			render(
 				<BalanceInformation
 					{...defaultProps}
-					usdCurrent={100}
-					totalPaid={10000}
+					summary={summaryWithExtra}
+					totalExtraArs={50000}
+					totalExtraUsd={100}
 					formatDate={formatDate}
 				/>
 			);
 
-			const text = container.textContent;
-			expect(text).toContain('$10.000');
+			expect(screen.getByText('$50.000')).toBeInTheDocument();
+			expect(screen.getByText('USD 100.00')).toBeInTheDocument();
 		});
 	});
 
@@ -382,9 +405,10 @@ describe('BalanceInformation', () => {
 			expect(screen.getByText(/Fecha de inicio/i)).toBeInTheDocument();
 			expect(screen.getByText(/Dolar en fecha contratacion/i)).toBeInTheDocument();
 			expect(screen.getByText(/Dolar actual/i)).toBeInTheDocument();
-			expect(screen.getByText(/Presupuesto inicial/i)).toBeInTheDocument();
+			expect(screen.getByText(/Presupuesto contratado/i)).toBeInTheDocument();
 			expect(screen.getByText(/Presupuesto actual/i)).toBeInTheDocument();
 			expect(screen.getByText(/Entregado/i)).toBeInTheDocument();
+			expect(screen.getByText(/Montos extra/i)).toBeInTheDocument();
 			expect(screen.getByText(/Saldo/i)).toBeInTheDocument();
 		});
 	});

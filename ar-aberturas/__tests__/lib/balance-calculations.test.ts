@@ -6,7 +6,7 @@ describe('calculateBalanceSummary', () => {
 	describe('Basic calculations', () => {
 		it('should calculate correct remaining ARS', () => {
 			const result = calculateBalanceSummary({
-				budgetAmountArs: null,
+				budgetAmountArs: 100000,
 				budgetAmountUsd: 1000,
 				usdCurrent: 100,
 				totalPaidArs: 50000,
@@ -29,9 +29,9 @@ describe('calculateBalanceSummary', () => {
 			expect(result.remainingUsd).toBe(700);
 		});
 
-		it('should calculate current budget in ARS based on USD rate', () => {
+		it('should use budgetAmountArs directly for current budget', () => {
 			const result = calculateBalanceSummary({
-				budgetAmountArs: null,
+				budgetAmountArs: 150000,
 				budgetAmountUsd: 1000,
 				usdCurrent: 150,
 				totalPaidArs: 0,
@@ -39,9 +39,10 @@ describe('calculateBalanceSummary', () => {
 			});
 
 			expect(result.budgetArsCurrent).toBe(150000);
+			expect(result.remainingUsd).toBe(1000);
 		});
 
-		it('should handle zero USD current rate (default to 1)', () => {
+		it('should return 0 for budgetArsCurrent when null', () => {
 			const result = calculateBalanceSummary({
 				budgetAmountArs: null,
 				budgetAmountUsd: 1000,
@@ -50,26 +51,14 @@ describe('calculateBalanceSummary', () => {
 				totalPaidUsd: 0,
 			});
 
-			expect(result.budgetArsCurrent).toBe(1000);
-		});
-
-		it('should handle null USD current rate (default to 1)', () => {
-			const result = calculateBalanceSummary({
-				budgetAmountArs: null,
-				budgetAmountUsd: 1000,
-				usdCurrent: null,
-				totalPaidArs: 0,
-				totalPaidUsd: 0,
-			});
-
-			expect(result.budgetArsCurrent).toBe(1000);
+			expect(result.budgetArsCurrent).toBe(0);
 		});
 	});
 
 	describe('Progress Percentage', () => {
 		it('should calculate correct progress percentage', () => {
 			const result = calculateBalanceSummary({
-				budgetAmountArs: null,
+				budgetAmountArs: 100000,
 				budgetAmountUsd: 1000,
 				usdCurrent: 100,
 				totalPaidArs: 25000,
@@ -81,7 +70,7 @@ describe('calculateBalanceSummary', () => {
 
 		it('should cap progress at 100%', () => {
 			const result = calculateBalanceSummary({
-				budgetAmountArs: null,
+				budgetAmountArs: 100000,
 				budgetAmountUsd: 1000,
 				usdCurrent: 100,
 				totalPaidArs: 100000,
@@ -103,10 +92,11 @@ describe('calculateBalanceSummary', () => {
 			expect(result.progressPercentage).toBe(0);
 		});
 
-		it('should use budgetArsInitial as fallback for progress calculation', () => {
+		it('should use budgetInitialArs as fallback for progress calculation', () => {
 			const result = calculateBalanceSummary({
-				budgetAmountArs: 100000,
+				budgetAmountArs: 0,
 				budgetAmountUsd: 0,
+				budgetInitialArs: 100000,
 				usdCurrent: 100,
 				totalPaidArs: 25000,
 				totalPaidUsd: 0,
@@ -117,7 +107,7 @@ describe('calculateBalanceSummary', () => {
 
 		it('should round progress percentage correctly', () => {
 			const result = calculateBalanceSummary({
-				budgetAmountArs: null,
+				budgetAmountArs: 100000,
 				budgetAmountUsd: 1000,
 				usdCurrent: 100,
 				totalPaidArs: 33333,
@@ -128,7 +118,7 @@ describe('calculateBalanceSummary', () => {
 		});
 	});
 
-	describe('Debtor Status', () => {
+	describe('Debtor Status (type field)', () => {
 		it('should mark as debtor when remainingUsd > 0', () => {
 			const result = calculateBalanceSummary({
 				budgetAmountArs: null,
@@ -138,10 +128,22 @@ describe('calculateBalanceSummary', () => {
 				totalPaidUsd: 500,
 			});
 
-			expect(result.isDebtor).toBe(true);
+			expect(result.type).toBe('Deudor');
 		});
 
-		it('should mark as creditor when remainingUsd <= 0', () => {
+		it('should mark as creditor when remainingUsd < 0', () => {
+			const result = calculateBalanceSummary({
+				budgetAmountArs: null,
+				budgetAmountUsd: 500,
+				usdCurrent: 100,
+				totalPaidArs: 0,
+				totalPaidUsd: 600,
+			});
+
+			expect(result.type).toBe('Acreedor');
+		});
+
+		it('should mark as cancelled when remainingUsd is 0', () => {
 			const result = calculateBalanceSummary({
 				budgetAmountArs: null,
 				budgetAmountUsd: 500,
@@ -150,19 +152,7 @@ describe('calculateBalanceSummary', () => {
 				totalPaidUsd: 500,
 			});
 
-			expect(result.isDebtor).toBe(false);
-		});
-
-		it('should mark as creditor when totalPaidUsd exceeds budget', () => {
-			const result = calculateBalanceSummary({
-				budgetAmountArs: null,
-				budgetAmountUsd: 500,
-				usdCurrent: 100,
-				totalPaidArs: 0,
-				totalPaidUsd: 700,
-			});
-
-			expect(result.isDebtor).toBe(false);
+			expect(result.type).toBe('Cancelado');
 		});
 	});
 
@@ -190,6 +180,7 @@ describe('calculateBalanceSummary', () => {
 			const result = calculateBalanceSummary({
 				budgetAmountArs: 500000,
 				budgetAmountUsd: null,
+				budgetInitialArs: 500000,
 				usdCurrent: undefined,
 				totalPaidArs: 100000,
 				totalPaidUsd: 0,
@@ -218,7 +209,7 @@ describe('calculateBalanceSummary', () => {
 	describe('Real-World Scenarios', () => {
 		it('should calculate correctly for a partially paid balance', () => {
 			const result = calculateBalanceSummary({
-				budgetAmountArs: null,
+				budgetAmountArs: 750000,
 				budgetAmountUsd: 5000,
 				usdCurrent: 150,
 				totalPaidArs: 300000,
@@ -228,13 +219,13 @@ describe('calculateBalanceSummary', () => {
 			expect(result.budgetArsCurrent).toBe(750000);
 			expect(result.remainingArs).toBe(450000);
 			expect(result.remainingUsd).toBe(3800);
-			expect(result.isDebtor).toBe(true);
+			expect(result.type).toBe('Deudor');
 			expect(result.progressPercentage).toBe(40);
 		});
 
 		it('should calculate correctly for a fully paid balance', () => {
 			const result = calculateBalanceSummary({
-				budgetAmountArs: null,
+				budgetAmountArs: 750000,
 				budgetAmountUsd: 5000,
 				usdCurrent: 150,
 				totalPaidArs: 750000,
@@ -243,13 +234,13 @@ describe('calculateBalanceSummary', () => {
 
 			expect(result.remainingArs).toBe(0);
 			expect(result.remainingUsd).toBe(0);
-			expect(result.isDebtor).toBe(false);
+			expect(result.type).toBe('Cancelado');
 			expect(result.progressPercentage).toBe(100);
 		});
 
 		it('should handle high USD rates', () => {
 			const result = calculateBalanceSummary({
-				budgetAmountArs: null,
+				budgetAmountArs: 10000000,
 				budgetAmountUsd: 10000,
 				usdCurrent: 1000,
 				totalPaidArs: 5000000,
@@ -264,7 +255,7 @@ describe('calculateBalanceSummary', () => {
 
 		it('should handle small USD amounts', () => {
 			const result = calculateBalanceSummary({
-				budgetAmountArs: null,
+				budgetAmountArs: 10000,
 				budgetAmountUsd: 100,
 				usdCurrent: 100,
 				totalPaidArs: 2500,
@@ -296,7 +287,7 @@ describe('calculateBalanceSummary', () => {
 			expect(result).toHaveProperty('remainingArs');
 			expect(result).toHaveProperty('remainingUsd');
 			expect(result).toHaveProperty('progressPercentage');
-			expect(result).toHaveProperty('isDebtor');
+			expect(result).toHaveProperty('type');
 		});
 
 		it('should return numbers for all numeric fields', () => {
@@ -318,7 +309,7 @@ describe('calculateBalanceSummary', () => {
 			expect(typeof result.progressPercentage).toBe('number');
 		});
 
-		it('should return boolean for isDebtor field', () => {
+		it('should return string for type field', () => {
 			const result = calculateBalanceSummary({
 				budgetAmountArs: null,
 				budgetAmountUsd: 1000,
@@ -327,7 +318,7 @@ describe('calculateBalanceSummary', () => {
 				totalPaidUsd: 500,
 			});
 
-			expect(typeof result.isDebtor).toBe('boolean');
+			expect(typeof result.type).toBe('string');
 		});
 	});
 });

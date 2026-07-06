@@ -70,6 +70,9 @@ export function BalanceForm({ clientId, budgets, onSubmit, onCancel }: BalanceFo
 			usd_current: selectedBudget.usd_quote
 				? formatNumber(selectedBudget.usd_quote.toLocaleString('es-AR'))
 				: '',
+			contract_date_usd: selectedBudget.usd_quote
+				? formatNumber(selectedBudget.usd_quote.toLocaleString('es-AR'))
+				: '',
 		}));
 	};
 

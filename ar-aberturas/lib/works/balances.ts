@@ -39,6 +39,11 @@ export type BalanceWithBudgetAndClient = BalanceWithBudget & {
 		id: number;
 		name?: string | null;
 		last_name?: string | null;
+		seller_id?: number | null;
+		seller?: {
+			id: number;
+			name: string;
+		} | null;
 	} | null;
 };
 
@@ -91,11 +96,98 @@ export async function listBalancesForReport(): Promise<{
 		.from(TABLE)
 		.select(
 			`*,
-			client:clients(id, name, last_name),
+			client:clients(id, name, last_name, seller_id),
 			budget:budgets(id, created_at, amount_ars, amount_usd, usd_quote, number, type, version, folder_budget:folder_budgets(work:works(address, locality)))`
 		)
 		.order('created_at', { ascending: false });
-	return { data, error };
+
+	if (error) return { data: null, error };
+	if (!data) return { data: [], error: null };
+
+	// Get all seller IDs from clients
+	const sellerIds = data
+		.map((b: any) => {
+			const client = b.client
+				? Array.isArray(b.client)
+					? b.client[0]
+					: b.client
+				: null;
+			return client?.seller_id;
+		})
+		.filter(Boolean);
+
+	// Fetch sellers
+	let sellersMap: Record<number, string> = {};
+	if (sellerIds.length > 0) {
+		const { data: sellers } = await supabase.from('sellers').select('id, name').in('id', sellerIds);
+		if (sellers) {
+			sellersMap = sellers.reduce(
+				(acc, s) => {
+					acc[s.id] = s.name;
+					return acc;
+				},
+				{} as Record<number, string>
+			);
+		}
+	}
+
+	const result: BalanceWithBudgetAndClient[] = data.map((b: any) => {
+		// Handle client - it can be null, array, or object
+		let client = null;
+		if (b.client) {
+			client = Array.isArray(b.client) ? b.client[0] : b.client;
+		}
+
+		// Handle budget - it can be null, array, or object
+		let budget = null;
+		if (b.budget) {
+			budget = Array.isArray(b.budget) ? b.budget[0] : b.budget;
+		}
+
+		// Handle folder_budget in budget
+		let folderBudget = null;
+		if (budget?.folder_budget) {
+			folderBudget = Array.isArray(budget.folder_budget) ? budget.folder_budget[0] : budget.folder_budget;
+		}
+
+		// Handle work in folder_budget
+		let work = null;
+		if (folderBudget?.work) {
+			work = Array.isArray(folderBudget.work) ? folderBudget.work[0] : folderBudget.work;
+		}
+
+		// Add seller info to client
+		let seller = null;
+		if (client?.seller_id && sellersMap[client.seller_id]) {
+			seller = {
+				id: client.seller_id,
+				name: sellersMap[client.seller_id],
+			};
+		}
+
+		return {
+			...b,
+			budget: budget
+				? {
+						...budget,
+						folder_budget: folderBudget
+							? {
+									...folderBudget,
+									work: work || null,
+								}
+							: null,
+					}
+				: null,
+			client: client
+				? {
+						...client,
+						seller: seller,
+					}
+				: null,
+		} as BalanceWithBudgetAndClient;
+	});
+
+	return { data: result, error: null };
 }
 
 export async function getBalanceById(

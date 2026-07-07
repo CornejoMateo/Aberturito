@@ -47,6 +47,8 @@ type BalanceReportRow = {
 	usdContractRef: number;
 	usdCurrentToCancel: number | null;
 	balanceInUseUsd: number;
+	seller: string;
+	sellerId: number | null;
 };
 
 export function BalancesReport() {
@@ -67,6 +69,7 @@ export function BalancesReport() {
 	const [usdCurrentMax, setUsdCurrentMax] = useState<string>('');
 	const [balanceInUseMin, setBalanceInUseMin] = useState<string>('');
 	const [balanceInUseMax, setBalanceInUseMax] = useState<string>('');
+	const [sellerFilter, setSellerFilter] = useState<string>('all');
 	const [filterDialogOpen, setFilterDialogOpen] = useState(false);
 
 	// Calculate stats
@@ -117,6 +120,9 @@ export function BalancesReport() {
 					const conceptParts = [b.budget?.number ?? '', b.budget?.type ?? ''].filter(Boolean);
 					const concept = conceptParts.join(' - ') || DEFAULT_FALLBACK;
 
+					const sellerName = b.client?.seller?.name || 'Sin vendedor';
+					const sellerId = b.client?.seller?.id || null;
+
 					const usdContractRef = Number(b.contract_date_usd) || 0;
 
 					const balanceType =
@@ -149,6 +155,8 @@ export function BalancesReport() {
 						usdContractRef,
 						usdCurrentToCancel: usdCurrentToCancel,
 						balanceInUseUsd,
+						seller: sellerName,
+						sellerId,
 					};
 				})
 			);
@@ -251,6 +259,15 @@ export function BalancesReport() {
 			}
 		}
 
+		// Filter by seller
+		if (sellerFilter !== 'all') {
+			if (sellerFilter === 'none') {
+				filtered = filtered.filter((r) => r.sellerId === null);
+			} else {
+				filtered = filtered.filter((r) => r.sellerId === Number(sellerFilter));
+			}
+		}
+
 		// Filter by text
 		const s = searchTerm.trim().toLowerCase();
 		if (s) {
@@ -259,7 +276,8 @@ export function BalancesReport() {
 					r.client.toLowerCase().includes(s) ||
 					r.work.toLowerCase().includes(s) ||
 					r.concept.toLowerCase().includes(s) ||
-					r.balanceType.toLowerCase().includes(s)
+					r.balanceType.toLowerCase().includes(s) ||
+					r.seller.toLowerCase().includes(s)
 				);
 			});
 		}
@@ -305,6 +323,7 @@ export function BalancesReport() {
 			usdCurrentMax,
 			balanceInUseMin,
 			balanceInUseMax,
+			sellerFilter,
 		]);
 
 	const handleSort = (field: keyof BalanceReportRow) => {
@@ -364,6 +383,7 @@ export function BalancesReport() {
 		usdCurrentMax: string;
 		balanceInUseMin: string;
 		balanceInUseMax: string;
+		sellerFilter: string;
 	}) => {
 		setBalanceTypeFilter(filters.balanceTypeFilter);
 		setPurchaseMin(filters.purchaseMin);
@@ -378,6 +398,7 @@ export function BalancesReport() {
 		setUsdCurrentMax(filters.usdCurrentMax);
 		setBalanceInUseMin(filters.balanceInUseMin);
 		setBalanceInUseMax(filters.balanceInUseMax);
+		setSellerFilter(filters.sellerFilter);
 	};
 
 	return (
@@ -538,19 +559,28 @@ export function BalancesReport() {
 												{getSortIcon('balanceInUseUsd')}
 											</div>
 										</TableHead>
+										<TableHead
+											className="whitespace-nowrap cursor-pointer hover:bg-muted/50"
+											onClick={() => handleSort('seller')}
+										>
+											<div className="flex items-center gap-1">
+												Vendedor
+												{getSortIcon('seller')}
+											</div>
+										</TableHead>
 									</TableRow>
 								</TableHeader>
 
 								<TableBody>
 									{loading ? (
 										<TableRow>
-											<TableCell colSpan={11} className="text-center text-muted-foreground">
+											<TableCell colSpan={12} className="text-center text-muted-foreground">
 												Cargando saldos...
 											</TableCell>
 										</TableRow>
 									) : filteredRows.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={11} className="text-center text-muted-foreground">
+											<TableCell colSpan={12} className="text-center text-muted-foreground">
 												No hay resultados
 											</TableCell>
 										</TableRow>
@@ -580,6 +610,7 @@ export function BalancesReport() {
 												<TableCell className="text-right whitespace-nowrap">
 													{formatCurrencyUSD(r.balanceInUseUsd)}
 												</TableCell>
+												<TableCell className="whitespace-nowrap">{r.seller}</TableCell>
 											</TableRow>
 										))
 									)}
@@ -679,6 +710,7 @@ export function BalancesReport() {
 					usdCurrentMax,
 					balanceInUseMin,
 					balanceInUseMax,
+					sellerFilter,
 				}}
 				onApplyFilters={handleApplyFilters}
 			/>

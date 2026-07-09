@@ -225,6 +225,35 @@ export async function updateBalance(
 
 export async function deleteBalance(id: number): Promise<{ data: null; error: any }> {
 	const supabase = getSupabaseClient();
+
+	// Fetch associated transactions
+	const { data: transactions } = await supabase
+		.from('balance_transactions')
+		.select('id')
+		.eq('balance_id', id);
+
+	if (transactions && transactions.length > 0) {
+		const transactionIds = transactions.map((t: { id: number }) => t.id);
+
+		// Fetch and delete files associated with those transactions
+		const { data: files } = await supabase
+			.from('files_client')
+			.select('id, path')
+			.in('balance_transaction_id', transactionIds);
+
+		if (files && files.length > 0) {
+			const paths = files.map((f: { path: string | null }) => f.path).filter(Boolean) as string[];
+			if (paths.length > 0) {
+				await supabase.storage.from('clients').remove(paths);
+			}
+			const fileIds = files.map((f: { id: number }) => f.id);
+			await supabase.from('files_client').delete().in('id', fileIds);
+		}
+
+		// Delete the transactions
+		await supabase.from('balance_transactions').delete().in('id', transactionIds);
+	}
+
 	const { error } = await supabase.from(TABLE).delete().eq('id', id);
 	return { data: null, error };
 }

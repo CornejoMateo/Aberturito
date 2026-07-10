@@ -235,13 +235,17 @@ export function BalancesReport() {
 		if (usdCurrentMin !== '') {
 			const min = parseArsToNumber(usdCurrentMin);
 			if (!isNaN(min)) {
-				filtered = filtered.filter((r) => r.usdCurrentToCancel !== null && r.usdCurrentToCancel >= min);
+				filtered = filtered.filter(
+					(r) => r.usdCurrentToCancel !== null && r.usdCurrentToCancel >= min
+				);
 			}
 		}
 		if (usdCurrentMax !== '') {
 			const max = parseArsToNumber(usdCurrentMax);
 			if (!isNaN(max)) {
-				filtered = filtered.filter((r) => r.usdCurrentToCancel !== null && r.usdCurrentToCancel <= max);
+				filtered = filtered.filter(
+					(r) => r.usdCurrentToCancel !== null && r.usdCurrentToCancel <= max
+				);
 			}
 		}
 
@@ -306,25 +310,25 @@ export function BalancesReport() {
 			return 0;
 		});
 	}, [
-			rows,
-			searchTerm,
-			sortField,
-			sortDirection,
-			balanceTypeFilter,
-			purchaseMin,
-			purchaseMax,
-			deliveriesMin,
-			deliveriesMax,
-			balanceAmountMin,
-			balanceAmountMax,
-			usdContractMin,
-			usdContractMax,
-			usdCurrentMin,
-			usdCurrentMax,
-			balanceInUseMin,
-			balanceInUseMax,
-			sellerFilter,
-		]);
+		rows,
+		searchTerm,
+		sortField,
+		sortDirection,
+		balanceTypeFilter,
+		purchaseMin,
+		purchaseMax,
+		deliveriesMin,
+		deliveriesMax,
+		balanceAmountMin,
+		balanceAmountMax,
+		usdContractMin,
+		usdContractMax,
+		usdCurrentMin,
+		usdCurrentMax,
+		balanceInUseMin,
+		balanceInUseMax,
+		sellerFilter,
+	]);
 
 	const handleSort = (field: keyof BalanceReportRow) => {
 		if (sortField === field) {
@@ -621,13 +625,9 @@ export function BalancesReport() {
 						{/* Mobile Card View */}
 						<div className="md:hidden p-4 space-y-4">
 							{loading ? (
-								<div className="text-center py-8 text-muted-foreground">
-									Cargando saldos...
-								</div>
+								<div className="text-center py-8 text-muted-foreground">Cargando saldos...</div>
 							) : filteredRows.length === 0 ? (
-								<div className="text-center py-8 text-muted-foreground">
-									No hay resultados
-								</div>
+								<div className="text-center py-8 text-muted-foreground">No hay resultados</div>
 							) : (
 								filteredRows.map((r) => (
 									<div key={r.id} className="p-4 rounded-lg border bg-card space-y-3">
@@ -636,11 +636,15 @@ export function BalancesReport() {
 												<div className="font-medium text-sm">{r.client}</div>
 												<div className="text-xs text-muted-foreground mt-1">{r.contractDate}</div>
 											</div>
-											<div className={`text-xs px-2 py-1 rounded-full ${
-												r.balanceType === 'Deudor' ? 'bg-orange-100 text-orange-800' :
-												r.balanceType === 'Acreedor' ? 'bg-blue-100 text-blue-800' :
-												'bg-green-100 text-green-800'
-											}`}>
+											<div
+												className={`text-xs px-2 py-1 rounded-full ${
+													r.balanceType === 'Deudor'
+														? 'bg-orange-100 text-orange-800'
+														: r.balanceType === 'Acreedor'
+															? 'bg-blue-100 text-blue-800'
+															: 'bg-green-100 text-green-800'
+												}`}
+											>
 												{r.balanceType}
 											</div>
 										</div>

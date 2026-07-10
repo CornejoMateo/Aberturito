@@ -1,5 +1,8 @@
+import { parseArsToNumber } from '@/utils/budgets/utils';
+import { formatCurrency } from '@/helpers/format-prices.tsx/formats';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { formatCreatedAt } from '@/helpers/date/format-date';
 
 export async function generateBudgetsReportPDF(
 	rows: any[],
@@ -37,29 +40,29 @@ export async function generateBudgetsReportPDF(
 
 	let yOffset = sellerFilter && sellerFilter !== 'all' ? 35 : 28;
 
-	if (amountMin && amountMin !== '' || amountMax && amountMax !== '') {
+	if ((amountMin && amountMin !== '') || (amountMax && amountMax !== '')) {
 		const filterText = [];
 		if (amountMin && amountMin !== '') {
-			const min = parseFloat(amountMin.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(min)) filterText.push(`Mín: $${min.toLocaleString('es-AR')}`);
+			const min = formatCurrency(parseArsToNumber(amountMin));
+			filterText.push(`Mín: ${min}`);
 		}
 		if (amountMax && amountMax !== '') {
-			const max = parseFloat(amountMax.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(max)) filterText.push(`Máx: $${max.toLocaleString('es-AR')}`);
+			const max = formatCurrency(parseArsToNumber(amountMax));
+			filterText.push(`Máx: ${max}`);
 		}
 		pdf.text(`Monto ARS: ${filterText.join(' - ')}`, margin, yOffset);
 		yOffset += 7;
 	}
 
-	if (amountMinUsd && amountMinUsd !== '' || amountMaxUsd && amountMaxUsd !== '') {
+	if ((amountMinUsd && amountMinUsd !== '') || (amountMaxUsd && amountMaxUsd !== '')) {
 		const filterText = [];
 		if (amountMinUsd && amountMinUsd !== '') {
-			const min = parseFloat(amountMinUsd.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(min)) filterText.push(`Mín: $${min.toLocaleString('en-US')}`);
+			const min = formatCurrency(parseArsToNumber(amountMinUsd));
+			filterText.push(`Mín: $${min}`);
 		}
 		if (amountMaxUsd && amountMaxUsd !== '') {
-			const max = parseFloat(amountMaxUsd.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(max)) filterText.push(`Máx: $${max.toLocaleString('en-US')}`);
+			const max = formatCurrency(parseArsToNumber(amountMaxUsd));
+			filterText.push(`Máx: $${max}`);
 		}
 		pdf.text(`Monto USD: ${filterText.join(' - ')}`, margin, yOffset);
 		yOffset += 7;
@@ -73,15 +76,26 @@ export async function generateBudgetsReportPDF(
 		row.type,
 		row.materialType,
 		row.work,
-		row.amountArs.toLocaleString('es-AR', { minimumFractionDigits: 2 }),
-		row.amountUsd.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+		row.amountArs.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 3 }),
+		row.amountUsd.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 3 }),
 		row.status,
 		row.seller,
 	]);
 
 	// Table headers
 	const headers = [
-		['Fecha', 'Cliente', 'Número', 'Tipo', 'Material', 'Obra', 'Monto ARS', 'Monto USD', 'Estado', 'Vendedor'],
+		[
+			'Fecha',
+			'Cliente',
+			'Número',
+			'Tipo',
+			'Material',
+			'Obra',
+			'Monto ARS',
+			'Monto USD',
+			'Estado',
+			'Vendedor',
+		],
 	];
 
 	// Generate table
@@ -119,19 +133,19 @@ export async function generateBudgetsReportPDF(
 			pdf.setFontSize(8);
 			pdf.setFont('helvetica', 'italic');
 			pdf.setTextColor(150);
-			pdf.text(
-				`Página ${data.pageNumber} de ${totalPages}`,
-				pageWidth / 2,
-				pageHeight - 10,
-				{ align: 'center' }
-			);
+			pdf.text(`Página ${data.pageNumber} de ${totalPages}`, pageWidth / 2, pageHeight - 10, {
+				align: 'center',
+			});
 			pdf.setTextColor(0);
 		},
 	});
 
+	const fileDate = new Date();
+
 	// Save PDF
-	const fileName = sellerFilter && sellerFilter !== 'all'
-		? `presupuestos_${sellerFilter === 'none' ? 'sin_vendedor' : rows[0]?.seller?.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
-		: `presupuestos_${new Date().toISOString().split('T')[0]}.pdf`;
+	const fileName =
+		sellerFilter && sellerFilter !== 'all'
+			? `presupuestos_${sellerFilter === 'none' ? 'sin_vendedor' : rows[0]?.seller?.replace(/\s+/g, '_')}_${formatCreatedAt(fileDate)}.pdf`
+			: `presupuestos_${formatCreatedAt(fileDate)}.pdf`;
 	pdf.save(fileName);
 }

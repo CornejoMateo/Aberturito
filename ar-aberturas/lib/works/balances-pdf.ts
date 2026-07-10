@@ -1,3 +1,6 @@
+import { formatCreatedAt } from '@/helpers/date/format-date';
+import { formatCurrency, formatCurrencyUSD } from '@/helpers/format-prices.tsx/formats';
+import { parseArsToNumber } from '@/utils/budgets/utils';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -45,85 +48,88 @@ export async function generateBalancesReportPDF(
 		yOffset += 7;
 	}
 
-	if (purchaseMin && purchaseMin !== '' || purchaseMax && purchaseMax !== '') {
+	if ((purchaseMin && purchaseMin !== '') || (purchaseMax && purchaseMax !== '')) {
 		const filterText = [];
 		if (purchaseMin && purchaseMin !== '') {
-			const min = parseFloat(purchaseMin.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(min)) filterText.push(`Mín: $${min.toLocaleString('es-AR')}`);
+			const min = formatCurrency(parseArsToNumber(purchaseMin));
+			filterText.push(`Mín: ${min}`);
 		}
 		if (purchaseMax && purchaseMax !== '') {
-			const max = parseFloat(purchaseMax.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(max)) filterText.push(`Máx: $${max.toLocaleString('es-AR')}`);
+			const max = formatCurrency(parseArsToNumber(purchaseMax));
+			filterText.push(`Máx: ${max}`);
 		}
 		pdf.text(`Compra ARS: ${filterText.join(' - ')}`, margin, yOffset);
 		yOffset += 7;
 	}
 
-	if (deliveriesMin && deliveriesMin !== '' || deliveriesMax && deliveriesMax !== '') {
+	if ((deliveriesMin && deliveriesMin !== '') || (deliveriesMax && deliveriesMax !== '')) {
 		const filterText = [];
 		if (deliveriesMin && deliveriesMin !== '') {
-			const min = parseFloat(deliveriesMin.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(min)) filterText.push(`Mín: $${min.toLocaleString('es-AR')}`);
+			const min = formatCurrency(parseArsToNumber(deliveriesMin));
+			filterText.push(`Mín: ${min}`);
 		}
 		if (deliveriesMax && deliveriesMax !== '') {
-			const max = parseFloat(deliveriesMax.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(max)) filterText.push(`Máx: $${max.toLocaleString('es-AR')}`);
+			const max = formatCurrency(parseArsToNumber(deliveriesMax));
+			filterText.push(`Máx: ${max}`);
 		}
 		pdf.text(`Entregas ARS: ${filterText.join(' - ')}`, margin, yOffset);
 		yOffset += 7;
 	}
 
-	if (balanceAmountMin && balanceAmountMin !== '' || balanceAmountMax && balanceAmountMax !== '') {
+	if (
+		(balanceAmountMin && balanceAmountMin !== '') ||
+		(balanceAmountMax && balanceAmountMax !== '')
+	) {
 		const filterText = [];
 		if (balanceAmountMin && balanceAmountMin !== '') {
-			const min = parseFloat(balanceAmountMin.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(min)) filterText.push(`Mín: $${min.toLocaleString('es-AR')}`);
+			const min = formatCurrency(parseArsToNumber(balanceAmountMin));
+			filterText.push(`Mín: ${min}`);
 		}
 		if (balanceAmountMax && balanceAmountMax !== '') {
-			const max = parseFloat(balanceAmountMax.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(max)) filterText.push(`Máx: $${max.toLocaleString('es-AR')}`);
+			const max = formatCurrency(parseArsToNumber(balanceAmountMax));
+			filterText.push(`Máx: ${max}`);
 		}
 		pdf.text(`Saldo ARS: ${filterText.join(' - ')}`, margin, yOffset);
 		yOffset += 7;
 	}
 
-	if (usdContractMin && usdContractMin !== '' || usdContractMax && usdContractMax !== '') {
+	if ((usdContractMin && usdContractMin !== '') || (usdContractMax && usdContractMax !== '')) {
 		const filterText = [];
 		if (usdContractMin && usdContractMin !== '') {
-			const min = parseFloat(usdContractMin.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(min)) filterText.push(`Mín: $${min.toLocaleString('en-US')}`);
+			const min = formatCurrency(parseArsToNumber(usdContractMin));
+			filterText.push(`Mín: ${min}`);
 		}
 		if (usdContractMax && usdContractMax !== '') {
-			const max = parseFloat(usdContractMax.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(max)) filterText.push(`Máx: $${max.toLocaleString('en-US')}`);
+			const max = formatCurrency(parseArsToNumber(usdContractMax));
+			filterText.push(`Máx: ${max}`);
 		}
 		pdf.text(`USD Contrato: ${filterText.join(' - ')}`, margin, yOffset);
 		yOffset += 7;
 	}
 
-	if (usdCurrentMin && usdCurrentMin !== '' || usdCurrentMax && usdCurrentMax !== '') {
+	if ((usdCurrentMin && usdCurrentMin !== '') || (usdCurrentMax && usdCurrentMax !== '')) {
 		const filterText = [];
 		if (usdCurrentMin && usdCurrentMin !== '') {
-			const min = parseFloat(usdCurrentMin.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(min)) filterText.push(`Mín: $${min.toLocaleString('en-US')}`);
+			const min = formatCurrency(parseArsToNumber(usdCurrentMin));
+			filterText.push(`Mín: ${min}`);
 		}
 		if (usdCurrentMax && usdCurrentMax !== '') {
-			const max = parseFloat(usdCurrentMax.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(max)) filterText.push(`Máx: $${max.toLocaleString('en-US')}`);
+			const max = formatCurrency(parseArsToNumber(usdCurrentMax));
+			filterText.push(`Máx: ${max}`);
 		}
 		pdf.text(`USD Actual: ${filterText.join(' - ')}`, margin, yOffset);
 		yOffset += 7;
 	}
 
-	if (balanceInUseMin && balanceInUseMin !== '' || balanceInUseMax && balanceInUseMax !== '') {
+	if ((balanceInUseMin && balanceInUseMin !== '') || (balanceInUseMax && balanceInUseMax !== '')) {
 		const filterText = [];
 		if (balanceInUseMin && balanceInUseMin !== '') {
-			const min = parseFloat(balanceInUseMin.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(min)) filterText.push(`Mín: $${min.toLocaleString('en-US')}`);
+			const min = formatCurrency(parseArsToNumber(balanceInUseMin));
+			filterText.push(`Mín: ${min}`);
 		}
 		if (balanceInUseMax && balanceInUseMax !== '') {
-			const max = parseFloat(balanceInUseMax.replace(/\./g, '').replace(',', '.'));
-			if (!isNaN(max)) filterText.push(`Máx: $${max.toLocaleString('en-US')}`);
+			const max = formatCurrency(parseArsToNumber(balanceInUseMax));
+			filterText.push(`Máx: ${max}`);
 		}
 		pdf.text(`Saldo USD: ${filterText.join(' - ')}`, margin, yOffset);
 		yOffset += 7;
@@ -135,19 +141,42 @@ export async function generateBalancesReportPDF(
 		row.client,
 		row.work,
 		row.concept,
-		row.purchaseArs.toLocaleString('es-AR', { minimumFractionDigits: 2 }),
-		row.deliveriesArs.toLocaleString('es-AR', { minimumFractionDigits: 2 }),
+		row.purchaseArs.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 3 }),
+		row.deliveriesArs.toLocaleString('es-AR', {
+			minimumFractionDigits: 0,
+			maximumFractionDigits: 3,
+		}),
 		row.balanceType,
-		row.balanceAmountArs.toLocaleString('es-AR', { minimumFractionDigits: 2 }),
-		row.usdContractRef.toLocaleString('en-US', { minimumFractionDigits: 2 }),
-		row.usdCurrentToCancel !== null ? row.usdCurrentToCancel.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '-',
-		row.balanceInUseUsd.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+		row.balanceAmountArs.toLocaleString('es-AR', {
+			minimumFractionDigits: 0,
+			maximumFractionDigits: 3,
+		}),
+		row.usdContractRef.toLocaleString('en-US', {
+			minimumFractionDigits: 0,
+			maximumFractionDigits: 3,
+		}),
+		row.balanceInUseUsd.toLocaleString('en-US', {
+			minimumFractionDigits: 0,
+			maximumFractionDigits: 3,
+		}),
 		row.seller,
 	]);
 
 	// Table headers
 	const headers = [
-		['Fecha', 'Cliente', 'Obra', 'Concepto', 'Compra ARS', 'Entregas ARS', 'Tipo', 'Saldo ARS', 'USD Contrato', 'USD Actual', 'Saldo USD', 'Vendedor'],
+		[
+			'Fecha',
+			'Cliente',
+			'Obra',
+			'Concepto',
+			'Compra ARS',
+			'Entregas ARS',
+			'Tipo',
+			'Saldo ARS',
+			'USD Contrato',
+			'Saldo USD',
+			'Vendedor',
+		],
 	];
 
 	// Generate table
@@ -177,7 +206,6 @@ export async function generateBalancesReportPDF(
 			6: { cellWidth: 18 }, // Tipo
 			7: { cellWidth: 25 }, // Saldo ARS
 			8: { cellWidth: 25 }, // USD Contrato
-			9: { cellWidth: 25 }, // USD Actual
 			10: { cellWidth: 25 }, // Saldo USD
 			11: { cellWidth: 25 }, // Vendedor
 		},
@@ -187,25 +215,19 @@ export async function generateBalancesReportPDF(
 			pdf.setFontSize(8);
 			pdf.setFont('helvetica', 'italic');
 			pdf.setTextColor(150);
-			pdf.text(
-				`Página ${data.pageNumber} de ${totalPages}`,
-				pageWidth / 2,
-				pageHeight - 10,
-				{ align: 'center' }
-			);
+			pdf.text(`Página ${data.pageNumber} de ${totalPages}`, pageWidth / 2, pageHeight - 10, {
+				align: 'center',
+			});
 			pdf.setTextColor(0);
 		},
 	});
 
 	// Save PDF
 	const fileDate = new Date();
-	const day = String(fileDate.getDate()).padStart(2, '0');
-	const month = String(fileDate.getMonth() + 1).padStart(2, '0');
-	const year = fileDate.getFullYear();
-	const formattedDate = `${day}-${month}-${year}`;
 
-	const fileName = balanceTypeFilter && balanceTypeFilter !== 'all'
-		? `saldos_${balanceTypeFilter}_${formattedDate}.pdf`
-		: `saldos_${formattedDate}.pdf`;
+	const fileName =
+		balanceTypeFilter && balanceTypeFilter !== 'all'
+			? `saldos_${balanceTypeFilter}_${formatCreatedAt(fileDate)}.pdf`
+			: `saldos_${formatCreatedAt(fileDate)}.pdf`;
 	pdf.save(fileName);
 }

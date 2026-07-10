@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { formatNumber } from '@/utils/budgets/utils';
 import { BALANCE_TYPES } from '@/constants/reports/balances-report';
+import { listSellers, Seller } from '@/lib/sellers/sellers';
 
 type BalanceFilters = {
 	balanceTypeFilter: string;
@@ -33,6 +34,7 @@ type BalanceFilters = {
 	usdCurrentMax: string;
 	balanceInUseMin: string;
 	balanceInUseMax: string;
+	sellerFilter: string;
 };
 
 interface BalancesFilterDialogProps {
@@ -48,6 +50,7 @@ export function BalancesFilterDialog({
 	filters,
 	onApplyFilters,
 }: BalancesFilterDialogProps) {
+	const [sellers, setSellers] = useState<Seller[]>([]);
 	const [localFilters, setLocalFilters] = useState<BalanceFilters>(filters);
 
 	useEffect(() => {
@@ -68,7 +71,12 @@ export function BalancesFilterDialog({
 		filters.usdCurrentMax,
 		filters.balanceInUseMin,
 		filters.balanceInUseMax,
+		filters.sellerFilter,
 	]);
+
+	useEffect(() => {
+		listSellers().then(({ data }) => setSellers(data ?? []));
+	}, []);
 
 	const handleApply = () => {
 		onApplyFilters(localFilters);
@@ -90,6 +98,7 @@ export function BalancesFilterDialog({
 			usdCurrentMax: '',
 			balanceInUseMin: '',
 			balanceInUseMax: '',
+			sellerFilter: 'all',
 		};
 		setLocalFilters(clearedFilters);
 		onApplyFilters(clearedFilters);
@@ -302,6 +311,29 @@ export function BalancesFilterDialog({
 							}}
 							className="bg-background"
 						/>
+					</div>
+
+					<div className="grid gap-2">
+						<Label htmlFor="seller">Vendedor</Label>
+						<Select
+							value={localFilters.sellerFilter}
+							onValueChange={(value) =>
+								setLocalFilters((prev) => ({ ...prev, sellerFilter: value }))
+							}
+						>
+							<SelectTrigger className="bg-background">
+								<SelectValue placeholder="Todos los vendedores" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">Todos los vendedores</SelectItem>
+								<SelectItem value="none">Sin vendedor</SelectItem>
+								{sellers.map((seller) => (
+									<SelectItem key={seller.id} value={String(seller.id)}>
+										{seller.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
 					</div>
 				</div>
 

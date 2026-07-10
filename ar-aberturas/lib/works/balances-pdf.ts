@@ -142,11 +142,12 @@ export async function generateBalancesReportPDF(
 		row.usdContractRef.toLocaleString('en-US', { minimumFractionDigits: 2 }),
 		row.usdCurrentToCancel !== null ? row.usdCurrentToCancel.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '-',
 		row.balanceInUseUsd.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+		row.seller,
 	]);
 
 	// Table headers
 	const headers = [
-		['Fecha', 'Cliente', 'Obra', 'Concepto', 'Compra ARS', 'Entregas ARS', 'Tipo', 'Saldo ARS', 'USD Contrato', 'USD Actual', 'Saldo USD'],
+		['Fecha', 'Cliente', 'Obra', 'Concepto', 'Compra ARS', 'Entregas ARS', 'Tipo', 'Saldo ARS', 'USD Contrato', 'USD Actual', 'Saldo USD', 'Vendedor'],
 	];
 
 	// Generate table
@@ -178,6 +179,7 @@ export async function generateBalancesReportPDF(
 			8: { cellWidth: 25 }, // USD Contrato
 			9: { cellWidth: 25 }, // USD Actual
 			10: { cellWidth: 25 }, // Saldo USD
+			11: { cellWidth: 25 }, // Vendedor
 		},
 		didDrawPage: (data) => {
 			// Footer with page numbers
